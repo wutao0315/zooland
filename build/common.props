@@ -1,0 +1,17 @@
+<Project>
+
+	<Import Project="version.props" />
+
+	<PropertyGroup Label="Package">
+		<Product>Zooland</Product>
+		<Authors>savorboard;dotnetcore</Authors>
+    <RepositoryUrl>https://github.com/wutao0315/Zooland</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageIconUrl>https://avatars2.githubusercontent.com/u/19404084</PackageIconUrl>
+		<PackageProjectUrl>https://github.com/wutao0315/Zooland</PackageProjectUrl>
+		<PackageLicenseUrl>https://github.com/wutao0315/Zooland/blob/master/LICENSE.txt</PackageLicenseUrl>
+    <PackageTags>Zooland;rpc;wcf;grpc;akka;http;thrift;</PackageTags>
+    <Description>Zooland simple rpc.</Description>
+	</PropertyGroup>
+
+</Project>
