@@ -36,7 +36,7 @@ namespace Zooyard.Rpc.HttpImpl
         {
             var task = TheTransport.SendAsync(new HttpRequestMessage
             {
-                Method = new HttpMethod("HEAD"),
+                Method = new HttpMethod("GET"),
                 RequestUri = new Uri($"{this.Url.Protocol}://{this.Url.Host}:{this.Url.Port}/{this.Url.Path}/head")
             });
 

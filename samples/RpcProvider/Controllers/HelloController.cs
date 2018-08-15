@@ -1,4 +1,4 @@
-﻿using RpcProviderWeb.Models;
+﻿using RpcProvider.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,11 +6,11 @@ using System.Net;
 using System.Net.Http;
 using System.Web.Http;
 
-namespace RpcProviderWeb.Controllers
+namespace RpcProvider.Controllers
 {
     public class HelloController : ApiController
     {
-        [HttpHead]
+        [HttpGet]
         public string Head()
         {
             return "rpc is ok";

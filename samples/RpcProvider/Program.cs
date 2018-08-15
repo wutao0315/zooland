@@ -16,6 +16,7 @@ using System.Reflection;
 using System.ServiceProcess;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using Microsoft.Owin.Hosting;
 
 namespace RpcProvider
 {
@@ -23,6 +24,7 @@ namespace RpcProvider
     {
         private static readonly ILog _logger = LogManager.GetLogger(typeof(Program));
         public const string HostName= "RpcProvider";
+        private static IDisposable webApiApp;
 
         static void Main(string[] args)
         {
@@ -102,6 +104,8 @@ namespace RpcProvider
 
                 }
 
+                var webApiUrl = "http://localhost:10010/";
+                webApiApp = WebApp.Start<ApiStartUp>(url: webApiUrl);
                 Console.Out.WriteLine("Server listening...");
                 Console.Out.WriteLine("Press any key to stop the server...");
             }
@@ -121,6 +125,7 @@ namespace RpcProvider
             {
                 ContextRegistry.GetContext().Dispose();
             }
+            webApiApp.Dispose();
             Logger.Info($"{HostName} has been stopped.");
         }
         

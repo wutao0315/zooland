@@ -4,7 +4,7 @@ using System.Linq;
 using System.Web;
 using System.Web.Http;
 
-namespace RpcProviderWeb.Controllers
+namespace RpcProvider.Controllers
 {
     public class HomeController:ApiController
     {

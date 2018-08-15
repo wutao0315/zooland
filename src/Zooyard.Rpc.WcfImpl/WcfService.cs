@@ -21,24 +21,33 @@ namespace Zooyard.Rpc.WcfImpl
         private ServiceHost serviceHost { get; set; }
         public void Open()
         {
-            serviceHost = new ServiceHost(SingletonInstance, BaseAddresses.ToArray());
-            serviceHost.AddServiceEndpoint(
-               ContractType,
-               TheBinding,
-               SingletonInstance.GetType().Name);
-
-            // Step 4 of the hosting procedure: Enable metadata exchange.
-            //var smb = new ServiceMetadataBehavior();
-            //smb.HttpGetEnabled = true;
-
-            if (ServiceBehaviors!=null)
+            try
             {
-                foreach (var item in ServiceBehaviors)
+                serviceHost = new ServiceHost(SingletonInstance, BaseAddresses.ToArray());
+                serviceHost.AddServiceEndpoint(
+                   ContractType,
+                   TheBinding,
+                   SingletonInstance.GetType().Name);
+
+                // Step 4 of the hosting procedure: Enable metadata exchange.
+                //var smb = new ServiceMetadataBehavior();
+                //smb.HttpGetEnabled = true;
+
+                if (ServiceBehaviors != null)
                 {
-                    serviceHost.Description.Behaviors.Add(item);
+                    foreach (var item in ServiceBehaviors)
+                    {
+                        serviceHost.Description.Behaviors.Add(item);
+                    }
                 }
+                serviceHost.Open();
             }
-            serviceHost.Open();
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                throw ex;
+            }
+            
         }
 
         public void Dispose()
