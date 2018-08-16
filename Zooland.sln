@@ -68,6 +68,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcProviderAutofac", "sampl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcConsumerAutofac", "samples\RpcConsumerAutofac\RpcConsumerAutofac.csproj", "{58580931-8120-4D6A-9145-E3F4A6016E0C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zooyard.Sweeper", "src\Zooyard.Sweeper\Zooyard.Sweeper.csproj", "{D723980A-32F7-4B80-A01C-E64B615DF9B7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -154,6 +156,10 @@ Global
 		{58580931-8120-4D6A-9145-E3F4A6016E0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{58580931-8120-4D6A-9145-E3F4A6016E0C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{58580931-8120-4D6A-9145-E3F4A6016E0C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D723980A-32F7-4B80-A01C-E64B615DF9B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D723980A-32F7-4B80-A01C-E64B615DF9B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D723980A-32F7-4B80-A01C-E64B615DF9B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D723980A-32F7-4B80-A01C-E64B615DF9B7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -179,6 +185,7 @@ Global
 		{59962F4F-19F0-4A3A-8350-9F294DDCB0F0} = {1E4B38C1-0CF2-4E5C-AC4A-30B48CB3F7BA}
 		{3F13EC63-D385-4C55-B8DB-F977C1D35000} = {1E4B38C1-0CF2-4E5C-AC4A-30B48CB3F7BA}
 		{58580931-8120-4D6A-9145-E3F4A6016E0C} = {1E4B38C1-0CF2-4E5C-AC4A-30B48CB3F7BA}
+		{D723980A-32F7-4B80-A01C-E64B615DF9B7} = {50C4867C-8931-45F0-B773-463C7B953969}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4FBB3247-7E5E-40FB-85B2-67B3E3D57FCB}
