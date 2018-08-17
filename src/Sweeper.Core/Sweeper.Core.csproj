@@ -7,8 +7,8 @@
     <ProjectGuid>{D723980A-32F7-4B80-A01C-E64B615DF9B7}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Zooyard.Sweeper</RootNamespace>
-    <AssemblyName>Zooyard.Sweeper</AssemblyName>
+    <RootNamespace>Sweeper.Core</RootNamespace>
+    <AssemblyName>Sweeper.Core</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -41,12 +41,32 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Annotation.cs" />
-    <Compile Include="Span.cs" />
+    <Compile Include="IScope.cs" />
+    <Compile Include="IScopeManager.cs" />
+    <Compile Include="ISpan.cs" />
+    <Compile Include="ISpanContext.cs" />
+    <Compile Include="Log\Fields.cs" />
+    <Compile Include="Propagation\IFormat.cs" />
+    <Compile Include="Propagation\ITextMap.cs" />
+    <Compile Include="Propagation\TextMapExtractAdapter.cs" />
+    <Compile Include="Propagation\TextMapInjectAdapter.cs" />
+    <Compile Include="References.cs" />
+    <Compile Include="ITracer.cs" />
+    <Compile Include="Trace\Annotation.cs" />
+    <Compile Include="Trace\Span.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UUIDGenerator.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Utils\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Tag\AbstractTag.cs" />
+    <Compile Include="Tag\BooleanTag.cs" />
+    <Compile Include="Tag\IntOrStringTag.cs" />
+    <Compile Include="Tag\IntTag.cs" />
+    <Compile Include="Tag\StringTag.cs" />
+    <Compile Include="Tag\Tags.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Zooyard.Sweeper
+namespace Sweeper.Core.Trace
 {
     public class Span
     {
