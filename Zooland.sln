@@ -66,6 +66,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcContractRemoting", "samp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sweeper.Core", "src\Sweeper.Core\Sweeper.Core.csproj", "{D723980A-32F7-4B80-A01C-E64B615DF9B7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sweeper.Noop", "src\Sweeper.Noop\Sweeper.Noop.csproj", "{45FDE5F8-7B60-4EFB-97EC-06C76B7B535E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -148,6 +150,10 @@ Global
 		{D723980A-32F7-4B80-A01C-E64B615DF9B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D723980A-32F7-4B80-A01C-E64B615DF9B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D723980A-32F7-4B80-A01C-E64B615DF9B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{45FDE5F8-7B60-4EFB-97EC-06C76B7B535E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{45FDE5F8-7B60-4EFB-97EC-06C76B7B535E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{45FDE5F8-7B60-4EFB-97EC-06C76B7B535E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{45FDE5F8-7B60-4EFB-97EC-06C76B7B535E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -172,6 +178,7 @@ Global
 		{13A84864-D4F6-4D1E-A447-9332396BF6BD} = {1E4B38C1-0CF2-4E5C-AC4A-30B48CB3F7BA}
 		{59962F4F-19F0-4A3A-8350-9F294DDCB0F0} = {1E4B38C1-0CF2-4E5C-AC4A-30B48CB3F7BA}
 		{D723980A-32F7-4B80-A01C-E64B615DF9B7} = {50C4867C-8931-45F0-B773-463C7B953969}
+		{45FDE5F8-7B60-4EFB-97EC-06C76B7B535E} = {50C4867C-8931-45F0-B773-463C7B953969}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4FBB3247-7E5E-40FB-85B2-67B3E3D57FCB}

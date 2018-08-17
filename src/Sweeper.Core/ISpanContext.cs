@@ -14,7 +14,7 @@ namespace Sweeper.Core
      * @see Span#setBaggageItem(String, String)
      * @see Span#getBaggageItem(String)
      */
-        IEnumerable<IDictionary<string, string>> baggageItems();
+        IEnumerable<KeyValuePair<string, string>> baggageItems();
 
     }
 }

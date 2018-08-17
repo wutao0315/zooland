@@ -39,6 +39,6 @@ namespace Sweeper.Core
          *
          * @return the {@link Scope active scope}, or null if none could be found.
          */
-        ISpan active();
+        IScope active();
     }
 }
