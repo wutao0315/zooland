@@ -13,7 +13,7 @@ namespace Sweeper.Core.Propagation
  * @see io.opentracing.Tracer#inject(SpanContext, Format, Object)
  * @see io.opentracing.Tracer#extract(Format, Object)
  */
-    public interface ITextMap : IEnumerator<KeyValuePair<string, string>>
+    public interface ITextMap : IEnumerable<KeyValuePair<string, string>>
     {
         /**
          * Gets an iterator over arbitrary key:value pairs from the TextMapReader.
@@ -25,7 +25,7 @@ namespace Sweeper.Core.Propagation
          * @see Format.Builtin#TEXT_MAP
          * @see Format.Builtin#HTTP_HEADERS
          */
-        IEnumerator<KeyValuePair<string, string>> iterator();
+        IEnumerable<KeyValuePair<string, string>> iterator();
 
         /**
          * Puts a key:value pair into the TextMapWriter's backing store.
