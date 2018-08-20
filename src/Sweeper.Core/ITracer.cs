@@ -16,7 +16,7 @@ namespace Sweeper.Core
         /**
          * @return the current {@link ScopeManager}, which may be a noop but may not be null.
          */
-        IScopeManager scopeManager();
+        IScopeManager ScopeManager { get; }
 
         /**
          * @return the active {@link Span}. This is a shorthand for Tracer.scopeManager().active().span(),

@@ -34,9 +34,9 @@ namespace Sweeper.Core.Propagation
         }
 
 
-        public KeyValuePair<string, string> Current => throw new NotImplementedException();
 
-        object IEnumerator.Current => throw new NotImplementedException();
+
+     
 
         public void Dispose()
         {
@@ -53,6 +53,21 @@ namespace Sweeper.Core.Propagation
      
 
         public void Reset()
+        {
+            throw new NotImplementedException();
+        }
+
+        IEnumerable<KeyValuePair<string, string>> ITextMap.iterator()
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerator<KeyValuePair<string, string>> GetEnumerator()
+        {
+            throw new NotImplementedException();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
         {
             throw new NotImplementedException();
         }

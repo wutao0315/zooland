@@ -1,6 +1,6 @@
 ﻿using System.Threading;
 
-namespace Zooyard.Core.Atomic
+namespace Sweeper.Core.Atomic
 {
     public sealed class AtomicInteger
     {

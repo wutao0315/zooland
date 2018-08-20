@@ -15,7 +15,7 @@ namespace Sweeper.Core
     *
     * @return the SpanContext that encapsulates Span state that should propagate across process boundaries.
     */
-        ISpanContext context();
+        ISpanContext Context { get; }
 
         /**
          * Set a key:value tag on the Span.

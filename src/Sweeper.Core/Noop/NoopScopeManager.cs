@@ -12,7 +12,6 @@
  * the License.
  */
 using Sweeper.Core;
-using Sweeper.Core.Propagation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,42 +22,34 @@ using System.Threading.Tasks;
 namespace Sweeper.Noop
 {
 
-    public interface INoopTracer : ITracer
+
+    /**
+     * A noop (i.e., cheap-as-possible) implementation of an ScopeManager.
+     */
+    public class NoopScopeManagerImpl : IScopeManager
     {
-    }
-
-    sealed class NoopTracerImpl : INoopTracer
-    {
-        public readonly static INoopTracer INSTANCE = new NoopTracerImpl();
-
-
-        public IScopeManager scopeManager()
+        public static readonly IScopeManager INSTANCE = new NoopScopeManagerImpl();
+        public IScope active()
         {
-            return NoopScopeManagerImpl.INSTANCE;
+            return NoopScopeImpl.INSTANCE;
         }
+        public IScope activate(ISpan span, bool finishOnClose)
+        {
+            return NoopScopeImpl.INSTANCE;
+        }
+    }
+    public class NoopScopeImpl : IScope
+    {
+        public static readonly IScope INSTANCE = new NoopScopeImpl();
+        public void close() { }
 
 
-        public ISpan activeSpan()
+        public ISpan span()
         {
             return NoopSpanImpl.INSTANCE;
         }
 
 
-        public ISpanBuilder buildSpan(string operationName) { return NoopSpanBuilderImpl.INSTANCE; }
-
-
-        public void inject<C>(ISpanContext spanContext, IFormat<C> format, C carrier) { }
-
-
-        public ISpanContext extract<C>(IFormat<C> format, C carrier) { return NoopSpanContextImpl.INSTANCE; }
-
-
-        public override string ToString()
-        {
-            return typeof(INoopTracer).Name;
-        }
     }
-
 }
-
 

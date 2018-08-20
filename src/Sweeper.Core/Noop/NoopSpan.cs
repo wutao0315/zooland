@@ -21,17 +21,11 @@ using System.Threading.Tasks;
 
 namespace Sweeper.Noop
 {
-
-    public interface INoopSpan : ISpan
+    public sealed class NoopSpanImpl : ISpan
     {
-        //
-    }
+        public static readonly ISpan INSTANCE = new NoopSpanImpl();
 
-    sealed class NoopSpanImpl : INoopSpan
-    {
-        public static readonly INoopSpan INSTANCE = new NoopSpanImpl();
-
-        public ISpanContext context() { return NoopSpanContextImpl.INSTANCE; }
+        public ISpanContext Context { get { return NoopSpanContextImpl.INSTANCE; } }
 
 
 
@@ -69,7 +63,7 @@ namespace Sweeper.Noop
         public ISpan setOperationName(string operationName) { return this; }
 
 
-        public override string ToString() { return typeof(INoopSpan).Name; }
+        public override string ToString() { return typeof(NoopSpanImpl).Name; }
 
 
     }

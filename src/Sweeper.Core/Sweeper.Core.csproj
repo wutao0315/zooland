@@ -41,12 +41,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Atomic\AtomicInteger.cs" />
     <Compile Include="Atomic\AtomicLong.cs" />
     <Compile Include="IScope.cs" />
     <Compile Include="IScopeManager.cs" />
     <Compile Include="ISpan.cs" />
     <Compile Include="ISpanContext.cs" />
     <Compile Include="Log\Fields.cs" />
+    <Compile Include="Noop\NoopScopeManager.cs" />
+    <Compile Include="Noop\NoopSpan.cs" />
+    <Compile Include="Noop\NoopSpanBuilder.cs" />
+    <Compile Include="Noop\NoopSpanContext.cs" />
+    <Compile Include="Noop\NoopTracer.cs" />
+    <Compile Include="Noop\NoopTracerFactory.cs" />
     <Compile Include="Propagation\IFormat.cs" />
     <Compile Include="Propagation\ITextMap.cs" />
     <Compile Include="Propagation\TextMapExtractAdapter.cs" />
@@ -54,6 +61,12 @@
     <Compile Include="References.cs" />
     <Compile Include="ITracer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Support\AutoFinishScope.cs" />
+    <Compile Include="Support\AutoFinishScopeManager.cs" />
+    <Compile Include="Support\GlobalTracer.cs" />
+    <Compile Include="Support\ThreadLocalScope.cs" />
+    <Compile Include="Support\ThreadLocalScopeManager.cs" />
+    <Compile Include="Utils\DateTimeOffsetExtensions.cs" />
     <Compile Include="UUIDGenerator.cs" />
   </ItemGroup>
   <ItemGroup />

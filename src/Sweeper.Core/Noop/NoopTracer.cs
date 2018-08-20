@@ -11,6 +11,8 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
+using Sweeper.Core;
+using Sweeper.Core.Propagation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,18 +22,36 @@ using System.Threading.Tasks;
 
 namespace Sweeper.Noop
 {
-    public sealed class NoopTracerFactory
-    {
 
-        public static INoopTracer create()
+    public sealed class NoopTracerImpl : ITracer
+    {
+        public readonly static ITracer INSTANCE = new NoopTracerImpl();
+
+
+        public IScopeManager ScopeManager
         {
-            return NoopTracerImpl.INSTANCE;
+            get => NoopScopeManagerImpl.INSTANCE;
         }
 
-        private NoopTracerFactory() { }
+
+        public ISpan activeSpan()
+        {
+            return NoopSpanImpl.INSTANCE;
+        }
+
+
+        public ISpanBuilder buildSpan(string operationName) { return NoopSpanBuilderImpl.INSTANCE; }
+
+
+        public void inject<C>(ISpanContext spanContext, IFormat<C> format, C carrier) { }
+
+
+        public ISpanContext extract<C>(IFormat<C> format, C carrier) { return NoopSpanContextImpl.INSTANCE; }
+
+
+        public override string ToString() => typeof(NoopTracerImpl).Name;
     }
 
 }
-
 
 

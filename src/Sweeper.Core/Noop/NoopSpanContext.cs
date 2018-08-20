@@ -22,11 +22,7 @@ using System.Threading.Tasks;
 namespace Sweeper.Noop
 {
 
-    public interface INoopSpanContext : ISpanContext
-    {
-    }
-
-    sealed class NoopSpanContextImpl : INoopSpanContext
+    public sealed class NoopSpanContextImpl : ISpanContext
     {
         public static readonly NoopSpanContextImpl INSTANCE = new NoopSpanContextImpl();
 
@@ -38,7 +34,7 @@ namespace Sweeper.Noop
         }
 
 
-        public override string ToString() => typeof(INoopSpanContext).Name; 
+        public override string ToString() => typeof(NoopSpanContextImpl).Name; 
     }
 
 }
