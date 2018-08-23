@@ -67,7 +67,7 @@
     <Compile Include="Support\ThreadLocalScope.cs" />
     <Compile Include="Support\ThreadLocalScopeManager.cs" />
     <Compile Include="Utils\DateTimeOffsetExtensions.cs" />
-    <Compile Include="UUIDGenerator.cs" />
+    <Compile Include="Utils\UUIDGenerator.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

@@ -114,29 +114,27 @@ namespace Sweeper.Mock
                 long? spanId = null;
                 IDictionary<string, string> baggage = new Dictionary<string, string>();
 
-                if (carrier is ITextMap)
-                {
-                    ITextMap textMap = (ITextMap)carrier;
-                    foreach (var entry in textMap)
-                    {
-                        if (TRACE_ID_KEY.Equals(entry.Key))
-                        {
-                            traceId =Convert.ToInt64(entry.Value);
-                        }
-                        else if (SPAN_ID_KEY.Equals(entry.Key))
-                        {
-                            spanId = Convert.ToInt64(entry.Value);
-                        }
-                        else if (entry.Key.StartsWith(BAGGAGE_KEY_PREFIX))
-                        {
-                            string key = entry.Key.Substring((BAGGAGE_KEY_PREFIX.Length));
-                            baggage.Add(key, entry.Value);
-                        }
-                    }
-                }
-                else
+                if (!(carrier is ITextMap))
                 {
                     throw new Exception("Unknown carrier");
+                }
+
+                var textMap = (ITextMap)carrier;
+                foreach (var entry in textMap)
+                {
+                    if (TRACE_ID_KEY.Equals(entry.Key))
+                    {
+                        traceId = Convert.ToInt64(entry.Value);
+                    }
+                    else if (SPAN_ID_KEY.Equals(entry.Key))
+                    {
+                        spanId = Convert.ToInt64(entry.Value);
+                    }
+                    else if (entry.Key.StartsWith(BAGGAGE_KEY_PREFIX))
+                    {
+                        string key = entry.Key.Substring((BAGGAGE_KEY_PREFIX.Length));
+                        baggage.Add(key, entry.Value);
+                    }
                 }
 
                 if (traceId != null && spanId != null)

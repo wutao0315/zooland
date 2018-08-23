@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Sweeper.Core
+namespace Sweeper.Core.Utils
 {
     public interface ITraceIdGenerator
     {

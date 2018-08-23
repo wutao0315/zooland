@@ -260,11 +260,11 @@ namespace Sweeper.Mock
             }
 
 
-            public bool equals(object o)
+            public override bool Equals(object o)
             {
                 if (this == o) return true;
                 if (o == null || this.GetType() != o.GetType()) return false;
-                Reference reference = (Reference)o;
+                var reference = (Reference)o;
                 return context == reference.context && referenceType == reference.referenceType;
             }
 
@@ -297,7 +297,7 @@ namespace Sweeper.Mock
             {
                 this.References = new List<Reference>(refs);
             }
-            MockContext parent = findPreferredParentRef(this.References);
+            var parent = findPreferredParentRef(this.References);
             if (parent == null)
             {
                 // We're a root Span.
@@ -359,20 +359,16 @@ namespace Sweeper.Mock
         {
             if (Finished)
             {
-                Exception ex = new Exception(string.Format(format, args));
+                var ex = new Exception(string.Format(format, args));
                 errors.Add(ex);
                 throw ex;
             }
         }
 
 
-        public string tostring()
+        public override string ToString()
         {
-            return "{" +
-                    "traceId:" + context.TraceId +
-                    ", spanId:" + context.SpanId +
-                    ", parentId:" + ParentId +
-                    ", operationName:\"" + OperationName + "\"}";
+            return $@"{{  traceId:{context.TraceId}, spanId:{context.SpanId}, parentId:{ParentId}, operationName:{OperationName} }}";
         }
 
     }
