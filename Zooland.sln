@@ -68,6 +68,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sweeper.Core", "src\Sweeper
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sweeper.Mock", "src\Sweeper.Mock\Sweeper.Mock.csproj", "{8498365B-AA21-4E34-A731-76F71C184D73}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SweeperTest", "test\SweeperTest\SweeperTest.csproj", "{B54372E9-8319-4D40-A636-F703705CB7E8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -154,6 +156,10 @@ Global
 		{8498365B-AA21-4E34-A731-76F71C184D73}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8498365B-AA21-4E34-A731-76F71C184D73}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8498365B-AA21-4E34-A731-76F71C184D73}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B54372E9-8319-4D40-A636-F703705CB7E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B54372E9-8319-4D40-A636-F703705CB7E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B54372E9-8319-4D40-A636-F703705CB7E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B54372E9-8319-4D40-A636-F703705CB7E8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -179,6 +185,7 @@ Global
 		{59962F4F-19F0-4A3A-8350-9F294DDCB0F0} = {1E4B38C1-0CF2-4E5C-AC4A-30B48CB3F7BA}
 		{D723980A-32F7-4B80-A01C-E64B615DF9B7} = {50C4867C-8931-45F0-B773-463C7B953969}
 		{8498365B-AA21-4E34-A731-76F71C184D73} = {50C4867C-8931-45F0-B773-463C7B953969}
+		{B54372E9-8319-4D40-A636-F703705CB7E8} = {D405A4E4-A122-4C0C-86A9-336E3CE7C98F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4FBB3247-7E5E-40FB-85B2-67B3E3D57FCB}

@@ -41,7 +41,7 @@ namespace Sweeper.Noop
     public class NoopScopeImpl : IScope
     {
         public static readonly IScope INSTANCE = new NoopScopeImpl();
-        public void close() { }
+        public void Dispose() { }
 
 
         public ISpan span()

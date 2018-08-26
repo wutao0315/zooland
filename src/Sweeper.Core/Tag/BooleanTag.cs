@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace Sweeper.Core.Tag
 {
-    public class BooleanTag : AbstractTag<bool> {
+    public class BooleanTag : AbstractTag<bool>
+    {
     public BooleanTag(string key):base(key)
     {
     }

@@ -23,7 +23,7 @@ namespace Sweeper.Core.Support
         }
 
 
-        public void close()
+        public void Dispose()
         {
             if (scopeManager.tlsScope.Value != this)
             {

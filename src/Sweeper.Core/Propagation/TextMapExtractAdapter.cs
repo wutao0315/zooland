@@ -24,50 +24,29 @@ namespace Sweeper.Core.Propagation
             this.map = map;
         }
 
-        public IEnumerator<KeyValuePair<string, string>> iterator()
+        public IEnumerable<KeyValuePair<string, string>> iterator()
         {
-            return map.GetEnumerator();
+            return map.ToList();
         }
 
         public void put(string key, string value)
         {
-            throw new Exception("TextMapExtractAdapter should only be used with Tracer.extract()");
+            map.Add(key,value);
         }
 
 
 
-        public void Dispose()
-        {
-            throw new NotImplementedException();
-        }
+       
 
-     
-
-        public bool MoveNext()
-        {
-            throw new NotImplementedException();
-        }
-
-     
-
-        public void Reset()
-        {
-            throw new NotImplementedException();
-        }
-
-        IEnumerable<KeyValuePair<string, string>> ITextMap.iterator()
-        {
-            throw new NotImplementedException();
-        }
 
         public IEnumerator<KeyValuePair<string, string>> GetEnumerator()
         {
-            throw new NotImplementedException();
+            return map.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            throw new NotImplementedException();
+            return map.GetEnumerator();
         }
     }
 }

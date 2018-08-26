@@ -10,7 +10,7 @@ namespace Sweeper.Core.Propagation
     {
        
     }
-    sealed class Builtin<C> : IFormat<C>
+    public sealed class Builtin<C>: IFormat<C>
     {
 
         private readonly string name;

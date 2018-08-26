@@ -15,6 +15,7 @@ namespace Sweeper.Core
      * @see Span#getBaggageItem(String)
      */
         IEnumerable<KeyValuePair<string, string>> baggageItems();
-
+        long TraceId { get; }
+        int SpanId { get; }
     }
 }

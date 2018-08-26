@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace Sweeper.Core
 {
-    public interface IScope
+    public interface IScope:IDisposable
     {
-        void close();
+        //void close();
         ISpan span();
     }
 }

@@ -33,6 +33,9 @@ namespace Sweeper.Noop
             return new List<KeyValuePair<string,string>>();
         }
 
+        public long TraceId { get; private set; }
+        public int SpanId { get; private set; }
+
 
         public override string ToString() => typeof(NoopSpanContextImpl).Name; 
     }

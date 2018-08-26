@@ -111,7 +111,7 @@ namespace Sweeper.Mock
             public MockSpan.MockContext extract<C>(IFormat<C> format, C carrier)
             {
                 long? traceId = null;
-                long? spanId = null;
+                int? spanId = null;
                 IDictionary<string, string> baggage = new Dictionary<string, string>();
 
                 if (!(carrier is ITextMap))
@@ -128,7 +128,7 @@ namespace Sweeper.Mock
                     }
                     else if (SPAN_ID_KEY.Equals(entry.Key))
                     {
-                        spanId = Convert.ToInt64(entry.Value);
+                        spanId = Convert.ToInt32(entry.Value);
                     }
                     else if (entry.Key.StartsWith(BAGGAGE_KEY_PREFIX))
                     {

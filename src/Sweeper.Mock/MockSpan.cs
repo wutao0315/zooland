@@ -13,6 +13,7 @@ namespace Sweeper.Mock
     {
         // A simple-as-possible (consecutive for repeatability) id generator.
         private static AtomicLong nextId = new AtomicLong(0);
+        private static AtomicInteger nextIntId = new AtomicInteger(0);
 
         //private readonly MockTracer mockTracer;
         private MockContext context;
@@ -188,7 +189,7 @@ namespace Sweeper.Mock
             //private readonly IDictionary<string, string> baggage;
             //private readonly long spanId;
             public long TraceId { get; private set; }
-            public long SpanId { get; private set; }
+            public int SpanId { get; private set; }
             public IDictionary<string, string> Baggage { get; private set; }
 
             /**
@@ -199,7 +200,7 @@ namespace Sweeper.Mock
              *
              * @see MockContext#withBaggageItem(string, string)
              */
-            public MockContext(long traceId, long spanId, IDictionary<string, string> baggage)
+            public MockContext(long traceId, int spanId, IDictionary<string, string> baggage)
             {
                 this.Baggage = baggage;
                 this.TraceId = traceId;
@@ -301,13 +302,13 @@ namespace Sweeper.Mock
             if (parent == null)
             {
                 // We're a root Span.
-                this.context = new MockContext(NextId(), NextId(), new Dictionary<string, string>());
+                this.context = new MockContext(NextId(), NextIntId(), new Dictionary<string, string>());
                 this.ParentId = 0;
             }
             else
             {
                 // We're a child Span.
-                this.context = new MockContext(parent.TraceId, NextId(), mergeBaggages(this.References));
+                this.context = new MockContext(parent.TraceId, NextIntId(), mergeBaggages(this.References));
                 this.ParentId = parent.SpanId;
             }
         }
@@ -349,6 +350,10 @@ namespace Sweeper.Mock
         {
             return nextId.AddAndGet(1);
         }
+        public int NextIntId()
+        {
+            return nextIntId.AddAndGet(1);
+        }
 
         public static long NowMicros()
         {
@@ -368,7 +373,7 @@ namespace Sweeper.Mock
 
         public override string ToString()
         {
-            return $@"{{  traceId:{context.TraceId}, spanId:{context.SpanId}, parentId:{ParentId}, operationName:{OperationName} }}";
+            return $@"[  traceId:{context.TraceId}, spanId:{context.SpanId}, parentId:{ParentId}, operationName:{OperationName} ]d";
         }
 
     }
