@@ -49,6 +49,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="activate_deactivate.cs" />
     <Compile Include="client_server.cs" />
     <Compile Include="common_request_handler.cs" />
     <Compile Include="TestUtils.cs" />

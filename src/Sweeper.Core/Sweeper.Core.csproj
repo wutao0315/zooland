@@ -46,6 +46,7 @@
     <Compile Include="IScope.cs" />
     <Compile Include="IScopeManager.cs" />
     <Compile Include="ISpan.cs" />
+    <Compile Include="ISpanBuilder.cs" />
     <Compile Include="ISpanContext.cs" />
     <Compile Include="Log\Fields.cs" />
     <Compile Include="Noop\NoopScopeManager.cs" />
