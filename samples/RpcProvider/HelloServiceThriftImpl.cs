@@ -13,6 +13,7 @@ namespace RpcProvider
 
         public void CallName(string name)
         {
+            
             Console.WriteLine($"from thrift {name} call CallName![{ServiceName}]");
         }
 
