@@ -13,24 +13,16 @@
     {
         private class Map
         {
-            public Type New
-            {
-                get;
-                set;
-            }
+            public Type New { get; set; }
 
-            public Type Org
-            {
-                get;
-                set;
-            }
+            public Type Org { get; set; }
         }
 
         private static IList<Map> maps = null;
 
         public static T New<T>(IInterceptor hanlder) where T : class
         {
-            object value = New(typeof(T), hanlder);
+            var value = New(typeof(T), hanlder);
             if (value == null)
             {
                 return null;
@@ -81,8 +73,10 @@
         static InterfaceProxy()
         {
             maps = new List<Map>();
+            //var an = new AssemblyName("?");
+            //var ab = AppDomain.CurrentDomain.DefineDynamicAssembly(an, AssemblyBuilderAccess.RunAndSave);
             var an = new AssemblyName("?");
-            var ab = AppDomain.CurrentDomain.DefineDynamicAssembly(an, AssemblyBuilderAccess.RunAndSave);
+            var ab = AssemblyBuilder.DefineDynamicAssembly(an, AssemblyBuilderAccess.Run);
             MODULE_BUILDER = ab.DefineDynamicModule(an.Name);
         }
 
@@ -119,7 +113,7 @@
         }
         
 
-        private static Type CreateType(Type clazz)
+        private static TypeInfo CreateType(Type clazz)
         {
             var tb = MODULE_BUILDER.DefineType($"Zooyard.Proxy.{clazz.Namespace}_{clazz.Name}");
             tb.AddInterfaceImplementation(clazz);
@@ -129,7 +123,7 @@
             CreateConstructor(tb, fb);
             CreateMethods(clazz, tb, fb);
             //
-            return tb.CreateType();
+            return tb.CreateTypeInfo();
         }
 
 

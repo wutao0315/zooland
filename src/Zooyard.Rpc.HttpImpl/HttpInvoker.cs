@@ -1,13 +1,5 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using Zooyard.Core;
 
 namespace Zooyard.Rpc.HttpImpl
@@ -34,20 +26,6 @@ namespace Zooyard.Rpc.HttpImpl
 
         public IResult Invoke(IInvocation invocation)
         {
-            //var paraTypes = new Type[invocation.Arguments.Length + 1];
-            //var parasPlus = new object[invocation.Arguments.Length + 1];
-            //for (var i = 0; i < invocation.Arguments.Length; i++)
-            //{
-            //    paraTypes[i] = invocation.Arguments[i].GetType();
-            //    parasPlus[i] = invocation.Arguments[i];
-            //}
-            //paraTypes[invocation.Arguments.Length] = typeof(Grpc.Core.CallOptions);
-            //parasPlus[invocation.Arguments.Length] = new Grpc.Core.CallOptions()
-            //    .WithDeadline(DateTime.UtcNow.AddMilliseconds(ClientTimeout));
-            //var method = Instance.GetType().GetMethod(invocation.MethodName, paraTypes);
-            //var value = method.Invoke(Instance, parasPlus);
-
-            
             var parameterType = Url.GetMethodParameterAndDecoded(invocation.MethodInfo.Name, PARAMETERTYPE_KEY, DEFAULT_PARAMETERTYPE).ToLower();
             var method = Url.GetMethodParameterAndDecoded(invocation.MethodInfo.Name, METHODTYPE_KEY, DEFAULT_METHODTYPE).ToLower();
             var parameters = invocation.MethodInfo.GetParameters();

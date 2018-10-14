@@ -178,7 +178,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Thrift">
-      <HintPath>..\..\src\lib\Thrift.dll</HintPath>
+      <HintPath>..\..\src\lib\Thrift\netcore\Thrift.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -207,9 +207,6 @@
     <None Include="App_Data\Config\Spring\zooyard.loadbalance.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="App_Data\Config\Spring\zooyard.remoting.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="App_Data\Config\Spring\zooyard.wcf.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
@@ -222,6 +219,7 @@
     </None>
     <None Include="App_Data\Config\Spring\zooyard.thrift.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </None>
     <None Include="App_Data\Config\Spring\zooyard.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -253,10 +251,6 @@
       <Project>{2aef263b-4e1d-4416-8e97-93331a06337f}</Project>
       <Name>Zooyard.Rpc.HttpImpl</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\src\Zooyard.Rpc.RemoteImpl\Zooyard.Rpc.RemotingImpl.csproj">
-      <Project>{463e018e-8a7f-43c5-8f3b-8efa8707ac42}</Project>
-      <Name>Zooyard.Rpc.RemotingImpl</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\src\Zooyard.Rpc.ThriftImpl\Zooyard.Rpc.ThriftImpl.csproj">
       <Project>{0c694c59-8dc1-41a2-8790-30f0cbb565ea}</Project>
       <Name>Zooyard.Rpc.ThriftImpl</Name>
@@ -280,10 +274,6 @@
     <ProjectReference Include="..\RpcContractHttp\RpcContractHttp.csproj">
       <Project>{316b206e-7834-4704-a04e-4a5b01ba239f}</Project>
       <Name>RpcContractHttp</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\RpcContractRemoting\RpcContractRemoting.csproj">
-      <Project>{59962f4f-19f0-4a3a-8350-9f294ddcb0f0}</Project>
-      <Name>RpcContractRemoting</Name>
     </ProjectReference>
     <ProjectReference Include="..\RpcContractThrift\RpcContractThrift.csproj">
       <Project>{f42a095a-bd90-4fef-8826-15ee1b6d819d}</Project>

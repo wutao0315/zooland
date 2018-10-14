@@ -1,13 +1,7 @@
-﻿
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Akka.Actor;
+using Akka.Configuration;
 using Zooyard.Core;
 using Zooyard.Rpc.Support;
-using Akka.Configuration;
-using Akka.Actor;
 
 namespace Zooyard.Rpc.AkkaImpl
 {
@@ -35,8 +29,7 @@ namespace Zooyard.Rpc.AkkaImpl
         {
             //获得transport参数,用于反射实例化
             var timeout = url.GetParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
-
-            //var config = ConfigurationFactory.ParseString(TheActorConfig.Replace("{0}", url.Port.ToString()).Replace("{1}",url.Host));
+            
             var config = ConfigurationFactory.ParseString(TheActorConfig);
 
             var system = ActorSystem.Create($"client-{url.ServiceInterface.Replace(".", "-")}", config);

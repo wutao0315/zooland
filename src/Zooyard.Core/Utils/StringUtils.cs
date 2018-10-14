@@ -141,11 +141,6 @@ namespace Zooyard.Core.Utils
         /// <returns> string </returns>
         public static string ToString(Exception e)
         {
-            
-            //UnsafeStringWriter w = new UnsafeStringWriter();
-            //PrintWriter p = new PrintWriter(w);
-            //JAVA TO C# CONVERTER WARNING: The .NET Type.FullName property will not always yield results identical to the Java Class.getName method:
-            //p.print(e.GetType().FullName);
             Console.Write(e.GetType().FullName);
             if (e.Message != null)
             {
@@ -175,18 +170,6 @@ namespace Zooyard.Core.Utils
             Console.WriteLine(msg);
             Console.Write(e);
             return e.Message;
-            //UnsafeStringWriter w = new UnsafeStringWriter();
-            //w.write(msg + "\n");
-            //PrintWriter p = new PrintWriter(w);
-            //try
-            //{
-            //    e.printStackTrace(p);
-            //    return w.ToString();
-            //}
-            //finally
-            //{
-            //    p.close();
-            //}
         }
 
         /// <summary>
@@ -362,8 +345,8 @@ namespace Zooyard.Core.Utils
         /// <returns> key-value map; </returns>
         private static IDictionary<string, string> parseKeyValuePair(string str, string itemSeparator)
         {
-            string[] tmp = str.Split(new[] { itemSeparator }, StringSplitOptions.RemoveEmptyEntries);
-            IDictionary<string, string> map = new Dictionary<string, string>(tmp.Length);
+            var tmp = str.Split(new[] { itemSeparator }, StringSplitOptions.RemoveEmptyEntries);
+            var map = new Dictionary<string, string>(tmp.Length);
             for (int i = 0; i < tmp.Length; i++)
             {
                 Match matcher = KVP_PATTERN.Match(tmp[i]);
@@ -378,7 +361,7 @@ namespace Zooyard.Core.Utils
 
         public static string getQueryStringValue(string qs, string key)
         {
-            IDictionary<string, string> map = StringUtils.parseQueryString(qs);
+            var map = StringUtils.parseQueryString(qs);
             return map[key];
         }
 
@@ -479,7 +462,7 @@ namespace Zooyard.Core.Utils
             }
             return buf == null ? camelName : buf.ToString();
         }
-        public static string ToArgumentString(ParameterInfo[] parameterInfos,object[] args)
+        public static string ToArgumentString(ParameterInfo[] parameterInfos, object[] args)
         {
             var buf = new StringBuilder();
             for (int i = 0; i < args.Length; i++)
@@ -495,7 +478,8 @@ namespace Zooyard.Core.Utils
                 {
                     try
                     {
-                        buf.Append(Newtonsoft.Json.JsonConvert.SerializeObject(arg));
+                        //buf.Append(Newtonsoft.Json.JsonConvert.SerializeObject(arg));
+                        buf.Append(arg);
                     }
                     catch (Exception e)
                     {

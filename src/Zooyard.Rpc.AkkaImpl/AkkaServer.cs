@@ -3,8 +3,6 @@ using Akka.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.Rpc.AkkaImpl
@@ -35,19 +33,7 @@ namespace Zooyard.Rpc.AkkaImpl
             // Use this for a multithreaded server
             // server = new TThreadPoolServer(processor, serverTransport);
             var config = ConfigurationFactory.ParseString(TheActorConfig);
-
-            //using (var system = ActorSystem.Create("MyServer", config))
-            //{
-            //    //system.ActorOf<GreetingActor>("Greeting");
-            //    foreach (var item in TheActors)
-            //    {
-            //        system.ActorOf(item.Value, item.Key);
-            //    }
-
-
-            //    Console.ReadLine();
-            //}
-
+            
             TheActorSystem = ActorSystem.Create(TheActorName.Replace(".","-"), config);
             
             foreach (var item in TheActors)
@@ -74,18 +60,5 @@ namespace Zooyard.Rpc.AkkaImpl
         public Type ActorType { get; set; }
         public IList<object> Args { get; set; }
     }
-    //public class Test : IIndirectActorProducer
-    //{
-    //    public Type ActorType => throw new NotImplementedException();
 
-    //    public ActorBase Produce()
-    //    {
-    //        throw new NotImplementedException();
-    //    }
-
-    //    public void Release(ActorBase actor)
-    //    {
-    //        throw new NotImplementedException();
-    //    }
-    //}
 }

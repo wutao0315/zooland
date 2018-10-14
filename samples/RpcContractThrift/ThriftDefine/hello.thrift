@@ -1,10 +1,10 @@
-﻿namespace csharp RpcContractThrift
-namespace java com.hello.service.thrift
+﻿namespace netcore RpcContractThrift
+namespace * thrift.test
 
 /**
  * HelloResult实体
  */
-struct HelloResult
+struct HelloData
 {
 	1: string Name; 
 	2: string Gender;	
@@ -35,9 +35,9 @@ service HelloService
 	/**
 	 * SayHello
 	 */
-	HelloResult SayHello(1:string name);
+	HelloData SayHello(1:string name);
 	/**
 	 * ShowHello
 	 */
-	string ShowHello(1:HelloResult hello);
+	string ShowHello(1:HelloData hello);
 }

@@ -6,14 +6,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using Thrift;
 using Thrift.Server;
-using Thrift.Transport;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.Rpc.ThriftImpl
 {
     public class ThriftServer : AbstractServer
     {
-        public TServer TheServer { get; set; }
+        public TBaseServer TheServer { get; set; }
         
         public override void DoExport()
         {
@@ -31,7 +30,7 @@ namespace Zooyard.Rpc.ThriftImpl
             //开启服务
             Task.Run(()=> 
             {
-                TheServer.Serve();
+                TheServer.ServeAsync(CancellationToken.None).GetAwaiter().GetResult();
             });
         }
 

@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
+#if NET461
 using System.ServiceModel.Description;
-using System.Text;
-using System.Threading.Tasks;
+#endif 
+
 
 namespace Zooyard.Rpc.WcfImpl
 {
@@ -14,24 +15,25 @@ namespace Zooyard.Rpc.WcfImpl
         public object SingletonInstance { get; set; }
         public Type ContractType { get; set; }
         public IList<Uri> BaseAddresses { get; set; } = new List<Uri>();
-
-        public IList<IServiceBehavior> ServiceBehaviors { get; set; }
         public Binding TheBinding { get; set; }
-
+#if NET461
+        public IList<IServiceBehavior> ServiceBehaviors { get; set; }
         private ServiceHost serviceHost { get; set; }
+#endif 
         public void Open()
         {
             try
             {
+                // Step 4 of the hosting procedure: Enable metadata exchange.
+                //var smb = new ServiceMetadataBehavior();
+                //smb.HttpGetEnabled = true;
+
+#if NET461
                 serviceHost = new ServiceHost(SingletonInstance, BaseAddresses.ToArray());
                 serviceHost.AddServiceEndpoint(
                    ContractType,
                    TheBinding,
                    SingletonInstance.GetType().Name);
-
-                // Step 4 of the hosting procedure: Enable metadata exchange.
-                //var smb = new ServiceMetadataBehavior();
-                //smb.HttpGetEnabled = true;
 
                 if (ServiceBehaviors != null)
                 {
@@ -41,6 +43,7 @@ namespace Zooyard.Rpc.WcfImpl
                     }
                 }
                 serviceHost.Open();
+#endif
             }
             catch (Exception ex)
             {
@@ -52,11 +55,13 @@ namespace Zooyard.Rpc.WcfImpl
 
         public void Dispose()
         {
+#if NET461
             if (serviceHost!=null)
             {
                 serviceHost.Close();
                 serviceHost.Abort();
             }
+#endif
         }
     }
 }

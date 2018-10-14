@@ -18,20 +18,20 @@ namespace Zooyard.Core
 
     public class RpcInvocation : IInvocation
     {
-        public RpcInvocation(string app, string version, Type targetType,MethodInfo methodInfo,object[] arguments)
+        public RpcInvocation(string app, string version, Type targetType, MethodInfo methodInfo, object[] arguments)
         {
             App = app;
             Version = version;
             TargetType = targetType;
             MethodInfo = methodInfo;
             Arguments = arguments;
-            ArgumentTypes = arguments==null?null:(from item in arguments select item.GetType()).ToArray();
+            ArgumentTypes = arguments == null ? null : (from item in arguments select item.GetType()).ToArray();
         }
         public string App { get; private set; }
         public string Version { get; private set; }
         public Type TargetType { get; private set; }
-        public MethodInfo MethodInfo { get;private set; }
-        public object[] Arguments { get;private set; }
+        public MethodInfo MethodInfo { get; private set; }
+        public object[] Arguments { get; private set; }
         public Type[] ArgumentTypes { get; private set; }
         public string AppPoint()
         {

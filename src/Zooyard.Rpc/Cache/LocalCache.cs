@@ -4,7 +4,7 @@ using Zooyard.Core;
 
 namespace Zooyard.Rpc.Cache
 {
-    public class LocalCache:ICache
+    public class LocalCache : ICache
     {
         public const string NAME = "local";
         private MemoryCache store;
@@ -12,7 +12,7 @@ namespace Zooyard.Rpc.Cache
 
         public LocalCache(URL url)
         {
-            this.Timeout=url.GetParameter("cache.timeout", 60000);
+            this.Timeout = url.GetParameter("cache.timeout", 60000);
             this.store = MemoryCache.Default;
         }
 

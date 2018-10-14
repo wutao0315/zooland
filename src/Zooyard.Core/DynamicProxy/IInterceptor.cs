@@ -4,8 +4,13 @@ namespace Zooyard.Core.DynamicProxy
 {
     public interface IInterceptor
     {
-        //void Intercept(IProxyInvocation invocation);
-        object Intercept(object obj,string methodName, params object[] args);
-        //object Intercept(object obj, int rid, string name, params object[] args);
+        /// <summary>
+        /// 代理模块
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <param name="methodName"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        object Intercept(object obj, string methodName, params object[] args);
     }
 }

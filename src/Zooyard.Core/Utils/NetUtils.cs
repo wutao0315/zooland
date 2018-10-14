@@ -186,7 +186,7 @@ namespace Zooyard.Core.Utils
             }
             if (host.Contains("://"))
             {
-                URL u = URL.valueOf(host);
+                var u = URL.valueOf(host);
                 if (NetUtils.isInvalidLocalHost(u.Host))
                 {
                     return u.SetHost(NetUtils.LocalHost).ToFullString();
@@ -279,40 +279,6 @@ namespace Zooyard.Core.Utils
                             }
                         }
                     }
-                    //IEnumerator<NetworkInterface> interfaces = NetworkInterface.NetworkInterfaces;
-                    //if (interfaces != null)
-                    //{
-                    //    while (interfaces.MoveNext())
-                    //    {
-                    //        try
-                    //        {
-                    //            NetworkInterface network = interfaces.Current;
-                    //            IEnumerator<IPAddress> addresses = network.InetAddresses;
-                    //            if (addresses != null)
-                    //            {
-                    //                while (addresses.MoveNext())
-                    //                {
-                    //                    try
-                    //                    {
-                    //                        IPAddress address = addresses.Current;
-                    //                        if (isValidAddress(address))
-                    //                        {
-                    //                            return address;
-                    //                        }
-                    //                    }
-                    //                    catch (Exception e)
-                    //                    {
-                    //                        logger.Warn("Failed to retriving ip address, " + e.Message, e);
-                    //                    }
-                    //                }
-                    //            }
-                    //        }
-                    //        catch (Exception e)
-                    //        {
-                    //            logger.Warn("Failed to retriving ip address, " + e.Message, e);
-                    //        }
-                    //    }
-                    //}
                 }
                 catch (Exception e)
                 {
@@ -366,7 +332,7 @@ namespace Zooyard.Core.Utils
 
         public static string toURL(string protocol, string host, int port, string path)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             sb.Append(protocol).Append("://");
             sb.Append(host).Append(':').Append(port);
             if (path[0] != '/')

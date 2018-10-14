@@ -1,20 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
-using System.Text;
-using System.Threading.Tasks;
 using Zooyard.Core;
 using Zooyard.Rpc.Support;
-using Zooyard.Rpc.WcfImpl;
 
 namespace Zooyard.Rpc.WcfImpl
 {
     public class WcfClientPool : AbstractClientPool
     {
-        //public const string BINDING_KEY = "binding";
-        public const string DEFAULT_BINDING = "BasicHttpBinding";
+        public const string BINDING_KEY = "binding";
+        public const string DEFAULT_BINDING = "http";
+
         public const string PATH_KEY = "path";
 
         public const string PROXY_KEY = "proxy";
@@ -54,11 +51,8 @@ namespace Zooyard.Rpc.WcfImpl
 
                 var timeout = url.GetParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
                 //获取协议
-                Binding binding = new BasicHttpBinding();
-                if (TheBindingTypes.ContainsKey(url.Protocol))
-                {
-                    binding = (Binding)Activator.CreateInstance(TheBindingTypes[url.Protocol]);
-                }
+                var bindingKey = url.GetParameter(BINDING_KEY, DEFAULT_BINDING);
+                var binding = (Binding)Activator.CreateInstance(TheBindingTypes[bindingKey]);
                 binding.SendTimeout = TimeSpan.FromMilliseconds(timeout);
                 binding.ReceiveTimeout = TimeSpan.FromMilliseconds(timeout);
                 

@@ -21,33 +21,7 @@ namespace Zooyard.Rpc.Cluster
 
         private void addFailed(IClientPool pool,IInvocation invocation, URL router)
         {
-            //if (retryFuture == null)
-            //{
-            //    lock(this) {
-            //        if (retryFuture == null)
-            //        {
-            //            retryFuture = scheduledExecutorService.scheduleWithFixedDelay(new Runnable()
-            //            {
-
-            //            public void run()
-            //            {
-            //                // 收集统计信息
-            //                try
-            //                {
-            //                    retryFailed();
-            //                }
-            //                catch (Throwable t)
-            //                { // 防御性容错
-            //                    logger.error("Unexpected error occur at collect statistic", t);
-            //                }
-            //            }
-            //        }, RETRY_FAILED_PERIOD, RETRY_FAILED_PERIOD, TimeUnit.MILLISECONDS);
-            //    }
-            //}
-            //failed.put(invocation, router);
-            
            
-
             if (retryTimer == null)
             {
                 lock (this)

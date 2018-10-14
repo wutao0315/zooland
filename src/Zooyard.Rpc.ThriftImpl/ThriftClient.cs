@@ -4,9 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Thrift;
-using Thrift.Protocol;
 using Thrift.Server;
-using Thrift.Transport;
+using Thrift.Transports;
 using Zooyard.Core;
 using Zooyard.Rpc.Support;
 
@@ -18,10 +17,10 @@ namespace Zooyard.Rpc.ThriftImpl
         /// <summary>
         /// 传输层
         /// </summary>
-        public TTransport Transport { get; private set; }
+        public TClientTransport Transport { get; private set; }
         public IDisposable Thriftclient { get; private set; }
 
-        public ThriftClient(TTransport transport, IDisposable thriftclient,URL url)
+        public ThriftClient(TClientTransport transport, IDisposable thriftclient,URL url)
         {
             this.Transport = transport;
             this.Thriftclient = thriftclient;
@@ -40,7 +39,7 @@ namespace Zooyard.Rpc.ThriftImpl
         {
             if (Transport != null && !Transport.IsOpen)
             {
-                Transport.Open();
+                Transport.OpenAsync().GetAwaiter().GetResult();
             }
         }
 

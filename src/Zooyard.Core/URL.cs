@@ -49,11 +49,6 @@ namespace Zooyard.Core
         {
         }
 
-        //public URL(string protocol, string host, int port, string[] pairs)
-        //    : this(protocol, null, null, host, port, null, CollectionUtils.toStringMap(pairs)) // 变长参数...与下面的path参数冲突，改为数组
-        //{
-        //}
-
         public URL(string protocol, string host, int port, IDictionary<string, string> parameters)
             : this(protocol, null, null, host, port, null, parameters)
         {
@@ -63,11 +58,6 @@ namespace Zooyard.Core
             : this(protocol, null, null, host, port, path, null)
         {
         }
-
-        //public URL(string protocol, string host, int port, string path, params string[] pairs)
-        //    : this(protocol, null, null, host, port, path, CollectionUtils.toStringMap(pairs))
-        //{
-        //}
 
         public URL(string protocol, string host, int port, string path, IDictionary<string, string> parameters)
             : this(protocol, null, null, host, port, path, parameters)
@@ -79,16 +69,11 @@ namespace Zooyard.Core
         {
         }
 
-        //public URL(string protocol, string username, string password, string host, int port, string path, params string[] pairs)
-        //    : this(protocol, username, password, host, port, path, CollectionUtils.toStringMap(pairs))
-        //{
-        //}
-
         public URL(string protocol, string username, string password, string host, int port, string path, IDictionary<string, string> parameters)
         {
             if ((username == null || username.Length == 0) && password != null && password.Length > 0)
             {
-                throw new System.ArgumentException("Invalid url, password without username!");
+                throw new ArgumentException("Invalid url, password without username!");
             }
             this.Protocol = protocol;
             this.Username = username;
@@ -120,9 +105,9 @@ namespace Zooyard.Core
         /// <seealso cref= URL </seealso>
         public static URL valueOf(string url)
         {
-            if (url == null || (url = url.Trim()).Length == 0)
+            if (string.IsNullOrWhiteSpace(url))
             {
-                throw new System.ArgumentException("url == null");
+                throw new ArgumentException("url == null");
             }
             string protocol = null;
             string username = null;
@@ -134,9 +119,9 @@ namespace Zooyard.Core
             int i = url.IndexOf("?"); // seperator between body and parameters
             if (i >= 0)
             {
-                string[] parts = url.Substring(i + 1).Split(new[] { "&" }, StringSplitOptions.RemoveEmptyEntries);
+                var parts = url.Substring(i + 1).Split(new[] { "&" }, StringSplitOptions.RemoveEmptyEntries);
                 parameters = new Dictionary<string, string>();
-                foreach (string part in parts)
+                foreach (var part in parts)
                 {
                     var partinner = part.Trim();
                     if (partinner.Length > 0)
@@ -219,11 +204,11 @@ namespace Zooyard.Core
         {
             get
             {
-                if ((Username == null || Username.Length == 0) && (Password == null || Password.Length == 0))
+                if (string.IsNullOrWhiteSpace(Username) && string.IsNullOrWhiteSpace(Password))
                 {
                     return null;
                 }
-                return (Username == null ? "" : Username) + ":" + (Password == null ? "" : Password);
+                return $"{Username ?? ""}:{Password ?? ""}";
             }
         }
 
@@ -296,9 +281,9 @@ namespace Zooyard.Core
                 var urls = new List<URL>();
                 urls.Add(this);
                 string[] backups = GetParameter(BACKUP_KEY, new string[0]);
-                if (backups != null && backups.Length > 0)
+                if (backups?.Length > 0)
                 {
-                    foreach (string backup in backups)
+                    foreach (var backup in backups)
                     {
                         urls.Add(this.SetAddress(backup));
                     }

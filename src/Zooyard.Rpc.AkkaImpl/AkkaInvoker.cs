@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Akka.Actor;
+using System;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Zooyard.Core;
-using Akka.Actor;
 using System.Threading;
+using Zooyard.Core;
 
 namespace Zooyard.Rpc.AkkaImpl
 {
@@ -23,25 +20,14 @@ namespace Zooyard.Rpc.AkkaImpl
 
         public IResult Invoke(IInvocation invocation)
         {
-           
-            //var types = (from item in invocation?.Arguments select item.GetType())?.ToArray();
-            //var method = Instance.GetType().GetMethod(invocation.MethodInfo.Name, types);
-            //var value = method.Invoke(Instance, invocation.Arguments);
-
             if (invocation.Arguments.Count()>1)
             {
                 throw new Exception("akka not have muti parameters");
             }
-            //var parameters = invocation.MethodInfo.GetParameters();
-            //foreach (var item in parameters)
-            //{
-            //    //item.Name
 
-            //}
             var greeting = Instance.ActorSelection($"{Url.Protocol}://{Url.ServiceInterface.Replace(".","-")}@{Url.Host}:{Url.Port}/{Url.Path}/{invocation.MethodInfo.Name}");
 
             object value = null;
-            //invocation.MethodInfo.GetMethodBody()
             try
             {
                 var cancelSource = new CancellationTokenSource();

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using Thrift.Protocol;
-using Thrift.Transport;
+using Thrift.Protocols;
+using Thrift.Transports;
+using Thrift.Transports.Client;
 using Zooyard.Core;
 using Zooyard.Rpc.Support;
 
@@ -32,13 +34,14 @@ namespace Zooyard.Rpc.ThriftImpl
             //实例化TheTransport
             //获得transport参数,用于反射实例化
             var timeout = url.GetParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
-            TTransport transport = new TSocket(url.Host,url.Port, timeout);
+            
+            TClientTransport transport = new TSocketClientTransport(IPAddress.Parse(url.Host),url.Port, timeout);
             var transportKey = url.GetParameter(TRANSPORT_KEY, DEFAULT_TRANSPORT);
             if (TheTransportTypes!=null 
                 && TheTransportTypes.ContainsKey(transportKey)
                 && transportKey!= DEFAULT_TRANSPORT)
             {
-                transport = (TTransport)Activator.CreateInstance(TheTransportTypes[transportKey], url.Host, url.Port, timeout);
+                transport = (TClientTransport)Activator.CreateInstance(TheTransportTypes[transportKey], IPAddress.Parse(url.Host), url.Port, timeout);
             }
 
             //获取协议

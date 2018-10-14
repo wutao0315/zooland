@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Spring.Context.Support;
 
@@ -18,10 +19,9 @@ namespace RpcConsumer
             var helloServiceWcf = context.GetObject<RpcContractWcf.IHelloService>();
             var helloServiceHttp = context.GetObject<RpcContractHttp.IHelloService>();
             var helloServiceAkka = context.GetObject<RpcContractAkka.IHelloService>();
-            var helloServiceRemoting = context.GetObject<RpcContractRemoting.IHelloService>();
             while (true)
             {
-                Console.WriteLine("请选择:wcf | grpc | thrift | http | akka | remoting");
+                Console.WriteLine("请选择:wcf | grpc | thrift | http | akka");
                 var mode = Console.ReadLine().ToLower();
                 switch (mode)
                 {
@@ -39,9 +39,6 @@ namespace RpcConsumer
                         break;
                     case "akka":
                         CallWhile((helloword) => { AkkaHello(helloServiceAkka, helloword); });
-                        break;
-                    case "remoting":
-                        CallWhile((helloword) => { RemotingHello(helloServiceRemoting, helloword); });
                         break;
                     case "all":
                         for (int i = 0; i < 3; i++)
@@ -120,18 +117,19 @@ namespace RpcConsumer
         }
         private static void ThriftHello(RpcContractThrift.IHelloService helloServiceThrift, string helloword = "world")
         {
-            var callNameVoid = helloServiceThrift.CallNameVoid();
+            var token = CancellationToken.None;
+            var callNameVoid = helloServiceThrift.CallNameVoidAsync(token).GetAwaiter().GetResult();
             Console.WriteLine(callNameVoid);
-            helloServiceThrift.CallName(helloword);
+            helloServiceThrift.CallNameAsync(helloword, token).GetAwaiter().GetResult();
             Console.WriteLine("CallName called");
-            helloServiceThrift.CallVoid();
+            helloServiceThrift.CallVoidAsync(token).GetAwaiter().GetResult();
             Console.WriteLine("CallVoid called");
-            var hello = helloServiceThrift.Hello(helloword);
+            var hello = helloServiceThrift.HelloAsync(helloword, token).GetAwaiter().GetResult();
             Console.WriteLine(hello);
-            var helloResult = helloServiceThrift.SayHello(helloword + "perfect world");
-            Console.WriteLine($"{helloResult.Name},{helloResult.Gender},{helloResult.Head}");
+            var helloResult = helloServiceThrift.SayHelloAsync(helloword + "perfect world", token).GetAwaiter().GetResult();
+            Console.WriteLine($"{helloResult.Name},{helloResult.Gender},{helloResult.Head}", token);
             helloResult.Name = helloword + "show perfect world";
-            var showResult = helloServiceThrift.ShowHello(helloResult);
+            var showResult = helloServiceThrift.ShowHelloAsync(helloResult, token).GetAwaiter().GetResult();
             Console.WriteLine(showResult);
         }
         private static void GrpcHello(RpcContractGrpc.IHelloService helloServiceGrpc, string helloword = "world")
@@ -198,23 +196,6 @@ namespace RpcConsumer
             var showResultWcf = akkaServiceHttp.ShowHello(helloResult);
             Console.WriteLine(showResultWcf.Name);
             
-        }
-        private static void RemotingHello(RpcContractRemoting.IHelloService remotingServiceHttp, string helloword = "world")
-        {
-            var callNameVoid = remotingServiceHttp.CallNameVoid();
-            Console.WriteLine(callNameVoid);
-            remotingServiceHttp.CallName(helloword);
-            Console.WriteLine("CallName called");
-            remotingServiceHttp.CallVoid();
-            Console.WriteLine("CallVoid called");
-            var hello = remotingServiceHttp.Hello(helloword);
-            Console.WriteLine(hello);
-            var helloResult = remotingServiceHttp.SayHello($"{helloword} perfect world");
-            Console.WriteLine($"{helloResult.Name},{helloResult.Gender},{helloResult.Head}");
-            helloResult.Name = helloword + "show perfect world";
-            var showResult = remotingServiceHttp.ShowHello(helloResult);
-            Console.WriteLine(showResult);
-
         }
 
         private static void CallWhile(Action<string> map)
