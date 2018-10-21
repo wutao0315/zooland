@@ -2,7 +2,7 @@
 using System;
 using Zooyard.Rpc.Support;
 #if NET461
-using Microsoft.Owin.Hosting;
+//using Microsoft.Owin.Hosting;
 #endif
 namespace Zooyard.Rpc.HttpImpl
 {
@@ -29,7 +29,7 @@ namespace Zooyard.Rpc.HttpImpl
             try
             {
 #if NET461
-                webApiApp = WebApp.Start<T>(url: WebApiUrl);
+                //webApiApp = WebApp.Start<T>(url: WebApiUrl);
 #endif
                 Console.Out.WriteLine("Server listening...");
                 Console.Out.WriteLine("Press any key to stop the server...");

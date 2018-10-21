@@ -19,9 +19,12 @@ namespace RpcConsumer
             var helloServiceWcf = context.GetObject<RpcContractWcf.IHelloService>();
             var helloServiceHttp = context.GetObject<RpcContractHttp.IHelloService>();
             var helloServiceAkka = context.GetObject<RpcContractAkka.IHelloService>();
+            var helloServiceNetty = context.GetObject<RpcContractNetty.IHelloService>();
+            //RpcContractNetty.IHelloService helloServiceNetty = null;
+
             while (true)
             {
-                Console.WriteLine("请选择:wcf | grpc | thrift | http | akka");
+                Console.WriteLine("请选择:wcf | grpc | thrift | http | akka | netty | all");
                 var mode = Console.ReadLine().ToLower();
                 switch (mode)
                 {
@@ -39,6 +42,9 @@ namespace RpcConsumer
                         break;
                     case "akka":
                         CallWhile((helloword) => { AkkaHello(helloServiceAkka, helloword); });
+                        break;
+                    case "netty":
+                        CallWhile((helloword) => { NettyHello(helloServiceNetty, helloword); });
                         break;
                     case "all":
                         for (int i = 0; i < 3; i++)
@@ -97,6 +103,19 @@ namespace RpcConsumer
                                 try
                                 {
                                     AkkaHello(helloServiceAkka);
+                                }
+                                catch (Exception ex)
+                                {
+
+                                    throw ex;
+                                }
+                            });
+                            Task.Run(() =>
+                            {
+
+                                try
+                                {
+                                    NettyHello(helloServiceNetty);
                                 }
                                 catch (Exception ex)
                                 {
@@ -197,7 +216,23 @@ namespace RpcConsumer
             Console.WriteLine(showResultWcf.Name);
             
         }
-
+        private static void NettyHello(RpcContractNetty.IHelloService nettyServiceHttp,string helloword = "world")
+        {
+            var callNameVoid = nettyServiceHttp.CallNameVoid();
+            Console.WriteLine(callNameVoid);
+            nettyServiceHttp.CallName(helloword);
+            Console.WriteLine("CallName called");
+            nettyServiceHttp.CallVoid();
+            Console.WriteLine("CallVoid called");
+            var hello = nettyServiceHttp.Hello(helloword);
+            Console.WriteLine(hello);
+            var helloResult = nettyServiceHttp.SayHello($"{helloword} perfect world");
+            Console.WriteLine($"{helloResult.Name},{helloResult.Gender},{helloResult.Head}");
+            helloResult.Name = helloword + "show perfect world";
+            var showResultNetty = nettyServiceHttp.ShowHello(helloResult);
+            Console.WriteLine(showResultNetty);
+            
+        }
         private static void CallWhile(Action<string> map)
         {
             var helloword = "world";

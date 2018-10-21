@@ -41,6 +41,11 @@ namespace Zooyard.Rpc.HttpImpl
                 return new RpcResult(value.ChangeType(invocation.MethodInfo.ReturnType));
             }
 
+            if (invocation.MethodInfo.ReturnType == typeof(string))
+            {
+                return new RpcResult(value);
+            }
+
             var result = new RpcResult(JsonConvert.DeserializeObject(value, invocation.MethodInfo.ReturnType));
             return result;
         }

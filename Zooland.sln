@@ -28,23 +28,23 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{50C4867C-893
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcConsumer", "samples\RpcConsumer\RpcConsumer.csproj", "{B54DDA68-A232-4C24-9581-AC91D9C678BA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zooyard.Core", "src\Zooyard.Core\Zooyard.Core.csproj", "{EABD730A-25F2-42CF-92F2-84049A0A7599}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.Core", "src\Zooyard.Core\Zooyard.Core.csproj", "{EABD730A-25F2-42CF-92F2-84049A0A7599}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Spring.Services.Zooyard", "src\Spring.Services.Zooland\Spring.Services.Zooyard.csproj", "{048438B8-CE56-44FE-AC54-23754154C521}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zooyard.ConsulImpl", "src\Zooyard.ConsulImpl\Zooyard.ConsulImpl.csproj", "{4A7BA3AD-93A0-4488-AFBF-2546B42A1AEB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zooyard.Rpc", "src\Zooyard.Rpc\Zooyard.Rpc.csproj", "{EA835562-2C39-42EA-BC2D-4182A40CF2D2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.Rpc", "src\Zooyard.Rpc\Zooyard.Rpc.csproj", "{EA835562-2C39-42EA-BC2D-4182A40CF2D2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zooyard.Rpc.AkkaImpl", "src\Zooyard.Rpc.AkkaImpl\Zooyard.Rpc.AkkaImpl.csproj", "{F28A6BDC-9F4F-4BA4-B90E-85480DBBEE55}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.Rpc.AkkaImpl", "src\Zooyard.Rpc.AkkaImpl\Zooyard.Rpc.AkkaImpl.csproj", "{F28A6BDC-9F4F-4BA4-B90E-85480DBBEE55}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zooyard.Rpc.GrpcImpl", "src\Zooyard.Rpc.GrpcImpl\Zooyard.Rpc.GrpcImpl.csproj", "{B44B6CB3-078A-4DF2-B325-D42D3EDB730E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.Rpc.GrpcImpl", "src\Zooyard.Rpc.GrpcImpl\Zooyard.Rpc.GrpcImpl.csproj", "{B44B6CB3-078A-4DF2-B325-D42D3EDB730E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zooyard.Rpc.HttpImpl", "src\Zooyard.Rpc.HttpImpl\Zooyard.Rpc.HttpImpl.csproj", "{2AEF263B-4E1D-4416-8E97-93331A06337F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.Rpc.HttpImpl", "src\Zooyard.Rpc.HttpImpl\Zooyard.Rpc.HttpImpl.csproj", "{2AEF263B-4E1D-4416-8E97-93331A06337F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zooyard.Rpc.ThriftImpl", "src\Zooyard.Rpc.ThriftImpl\Zooyard.Rpc.ThriftImpl.csproj", "{0C694C59-8DC1-41A2-8790-30F0CBB565EA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.Rpc.ThriftImpl", "src\Zooyard.Rpc.ThriftImpl\Zooyard.Rpc.ThriftImpl.csproj", "{0C694C59-8DC1-41A2-8790-30F0CBB565EA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zooyard.Rpc.WcfImpl", "src\Zooyard.Rpc.WcfImpl\Zooyard.Rpc.WcfImpl.csproj", "{96599370-259A-47FF-BFBE-832C054F4311}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.Rpc.WcfImpl", "src\Zooyard.Rpc.WcfImpl\Zooyard.Rpc.WcfImpl.csproj", "{96599370-259A-47FF-BFBE-832C054F4311}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcContractAkka", "samples\RpcContractAkka\RpcContractAkka.csproj", "{9A94F120-847A-4BC6-8E1E-0BF957DB7EAA}"
 EndProject
@@ -52,11 +52,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcContractGrpc", "samples\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcContractHttp", "samples\RpcContractHttp\RpcContractHttp.csproj", "{316B206E-7834-4704-A04E-4A5B01BA239F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcContractThrift", "samples\RpcContractThrift\RpcContractThrift.csproj", "{F42A095A-BD90-4FEF-8826-15EE1B6D819D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcContractThrift", "samples\RpcContractThrift\RpcContractThrift.csproj", "{F42A095A-BD90-4FEF-8826-15EE1B6D819D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcContractWcf", "samples\RpcContractWcf\RpcContractWcf.csproj", "{F7CF3768-F809-481D-9C45-44BB2FD4FA55}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcProvider", "samples\RpcProvider\RpcProvider.csproj", "{13A84864-D4F6-4D1E-A447-9332396BF6BD}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.Rpc.NettyImpl", "src\Zooyard.Rpc.NettyImpl\Zooyard.Rpc.NettyImpl.csproj", "{61CA8D0D-0C66-41E5-9213-F1C93567ED5D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcContractNetty", "samples\RpcContractNetty\RpcContractNetty.csproj", "{0796FC26-E6B7-4FD3-8415-D0F775490544}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -128,6 +132,14 @@ Global
 		{13A84864-D4F6-4D1E-A447-9332396BF6BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{13A84864-D4F6-4D1E-A447-9332396BF6BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{13A84864-D4F6-4D1E-A447-9332396BF6BD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{61CA8D0D-0C66-41E5-9213-F1C93567ED5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{61CA8D0D-0C66-41E5-9213-F1C93567ED5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{61CA8D0D-0C66-41E5-9213-F1C93567ED5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{61CA8D0D-0C66-41E5-9213-F1C93567ED5D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0796FC26-E6B7-4FD3-8415-D0F775490544}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0796FC26-E6B7-4FD3-8415-D0F775490544}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0796FC26-E6B7-4FD3-8415-D0F775490544}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0796FC26-E6B7-4FD3-8415-D0F775490544}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -149,6 +161,8 @@ Global
 		{F42A095A-BD90-4FEF-8826-15EE1B6D819D} = {1E4B38C1-0CF2-4E5C-AC4A-30B48CB3F7BA}
 		{F7CF3768-F809-481D-9C45-44BB2FD4FA55} = {1E4B38C1-0CF2-4E5C-AC4A-30B48CB3F7BA}
 		{13A84864-D4F6-4D1E-A447-9332396BF6BD} = {1E4B38C1-0CF2-4E5C-AC4A-30B48CB3F7BA}
+		{61CA8D0D-0C66-41E5-9213-F1C93567ED5D} = {50C4867C-8931-45F0-B773-463C7B953969}
+		{0796FC26-E6B7-4FD3-8415-D0F775490544} = {1E4B38C1-0CF2-4E5C-AC4A-30B48CB3F7BA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4FBB3247-7E5E-40FB-85B2-67B3E3D57FCB}
