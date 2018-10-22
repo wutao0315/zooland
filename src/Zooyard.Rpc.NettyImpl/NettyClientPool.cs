@@ -1,12 +1,12 @@
 ﻿using DotNetty.Buffers;
 using DotNetty.Codecs;
+using DotNetty.Common.Concurrency;
 using DotNetty.Common.Utilities;
 using DotNetty.Handlers.Logging;
 using DotNetty.Handlers.Tls;
 using DotNetty.Transport.Bootstrapping;
 using DotNetty.Transport.Channels;
 using DotNetty.Transport.Channels.Sockets;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -29,8 +29,10 @@ namespace Zooyard.Rpc.NettyImpl
         public const string DEFAULT_PWD = "password";
         public const string PFX_KEY = "pfx";
         public const string DEFAULT_PFX = "dotnetty.com";
+        
 
         public IDictionary<string, NettyProtocol> NettyProtocol { get; set; }
+        
         //public Type EventLoopGroupType { get; set; }
         //public Type ChannelType { get; set; }
         //public IEventLoopGroup EventLoopGroup { get; set; }
@@ -46,6 +48,7 @@ namespace Zooyard.Rpc.NettyImpl
             IEventLoopGroup group = protocol.EventLoopGroupType
                    .GetConstructor(new Type[] { })
                    .Invoke(new object[] { }) as IEventLoopGroup;
+
             IChannel clientChannel = protocol.ChannelType
                    .GetConstructor(new Type[] { })
                    .Invoke(new object[] { }) as IChannel;
@@ -78,65 +81,147 @@ namespace Zooyard.Rpc.NettyImpl
                     {
                         pipeline.AddLast("tls", new TlsHandler(stream => new SslStream(stream, true, (sender, certificate, chain, errors) => true), new ClientTlsSettings(targetHost)));
                     }
-                    pipeline.AddLast(new LoggingHandler());
-                        //pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
-                        //pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(ushort.MaxValue, 0, 2, 0, 2));
-                    pipeline.AddLast(new LengthFieldPrepender(4));
-                    pipeline.AddLast(new LengthFieldBasedFrameDecoder(int.MaxValue, 0, 4, 0, 4));
 
-                    pipeline.AddLast(new ClientHandler());
+                    //pipeline.AddLast(new LoggingHandler());
+                    //pipeline.AddLast(new LengthFieldPrepender(4));
+                    //pipeline.AddLast(new LengthFieldBasedFrameDecoder(int.MaxValue, 0, 4, 0, 4));
+                    //pipeline.AddLast(new ClientHandler(ReceivedMessage));
+
+                    pipeline.AddLast(protocol.ChannelHandlers?.ToArray());
                 }));
             
-            //var client = bootstrap.BindAsync(new IPEndPoint(IPAddress.Parse(url.Host), url.Port)).GetAwaiter().GetResult();
             var client = bootstrap.ConnectAsync(new IPEndPoint(IPAddress.Parse(url.Host), url.Port)).GetAwaiter().GetResult();
             var messageListener = new MessageListener();
             client.GetAttribute(messageListenerKey).Set(messageListener);
             
-
-            //IChannel clientChannel = bootstrap.ConnectAsync(new IPEndPoint(IPAddress.Parse(url.Host), url.Port)).GetAwaiter().GetResult();
+            
             return new NettyClient(group, client, messageListener, url);
         }
 
-        protected class ClientHandler : ChannelHandlerAdapter
+        public void ReceivedMessage(IChannelHandlerContext context, TransportMessage transportMessage)
         {
- 
+            var ml = context.Channel.GetAttribute(messageListenerKey).Get();
+            ml.OnReceived(transportMessage);
+        }
 
-            public override void ChannelRead(IChannelHandlerContext context, object message)
+        
+    }
+
+    public class ClientHandler : ChannelHandlerAdapter
+    {
+        readonly Action<IChannelHandlerContext,TransportMessage> _receviedAction;
+        public ClientHandler(Action<IChannelHandlerContext,TransportMessage> receviedAction)
+        {
+            _receviedAction = receviedAction;
+        }
+
+        public override void ChannelRead(IChannelHandlerContext context, object message)
+        {
+            var byteBuffer = message as IByteBuffer;
+            //var result = "";
+            //if (byteBuffer != null)
+            //{
+            //    result = byteBuffer.ToString(Encoding.UTF8);
+            //    Console.WriteLine($"Received from server:{result}");
+            //}
+            //var transportMessage = JsonConvert.DeserializeObject<TransportMessage>(result);
+
+            if (byteBuffer == null)
             {
-                var byteBuffer = message as IByteBuffer;
-                //var result = "";
-                //if (byteBuffer != null)
-                //{
-                //    result = byteBuffer.ToString(Encoding.UTF8);
-                //    Console.WriteLine($"Received from server:{result}");
-                //}
-                //var transportMessage = JsonConvert.DeserializeObject<TransportMessage>(result);
-
-                if (byteBuffer == null)
-                {
-                    throw new Exception("byte buffer is null");
-                }
-
-                var bytes = new byte[byteBuffer.ReadableBytes];
-                byteBuffer.ReadBytes(bytes);
-                var transportMessage = bytes.Desrialize<TransportMessage>();
-                var messageListener = context.Channel.GetAttribute(messageListenerKey).Get();
-                messageListener.OnReceived(transportMessage);
+                throw new Exception("byte buffer is null");
             }
 
-            public override void ChannelReadComplete(IChannelHandlerContext context) => context.Flush();
+            var bytes = new byte[byteBuffer.ReadableBytes];
+            byteBuffer.ReadBytes(bytes);
+            var transportMessage = bytes.Desrialize<TransportMessage>();
+            _receviedAction(context, transportMessage);
+           
+        }
 
-            public override void ExceptionCaught(IChannelHandlerContext context, Exception exception)
-            {
-                Console.WriteLine("Exception: " + exception);
-                context.CloseAsync();
-            }
+        public override void ChannelReadComplete(IChannelHandlerContext context) => context.Flush();
+
+        public override void ExceptionCaught(IChannelHandlerContext context, Exception exception)
+        {
+            Console.WriteLine("Exception: " + exception);
+            context.CloseAsync();
         }
     }
+
+    //public class WebSocketClientHandler : SimpleChannelInboundHandler<object>
+    //{
+    //    //readonly WebSocketClientHandshaker handshaker;
+    //    readonly TaskCompletionSource completionSource;
+
+    //    public WebSocketClientHandler(WebSocketClientHandshaker handshaker)
+    //    {
+    //        //this.handshaker = handshaker;
+    //        this.completionSource = new TaskCompletionSource();
+    //    }
+
+    //    public Task HandshakeCompletion => this.completionSource.Task;
+
+    //    public override void ChannelActive(IChannelHandlerContext ctx) =>
+    //        this.handshaker.HandshakeAsync(ctx.Channel).LinkOutcome(this.completionSource);
+
+    //    public override void ChannelInactive(IChannelHandlerContext context)
+    //    {
+    //        Console.WriteLine("WebSocket Client disconnected!");
+    //    }
+
+    //    protected override void ChannelRead0(IChannelHandlerContext ctx, object msg)
+    //    {
+    //        IChannel ch = ctx.Channel;
+    //        if (!this.handshaker.IsHandshakeComplete)
+    //        {
+    //            try
+    //            {
+    //                this.handshaker.FinishHandshake(ch, (IFullHttpResponse)msg);
+    //                Console.WriteLine("WebSocket Client connected!");
+    //                this.completionSource.TryComplete();
+    //            }
+    //            catch (WebSocketHandshakeException e)
+    //            {
+    //                Console.WriteLine("WebSocket Client failed to connect");
+    //                this.completionSource.TrySetException(e);
+    //            }
+
+    //            return;
+    //        }
+
+
+    //        if (msg is IFullHttpResponse response)
+    //        {
+    //            throw new InvalidOperationException(
+    //                $"Unexpected FullHttpResponse (getStatus={response.Status}, content={response.Content.ToString(Encoding.UTF8)})");
+    //        }
+
+    //        if (msg is TextWebSocketFrame textFrame)
+    //        {
+    //            Console.WriteLine($"WebSocket Client received message: {textFrame.Text()}");
+    //        }
+    //        else if (msg is PongWebSocketFrame)
+    //        {
+    //            Console.WriteLine("WebSocket Client received pong");
+    //        }
+    //        else if (msg is CloseWebSocketFrame)
+    //        {
+    //            Console.WriteLine("WebSocket Client received closing");
+    //            ch.CloseAsync();
+    //        }
+    //    }
+
+    //    public override void ExceptionCaught(IChannelHandlerContext ctx, Exception exception)
+    //    {
+    //        Console.WriteLine("Exception: " + exception);
+    //        this.completionSource.TrySetException(exception);
+    //        ctx.CloseAsync();
+    //    }
+    //}
 
     public class NettyProtocol
     {
         public Type EventLoopGroupType { get; set; }
         public Type ChannelType { get; set; }
+        public IList<IChannelHandler> ChannelHandlers { get; set; }
     }
 }

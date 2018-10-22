@@ -4,16 +4,11 @@ using DotNetty.Handlers.Logging;
 using DotNetty.Handlers.Tls;
 using DotNetty.Transport.Bootstrapping;
 using DotNetty.Transport.Channels;
-using DotNetty.Transport.Channels.Sockets;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Zooyard.Rpc.Support;
 
@@ -23,12 +18,12 @@ namespace Zooyard.Rpc.NettyImpl
     {
         //UseLibuv
 
-        public object TheService { get; set; }
-
         public IEventLoopGroup TheBossGroup { get; set; }
         public IEventLoopGroup TheWorkerGroup { get; set; }
         public IServerChannel TheServerChannel { get; set; }
+        public IList<IChannelHandler> ChannelHandlers { get; set; }
         public int ThePort { get; set; }
+
 
 
         public bool IsSsl { get; set; } = false;
@@ -67,14 +62,13 @@ namespace Zooyard.Rpc.NettyImpl
                         pipeline.AddLast("tls", TlsHandler.Server(tlsCertificate));
                     }
 
-                    pipeline.AddLast(new LoggingHandler("SRV-CONN"));
-                    //pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
-                    //pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(ushort.MaxValue, 0, 2, 0, 2));
-                    pipeline.AddLast(new LengthFieldPrepender(4));
-                    pipeline.AddLast(new LengthFieldBasedFrameDecoder(int.MaxValue, 0, 4, 0, 4));
-                    //将消息转码
-                    //pipeline.AddLast(new TransportMessageChannelHandlerAdapter(_transportMessageDecoder));
-                    pipeline.AddLast(new ServerHandler(TheService));
+                    //pipeline.AddLast(new LoggingHandler("SRV-CONN"));
+                    //pipeline.AddLast(new LengthFieldPrepender(4));
+                    //pipeline.AddLast(new LengthFieldBasedFrameDecoder(int.MaxValue, 0, 4, 0, 4));
+                    //pipeline.AddLast(new ServerHandler(TheService));
+
+                    pipeline.AddLast(ChannelHandlers?.ToArray());
+                    
                 }));
             try
             {
@@ -107,84 +101,82 @@ namespace Zooyard.Rpc.NettyImpl
 
         }
 
-        private class ServerHandler : ChannelHandlerAdapter
-        {
-            private object service { get; set; }
-            public ServerHandler(object _service)
-            {
-                service = _service;
-            }
-
-            #region Overrides of ChannelHandlerAdapter
-
-            public override void ChannelRead(IChannelHandlerContext context, object message)
-            {
-                //接收到消息
-                //调用服务器端接口
-                //将返回值编码
-                //将返回值发送到客户端
-                var buffer = message as IByteBuffer;
-                if (buffer != null)
-                {
-                    var bytes = new byte[buffer.ReadableBytes];
-                    buffer.ReadBytes(bytes);
-                    var transportMessage =bytes.Desrialize<TransportMessage>();
-                    var rpc = transportMessage.GetContent<RemoteInvokeMessage>();
-                    //var rpcJson = buffer.ToString(Encoding.UTF8);
-                    //Console.WriteLine($"Received from client: {rpcJson}");
-                    //var transportMessage = JsonConvert.DeserializeObject<TransportMessage>(rpcJson);
-                    //var rpc = JsonConvert.DeserializeObject<RemoteInvokeMessage>(transportMessage.Content.ToString());
-                    var methodName = rpc.Method;
-                    var arguments = rpc.Arguments;
-                    var types = (from item in arguments select item.GetType()).ToArray();
-                    var remoteInvoker = new RemoteInvokeResultMessage
-                    {
-                        ExceptionMessage = "",
-                        StatusCode = 200
-                    };
-                    try
-                    {
-                        var method = service.GetType().GetMethod(methodName, types);
-                        var result = method.Invoke(service, arguments);
-                        remoteInvoker.Result = result;
-                        
-
-                       
-                        //socket.Send(sendByte, sendByte.Length, 0);
-                    }
-                    catch (Exception ex)
-                    {
-                        remoteInvoker.ExceptionMessage = ex.Message;
-                        remoteInvoker.StatusCode = 500;
-                    }
-                    var resultData = TransportMessage.CreateInvokeResultMessage(transportMessage.Id, remoteInvoker);
-                    var sendByte = resultData.Serialize();
-                    //var sendStr = JsonConvert.SerializeObject(resultData);
-                    //var sendByte = Encoding.ASCII.GetBytes(sendStr);
-                    var sendBuffer = Unpooled.WrappedBuffer(sendByte);
-                    context.WriteAsync(sendBuffer);
-                }
-
-            }
-
-            public override void ChannelReadComplete(IChannelHandlerContext context)
-            {
-                context.Flush();
-            }
-
-            public override void ExceptionCaught(IChannelHandlerContext context, Exception exception)
-            {
-                //客户端主动断开需要应答，否则socket变成CLOSE_WAIT状态导致socket资源耗尽
-                context.CloseAsync();
-                Console.WriteLine($"与服务器：{context.Channel.RemoteAddress}通信时发送了错误。");
-                //if (_logger.IsEnabled(LogLevel.Error))
-                //    _logger.LogError(exception, $"与服务器：{context.Channel.RemoteAddress}通信时发送了错误。");
-            }
-
-            #endregion Overrides of ChannelHandlerAdapter
-        }
+        
     }
 
+    public class ServerHandler : ChannelHandlerAdapter
+    {
+        readonly object _service;
+        public ServerHandler(object service)
+        {
+            _service = service;
+        }
+
+        #region Overrides of ChannelHandlerAdapter
+
+        public override void ChannelRead(IChannelHandlerContext context, object message)
+        {
+            //接收到消息
+            //调用服务器端接口
+            //将返回值编码
+            //将返回值发送到客户端
+            var buffer = message as IByteBuffer;
+            if (buffer != null)
+            {
+                var bytes = new byte[buffer.ReadableBytes];
+                buffer.ReadBytes(bytes);
+                var transportMessage = bytes.Desrialize<TransportMessage>();
+                var rpc = transportMessage.GetContent<RemoteInvokeMessage>();
+                //var rpcJson = buffer.ToString(Encoding.UTF8);
+                //Console.WriteLine($"Received from client: {rpcJson}");
+                //var transportMessage = JsonConvert.DeserializeObject<TransportMessage>(rpcJson);
+                //var rpc = JsonConvert.DeserializeObject<RemoteInvokeMessage>(transportMessage.Content.ToString());
+                var methodName = rpc.Method;
+                var arguments = rpc.Arguments;
+                var types = (from item in arguments select item.GetType()).ToArray();
+                var remoteInvoker = new RemoteInvokeResultMessage
+                {
+                    ExceptionMessage = "",
+                    StatusCode = 200
+                };
+                try
+                {
+                    var method = _service.GetType().GetMethod(methodName, types);
+                    var result = method.Invoke(_service, arguments);
+                    remoteInvoker.Result = result;
+                    //socket.Send(sendByte, sendByte.Length, 0);
+                }
+                catch (Exception ex)
+                {
+                    remoteInvoker.ExceptionMessage = ex.Message;
+                    remoteInvoker.StatusCode = 500;
+                }
+                var resultData = TransportMessage.CreateInvokeResultMessage(transportMessage.Id, remoteInvoker);
+                var sendByte = resultData.Serialize();
+                //var sendStr = JsonConvert.SerializeObject(resultData);
+                //var sendByte = Encoding.ASCII.GetBytes(sendStr);
+                var sendBuffer = Unpooled.WrappedBuffer(sendByte);
+                context.WriteAsync(sendBuffer);
+            }
+
+        }
+
+        public override void ChannelReadComplete(IChannelHandlerContext context)
+        {
+            context.Flush();
+        }
+
+        public override void ExceptionCaught(IChannelHandlerContext context, Exception exception)
+        {
+            //客户端主动断开需要应答，否则socket变成CLOSE_WAIT状态导致socket资源耗尽
+            context.CloseAsync();
+            Console.WriteLine($"与服务器：{context.Channel.RemoteAddress}通信时发送了错误。");
+            //if (_logger.IsEnabled(LogLevel.Error))
+            //    _logger.LogError(exception, $"与服务器：{context.Channel.RemoteAddress}通信时发送了错误。");
+        }
+
+        #endregion Overrides of ChannelHandlerAdapter
+    }
 
     //public class RpcData
     //{
