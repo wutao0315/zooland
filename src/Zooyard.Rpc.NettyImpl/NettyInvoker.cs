@@ -23,16 +23,6 @@ namespace Zooyard.Rpc.NettyImpl
 
         public IResult Invoke(IInvocation invocation)
         {
-            //var rpc = new RpcData
-            //{
-            //    Method = invocation.MethodInfo.Name,
-            //    Arguments = invocation.Arguments
-            //};
-            //var bytes = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(rpc));
-            //var byteBuffers = Unpooled.WrappedBuffer(bytes);
-
-            //client.WriteAndFlushAsync(byteBuffers).GetAwaiter().GetResult();
-
             try
             {
                 var message = new RemoteInvokeMessage
@@ -43,21 +33,15 @@ namespace Zooyard.Rpc.NettyImpl
 
                 var transportMessage = TransportMessage.CreateInvokeMessage(message);
                 
-
-                //var rpc = new RpcData
-                //{
-                    
-                //    Method = invocation.MethodInfo.Name,
-                //    Arguments = invocation.Arguments
-                //};
-
                 //注册结果回调
                 var callbackTask = RegisterResultCallbackAsync(transportMessage.Id);
 
                 try
                 {
+
                     //发送
-                    var bytes = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(transportMessage));
+                    //var bytes = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(transportMessage));
+                    var bytes = transportMessage.Serialize();
                     var byteBuffers = Unpooled.WrappedBuffer(bytes);
 
                     client.WriteAndFlushAsync(byteBuffers).GetAwaiter().GetResult();
@@ -68,24 +52,25 @@ namespace Zooyard.Rpc.NettyImpl
                 }
 
                 var value = callbackTask.GetAwaiter().GetResult();
-                
-                if (invocation.MethodInfo.ReturnType.IsValueType)
-                {
-                    if (invocation.MethodInfo.ReturnType == typeof(void))
-                    {
-                        return new RpcResult();
-                    }
-                    return new RpcResult(value.Result.ChangeType(invocation.MethodInfo.ReturnType));
-                }
+                return new RpcResult(value.Result);
 
-                if (invocation.MethodInfo.ReturnType == typeof(string))
-                {
-                    return new RpcResult(value.Result);
-                }
+                //if (invocation.MethodInfo.ReturnType.IsValueType)
+                //{
+                //    if (invocation.MethodInfo.ReturnType == typeof(void))
+                //    {
+                //        return new RpcResult();
+                //    }
+                //    return new RpcResult(value.Result.ChangeType(invocation.MethodInfo.ReturnType));
+                //}
 
-                var result = new RpcResult(JsonConvert.DeserializeObject(value.Result.ToString(), invocation.MethodInfo.ReturnType));
-                return result;
-                
+                //if (invocation.MethodInfo.ReturnType == typeof(string))
+                //{
+                //    return new RpcResult(value.Result);
+                //}
+
+                //var result = new RpcResult(JsonConvert.DeserializeObject(value.Result.ToString(), invocation.MethodInfo.ReturnType));
+                //return result;
+
             }
             catch (Exception exception)
             {
@@ -133,7 +118,8 @@ namespace Zooyard.Rpc.NettyImpl
 
             if (message.IsInvokeResultMessage())
             {
-                var content = JsonConvert.DeserializeObject<RemoteInvokeResultMessage>(message.Content.ToString());// message.GetContent<RemoteInvokeResultMessage>();
+                var content = message.GetContent<RemoteInvokeResultMessage>();
+                //var content = JsonConvert.DeserializeObject<RemoteInvokeResultMessage>(message.Content.ToString());
                 message.Content = content;
                 if (!string.IsNullOrEmpty(content.ExceptionMessage))
                 {

@@ -28,7 +28,6 @@ namespace Zooyard.Rpc.NettyImpl
         public IEventLoopGroup TheBossGroup { get; set; }
         public IEventLoopGroup TheWorkerGroup { get; set; }
         public IServerChannel TheServerChannel { get; set; }
-        public string TheIpAddress { get; set; }
         public int ThePort { get; set; }
 
 
@@ -44,7 +43,7 @@ namespace Zooyard.Rpc.NettyImpl
             
             //if (_logger.IsEnabled(LogLevel.Debug))
             //    _logger.LogDebug($"准备启动服务主机，监听地址：{TheEndPoint}。");
-            Console.WriteLine($"准备启动服务主机，监听地址：{TheIpAddress}:{ThePort}。");
+            Console.WriteLine($"准备启动服务主机，监听地址：{ThePort}。");
             
             X509Certificate2 tlsCertificate = null;
             if (IsSsl)
@@ -80,15 +79,15 @@ namespace Zooyard.Rpc.NettyImpl
             try
             {
                 
-                _channel = bootstrap.BindAsync(new IPEndPoint(IPAddress.Parse(TheIpAddress), ThePort)).GetAwaiter().GetResult();
+                _channel = bootstrap.BindAsync(ThePort).GetAwaiter().GetResult();
                 //if (_logger.IsEnabled(LogLevel.Debug))
                 //    _logger.LogDebug($"服务主机启动成功，监听地址：{endPoint}。");
-                Console.WriteLine($"服务主机启动成功，监听地址：{TheIpAddress}:{ThePort}。");
+                Console.WriteLine($"服务主机启动成功，监听地址：{ThePort}。");
             }
             catch
             {
                 //_logger.LogError($"服务主机启动失败，监听地址：{endPoint}。 ");
-                Console.WriteLine($"服务主机启动失败，监听地址：{TheIpAddress}:{ThePort}。");
+                Console.WriteLine($"服务主机启动失败，监听地址：{ThePort}。");
             }
 
         }
@@ -115,14 +114,6 @@ namespace Zooyard.Rpc.NettyImpl
             {
                 service = _service;
             }
-            //private readonly Action<IChannelHandlerContext, TransportMessage> _readAction;
-            ////private readonly ILogger _logger;
-
-            //public ServerHandler(Action<IChannelHandlerContext, TransportMessage> readAction)
-            //{
-            //    _readAction = readAction;
-            //    //_logger = logger;
-            //}
 
             #region Overrides of ChannelHandlerAdapter
 
@@ -135,47 +126,45 @@ namespace Zooyard.Rpc.NettyImpl
                 var buffer = message as IByteBuffer;
                 if (buffer != null)
                 {
-                    var rpcJson = buffer.ToString(Encoding.UTF8);
-                    Console.WriteLine($"Received from client: {rpcJson}");
-                    var transportMessage = JsonConvert.DeserializeObject<TransportMessage>(rpcJson);
-                    //var rpc = transportMessage.GetContent<RemoteInvokeMessage>();
-                    var rpc = JsonConvert.DeserializeObject<RemoteInvokeMessage>(transportMessage.Content.ToString());
+                    var bytes = new byte[buffer.ReadableBytes];
+                    buffer.ReadBytes(bytes);
+                    var transportMessage =bytes.Desrialize<TransportMessage>();
+                    var rpc = transportMessage.GetContent<RemoteInvokeMessage>();
+                    //var rpcJson = buffer.ToString(Encoding.UTF8);
+                    //Console.WriteLine($"Received from client: {rpcJson}");
+                    //var transportMessage = JsonConvert.DeserializeObject<TransportMessage>(rpcJson);
+                    //var rpc = JsonConvert.DeserializeObject<RemoteInvokeMessage>(transportMessage.Content.ToString());
                     var methodName = rpc.Method;
                     var arguments = rpc.Arguments;
                     var types = (from item in arguments select item.GetType()).ToArray();
+                    var remoteInvoker = new RemoteInvokeResultMessage
+                    {
+                        ExceptionMessage = "",
+                        StatusCode = 200
+                    };
                     try
                     {
                         var method = service.GetType().GetMethod(methodName, types);
                         var result = method.Invoke(service, arguments);
-                        var aa = new RemoteInvokeResultMessage
-                        {
-                            ExceptionMessage = "",
-                            Result = result,
-                            StatusCode = 200
-                        };
-                        var resultData = TransportMessage.CreateInvokeResultMessage(transportMessage.Id, aa);
-                        var sendStr = JsonConvert.SerializeObject(resultData);
-                        var sendByte = Encoding.ASCII.GetBytes(sendStr);
-                        var sendBuffer = Unpooled.WrappedBuffer(sendByte);
+                        remoteInvoker.Result = result;
+                        
 
-                        context.WriteAsync(sendBuffer);
+                       
                         //socket.Send(sendByte, sendByte.Length, 0);
                     }
                     catch (Exception ex)
                     {
-
-                        throw ex;
+                        remoteInvoker.ExceptionMessage = ex.Message;
+                        remoteInvoker.StatusCode = 500;
                     }
+                    var resultData = TransportMessage.CreateInvokeResultMessage(transportMessage.Id, remoteInvoker);
+                    var sendByte = resultData.Serialize();
+                    //var sendStr = JsonConvert.SerializeObject(resultData);
+                    //var sendByte = Encoding.ASCII.GetBytes(sendStr);
+                    var sendBuffer = Unpooled.WrappedBuffer(sendByte);
+                    context.WriteAsync(sendBuffer);
                 }
-                //context.WriteAsync(message);
 
-
-                
-                //Task.Run(() =>
-                //{
-                //    var transportMessage = (TransportMessage)message;
-                //    _readAction(context, transportMessage);
-                //});
             }
 
             public override void ChannelReadComplete(IChannelHandlerContext context)
@@ -197,15 +186,16 @@ namespace Zooyard.Rpc.NettyImpl
     }
 
 
-    public class RpcData
-    {
-        public string Method { get; set; }
-        public object[] Arguments { get; set; }
-    }
+    //public class RpcData
+    //{
+    //    public string Method { get; set; }
+    //    public object[] Arguments { get; set; }
+    //}
 
     /// <summary>
     /// 传输消息模型。
     /// </summary>
+    [Serializable]
     public class TransportMessage
     {
 
@@ -246,7 +236,7 @@ namespace Zooyard.Rpc.NettyImpl
         /// <returns>如果是则返回true，否则返回false。</returns>
         public bool IsInvokeMessage()
         {
-            return ContentType == MessagePackTransportMessageType.remoteInvokeMessageTypeName;
+            return ContentType == typeof(RemoteInvokeMessage).FullName;
         }
 
         /// <summary>
@@ -255,7 +245,7 @@ namespace Zooyard.Rpc.NettyImpl
         /// <returns>如果是则返回true，否则返回false。</returns>
         public bool IsInvokeResultMessage()
         {
-            return ContentType == MessagePackTransportMessageType.remoteInvokeResultMessageTypeName;
+            return ContentType == typeof(RemoteInvokeResultMessage).FullName;
         }
 
 
@@ -277,7 +267,7 @@ namespace Zooyard.Rpc.NettyImpl
         /// <returns>调用传输消息。</returns>
         public static TransportMessage CreateInvokeMessage(RemoteInvokeMessage invokeMessage)
         {
-            return new TransportMessage(invokeMessage, MessagePackTransportMessageType.remoteInvokeMessageTypeName)
+            return new TransportMessage(invokeMessage, typeof(RemoteInvokeMessage).FullName)
             {
                 Id = Guid.NewGuid().ToString("N")
             };
@@ -291,7 +281,7 @@ namespace Zooyard.Rpc.NettyImpl
         /// <returns>调用结果传输消息。</returns>
         public static TransportMessage CreateInvokeResultMessage(string id, RemoteInvokeResultMessage invokeResultMessage)
         {
-            return new TransportMessage(invokeResultMessage, MessagePackTransportMessageType.remoteInvokeResultMessageTypeName)
+            return new TransportMessage(invokeResultMessage, typeof(RemoteInvokeResultMessage).FullName)
             {
                 Id = id
             };
@@ -300,6 +290,7 @@ namespace Zooyard.Rpc.NettyImpl
     /// <summary>
     /// 远程调用结果消息。
     /// </summary>
+    [Serializable]
     public class RemoteInvokeResultMessage
     {
         /// <summary>
@@ -319,6 +310,7 @@ namespace Zooyard.Rpc.NettyImpl
     /// <summary>
     /// 远程调用消息。
     /// </summary>
+    [Serializable]
     public class RemoteInvokeMessage
     {
         ///// <summary>
@@ -337,12 +329,6 @@ namespace Zooyard.Rpc.NettyImpl
         //public IDictionary<string, object> Attachments { get; set; }
         public string Method { get; set; }
         public object[] Arguments { get; set; }
-    }
-    public class MessagePackTransportMessageType
-    {
-        public static string remoteInvokeResultMessageTypeName = typeof(RemoteInvokeResultMessage).FullName;
-
-        public static string remoteInvokeMessageTypeName = typeof(RemoteInvokeMessage).FullName;
     }
 
     /// <summary>

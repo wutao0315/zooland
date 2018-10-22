@@ -84,39 +84,27 @@ namespace Zooyard.Rpc.NettyImpl
 
         protected class ClientHandler : ChannelHandlerAdapter
         {
-            //public const string SIZE_KEY = "size";
-            //public const int DEFAULT_SIZE = 256;
-
-            //readonly IByteBuffer initialMessage;
-
-            //public ClientHandler(URL url)
-            //{
-            //    var size = url.GetParameter(SIZE_KEY, DEFAULT_SIZE);
-            //    this.initialMessage = Unpooled.Buffer(size);
-            //    byte[] messageBytes = Encoding.UTF8.GetBytes("Hello world");
-            //    this.initialMessage.WriteBytes(messageBytes);
-            //}
-
-            //public override void ChannelActive(IChannelHandlerContext context) => context.WriteAndFlushAsync(this.initialMessage);
-            //private readonly Action<string> _readAction;
-
-            //public ClientHandler(Action<string> readAction)
-            //{
-            //    _readAction = readAction;
-            //}
+ 
 
             public override void ChannelRead(IChannelHandlerContext context, object message)
             {
                 var byteBuffer = message as IByteBuffer;
-                var result = "";
-                if (byteBuffer != null)
+                //var result = "";
+                //if (byteBuffer != null)
+                //{
+                //    result = byteBuffer.ToString(Encoding.UTF8);
+                //    Console.WriteLine($"Received from server:{result}");
+                //}
+                //var transportMessage = JsonConvert.DeserializeObject<TransportMessage>(result);
+
+                if (byteBuffer == null)
                 {
-                    result = byteBuffer.ToString(Encoding.UTF8);
-                    Console.WriteLine($"Received from server:{result}");
+                    throw new Exception("byte buffer is null");
                 }
-                //_readAction(result);
-                //context.WriteAsync(message);
-                var transportMessage = JsonConvert.DeserializeObject<TransportMessage>(result);
+
+                var bytes = new byte[byteBuffer.ReadableBytes];
+                byteBuffer.ReadBytes(bytes);
+                var transportMessage = bytes.Desrialize<TransportMessage>();
                 var messageListener = context.Channel.GetAttribute(messageListenerKey).Get();
                 messageListener.OnReceived(transportMessage);
             }
