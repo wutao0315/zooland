@@ -52,19 +52,18 @@ namespace Zooyard.Rpc.NettyImpl
 
         public override void Open()
         {
-            if (!Client.Open)
+            if (!Client.Open || !Client.Active)
             {
                 var k = new IPEndPoint(IPAddress.Parse(Url.Host), Url.Port);
-                Client.ConnectAsync(k);
+                Client.ConnectAsync(k).GetAwaiter().GetResult();
                 //Client.GetAttribute(origEndPointKey).Set(k);
             }
         }
 
         public override void Close()
         {
-            if (Client.Open)
+            if (Client.Active || Client.Open)
             {
-                Client.CloseAsync().GetAwaiter().GetResult();
                 Client.DisconnectAsync().GetAwaiter().GetResult();
             }
         }
@@ -72,7 +71,8 @@ namespace Zooyard.Rpc.NettyImpl
         public override void Dispose()
         {
             Close();
-            if (!EventLoopGroup.IsShutdown)
+            Client.CloseAsync().GetAwaiter().GetResult();
+            if (!EventLoopGroup.IsShutdown || !EventLoopGroup.IsTerminated)
             {
                 var quietPeriod = Url.GetParameter(QUIETPERIOD_KEY, DEFAULT_QUIETPERIOD);
                 var timeout = Url.GetParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);

@@ -21,7 +21,7 @@ namespace RpcConsumer
             var helloServiceAkka = context.GetObject<RpcContractAkka.IHelloService>();
             var helloServiceNetty = context.GetObject<RpcContractNetty.IHelloService>();
             //RpcContractNetty.IHelloService helloServiceNetty = null;
-
+           
             while (true)
             {
                 Console.WriteLine("请选择:wcf | grpc | thrift | http | akka | netty | all");
