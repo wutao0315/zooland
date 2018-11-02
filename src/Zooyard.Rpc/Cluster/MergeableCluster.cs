@@ -140,7 +140,7 @@ namespace Zooyard.Rpc.Cluster
                     var r = entry.Value.Result;
                     if (r.HasException)
                     {
-                        logger.Error($"Invoke {entry.Key} {getGroupDescFromServiceKey(entry.Key)}  failed: {r.Exception.Message}", r.Exception);
+                        //logger.Error($"Invoke {entry.Key} {getGroupDescFromServiceKey(entry.Key)}  failed: {r.Exception.Message}", r.Exception);
                     }
                     else
                     {

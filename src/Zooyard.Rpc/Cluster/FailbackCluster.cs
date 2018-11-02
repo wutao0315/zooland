@@ -39,7 +39,7 @@ namespace Zooyard.Rpc.Cluster
                             }
                             catch (Exception t)
                             { // 防御性容错
-                                logger.Error("Unexpected error occur at collect statistic", t);
+                                //logger.Error("Unexpected error occur at collect statistic", t);
                             }
                         });
                         retryTimer.AutoReset = true;
@@ -74,7 +74,7 @@ namespace Zooyard.Rpc.Cluster
                 catch (Exception e)
                 {
                     pool.Recovery(client);
-                    logger.Error("Failed retry to invoke method " + invocation.MethodInfo.Name + ", waiting again.", e);
+                    //logger.Error("Failed retry to invoke method " + invocation.MethodInfo.Name + ", waiting again.", e);
                 }
             }
         }
@@ -109,7 +109,7 @@ namespace Zooyard.Rpc.Cluster
             catch (Exception e)
             {
                 
-                logger.Error("Failback to invoke method " + invocation.MethodInfo.Name + ", wait for retry in background. Ignored exception: " + e.Message + ", ", e);
+                //logger.Error("Failback to invoke method " + invocation.MethodInfo.Name + ", wait for retry in background. Ignored exception: " + e.Message + ", ", e);
                 addFailed(pool,invocation, invoker);
                 result = new RpcResult(); // ignore
                 exception = e;

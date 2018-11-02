@@ -36,7 +36,7 @@ namespace Zooyard.Rpc.Cluster
             {
                 exception = e;
                 badUrls.Add(new BadUrl { Url = invoker, BadTime = DateTime.Now, CurrentException = exception });
-                logger.Error("Failsafe ignore exception: " + e.Message, e);
+                //logger.Error("Failsafe ignore exception: " + e.Message, e);
                 result = new RpcResult(e); // ignore
             }
             return new ClusterResult(result, goodUrls, badUrls,exception,false);

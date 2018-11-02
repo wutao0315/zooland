@@ -52,18 +52,18 @@ namespace Zooyard.Rpc.Cluster
                         var refer = client.Refer();
                         var result = refer.Invoke(invocation);
                         pool.Recovery(client);
-                        if (le != null && logger.IsWarnEnabled)
-                        {
-                            logger.Warn("Although retry the method " + invocation.MethodInfo.Name
-                                    + " in the service " + invocation.TargetType.FullName
-                                    + " was successful by the provider " + invoker.Address
-                                    + ", but there have been failed providers " + string.Join(",", providers)
-                                    + " (" + providers.Count + "/" + copyinvokers.Count
-                                    + ") from the registry " + address.Address
-                                    //+ " on the consumer " + NetUtils.GetLocalHost()
-                                    //+ " using the dubbo version " + Version.getVersion() + ". Last error is: "
-                                    + le.Message, le);
-                        }
+                        //if (le != null && logger.IsWarnEnabled)
+                        //{
+                        //    logger.Warn("Although retry the method " + invocation.MethodInfo.Name
+                        //            + " in the service " + invocation.TargetType.FullName
+                        //            + " was successful by the provider " + invoker.Address
+                        //            + ", but there have been failed providers " + string.Join(",", providers)
+                        //            + " (" + providers.Count + "/" + copyinvokers.Count
+                        //            + ") from the registry " + address.Address
+                        //            //+ " on the consumer " + NetUtils.GetLocalHost()
+                        //            //+ " using the dubbo version " + Version.getVersion() + ". Last error is: "
+                        //            + le.Message, le);
+                        //}
                         goodUrls.Add(invoker);
                         return new ClusterResult(result,goodUrls,badUrls,le,false);
                     }

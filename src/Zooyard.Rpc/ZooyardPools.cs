@@ -1,5 +1,4 @@
-﻿using Common.Logging;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,7 +25,7 @@ namespace Zooyard.Rpc
         public const string RECOVERY_TIME_KEY = "recoverytime";
         public const int DEFAULT_RECOVERY_TIME = 5;
         public const string APP_KEY = "app";
-        protected ILog logger = LogManager.GetLogger<ZooyardPools>();
+        //protected ILog logger = LogManager.GetLogger<ZooyardPools>();
         /// <summary>
         /// 地址
         /// 如果是registry开头，就代表是注册中心的地址
@@ -84,7 +83,7 @@ namespace Zooyard.Rpc
             IDictionary<string, ICluster> clusters,
             IDictionary<string, Type> caches,
             string address)
-            : this(pools, loadbalances, clusters, caches, address, new List<string> { address }) { }
+            : this(pools, loadbalances, clusters, caches, address, new List<string>()) { }
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -169,7 +168,7 @@ namespace Zooyard.Rpc
                 }
                 catch (Exception t)
                 {   // 防御性容错
-                    logger.Error("Unexpected error occur at collect statistic", t);
+                    //logger.Error("Unexpected error occur at collect statistic", t);
                 }
             });
             cycleTimer.AutoReset = true;
@@ -189,7 +188,7 @@ namespace Zooyard.Rpc
                 }
                 catch (Exception t)
                 {   // 防御性容错
-                    logger.Error("Unexpected error occur at collect statistic", t);
+                    //logger.Error("Unexpected error occur at collect statistic", t);
                 }
             });
             recoveryTimer.AutoReset = true;
@@ -229,7 +228,7 @@ namespace Zooyard.Rpc
                             this.Urls[badUrls.Key].Add(badUrl.Url);
                             list.Add(badUrl);
                             Console.WriteLine($"auto timer recovery url {badUrl.Url.ToString()}");
-                            logger.Debug($"recovery:{badUrl.Url.ToString()}");
+                            //logger.Debug($"recovery:{badUrl.Url.ToString()}");
                         }
                     }
                     //delete badurl from badurls 
@@ -578,7 +577,7 @@ namespace Zooyard.Rpc
                         {
                             goodUrls.Add(badUrl.Url);
                             Console.WriteLine($"recovery url {badUrl.ToString()}");
-                            logger.Error(badUrl.CurrentException);
+                            //logger.Error(badUrl.CurrentException);
                         }
 
                     }

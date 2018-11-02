@@ -39,7 +39,7 @@ namespace Zooyard.Rpc.Cluster
                 {
                     exception = e;
                     badUrls.Add(new BadUrl { Url = invoker, BadTime = DateTime.Now, CurrentException = exception });
-                    logger.Warn(e.Message, e);
+                    //logger.Warn(e.Message, e);
                 }
             }
             if (exception != null)
