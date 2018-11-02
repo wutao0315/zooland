@@ -6,13 +6,14 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Net.Sockets;
 using System.Net;
-using Common.Logging;
+//using Common.Logging;
 
 namespace Zooyard.Core.Utils
 {
     public class NetUtils
     {
-        private static readonly ILog _logger = LogManager.GetLogger("NetUtils");
+
+        //private static readonly ILog _logger = LogManager.GetLogger("NetUtils");
 
         public const string LOCALHOST = "127.0.0.1";
 
@@ -257,7 +258,7 @@ namespace Zooyard.Core.Utils
                 }
                 catch (Exception e)
                 {
-                    _logger.Warn("Failed to retriving ip address, " + e.Message, e);
+                    //_logger.Warn("Failed to retriving ip address, " + e.Message, e);
                 }
                 try
                 {
@@ -275,14 +276,14 @@ namespace Zooyard.Core.Utils
                             }
                             catch (Exception e)
                             {
-                                _logger.Warn("Failed to retriving ip address, " + e.Message, e);
+                                //_logger.Warn("Failed to retriving ip address, " + e.Message, e);
                             }
                         }
                     }
                 }
                 catch (Exception e)
                 {
-                    _logger.Warn("Failed to retriving ip address, " + e.Message, e);
+                    //_logger.Warn("Failed to retriving ip address, " + e.Message, e);
                 }
                 //logger.Error("Could not get local host ip address, will use 127.0.0.1 instead.");
                 return localAddress;

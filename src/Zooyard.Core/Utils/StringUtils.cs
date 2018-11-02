@@ -1,5 +1,4 @@
-﻿using Common.Logging;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -11,7 +10,7 @@ namespace Zooyard.Core.Utils
 {
     public sealed class StringUtils
     {
-        private static readonly ILog _logger = LogManager.GetLogger("StringUtils");
+        //private static readonly ILog _logger = LogManager.GetLogger("StringUtils");
         public static readonly string[] EMPTY_STRING_ARRAY = new string[0];
 
         private static readonly Regex KVP_PATTERN = new Regex("([_.a-zA-Z0-9][-_.a-zA-Z0-9]*)[=](.*)", RegexOptions.Compiled);  //key value pair pattern.
@@ -483,7 +482,7 @@ namespace Zooyard.Core.Utils
                     }
                     catch (Exception e)
                     {
-                        _logger.Warn(e.Message, e);
+                        //_logger.Warn(e.Message, e);
                         buf.Append(arg);
                     }
                 }
