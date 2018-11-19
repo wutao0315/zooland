@@ -20,12 +20,12 @@
 
         private static IList<Map> maps = null;
 
-        public static T New<T>(IInterceptor hanlder) where T : class
+        public static T New<T>(IInterceptor hanlder)
         {
             var value = New(typeof(T), hanlder);
             if (value == null)
             {
-                return null;
+                return default(T);
             }
             return (T)value;
         }

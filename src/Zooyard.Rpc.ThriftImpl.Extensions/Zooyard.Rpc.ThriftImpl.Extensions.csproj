@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="ServiceBuilderExtensions.cs~RF18e2ad8e.TMP" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="2.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="2.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Zooyard.Core\Zooyard.Core.csproj" />
+    <ProjectReference Include="..\Zooyard.Rpc.ThriftImpl\Zooyard.Rpc.ThriftImpl.csproj" />
+    <ProjectReference Include="..\Zooyard.Rpc\Zooyard.Rpc.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Thrift">
+      <HintPath>..\lib\Thrift\netcore\Thrift.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

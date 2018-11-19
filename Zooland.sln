@@ -60,7 +60,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcProvider", "samples\RpcP
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.Rpc.NettyImpl", "src\Zooyard.Rpc.NettyImpl\Zooyard.Rpc.NettyImpl.csproj", "{61CA8D0D-0C66-41E5-9213-F1C93567ED5D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcContractNetty", "samples\RpcContractNetty\RpcContractNetty.csproj", "{0796FC26-E6B7-4FD3-8415-D0F775490544}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcContractNetty", "samples\RpcContractNetty\RpcContractNetty.csproj", "{0796FC26-E6B7-4FD3-8415-D0F775490544}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zooyard.Rpc.ThriftImpl.Extensions", "src\Zooyard.Rpc.ThriftImpl.Extensions\Zooyard.Rpc.ThriftImpl.Extensions.csproj", "{C1E4C56E-2111-429D-B48E-9AE9DDFF36DB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.Core.Extensions", "src\Zooyard.Core.Extensions\Zooyard.Core.Extensions.csproj", "{CBF46C6B-5B98-4656-8589-C711BC88A6CD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{195EC2BD-3EE4-4D81-9BB4-7895BB8C84F4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zooyard.CoreTest", "test\Zooyard.CoreTest\Zooyard.CoreTest.csproj", "{9F4D0F0E-CE5A-48D4-85DE-8A6228F6457A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -140,6 +148,18 @@ Global
 		{0796FC26-E6B7-4FD3-8415-D0F775490544}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0796FC26-E6B7-4FD3-8415-D0F775490544}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0796FC26-E6B7-4FD3-8415-D0F775490544}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C1E4C56E-2111-429D-B48E-9AE9DDFF36DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C1E4C56E-2111-429D-B48E-9AE9DDFF36DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C1E4C56E-2111-429D-B48E-9AE9DDFF36DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C1E4C56E-2111-429D-B48E-9AE9DDFF36DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CBF46C6B-5B98-4656-8589-C711BC88A6CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CBF46C6B-5B98-4656-8589-C711BC88A6CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CBF46C6B-5B98-4656-8589-C711BC88A6CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CBF46C6B-5B98-4656-8589-C711BC88A6CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9F4D0F0E-CE5A-48D4-85DE-8A6228F6457A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F4D0F0E-CE5A-48D4-85DE-8A6228F6457A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F4D0F0E-CE5A-48D4-85DE-8A6228F6457A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F4D0F0E-CE5A-48D4-85DE-8A6228F6457A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -163,6 +183,9 @@ Global
 		{13A84864-D4F6-4D1E-A447-9332396BF6BD} = {1E4B38C1-0CF2-4E5C-AC4A-30B48CB3F7BA}
 		{61CA8D0D-0C66-41E5-9213-F1C93567ED5D} = {50C4867C-8931-45F0-B773-463C7B953969}
 		{0796FC26-E6B7-4FD3-8415-D0F775490544} = {1E4B38C1-0CF2-4E5C-AC4A-30B48CB3F7BA}
+		{C1E4C56E-2111-429D-B48E-9AE9DDFF36DB} = {50C4867C-8931-45F0-B773-463C7B953969}
+		{CBF46C6B-5B98-4656-8589-C711BC88A6CD} = {50C4867C-8931-45F0-B773-463C7B953969}
+		{9F4D0F0E-CE5A-48D4-85DE-8A6228F6457A} = {195EC2BD-3EE4-4D81-9BB4-7895BB8C84F4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4FBB3247-7E5E-40FB-85B2-67B3E3D57FCB}

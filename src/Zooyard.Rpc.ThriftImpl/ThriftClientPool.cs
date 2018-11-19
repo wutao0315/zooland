@@ -14,6 +14,15 @@ namespace Zooyard.Rpc.ThriftImpl
 {
     public class ThriftClientPool : AbstractClientPool
     {
+        public ThriftClientPool() { }
+        public ThriftClientPool(IDictionary<string, Type> transportTypes,
+            IDictionary<string, Type> protocolTypes,
+            IDictionary<string, Type> thriftClientTypes)
+        {
+            TheTransportTypes = transportTypes;
+            TheProtocolTypes = protocolTypes;
+            TheThriftClientTypes = thriftClientTypes;
+        }
         public const string TRANSPORT_KEY = "transport";
         public const string DEFAULT_TRANSPORT = "TSocket";
 
