@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Zooyard.Core;
@@ -8,10 +9,16 @@ namespace Zooyard.Rpc.Cluster
 {
     public class ForkingCluster : AbstractCluster
     {
+        public override string Name => NAME;
         public const string NAME = "forking";
         public const string FORKS_KEY = "forks";
         public const int DEFAULT_FORKS = 2;
-        
+
+        private readonly ILogger _logger;
+        public ForkingCluster(ILoggerFactory loggerFactory) : base(loggerFactory)
+        {
+            _logger = loggerFactory.CreateLogger<ForkingCluster>();
+        }
 
         public override IClusterResult DoInvoke(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
         {

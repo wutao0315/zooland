@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,32 +13,32 @@ namespace Zooyard.Rpc.ThriftImpl
 {
     public class ThriftServer : AbstractServer
     {
-        public TBaseServer TheServer { get; set; }
+        private readonly ILogger _logger;
+        private readonly TBaseServer _server;
+        public ThriftServer(TBaseServer server , ILoggerFactory loggerFactory):base(loggerFactory)
+        {
+            _logger = loggerFactory.CreateLogger<ThriftServer>();
+            _server = server;
+        }
+        
         
         public override void DoExport()
         {
-            //DemoServiceImpl handler = new DemoServiceImpl();
-            //TProcessor processor = new DemoService.Processor(handler);
-            //TServerTransport serverTransport = new TServerSocket(9090);
-            //TServer server = new TSimpleServer(processor, serverTransport);
-
-            // Use this for a multithreaded server
-            // server = new TThreadPoolServer(processor, serverTransport);
-            
-
-            Console.WriteLine($"Starting the thrift server ...");
-
-            //开启服务
+            //run the server
             Task.Run(()=> 
             {
-                TheServer.ServeAsync(CancellationToken.None).GetAwaiter().GetResult();
+                _server.ServeAsync(CancellationToken.None).GetAwaiter().GetResult();
             });
+
+            _logger.LogInformation($"Started the thrift server ...");
+            Console.WriteLine($"Started the thrift server ...");
         }
 
         public override void DoDispose()
         {
-            //向注册中心发送注销请求
-            TheServer.Stop();
+            //unregiste from register center
+            _server.Stop();
+            _logger.LogInformation("stoped the thrift server ...");
         }
     }
 }

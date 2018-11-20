@@ -1,10 +1,15 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Thrift;
 using Thrift.Protocols;
+using Thrift.Server;
+using Thrift.Transports;
 using Thrift.Transports.Client;
+using Thrift.Transports.Server;
 using Zooyard.Core;
 using Zooyard.Rpc.Cache;
 using Zooyard.Rpc.Cluster;
@@ -16,16 +21,28 @@ namespace Zooyard.Rpc.ThriftImpl.Extensions
     {
         public IDictionary<string,string> Clients { get; set; }
     }
-    
+
+    public class ThriftServerOption
+    {
+        public string ProtocolFactoryType { get; set; }
+        public ThriftTransportOption Transport { get; set; }
+    }
+    public class ThriftTransportOption
+    {
+        public string TransportType { get; set; }
+        public int Port { get; set; }
+        public int ClientTimeOut { get; set; }
+        public bool UserBufferedSockets { get; set; }
+    }
 
     public static class ServiceBuilderExtensions
     {
-        public static void AddThrift(this IServiceCollection services)
+        public static void AddThriftClient(this IServiceCollection services)
         {
             services.AddSingleton((serviceProvder) => 
             {
-                var option = serviceProvder.GetService<IOptions<ThriftOption>>()?.Value;
-
+                var option = serviceProvder.GetService<IOptions<ThriftOption>>().Value;
+                var loggerFactory = serviceProvder.GetService<ILoggerFactory>();
                 var thriftClientTypes = new Dictionary<string, Type>();
                 foreach (var item in option.Clients)
                 {
@@ -33,7 +50,6 @@ namespace Zooyard.Rpc.ThriftImpl.Extensions
                 }
 
                 var pool = new ThriftClientPool(
-                
                     transportTypes : new Dictionary<string, Type>
                         {
                             {"TSocket", typeof(TSocketClientTransport)},
@@ -52,11 +68,43 @@ namespace Zooyard.Rpc.ThriftImpl.Extensions
                             { "TJSONProtocol",typeof(TJsonProtocol)},
                             { "TMultiplexedProtocol",typeof(TMultiplexedProtocol)},
                         },
-                    thriftClientTypes : thriftClientTypes
+                    thriftClientTypes : thriftClientTypes,
+                    loggerFactory: loggerFactory
                 );
 
                 return pool;
             });
+
+        }
+
+        public static void AddThriftServer<ifacade, facade, processor>(this IServiceCollection services)
+            where processor : class, ITAsyncProcessor
+            where ifacade : class
+            where facade : class,ifacade
+        {
+            services.AddTransient<ifacade, facade>();
+            services.AddTransient<ITAsyncProcessor, processor>();
+
+            services.AddSingleton((serviceProvider)=> 
+            {
+                var option = serviceProvider.GetService<IOptions<ThriftServerOption>>().Value;
+                var transportType =Type.GetType(option.Transport.TransportType);
+                var transport = transportType.GetConstructor(new[] {typeof(int), typeof(int), typeof(bool) })
+                .Invoke(new object[] {option.Transport.Port,option.Transport.ClientTimeOut,option.Transport.UserBufferedSockets })
+                 as TServerTransport;
+
+                return transport;
+            });
+
+            services.AddSingleton((serviceProvider) => {
+                var option = serviceProvider.GetService<IOptions<ThriftServerOption>>().Value;
+                var factoryType = Type.GetType(option.ProtocolFactoryType);
+                var factory = factoryType.GetConstructor(null).Invoke(null)
+                 as ITProtocolFactory;
+                return factory;
+            });
+            
+            services.AddSingleton<AsyncBaseServer>();
 
         }
     }

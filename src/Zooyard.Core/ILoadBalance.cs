@@ -4,6 +4,7 @@ namespace Zooyard.Core
 {
     public interface ILoadBalance
     {
-       URL Select(IList<URL> urls,IInvocation invocation);
+        string Name { get; }
+        URL Select(IList<URL> urls,IInvocation invocation);
     }
 }

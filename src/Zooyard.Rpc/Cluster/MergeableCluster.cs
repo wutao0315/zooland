@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -10,10 +11,18 @@ namespace Zooyard.Rpc.Cluster
 {
     public class MergeableCluster : AbstractCluster
     {
+        public override string Name => NAME;
         public const string NAME = "mergeable";
         public IDictionary<Type, IMerger> DefaultMergers { get; set; }
         public IDictionary<string, IMerger> MySelfMergers { get; set; }
         public const string MERGER_KEY = "merger";
+
+        private readonly ILogger _logger;
+        public MergeableCluster(ILoggerFactory loggerFactory) : base(loggerFactory)
+        {
+            _logger = loggerFactory.CreateLogger<MergeableCluster>();
+        }
+
         private string getGroupDescFromServiceKey(string key)
         {
             int index = key.IndexOf("/");
@@ -136,11 +145,10 @@ namespace Zooyard.Rpc.Cluster
             {
                 try
                 {
-                    //IResult r = future.GetAwaiter().GetResult();// (timeout, TimeUnit.MILLISECONDS);
                     var r = entry.Value.Result;
                     if (r.HasException)
                     {
-                        //logger.Error($"Invoke {entry.Key} {getGroupDescFromServiceKey(entry.Key)}  failed: {r.Exception.Message}", r.Exception);
+                        _logger.LogError(r.Exception, $"Invoke {entry.Key} {getGroupDescFromServiceKey(entry.Key)}  failed: {r.Exception.Message}");
                     }
                     else
                     {
@@ -223,13 +231,11 @@ namespace Zooyard.Rpc.Cluster
                 IMerger resultMerger;
                 if (merger.ToLower() == "true" || merger.ToLower() == "default")
                 {
-                    //resultMerger = DefaultMergers[returnType];
                     resultMerger = MergerFactory.GetMerger(returnType, DefaultMergers);
                 }
                 else
                 {
                     resultMerger = MySelfMergers[merger];
-                    //resultMerger = ExtensionLoader.getExtensionLoader(Merger.class).getExtension(merger);
                 }
 
                 if (resultMerger != null)

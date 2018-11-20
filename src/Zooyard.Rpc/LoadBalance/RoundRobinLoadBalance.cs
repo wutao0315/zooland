@@ -8,6 +8,7 @@ namespace Zooyard.Rpc.LoadBalance
 {
     public class RoundRobinLoadBalance : AbstractLoadBalance
     {
+        public override string Name => NAME;
         public const string NAME = "roundrobin";
         private ConcurrentDictionary<string, AtomicPositiveInteger> sequences = new ConcurrentDictionary<String, AtomicPositiveInteger>();
 

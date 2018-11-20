@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Zooyard.Core;
@@ -10,12 +11,16 @@ namespace Zooyard.Rpc.Cluster
     /// </summary>
     public class FailbackCluster : AbstractCluster
     {
+        public override string Name => NAME;
         public const string NAME = "failback";
         private static readonly long RETRY_FAILED_PERIOD = 5 * 1000;
 
-        //private final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(2, new NamedThreadFactory("failback-cluster-timer", true));
+        private readonly ILogger _logger;
+        public FailbackCluster(ILoggerFactory loggerFactory) : base(loggerFactory)
+        {
+            _logger = loggerFactory.CreateLogger<FailbackCluster>();
+        }
         private ConcurrentDictionary<IInvocation, URL> failed = new ConcurrentDictionary<IInvocation, URL>();
-        //private volatile ScheduledFuture retryFuture;
         private System.Timers.Timer retryTimer;
 
 
@@ -34,12 +39,11 @@ namespace Zooyard.Rpc.Cluster
                             // 收集统计信息
                             try
                             {
-                                //Thread.Sleep(TimeSpan.FromMilliseconds(RETRY_FAILED_PERIOD));
                                 retryFailed(pool);
                             }
                             catch (Exception t)
                             { // 防御性容错
-                                //logger.Error("Unexpected error occur at collect statistic", t);
+                                _logger.LogError(t,"Unexpected error occur at collect statistic");
                             }
                         });
                         retryTimer.AutoReset = true;
@@ -74,7 +78,7 @@ namespace Zooyard.Rpc.Cluster
                 catch (Exception e)
                 {
                     pool.Recovery(client);
-                    //logger.Error("Failed retry to invoke method " + invocation.MethodInfo.Name + ", waiting again.", e);
+                    _logger.LogError(e, $"Failed retry to invoke method {invocation.MethodInfo.Name}, waiting again.");
                 }
             }
         }
@@ -108,8 +112,7 @@ namespace Zooyard.Rpc.Cluster
             }
             catch (Exception e)
             {
-                
-                //logger.Error("Failback to invoke method " + invocation.MethodInfo.Name + ", wait for retry in background. Ignored exception: " + e.Message + ", ", e);
+                _logger.LogError(e, $"Failback to invoke method {invocation.MethodInfo.Name}, wait for retry in background. Ignored exception:{e.Message}");
                 addFailed(pool,invocation, invoker);
                 result = new RpcResult(); // ignore
                 exception = e;

@@ -3,7 +3,7 @@ using Zooyard.Core;
 
 namespace Zooyard.Rpc.Support
 {
-    public abstract class AbstractClient: Core.IClient
+    public abstract class AbstractClient: IClient
     {
         public virtual string Version { get { return Url.GetParameter(URL.VERSION_KEY); } }
         public DateTime ActiveTime { get; set; } = DateTime.Now;

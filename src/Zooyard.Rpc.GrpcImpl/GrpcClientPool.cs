@@ -1,4 +1,5 @@
 ﻿using Grpc.Core;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using Zooyard.Core;
@@ -9,15 +10,20 @@ namespace Zooyard.Rpc.GrpcImpl
     public class GrpcClientPool : AbstractClientPool
     {
         public const string PROXY_KEY = "proxy";
-
         public const string TIMEOUT_KEY = "grpc_timeout";
         public const int DEFAULT_TIMEOUT = 5000;
-
         public const string MAXLENGTH_KEY = "grpc_maxlength";
         public const int DEFAULT_MAXLENGTH = int.MaxValue;
-
         public const string CREDENTIALS_KEY = "protocol";
         public const string DEFAULT_CREDENTIALS = "Insecure";
+
+        private readonly ILogger _logger;
+        private readonly ILoggerFactory _loggerFactory;
+        public GrpcClientPool(ILoggerFactory loggerFactory) : base(loggerFactory)
+        {
+            _loggerFactory = loggerFactory;
+            _logger = loggerFactory.CreateLogger<GrpcClientPool>();
+        }
 
         public IDictionary<string, ChannelCredentials> TheCredentials { get; set; }
 
@@ -58,7 +64,7 @@ namespace Zooyard.Rpc.GrpcImpl
             //实例化TheThriftClient
             var client = Activator.CreateInstance(TheGrpcClientTypes[proxyKey], channel);
 
-            return new GrpcClient(channel, client, url, credentials, timeout);
+            return new GrpcClient(channel, client, url, credentials, timeout, _loggerFactory);
         }
     }
 }

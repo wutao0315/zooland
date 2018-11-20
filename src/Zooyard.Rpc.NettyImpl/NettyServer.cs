@@ -1,9 +1,8 @@
 ﻿using DotNetty.Buffers;
-using DotNetty.Codecs;
-using DotNetty.Handlers.Logging;
 using DotNetty.Handlers.Tls;
 using DotNetty.Transport.Bootstrapping;
 using DotNetty.Transport.Channels;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,40 +17,58 @@ namespace Zooyard.Rpc.NettyImpl
     {
         //UseLibuv
 
-        public IEventLoopGroup TheBossGroup { get; set; }
-        public IEventLoopGroup TheWorkerGroup { get; set; }
-        public IServerChannel TheServerChannel { get; set; }
-        public IList<IChannelHandler> ChannelHandlers { get; set; }
-        public int ThePort { get; set; }
+        private readonly IEventLoopGroup _bossGroup;
+        private readonly IEventLoopGroup _workerGroup;
+        private readonly IServerChannel _serverChannel;
+        private readonly IList<IChannelHandler> _channelHandlers;
+        private readonly int _port;
+        private readonly bool _isSsl = false;
+        private readonly string _pfx = "dotnetty.com";
+        private readonly string _pwd = "password";
 
-
-
-        public bool IsSsl { get; set; } = false;
-        public string Pfx { get; set; } = "dotnetty.com";
-        public string Pwd { get; set; } = "password";
-
+        private readonly ILogger _logger;
+        public NettyServer(IEventLoopGroup bossGroup, 
+            IEventLoopGroup workerGroup, 
+            IServerChannel serverChannel,
+            IList<IChannelHandler> channelHandlers,
+            int port,
+            bool isSsl,
+            string pfx,
+            string pwd,
+            ILoggerFactory loggerFactory) : base(loggerFactory)
+        {
+            _logger = loggerFactory.CreateLogger<NettyServer>();
+            _bossGroup = bossGroup;
+            _workerGroup = workerGroup;
+            _serverChannel = serverChannel;
+            _channelHandlers = channelHandlers;
+            _port = port;
+            _isSsl = isSsl;
+            _pfx = pfx;
+            _pwd = pwd;
+        }
         private IChannel _channel;
 
         public override void DoExport()
         {
-
-            
-            //if (_logger.IsEnabled(LogLevel.Debug))
-            //    _logger.LogDebug($"准备启动服务主机，监听地址：{TheEndPoint}。");
-            Console.WriteLine($"准备启动服务主机，监听地址：{ThePort}。");
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug($"ready to start the server on port:{_port}.");
+            }
+                
             
             X509Certificate2 tlsCertificate = null;
-            if (IsSsl)
+            if (_isSsl)
             {
-                tlsCertificate = new X509Certificate2(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{Pfx}.pfx"), Pwd);
+                tlsCertificate = new X509Certificate2(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{_pfx}.pfx"), _pwd);
             }
 
             var bootstrap = new ServerBootstrap();
             bootstrap
-                .Group(TheBossGroup, TheWorkerGroup)
-                .ChannelFactory(()=> TheServerChannel)
+                .Group(_bossGroup, _workerGroup)
+                .ChannelFactory(()=> _serverChannel)
                 .Option(ChannelOption.SoBacklog, 100)
-                .Handler(new LoggingHandler("SRV-LSTN"))
+                .Handler(new DotNetty.Handlers.Logging.LoggingHandler("SRV-LSTN"))
                 .ChildOption(ChannelOption.Allocator, PooledByteBufferAllocator.Default)
                 .ChildHandler(new ActionChannelInitializer<IChannel>(channel =>
                 {
@@ -67,35 +84,33 @@ namespace Zooyard.Rpc.NettyImpl
                     //pipeline.AddLast(new LengthFieldBasedFrameDecoder(int.MaxValue, 0, 4, 0, 4));
                     //pipeline.AddLast(new ServerHandler(TheService));
 
-                    pipeline.AddLast(ChannelHandlers?.ToArray());
+                    pipeline.AddLast(_channelHandlers?.ToArray());
                     
                 }));
             try
             {
-                
-                _channel = bootstrap.BindAsync(ThePort).GetAwaiter().GetResult();
-                //if (_logger.IsEnabled(LogLevel.Debug))
-                //    _logger.LogDebug($"服务主机启动成功，监听地址：{endPoint}。");
-                Console.WriteLine($"服务主机启动成功，监听地址：{ThePort}。");
+                _channel = bootstrap.BindAsync(_port).GetAwaiter().GetResult();
+                if (_logger.IsEnabled(Microsoft.Extensions.Logging.LogLevel.Debug))
+                {
+                    _logger.LogDebug($"server started on port:{_port}.");
+                }
             }
-            catch
+            catch(Exception ex)
             {
-                //_logger.LogError($"服务主机启动失败，监听地址：{endPoint}。 ");
-                Console.WriteLine($"服务主机启动失败，监听地址：{ThePort}。");
+                _logger.LogError(ex, $"server start fail on port：{_port}。 ");
             }
 
         }
 
         public override void DoDispose()
         {
-            //向注册中心发送注销请求
 
             Task.Run(async () =>
             {
                 await _channel.CloseAsync();
                 await _channel.DisconnectAsync();
-                await TheBossGroup.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(1));
-                await TheWorkerGroup.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(1));
+                await _bossGroup.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(1));
+                await _workerGroup.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(1));
 
             }).Wait();
 
@@ -127,10 +142,7 @@ namespace Zooyard.Rpc.NettyImpl
                 buffer.ReadBytes(bytes);
                 var transportMessage = bytes.Desrialize<TransportMessage>();
                 var rpc = transportMessage.GetContent<RemoteInvokeMessage>();
-                //var rpcJson = buffer.ToString(Encoding.UTF8);
-                //Console.WriteLine($"Received from client: {rpcJson}");
-                //var transportMessage = JsonConvert.DeserializeObject<TransportMessage>(rpcJson);
-                //var rpc = JsonConvert.DeserializeObject<RemoteInvokeMessage>(transportMessage.Content.ToString());
+
                 var methodName = rpc.Method;
                 var arguments = rpc.Arguments;
                 var types = (from item in arguments select item.GetType()).ToArray();
@@ -144,7 +156,6 @@ namespace Zooyard.Rpc.NettyImpl
                     var method = _service.GetType().GetMethod(methodName, types);
                     var result = method.Invoke(_service, arguments);
                     remoteInvoker.Result = result;
-                    //socket.Send(sendByte, sendByte.Length, 0);
                 }
                 catch (Exception ex)
                 {
@@ -153,8 +164,6 @@ namespace Zooyard.Rpc.NettyImpl
                 }
                 var resultData = TransportMessage.CreateInvokeResultMessage(transportMessage.Id, remoteInvoker);
                 var sendByte = resultData.Serialize();
-                //var sendStr = JsonConvert.SerializeObject(resultData);
-                //var sendByte = Encoding.ASCII.GetBytes(sendStr);
                 var sendBuffer = Unpooled.WrappedBuffer(sendByte);
                 context.WriteAsync(sendBuffer);
             }
@@ -177,12 +186,6 @@ namespace Zooyard.Rpc.NettyImpl
 
         #endregion Overrides of ChannelHandlerAdapter
     }
-
-    //public class RpcData
-    //{
-    //    public string Method { get; set; }
-    //    public object[] Arguments { get; set; }
-    //}
 
     /// <summary>
     /// 传输消息模型。
@@ -305,20 +308,6 @@ namespace Zooyard.Rpc.NettyImpl
     [Serializable]
     public class RemoteInvokeMessage
     {
-        ///// <summary>
-        ///// 服务Id。
-        ///// </summary>
-        //public string ServiceId { get; set; }
-
-        //public bool DecodeJOject { get; set; }
-
-        //public string ServiceKey { get; set; }
-        ///// <summary>
-        ///// 服务参数。
-        ///// </summary>
-        //public IDictionary<string, object> Parameters { get; set; }
-
-        //public IDictionary<string, object> Attachments { get; set; }
         public string Method { get; set; }
         public object[] Arguments { get; set; }
     }

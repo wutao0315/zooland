@@ -1,4 +1,5 @@
 ﻿using Akka.Actor;
+using Microsoft.Extensions.Logging;
 using Zooyard.Core;
 using Zooyard.Rpc.Support;
 
@@ -7,34 +8,36 @@ namespace Zooyard.Rpc.AkkaImpl
     public class AkkaClient : AbstractClient
     {
         public override URL Url { get; }
-        private ActorSystem TheActorSystem { get; set; }
-        private int Timeout { get; set; }
+        private readonly ActorSystem _actorSystem;
+        private readonly int _timeout;
+        private readonly ILoggerFactory _loggerFactory;
+        private readonly ILogger _logger;
 
-        public AkkaClient(ActorSystem actorSystem,URL url,int timeout)
+        public AkkaClient(ActorSystem actorSystem, URL url, int timeout, ILoggerFactory loggerFactory)
         {
-            this.TheActorSystem = actorSystem;
+            _actorSystem = actorSystem;
             this.Url = url;
-            this.Timeout = timeout;
+            _timeout = timeout;
+            _loggerFactory = loggerFactory;
+            _logger = loggerFactory.CreateLogger<AkkaClient>();
         }
 
         public override IInvoker Refer()
         {
-            return new AkkaInvoker(TheActorSystem, Url, Timeout);
+            return new AkkaInvoker(_actorSystem, Url, _timeout, _loggerFactory);
         }
 
         public override void Open()
         {
-
         }
 
         public override void Close()
         {
-            TheActorSystem.Dispose();
-
+            _actorSystem.Dispose();
         }
         public override void Dispose()
         {
-            TheActorSystem.Dispose();
+            _actorSystem.Dispose();
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Akka.Actor;
 using Akka.Configuration;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,50 +10,51 @@ namespace Zooyard.Rpc.AkkaImpl
 {
     public class AkkaServer : AbstractServer
     {
-        public string TheActorConfig { get; set; } = @"
-        akka {  
-            actor {
-                provider = ""Akka.Remote.RemoteActorRefProvider, Akka.Remote""
-            }
-            remote {
-                dot-netty.tcp {
-                    port = 10011
-                    hostname = 0.0.0.0
-                    public-hostname = localhost 
-                }
-            }
+        private readonly ActorSystem _actorSystem;
+        private readonly IDictionary<string, ZooyardActor> _actors;
+
+        //private readonly string _actorName;
+        //private readonly string _actorConfig = @"
+        //akka {  
+        //    actor {
+        //        provider = ""Akka.Remote.RemoteActorRefProvider, Akka.Remote""
+        //    }
+        //    remote {
+        //        dot-netty.tcp {
+        //            port = 10011
+        //            hostname = 0.0.0.0
+        //            public-hostname = localhost 
+        //        }
+        //    }
+        //}
+        //";
+
+        private readonly ILogger _logger;
+        public AkkaServer(ActorSystem actorSystem, IDictionary<string, ZooyardActor> actors, ILoggerFactory loggerFactory) 
+            : base(loggerFactory)
+        {
+            _logger = loggerFactory.CreateLogger<AkkaServer>();
+            _actorSystem = actorSystem;
+            _actors = actors;
         }
-        ";
-        public string TheActorName { get; set; }
-        private ActorSystem TheActorSystem { get; set; }
-        public IDictionary<string, ZooyardActor> TheActors { get; set; }
-        
+        public AkkaServer(string actorName, string actorConfig, IDictionary<string, ZooyardActor> actors, ILoggerFactory loggerFactory) 
+            : this(ActorSystem.Create(actorName.Replace(".", "-"), ConfigurationFactory.ParseString(actorConfig)), actors, loggerFactory)
+        {
+        }
+
+       
         public override void DoExport()
         {
-
-            // Use this for a multithreaded server
-            // server = new TThreadPoolServer(processor, serverTransport);
-            var config = ConfigurationFactory.ParseString(TheActorConfig);
-            
-            TheActorSystem = ActorSystem.Create(TheActorName.Replace(".","-"), config);
-            
-            foreach (var item in TheActors)
+            foreach (var item in _actors)
             {
-                TheActorSystem.ActorOf(Props.Create(item.Value.ActorType,(item.Value.Args??new List<object>()).ToArray()), item.Key);
+                _actorSystem.ActorOf(Props.Create(item.Value.ActorType,(item.Value.Args??new List<object>()).ToArray()), item.Key);
             }
-
-            Console.WriteLine($"Starting the akka server ...");
-            //开启服务
-            //TheServer.Serve();
-            //向注册中心发送服务注册信息
-
+            _logger.LogInformation("Starting the akka server ...");
         }
 
         public override void DoDispose()
         {
-            //向注册中心发送注销请求
-
-            TheActorSystem.Dispose();
+            _actorSystem.Dispose();
         }
     }
     public class ZooyardActor

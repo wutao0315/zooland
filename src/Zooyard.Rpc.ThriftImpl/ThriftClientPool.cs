@@ -9,15 +9,23 @@ using Thrift.Transports;
 using Thrift.Transports.Client;
 using Zooyard.Core;
 using Zooyard.Rpc.Support;
+using Microsoft.Extensions.Logging;
 
 namespace Zooyard.Rpc.ThriftImpl
 {
     public class ThriftClientPool : AbstractClientPool
     {
-        public ThriftClientPool() { }
+        private readonly ILogger _logger;
+        private readonly ILoggerFactory _loggerFactory;
+        public ThriftClientPool(ILoggerFactory loggerFactory):base(loggerFactory)
+        {
+            _loggerFactory = loggerFactory;
+            _logger = loggerFactory.CreateLogger<ThriftClientPool>();
+        }
         public ThriftClientPool(IDictionary<string, Type> transportTypes,
             IDictionary<string, Type> protocolTypes,
-            IDictionary<string, Type> thriftClientTypes)
+            IDictionary<string, Type> thriftClientTypes,
+            ILoggerFactory loggerFactory) :this(loggerFactory)
         {
             TheTransportTypes = transportTypes;
             TheProtocolTypes = protocolTypes;
@@ -71,7 +79,7 @@ namespace Zooyard.Rpc.ThriftImpl
             //实例化TheThriftClient
             var client = (IDisposable)Activator.CreateInstance(TheThriftClientTypes[proxyKey], protocol);
 
-            return new ThriftClient(transport, client, url);
+            return new ThriftClient(transport, client, url, _loggerFactory);
         }
     }
 }

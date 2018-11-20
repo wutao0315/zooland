@@ -62,13 +62,23 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.Rpc.NettyImpl", "sr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcContractNetty", "samples\RpcContractNetty\RpcContractNetty.csproj", "{0796FC26-E6B7-4FD3-8415-D0F775490544}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zooyard.Rpc.ThriftImpl.Extensions", "src\Zooyard.Rpc.ThriftImpl.Extensions\Zooyard.Rpc.ThriftImpl.Extensions.csproj", "{C1E4C56E-2111-429D-B48E-9AE9DDFF36DB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.Rpc.ThriftImpl.Extensions", "src\Zooyard.Rpc.ThriftImpl.Extensions\Zooyard.Rpc.ThriftImpl.Extensions.csproj", "{C1E4C56E-2111-429D-B48E-9AE9DDFF36DB}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.Core.Extensions", "src\Zooyard.Core.Extensions\Zooyard.Core.Extensions.csproj", "{CBF46C6B-5B98-4656-8589-C711BC88A6CD}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{195EC2BD-3EE4-4D81-9BB4-7895BB8C84F4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zooyard.CoreTest", "test\Zooyard.CoreTest\Zooyard.CoreTest.csproj", "{9F4D0F0E-CE5A-48D4-85DE-8A6228F6457A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.CoreTest", "test\Zooyard.CoreTest\Zooyard.CoreTest.csproj", "{9F4D0F0E-CE5A-48D4-85DE-8A6228F6457A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zooyard.Rpc.AkkaImpl.Extensions", "src\Zooyard.Rpc.AkkaImpl.Extensions\Zooyard.Rpc.AkkaImpl.Extensions.csproj", "{BE4DD494-D557-4613-9C23-70661E2EAFCC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zooyard.Rpc.GrpcImpl.Extensions", "src\Zooyard.Rpc.GrpcImpl.Extensions\Zooyard.Rpc.GrpcImpl.Extensions.csproj", "{05D28D41-756F-498B-A4E0-69AC4D1F10FE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zooyard.Rpc.HttpImpl.Extensions", "src\Zooyard.Rpc.HttpImpl.Extensions\Zooyard.Rpc.HttpImpl.Extensions.csproj", "{F9BEF2F7-60D4-49DB-86BA-A34A9058FCA4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zooyard.Rpc.NettyImpl.Extensions", "src\Zooyard.Rpc.NettyImpl.Extensions\Zooyard.Rpc.NettyImpl.Extensions.csproj", "{3E619433-E72D-466C-BE2D-956FF61F8A7B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zooyard.Rpc.WcfImpl.Extensions", "src\Zooyard.Rpc.WcfImpl.Extensions\Zooyard.Rpc.WcfImpl.Extensions.csproj", "{ACD1F3C0-A19F-472F-AA8D-C82838761D43}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -160,6 +170,26 @@ Global
 		{9F4D0F0E-CE5A-48D4-85DE-8A6228F6457A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9F4D0F0E-CE5A-48D4-85DE-8A6228F6457A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9F4D0F0E-CE5A-48D4-85DE-8A6228F6457A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BE4DD494-D557-4613-9C23-70661E2EAFCC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE4DD494-D557-4613-9C23-70661E2EAFCC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE4DD494-D557-4613-9C23-70661E2EAFCC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE4DD494-D557-4613-9C23-70661E2EAFCC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05D28D41-756F-498B-A4E0-69AC4D1F10FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05D28D41-756F-498B-A4E0-69AC4D1F10FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05D28D41-756F-498B-A4E0-69AC4D1F10FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05D28D41-756F-498B-A4E0-69AC4D1F10FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F9BEF2F7-60D4-49DB-86BA-A34A9058FCA4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9BEF2F7-60D4-49DB-86BA-A34A9058FCA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9BEF2F7-60D4-49DB-86BA-A34A9058FCA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9BEF2F7-60D4-49DB-86BA-A34A9058FCA4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E619433-E72D-466C-BE2D-956FF61F8A7B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E619433-E72D-466C-BE2D-956FF61F8A7B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E619433-E72D-466C-BE2D-956FF61F8A7B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E619433-E72D-466C-BE2D-956FF61F8A7B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ACD1F3C0-A19F-472F-AA8D-C82838761D43}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ACD1F3C0-A19F-472F-AA8D-C82838761D43}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ACD1F3C0-A19F-472F-AA8D-C82838761D43}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ACD1F3C0-A19F-472F-AA8D-C82838761D43}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -186,6 +216,11 @@ Global
 		{C1E4C56E-2111-429D-B48E-9AE9DDFF36DB} = {50C4867C-8931-45F0-B773-463C7B953969}
 		{CBF46C6B-5B98-4656-8589-C711BC88A6CD} = {50C4867C-8931-45F0-B773-463C7B953969}
 		{9F4D0F0E-CE5A-48D4-85DE-8A6228F6457A} = {195EC2BD-3EE4-4D81-9BB4-7895BB8C84F4}
+		{BE4DD494-D557-4613-9C23-70661E2EAFCC} = {50C4867C-8931-45F0-B773-463C7B953969}
+		{05D28D41-756F-498B-A4E0-69AC4D1F10FE} = {50C4867C-8931-45F0-B773-463C7B953969}
+		{F9BEF2F7-60D4-49DB-86BA-A34A9058FCA4} = {50C4867C-8931-45F0-B773-463C7B953969}
+		{3E619433-E72D-466C-BE2D-956FF61F8A7B} = {50C4867C-8931-45F0-B773-463C7B953969}
+		{ACD1F3C0-A19F-472F-AA8D-C82838761D43} = {50C4867C-8931-45F0-B773-463C7B953969}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4FBB3247-7E5E-40FB-85B2-67B3E3D57FCB}

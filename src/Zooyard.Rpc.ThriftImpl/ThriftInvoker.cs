@@ -1,14 +1,17 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using Zooyard.Core;
 
 namespace Zooyard.Rpc.ThriftImpl
 {
     public class ThriftInvoker : IInvoker
     {
-        private IDisposable Instance { get; set; }
-        public ThriftInvoker(IDisposable instance)
+        private readonly IDisposable _instance;
+        private readonly ILogger _logger;
+        public ThriftInvoker(IDisposable instance,ILoggerFactory loggerFactory)
         {
-            Instance = instance;
+            _instance = instance;
+            _logger = loggerFactory.CreateLogger<ThriftInvoker>();
         }
 
         public IResult Invoke(IInvocation invocation)
@@ -22,9 +25,10 @@ namespace Zooyard.Rpc.ThriftImpl
             //var method = Instance.GetType().GetMethod(methodName, argumentTypes.ToArray());
             //var value = method.Invoke(Instance, arguments.ToArray());
             //return new RpcResult(value);
-
-            var method = Instance.GetType().GetMethod(invocation.MethodInfo.Name, invocation.ArgumentTypes);
-            var value = method.Invoke(Instance, invocation.Arguments);
+            
+            var method = _instance.GetType().GetMethod(invocation.MethodInfo.Name, invocation.ArgumentTypes);
+            var value = method.Invoke(_instance, invocation.Arguments);
+            _logger.LogInformation($"Invoke:{invocation.MethodInfo.Name}");
             return new RpcResult(value);
         }
     }

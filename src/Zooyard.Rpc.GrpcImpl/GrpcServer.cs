@@ -1,4 +1,5 @@
 ﻿using Grpc.Core;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using Zooyard.Rpc.Support;
@@ -7,45 +8,42 @@ namespace Zooyard.Rpc.GrpcImpl
 {
     public class GrpcServer : AbstractServer
     {
-        public IList<ServerServiceDefinition> Services { get; set; }
-        public IList<ServerPort> Ports { get; set; }
-        public Server TheServer { get; set; }
-        
-        
+        private readonly IEnumerable<ServerServiceDefinition> _services;
+        private readonly IEnumerable<ServerPort> _ports;
+
+        private readonly ILogger _logger;
+        private readonly Server _server;
+        public GrpcServer(Server server, IEnumerable<ServerServiceDefinition> services, IEnumerable<ServerPort> ports, ILoggerFactory loggerFactory) : base(loggerFactory)
+        {
+            _logger = loggerFactory.CreateLogger<GrpcServer>();
+            _server = server;
+            _services = services;
+            _ports = ports;
+        }
+
+
         public override void DoExport()
         {
-            //DemoServiceImpl handler = new DemoServiceImpl();
-            //TProcessor processor = new DemoService.Processor(handler);
-            //TServerTransport serverTransport = new TServerSocket(9090);
-            //TServer server = new TSimpleServer(processor, serverTransport);
-
-            // Use this for a multithreaded server
-            // server = new TThreadPoolServer(processor, serverTransport);
-
-
-            //Server.ServiceDefinitionCollection cc = new Server.ServiceDefinitionCollection { new ServerServiceDefinition() { } };
-            foreach (var item in Services)
+            foreach (var item in _services)
             {
-                TheServer.Services.Add(item);
+                _server.Services.Add(item);
             }
-            foreach (var item in Ports)
+            foreach (var item in _ports)
             {
-                TheServer.Ports.Add(item);
+                _server.Ports.Add(item);
             }
             //开启服务
-            TheServer.Start();
-            Console.WriteLine($"Starting the grpc server ...");
+            _server.Start();
+            _logger.LogInformation("started the grpc server ...");
         }
 
         public override void DoDispose()
         {
             //向注册中心发送注销请求
-            if (TheServer != null)
+            if (_server != null)
             {
-                TheServer.ShutdownAsync().GetAwaiter().GetResult();
-                TheServer = null;
+                _server.ShutdownAsync().GetAwaiter().GetResult();
             }
-
         }
     }
 }

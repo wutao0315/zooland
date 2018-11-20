@@ -1,9 +1,15 @@
-﻿using Zooyard.Core;
+﻿using Microsoft.Extensions.Logging;
+using Zooyard.Core;
 
 namespace Zooyard.Rpc.Support
 {
     public abstract class AbstractServer : IServer
     {
+        private readonly ILogger _logger;
+        public AbstractServer(ILoggerFactory loggerFactory)
+        {
+            _logger = loggerFactory.CreateLogger<AbstractServer>();
+        }
         /// <summary>
         /// 注册中心发现机制
         /// </summary>
@@ -15,7 +21,7 @@ namespace Zooyard.Rpc.Support
         {
             //first start the service provider
             DoExport();
-
+            _logger.LogInformation("Export");
             if (!string.IsNullOrWhiteSpace(Address))
             {
                 var url = URL.valueOf(Address);
@@ -34,6 +40,7 @@ namespace Zooyard.Rpc.Support
             }
             //them stop the provider
             DoDispose();
+            _logger.LogInformation("Dispose");
         }
 
         public abstract void DoDispose();

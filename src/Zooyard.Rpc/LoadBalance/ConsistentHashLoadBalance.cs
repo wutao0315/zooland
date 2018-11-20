@@ -11,6 +11,7 @@ namespace Zooyard.Rpc.LoadBalance
 {
     public class ConsistentHashLoadBalance : AbstractLoadBalance
     {
+        public override string Name => NAME;
         public const string NAME = "hash";
         private ConcurrentDictionary<string, ConsistentHashSelector> selectors = new ConcurrentDictionary<String, ConsistentHashSelector>();
 

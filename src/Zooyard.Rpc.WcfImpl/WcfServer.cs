@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using Zooyard.Rpc.Support;
 
@@ -6,15 +7,19 @@ namespace Zooyard.Rpc.WcfImpl
 {
     public class WcfServer : AbstractServer
     {
+        private readonly ILogger _logger;
+        private readonly WcfService _server;
+        public WcfServer(WcfService server, ILoggerFactory loggerFactory) : base(loggerFactory)
+        {
+            _logger = loggerFactory.CreateLogger<WcfServer>();
+            _server = server;
+        }
+
         public IList<WcfService> Services { get; set; } = new List<WcfService>();
         public override void DoExport()
         {
-            //开启服务
-            foreach (var item in Services)
-            {
-                item.Open();
-                //向注册中心发送服务注册信息
-            }
+            //open service
+            _server.Open();
 
 
             // Step 3 of the hosting procedure: Add a service endpoint.
@@ -25,11 +30,7 @@ namespace Zooyard.Rpc.WcfImpl
 
         public override void DoDispose()
         {
-            //向注册中心发送注销请求
-            foreach (var item in Services)
-            {
-                item.Dispose();
-            }
+            _server.Dispose();
         }
     }
 }

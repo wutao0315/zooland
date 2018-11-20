@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
@@ -8,11 +9,13 @@ namespace Zooyard.Rpc.Support
 {
     public abstract class AbstractClientPool : IClientPool
     {
+        private readonly ILogger _logger;
+        
+
         #region 内部成员
         /// <summary>
-        /// 连接缓存池
+        /// client pools
         /// </summary>
-        //protected ConcurrentQueue<IClient> clientsPool;
         protected ConcurrentDictionary<string, ConcurrentQueue<IClient>> ClientsPool;
         /// <summary>
         /// 同步连接
@@ -46,14 +49,8 @@ namespace Zooyard.Rpc.Support
         protected Random rand = new Random();
         #endregion
 
-
         #region 属性
         public URL Address { get; set; }
-
-        /// <summary>
-        /// 启动版本，连接池重启时版本递增
-        /// </summary>
-        //internal int Version { set; get; }
 
         /// <summary>
         /// 连接池最大活动连接数
@@ -96,25 +93,13 @@ namespace Zooyard.Rpc.Support
         #endregion
 
         #region 构造方法
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="urls">服务器地址及端口</param>
-        protected AbstractClientPool()
+        public AbstractClientPool(ILoggerFactory loggerFactory)
         {
-            //参数校验及赋值
-            //if (urls == null)
-            //{
-            //    throw new ArgumentNullException("urls");
-            //}
-            //this.Version = 0;
-
-            //初始化
+            _logger = loggerFactory.CreateLogger<AbstractClientPool>();
+            //init
             CreateResetEvent();
             CreatePool();
         }
-
 
         #endregion
 
@@ -166,17 +151,6 @@ namespace Zooyard.Rpc.Support
                         }
                     }
 
-                    //空闲连接数小于最小空闲数，添加一个连接到连接池（已创建数不能超标）			
-                    //if ((!idleCount.ContainsKey(url.ToString()) || idleCount[url.ToString()] < MinIdle) 
-                    //    && (!activeCount.ContainsKey(url.ToString()) || activeCount[url.ToString()] < MaxActive))
-                    //{
-                    //    var candiate = InitializeClient(url, out innerErr);
-                    //    if (candiate != null)
-                    //    {
-                    //        EnqueueClient(url.ToString(), candiate);
-                    //    }
-                    //}
-
                     return client;
                 }
                 finally
@@ -203,6 +177,7 @@ namespace Zooyard.Rpc.Support
                     && idleCount[client.Url.ToString()] >= MaxIdle))//|| this.Version != client.Version
                 {
                     DestoryClient(client);
+                    _logger.LogInformation($"recovery to destory idle overflow:{client.Version}:{client.Url.ToString()}");
                     Console.WriteLine($"recovery to destory idle overflow:{client.Version}:{client.Url.ToString()}");
                 }
                 else
@@ -213,6 +188,7 @@ namespace Zooyard.Rpc.Support
                     EnqueueClient(client.Url.ToString(), client);
                     //发通知信号，连接池有连接变动
                     resetEvent.Set();
+                    _logger.LogInformation($"recovery to update:{client.Version}:{client.Url.ToString()}");
                     Console.WriteLine($"recovery to update:{client.Version}:{client.Url.ToString()}");
                 }
             }
@@ -246,14 +222,6 @@ namespace Zooyard.Rpc.Support
                 {
                     lock (locker)
                     {
-                        //Version++;
-                        //foreach (var item in this.Urls)
-                        //{
-                        //    while (idleCount.ContainsKey(item) && idleCount[item] > 0)
-                        //    {
-                        //        DequeueClient(item).Dispose();
-                        //    }
-                        //}
                         foreach (var item in ClientsPool.Keys)
                         {
                             while (idleCount[item] > 0)
@@ -291,9 +259,6 @@ namespace Zooyard.Rpc.Support
         {
             lock (locker)
             {
-                //版本增加
-                //Version++;
-
                 //读取配置
                 MaxActive = 100;
                 MinIdle = 2;
@@ -304,23 +269,6 @@ namespace Zooyard.Rpc.Support
                 {
                     ClientsPool = new ConcurrentDictionary<string,ConcurrentQueue<IClient>>();
                 }
-                //else
-                //{
-                    //foreach (var url in this.Urls)
-                    //{
-                    //    DestoryClient(DequeueClient(url));
-                    //}
-
-                    //while (idleCount > 0)
-                    //{
-                    //    DestoryClient(DequeueClient());
-                    //}
-
-                   // ClientsPool = new ConcurrentDictionary<string, ConcurrentQueue<IClient>>();
-                //}
-
-                //结点列表初始化
-                //this.Urls = urls;
             }
         }
 
@@ -371,11 +319,7 @@ namespace Zooyard.Rpc.Support
         protected IClient InitializeClient(URL url,out Exception err)
         {
             err = null;
-            //if (Urls==null||Urls.Count == 0|| !Urls.Contains(url))
-            //{
-            //    err = new NullReferenceException("there is no avalible serivce node to be access!");
-            //    return null;
-            //}
+
             try
             {
                 var client = CreateClient(url);
@@ -392,35 +336,10 @@ namespace Zooyard.Rpc.Support
             }
             catch (Exception e)
             {
+                _logger.LogError(e,e.Message);
                 err = e;
             }
-
-            //var hostIndexs = new int[Urls.Count];
-            //int j = 0;
-            //for (var i = 0; i < Urls.Count; i++)
-            //{
-            //    hostIndexs[i] = i;
-            //}
-            //for (var i = 0; i < Urls.Count; i++)
-            //{
-            //    try
-            //    {
-            //        j = rand.Next(Urls.Count);
-            //        var client = CreateClient(Urls[hostIndexs[j]]);
-            //        if (ValidateClient(client, out err))
-            //        {
-            //            activeCount++;
-            //            client.Reset();
-            //            return client;
-            //        }
-            //    }
-            //    catch (Exception e)
-            //    {
-            //        hostIndexs[j] = hostIndexs[(j + 1) % Urls.Count];
-            //        err = e;
-            //        continue;
-            //    }
-            //}
+            
             return null;
         }
 
@@ -440,6 +359,7 @@ namespace Zooyard.Rpc.Support
             catch (Exception e)
             {
                 err = e;
+                _logger.LogError(e, e.Message);
                 return false;
             }
         }
@@ -497,24 +417,24 @@ namespace Zooyard.Rpc.Support
 
         private void PrintConsole()
         {
-            //Console.WriteLine($"client pool information:{DateTime.Now.ToString("yyyy-MM-dd HH:mm:sss.fff")}");
-            //Console.WriteLine("-----------------------------------------");
-            //Console.WriteLine("client pools");
-            //foreach (var pool in ClientsPool)
-            //{
-            //    Console.WriteLine($"{pool.Value?.Count()}:{pool.Key}");
-            //}
-            //Console.WriteLine("idleCount");
-            //foreach (var item in idleCount)
-            //{
-            //    Console.WriteLine($"{item.Value}:{item.Key}");
-            //}
-            //Console.WriteLine("activeCount");
-            //foreach (var item in activeCount)
-            //{
-            //    Console.WriteLine($"{item.Value}:{item.Key}");
-            //}
-            //Console.WriteLine("-----------------------------------------");
+            Console.WriteLine($"client pool information:{DateTime.Now.ToString("yyyy-MM-dd HH:mm:sss.fff")}");
+            Console.WriteLine("-----------------------------------------");
+            Console.WriteLine("client pools");
+            foreach (var pool in ClientsPool)
+            {
+                Console.WriteLine($"{pool.Value?.Count??0}:{pool.Key}");
+            }
+            Console.WriteLine("idleCount");
+            foreach (var item in idleCount)
+            {
+                Console.WriteLine($"{item.Value}:{item.Key}");
+            }
+            Console.WriteLine("activeCount");
+            foreach (var item in activeCount)
+            {
+                Console.WriteLine($"{item.Value}:{item.Key}");
+            }
+            Console.WriteLine("-----------------------------------------");
         }
     }
 }

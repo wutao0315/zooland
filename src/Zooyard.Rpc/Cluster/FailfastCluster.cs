@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using Zooyard.Core;
 
@@ -6,7 +7,14 @@ namespace Zooyard.Rpc.Cluster
 {
     public class FailfastCluster : AbstractCluster
     {
+        public override string Name => NAME;
         public const string NAME = "failfast";
+        private readonly ILogger _logger;
+        public FailfastCluster(ILoggerFactory loggerFactory) : base(loggerFactory)
+        {
+            _logger = loggerFactory.CreateLogger<FailfastCluster>();
+        }
+
         public override IClusterResult DoInvoke(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
         {
             var goodUrls = new List<URL>();
@@ -55,7 +63,7 @@ namespace Zooyard.Rpc.Cluster
                     //+ " use zooyard version " + Version.getVersion()
                     + ", but no luck to perform the invocation. Last error is: " + e.Message, e.InnerException != null ? e.InnerException : e);
                 }
-
+                _logger.LogError(exception, exception.Message);
                 badUrls.Add(new BadUrl { Url = invoker, BadTime = DateTime.Now, CurrentException = exception });
             }
 

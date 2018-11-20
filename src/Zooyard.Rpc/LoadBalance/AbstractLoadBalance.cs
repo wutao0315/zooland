@@ -11,6 +11,8 @@ namespace Zooyard.Rpc.LoadBalance
         public const string WEIGHT_KEY = "weight"; 
         public const int DEFAULT_WEIGHT = 100;
         public const string REMOTE_TIMESTAMP_KEY = "remote.timestamp";
+
+        public virtual string Name { get; }
         
         public URL Select(IList<URL> urls, IInvocation invocation)
         {

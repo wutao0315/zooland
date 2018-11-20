@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
@@ -45,24 +46,20 @@ namespace Zooyard.Core.Extensions
                 return result;
             });
 
-            var loadBalances = new Dictionary<string, ILoadBalance>
-            {
-                { "hash", new ConsistentHashLoadBalance()},
-                { "leastactive", new LeastActiveLoadBalance()},
-                { "random", new RandomLoadBalance()},
-                { "roundrobin", new RoundRobinLoadBalance()}
-            };
+            services.AddSingleton<ConsistentHashLoadBalance>();
+            services.AddSingleton<LeastActiveLoadBalance>();
+            services.AddSingleton<RandomLoadBalance>();
+            services.AddSingleton<RoundRobinLoadBalance>();
 
-            var clusters = new Dictionary<string, ICluster>
-            {
-                { "broadcast", new BroadcastCluster()},
-                { "failback", new FailbackCluster()},
-                { "failfast", new FailfastCluster()},
-                { "failover", new FailoverCluster()},
-                { "failsafe", new FailsafeCluster()},
-                { "forking", new ForkingCluster()},
-                { "mergeable", new MergeableCluster()},
-            };
+
+            services.AddSingleton<BroadcastCluster>();
+            services.AddSingleton<FailbackCluster>();
+            services.AddSingleton<FailfastCluster>();
+            services.AddSingleton<FailoverCluster>();
+            services.AddSingleton<FailsafeCluster>();
+            services.AddSingleton<ForkingCluster>();
+            services.AddSingleton<MergeableCluster>();
+
 
             var caches = new Dictionary<string, Type>
             {
@@ -71,18 +68,32 @@ namespace Zooyard.Core.Extensions
                 {"threadlocal",typeof(ThreadLocalCache) },
             };
 
-           
-
             services.AddSingleton<IZooyardPools>((serviceProvder)=> 
             {
                 var option = serviceProvder.GetService<IOptions<ZoolandOption>>().Value;
                 var clientPools = serviceProvder.GetService<IDictionary<string,IClientPool>>();
-                var zooyardPools = new ZooyardPools(clientPools, loadBalances, clusters, caches, option.RegisterUrl, option.ClientUrls);
+                var loggerFactory = serviceProvder.GetService<ILoggerFactory>();
+
+                var loadbalanceList = serviceProvder.GetServices<ILoadBalance>();
+                var loadBalances = new Dictionary<string, ILoadBalance>();
+                foreach (var item in loadbalanceList)
+                {
+                    loadBalances.Add(item.Name,item);
+                };
+
+                var clusterList = serviceProvder.GetServices<ICluster>();
+                var clusters = new Dictionary<string, ICluster>();
+                foreach (var item in clusterList)
+                {
+                    clusters.Add(item.Name,item);
+                }
+
+                var zooyardPools = new ZooyardPools(loggerFactory, clientPools, loadBalances, clusters, caches, option.RegisterUrl, option.ClientUrls);
                 return zooyardPools;
             });
 
             var optionData = new ZoolandOption();
-            config.Bind("zooland", optionData);
+            config.Bind("zooyard", optionData);
 
             foreach (var item in optionData.Clients)
             {
@@ -105,8 +116,7 @@ namespace Zooyard.Core.Extensions
                     return result;
                 });
             }
-
-            //services.TryAdd(ServiceDescriptor.Singleton(typeof(ZooyardFactory<>), typeof(ZooyardFactory<>)));
+            
 
         }
     }

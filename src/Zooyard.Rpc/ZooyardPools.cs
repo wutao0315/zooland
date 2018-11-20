@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,9 @@ using Zooyard.Rpc.LoadBalance;
 
 namespace Zooyard.Rpc
 {
-    //单例对象
+    /// <summary>
+    /// Singleton object manage pools
+    /// </summary>
     public class ZooyardPools : IZooyardPools
     {
         public const string CACHE_KEY = "cache";
@@ -25,19 +28,19 @@ namespace Zooyard.Rpc
         public const string RECOVERY_TIME_KEY = "recoverytime";
         public const int DEFAULT_RECOVERY_TIME = 5;
         public const string APP_KEY = "app";
-        //protected ILog logger = LogManager.GetLogger<ZooyardPools>();
+        private readonly ILogger _logger;
         /// <summary>
-        /// 地址
-        /// 如果是registry开头，就代表是注册中心的地址
-        /// 否则就是直连地址
+        /// address
+        /// if address's protocol is 'registry', the urls will request register center for all urls
+        /// other way is connection directly address
         /// </summary>
         public URL Address { get; private set; }
         /// <summary>
-        /// 链接地址集合
+        /// good service url list
         /// </summary>
         public ConcurrentDictionary<string, IList<URL>> Urls { get; private set; }
         /// <summary>
-        /// 失败链接地址集合
+        /// bad service url list
         /// </summary>
         public ConcurrentDictionary<string, IList<BadUrl>> BadUrls { get; private set; }
         /// <summary>
@@ -45,21 +48,21 @@ namespace Zooyard.Rpc
         /// </summary>
         public IRegistryHost RegistryHost { get; set; }
         /// <summary>
-        /// 服务集合
-        /// key 是ApplicationName,
-        /// value是不同版本的客户端链接池
+        /// the service pools
+        /// key ApplicationName,
+        /// value diff version of client pool
         /// </summary>
         public ConcurrentDictionary<string, IClientPool> Pools { get; private set; }
         /// <summary>
-        /// 负载均衡
+        /// loadbalance
         /// </summary>
         public ConcurrentDictionary<string, ILoadBalance> LoadBalances { get; private set; }
         /// <summary>
-        /// 集群
+        /// cluster
         /// </summary>
         public ConcurrentDictionary<string, ICluster> Clusters { get; private set; }
         /// <summary>
-        /// 缓存集合
+        /// cache
         /// </summary>
         public ConcurrentDictionary<string, ICache> Caches { get; private set; }
         /// <summary>
@@ -71,30 +74,31 @@ namespace Zooyard.Rpc
         /// </summary>
         private System.Timers.Timer recoveryTimer;
         /// <summary>
-        /// 多线程锁
+        /// threed lock
         /// </summary>		
         protected object locker = new object();
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="pools"></param>
-        public ZooyardPools(IDictionary<string, IClientPool> pools,
+        public ZooyardPools(ILoggerFactory loggerFactory,IDictionary<string, IClientPool> pools,
             IDictionary<string, ILoadBalance> loadbalances,
             IDictionary<string, ICluster> clusters,
             IDictionary<string, Type> caches,
             string address)
-            : this(pools, loadbalances, clusters, caches, address, new List<string>()) { }
+            : this(loggerFactory,pools, loadbalances, clusters, caches, address, new List<string>()) { }
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="pools"></param>
-        public ZooyardPools(IDictionary<string, IClientPool> pools,
+        public ZooyardPools(ILoggerFactory loggerFactory, IDictionary<string, IClientPool> pools,
             IDictionary<string, ILoadBalance> loadbalances,
             IDictionary<string, ICluster> clusters,
             IDictionary<string, Type> caches,
             string address,
             IList<string> urls)
         {
+            _logger = loggerFactory.CreateLogger<ZooyardPools>();
             this.Pools = new ConcurrentDictionary<string, IClientPool>(pools);
             this.LoadBalances = new ConcurrentDictionary<string, ILoadBalance>(loadbalances);
             this.Clusters = new ConcurrentDictionary<string, ICluster>(clusters);
@@ -163,12 +167,11 @@ namespace Zooyard.Rpc
                 // 收集统计信息
                 try
                 {
-                    //Thread.Sleep(TimeSpan.FromMilliseconds(internalCycle));
                     cycleProcess();
                 }
                 catch (Exception t)
                 {   // 防御性容错
-                    //logger.Error("Unexpected error occur at collect statistic", t);
+                    _logger.LogError("Unexpected error occur at collect statistic", t);
                 }
             });
             cycleTimer.AutoReset = true;
@@ -183,12 +186,11 @@ namespace Zooyard.Rpc
                 // 收集统计信息
                 try
                 {
-                    //Thread.Sleep(TimeSpan.FromMilliseconds(internalCycle));
                     recoveryProcess();
                 }
                 catch (Exception t)
                 {   // 防御性容错
-                    //logger.Error("Unexpected error occur at collect statistic", t);
+                    _logger.LogError("Unexpected error occur at collect statistic", t);
                 }
             });
             recoveryTimer.AutoReset = true;
@@ -205,7 +207,6 @@ namespace Zooyard.Rpc
             {
                 pool.TimeOver(overtimeDate);
             }
-            //Console.WriteLine("cycle timer actived");
         }
 
         /// <summary>
@@ -228,17 +229,15 @@ namespace Zooyard.Rpc
                             this.Urls[badUrls.Key].Add(badUrl.Url);
                             list.Add(badUrl);
                             Console.WriteLine($"auto timer recovery url {badUrl.Url.ToString()}");
-                            //logger.Debug($"recovery:{badUrl.Url.ToString()}");
+                            _logger.LogInformation($"recovery:{badUrl.Url.ToString()}");
                         }
                     }
-                    //delete badurl from badurls 
                     foreach (var item in list)
                     {
                         badUrls.Value.Remove(item);
                     }
                 }
             }
-            //Console.WriteLine("recovery timer actived");
         }
 
         /// <summary>
@@ -248,13 +247,12 @@ namespace Zooyard.Rpc
         /// <returns>客户端服务连接</returns>
         private IClientPool GetClientPool(IInvocation invocation)
         {
-
             //参数检查
             if (!Pools.ContainsKey(invocation.TargetType.FullName))
             {
                 throw new Exception($"not find the {invocation.TargetType.FullName}'s pool,please config it ");
             }
-
+            
             var clientPool = Pools[invocation.TargetType.FullName];
             clientPool.Address = Address;
             return clientPool;
@@ -351,9 +349,7 @@ namespace Zooyard.Rpc
             {
                 result = Clusters[key];
             }
-
-            //result.Pool = GetClientPool(invocation);
-            //result.Address = this.Address;
+            
             return result;
         }
         /// <summary>
@@ -374,7 +370,7 @@ namespace Zooyard.Rpc
                 var result = filterUrls(invocation, Urls[invocation.TargetType.FullName]);
                 if (result?.Count > 0)
                 {
-                    Console.WriteLine("from good urls");
+                    _logger.LogInformation("from good urls");
                     return result;
                 }
             }
@@ -384,7 +380,7 @@ namespace Zooyard.Rpc
                 var result = filterUrls(invocation, BadUrls[invocation.TargetType.FullName].Select(w => w.Url).ToList());
                 if (result?.Count > 0)
                 {
-                    Console.WriteLine("from bad urls");
+                    _logger.LogInformation("from bad urls");
                     return result;
                 }
             }
@@ -453,14 +449,13 @@ namespace Zooyard.Rpc
             return result;
         }
         /// <summary>
-        /// 执行远程调用
+        /// exec rpc
         /// </summary>
         /// <param name="invocation"></param>
         /// <returns></returns>
-
         public IResult Invoke(IInvocation invocation)
         {
-            //缓存
+            //cache
             var cache = this.GetCache(invocation);
 
             var parameters = invocation.MethodInfo.GetParameters();
@@ -470,8 +465,8 @@ namespace Zooyard.Rpc
                 var value = cache.Get(key);
                 if (value != null)
                 {
-                    Console.WriteLine($"call from cache:{key}");
-                    Console.WriteLine($"cache type:{cache.GetType().FullName}");
+                    _logger.LogInformation($"call from cache:{key}");
+                    _logger.LogInformation($"cache type:{cache.GetType().FullName}");
                     return new RpcResult(value);
                 }
 
@@ -559,7 +554,8 @@ namespace Zooyard.Rpc
                         {
                             badUrls.Remove(badUrl);
                         }
-                        Console.WriteLine($"isolation url {goodUrl.ToString()}");
+
+                        _logger.LogInformation(badUrl.CurrentException,$"isolation url {badUrl.ToString()}");
                         badUrls.Add(item);
                     }
                 }
@@ -576,8 +572,7 @@ namespace Zooyard.Rpc
                         if (!goodUrls.Contains(badUrl.Url))
                         {
                             goodUrls.Add(badUrl.Url);
-                            Console.WriteLine($"recovery url {badUrl.ToString()}");
-                            //logger.Error(badUrl.CurrentException);
+                            _logger.LogInformation($"recovery url {badUrl.ToString()}");
                         }
 
                     }

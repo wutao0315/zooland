@@ -6,8 +6,8 @@ namespace Zooyard.Rpc.LoadBalance
 {
     public class RandomLoadBalance : AbstractLoadBalance
     {
+        public override string Name => NAME;
         public const string NAME = "random";
-
         private readonly Random random = new Random();
 
         protected override URL doSelect(IList<URL> urls, IInvocation invocation)

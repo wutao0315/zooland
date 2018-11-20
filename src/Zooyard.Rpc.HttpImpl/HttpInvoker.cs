@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System.Net.Http;
 using Zooyard.Core;
 
@@ -10,27 +11,31 @@ namespace Zooyard.Rpc.HttpImpl
         public const string DEFAULT_PARAMETERTYPE = "json";
         public const string METHODTYPE_KEY = "methodtype";
         public const string DEFAULT_METHODTYPE = "post";
-        private URL Url { get; set; }
-        private HttpClient Instance { get; set; }
+        private readonly URL _url;
+        private readonly HttpClient _instance;
+        private readonly ILogger _logger;
         /// <summary>
         /// 开启标志
         /// </summary>
         protected bool[] isOpen = new bool[] { false };
 
-        public HttpInvoker(HttpClient instance,URL url, bool[] isOpen)
+        public HttpInvoker(HttpClient instance,URL url, bool[] isOpen,ILoggerFactory loggerFactory)
         {
-            Instance = instance;
-            this.Url = url;
+            _instance = instance;
+            _url = url;
             this.isOpen = isOpen;
+            _logger = loggerFactory.CreateLogger<HttpInvoker>();
+
+
         }
 
         public IResult Invoke(IInvocation invocation)
         {
-            var parameterType = Url.GetMethodParameterAndDecoded(invocation.MethodInfo.Name, PARAMETERTYPE_KEY, DEFAULT_PARAMETERTYPE).ToLower();
-            var method = Url.GetMethodParameterAndDecoded(invocation.MethodInfo.Name, METHODTYPE_KEY, DEFAULT_METHODTYPE).ToLower();
+            var parameterType = _url.GetMethodParameterAndDecoded(invocation.MethodInfo.Name, PARAMETERTYPE_KEY, DEFAULT_PARAMETERTYPE).ToLower();
+            var method = _url.GetMethodParameterAndDecoded(invocation.MethodInfo.Name, METHODTYPE_KEY, DEFAULT_METHODTYPE).ToLower();
             var parameters = invocation.MethodInfo.GetParameters();
-            var stub = new HttpStub(Instance, isOpen);
-            var value = stub.Request($"/{Url.Path}/{invocation.MethodInfo.Name.ToLower()}", parameterType, method, parameters, invocation.Arguments).GetAwaiter().GetResult();
+            var stub = new HttpStub(_instance, isOpen);
+            var value = stub.Request($"/{_url.Path}/{invocation.MethodInfo.Name.ToLower()}", parameterType, method, parameters, invocation.Arguments).GetAwaiter().GetResult();
             
             if (invocation.MethodInfo.ReturnType.IsValueType)
             {
@@ -45,7 +50,7 @@ namespace Zooyard.Rpc.HttpImpl
             {
                 return new RpcResult(value);
             }
-
+            _logger.LogInformation($"Invoke:{invocation.MethodInfo.Name}");
             var result = new RpcResult(JsonConvert.DeserializeObject(value, invocation.MethodInfo.ReturnType));
             return result;
         }

@@ -1,4 +1,5 @@
 ﻿using Grpc.Core;
+using Microsoft.Extensions.Logging;
 using Zooyard.Core;
 using Zooyard.Rpc.Support;
 
@@ -7,47 +8,46 @@ namespace Zooyard.Rpc.GrpcImpl
     public class GrpcClient : AbstractClient
     {
         public override URL Url { get; }
-        public GrpcClient(Channel channel,object grpcClient, URL url, ChannelCredentials channelCredentials, int clientTimeout)
+        private Channel _channel;
+        private readonly ChannelCredentials _channelCredentials;
+        private readonly int _clientTimeout;
+        private readonly object _grpcClient;
+        private readonly ILoggerFactory _loggerFactory;
+        private readonly ILogger _logger;
+        public GrpcClient(Channel channel,object grpcClient, URL url, ChannelCredentials channelCredentials, int clientTimeout,ILoggerFactory loggerFactory)
         {
             this.Url = url;
-            this.TheChannel = channel;
-            this.ChannelCredentials = channelCredentials;
-            this.TheGrpcClient = grpcClient;
-            this.ClientTimeout = clientTimeout;
+            _channel = channel;
+            _channelCredentials = channelCredentials;
+            _grpcClient = grpcClient;
+            _clientTimeout = clientTimeout;
+            _loggerFactory = loggerFactory;
+            _logger = loggerFactory.CreateLogger<GrpcClient>();
         }
-        /// <summary>
-        /// 传输层
-        /// </summary>
-        protected Channel TheChannel { get; private set; }
-        protected ChannelCredentials ChannelCredentials { get; private set; }
-        protected int ClientTimeout { get; private set; }
-        protected object TheGrpcClient { get; private set; }
+       
 
-        
+
 
         public override IInvoker Refer()
         {
-            if (TheChannel!=null)
+            if (_channel != null && _channel.State == ChannelState.Shutdown)
             {
-                if (TheChannel.State==ChannelState.Shutdown)
-                {
-                    TheChannel = new Channel(TheChannel.Target, ChannelCredentials);
-                }
+                _channel = new Channel(_channel.Target, _channelCredentials);
             }
 
             Open();
             //grpc client service
 
-            return new GrpcInvoker(TheGrpcClient, ClientTimeout);
+            return new GrpcInvoker(_grpcClient, _clientTimeout,_loggerFactory);
         }
 
         public override void Open()
         {
-            if (TheChannel.State != ChannelState.Ready)
+            if (_channel.State != ChannelState.Ready)
             {
-                TheChannel.ConnectAsync().Wait(ClientTimeout / 2);
+                _channel.ConnectAsync().Wait(_clientTimeout / 2);
             }
-            if (TheChannel.State != ChannelState.Ready)
+            if (_channel.State != ChannelState.Ready)
             {
                 throw new Grpc.Core.RpcException(Status.DefaultCancelled, "connect failed");
             }
@@ -55,17 +55,17 @@ namespace Zooyard.Rpc.GrpcImpl
 
         public override void Close()
         {
-            if (TheChannel != null)
+            if (_channel != null)
             {
-                TheChannel.ShutdownAsync().Wait();
+                _channel.ShutdownAsync().GetAwaiter().GetResult();
             }
         }
 
         public override void Dispose()
         {
-            if (TheChannel!=null)
+            if (_channel != null)
             {
-                TheChannel.ShutdownAsync().Wait();
+                _channel.ShutdownAsync().GetAwaiter().GetResult();
             }
         }
     }

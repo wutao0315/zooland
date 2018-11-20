@@ -1,5 +1,6 @@
 ﻿using DotNetty.Buffers;
 using DotNetty.Transport.Channels;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
@@ -9,14 +10,16 @@ namespace Zooyard.Rpc.NettyImpl
 {
     public class NettyInvoker : IInvoker
     {
-        private IChannel client { get; set; }
+        private readonly IChannel _client;
+        private readonly ILogger _logger;
         private readonly ConcurrentDictionary<string, TaskCompletionSource<TransportMessage>> _resultDictionary =
             new ConcurrentDictionary<string, TaskCompletionSource<TransportMessage>>();
 
-        public NettyInvoker(IChannel client,IMessageListener _messageListener)
+        public NettyInvoker(IChannel client,IMessageListener _messageListener,ILoggerFactory loggerFactory)
         {
-            this.client = client;
+            _client = client;
             _messageListener.Received += MessageListener_Received;
+            _logger = loggerFactory.CreateLogger<NettyInvoker>();
         }
 
         public IResult Invoke(IInvocation invocation)
@@ -36,43 +39,27 @@ namespace Zooyard.Rpc.NettyImpl
 
                 try
                 {
-
-                    //发送
-                    //var bytes = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(transportMessage));
                     var bytes = transportMessage.Serialize();
                     var byteBuffers = Unpooled.WrappedBuffer(bytes);
 
-                    client.WriteAndFlushAsync(byteBuffers).GetAwaiter().GetResult();
+                    _client.WriteAndFlushAsync(byteBuffers).GetAwaiter().GetResult();
                 }
-                catch (Exception exception)
+                catch (Exception e)
                 {
-                    throw new Exception("与服务端通讯时发生了异常。", exception);
+                    _logger.LogError(e, e.Message);
+                    throw new Exception("connecting server error.", e);
                 }
 
                 var value = callbackTask.GetAwaiter().GetResult();
+                _logger.LogInformation($"Invoke:{invocation.MethodInfo.Name}");
                 return new RpcResult(value.Result);
-
-                //if (invocation.MethodInfo.ReturnType.IsValueType)
-                //{
-                //    if (invocation.MethodInfo.ReturnType == typeof(void))
-                //    {
-                //        return new RpcResult();
-                //    }
-                //    return new RpcResult(value.Result.ChangeType(invocation.MethodInfo.ReturnType));
-                //}
-
-                //if (invocation.MethodInfo.ReturnType == typeof(string))
-                //{
-                //    return new RpcResult(value.Result);
-                //}
-
-                //var result = new RpcResult(JsonConvert.DeserializeObject(value.Result.ToString(), invocation.MethodInfo.ReturnType));
-                //return result;
+                
 
             }
-            catch (Exception exception)
+            catch (Exception e)
             {
-                throw exception;
+                _logger.LogError(e,e.Message);
+                throw e;
             }
 
 
@@ -87,8 +74,10 @@ namespace Zooyard.Rpc.NettyImpl
         /// <returns>远程调用结果消息模型。</returns>
         private async Task<RemoteInvokeResultMessage> RegisterResultCallbackAsync(string id)
         {
-            //if (_logger.IsEnabled(LogLevel.Debug))
-            //    _logger.LogDebug($"准备获取Id为：{id}的响应内容。");
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug($"ready to recive message Id：{id} response content。");
+            }
 
             var task = new TaskCompletionSource<TransportMessage>();
             _resultDictionary.TryAdd(id, task);
@@ -96,6 +85,11 @@ namespace Zooyard.Rpc.NettyImpl
             {
                 var result = await task.Task;
                 return result.GetContent<RemoteInvokeResultMessage>();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, e.Message);
+                return null;
             }
             finally
             {
@@ -107,8 +101,11 @@ namespace Zooyard.Rpc.NettyImpl
 
         private async Task MessageListener_Received(TransportMessage message)
         {
-            //if (_logger.IsEnabled(LogLevel.Trace))
-            //    _logger.LogTrace("服务消费者接收到消息。");
+            if (_logger.IsEnabled(LogLevel.Trace))
+            {
+                _logger.LogTrace($"serivce customer recive the message:{message.Id} ");
+            }
+                
 
             TaskCompletionSource<TransportMessage> task;
             if (!_resultDictionary.TryGetValue(message.Id, out task))
@@ -117,7 +114,7 @@ namespace Zooyard.Rpc.NettyImpl
             if (message.IsInvokeResultMessage())
             {
                 var content = message.GetContent<RemoteInvokeResultMessage>();
-                //var content = JsonConvert.DeserializeObject<RemoteInvokeResultMessage>(message.Content.ToString());
+
                 message.Content = content;
                 if (!string.IsNullOrEmpty(content.ExceptionMessage))
                 {
@@ -128,8 +125,7 @@ namespace Zooyard.Rpc.NettyImpl
                     task.SetResult(message);
                 }
             }
-            //if (_serviceExecutor != null && message.IsInvokeMessage())
-            //    await _serviceExecutor.ExecuteAsync(sender, message);
+
         }
     }
 }

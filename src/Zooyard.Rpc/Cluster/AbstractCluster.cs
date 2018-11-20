@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using Zooyard.Core;
 
@@ -6,7 +7,7 @@ namespace Zooyard.Rpc.Cluster
 {
     public abstract class AbstractCluster : ICluster
     {
-        //private static readonly ILog _logger = LogManager.GetLogger("AbstractCluster");
+        private readonly ILogger _logger;
         public const string TIMEOUT_KEY = "timeout";
         public const int DEFAULT_TIMEOUT = 1000;
         /// <summary>
@@ -21,12 +22,12 @@ namespace Zooyard.Rpc.Cluster
 
         private volatile URL stickyInvoker = null;
         protected bool availablecheck;
-        //protected ILog logger = LogManager.GetLogger<AbstractCluster>();
 
-        public AbstractCluster()
+        public AbstractCluster(ILoggerFactory loggerFactory)
         {
+            _logger = loggerFactory.CreateLogger<AbstractCluster>();
         }
-
+        public virtual string Name { get; }
 
         /// <summary>
         /// 使用loadbalance选择invoker.</br>
@@ -110,7 +111,7 @@ namespace Zooyard.Rpc.Cluster
                 }
                 catch (Exception t)
                 {
-                    //_logger.Error("clustor relselect fail reason is :" + t.Message + " if can not slove ,you can set cluster.availablecheck=false in url", t);
+                    _logger.LogError(t,$"clustor relselect fail reason is :{t.Message} if can not slove ,you can set cluster.availablecheck=false in url");
                 }
             }
             return invoker;

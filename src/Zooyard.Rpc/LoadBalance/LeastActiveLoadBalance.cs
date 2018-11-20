@@ -6,6 +6,7 @@ namespace Zooyard.Rpc.LoadBalance
 {
     public class LeastActiveLoadBalance : AbstractLoadBalance
     {
+        public override string Name => NAME;
         public const string NAME = "leastactive";
         private readonly Random random = new Random();
         protected override URL doSelect(IList<URL> urls, IInvocation invocation)

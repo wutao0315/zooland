@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using Zooyard.Core;
 
@@ -6,7 +7,14 @@ namespace Zooyard.Rpc.Cluster
 {
     public class FailsafeCluster : AbstractCluster
     {
+        public override string Name => NAME;
         public const string NAME = "failsafe";
+        private readonly ILogger _logger;
+        public FailsafeCluster(ILoggerFactory loggerFactory) : base(loggerFactory)
+        {
+            _logger = loggerFactory.CreateLogger<FailsafeCluster>();
+        }
+
         public override IClusterResult DoInvoke(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
         {
             IResult result = null;
@@ -36,7 +44,7 @@ namespace Zooyard.Rpc.Cluster
             {
                 exception = e;
                 badUrls.Add(new BadUrl { Url = invoker, BadTime = DateTime.Now, CurrentException = exception });
-                //logger.Error("Failsafe ignore exception: " + e.Message, e);
+                _logger.LogError(e, $"Failsafe ignore exception: {e.Message}");
                 result = new RpcResult(e); // ignore
             }
             return new ClusterResult(result, goodUrls, badUrls,exception,false);

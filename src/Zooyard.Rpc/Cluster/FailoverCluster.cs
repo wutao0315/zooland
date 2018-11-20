@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Zooyard.Core;
@@ -7,10 +8,16 @@ namespace Zooyard.Rpc.Cluster
 {
     public class FailoverCluster : AbstractCluster
     {
+        public override string Name => NAME;
         public const string NAME = "failover";
         public const string RETRIES_KEY = "retries";
         public const int DEFAULT_RETRIES = 2;
-        
+        private readonly ILogger _logger;
+        public FailoverCluster(ILoggerFactory loggerFactory) : base(loggerFactory)
+        {
+            _logger = loggerFactory.CreateLogger<FailoverCluster>();
+        }
+
         public override IClusterResult DoInvoke(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
         {
             var goodUrls = new List<URL>();
@@ -52,18 +59,18 @@ namespace Zooyard.Rpc.Cluster
                         var refer = client.Refer();
                         var result = refer.Invoke(invocation);
                         pool.Recovery(client);
-                        //if (le != null && logger.IsWarnEnabled)
-                        //{
-                        //    logger.Warn("Although retry the method " + invocation.MethodInfo.Name
-                        //            + " in the service " + invocation.TargetType.FullName
-                        //            + " was successful by the provider " + invoker.Address
-                        //            + ", but there have been failed providers " + string.Join(",", providers)
-                        //            + " (" + providers.Count + "/" + copyinvokers.Count
-                        //            + ") from the registry " + address.Address
-                        //            //+ " on the consumer " + NetUtils.GetLocalHost()
-                        //            //+ " using the dubbo version " + Version.getVersion() + ". Last error is: "
-                        //            + le.Message, le);
-                        //}
+                        if (le != null && _logger.IsEnabled(LogLevel.Warning))
+                        {
+                            _logger.LogWarning(le, "Although retry the method " + invocation.MethodInfo.Name
+                                    + " in the service " + invocation.TargetType.FullName
+                                    + " was successful by the provider " + invoker.Address
+                                    + ", but there have been failed providers " + string.Join(",", providers)
+                                    + " (" + providers.Count + "/" + copyinvokers.Count
+                                    + ") from the registry " + address.Address
+                                    //+ " on the consumer " + NetUtils.GetLocalHost()
+                                    //+ " using the dubbo version " + Version.getVersion() + ". Last error is: "
+                                    + le.Message);
+                        }
                         goodUrls.Add(invoker);
                         return new ClusterResult(result,goodUrls,badUrls,le,false);
                     }

@@ -7,6 +7,7 @@ using DotNetty.Handlers.Tls;
 using DotNetty.Transport.Bootstrapping;
 using DotNetty.Transport.Channels;
 using DotNetty.Transport.Channels.Sockets;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -29,14 +30,17 @@ namespace Zooyard.Rpc.NettyImpl
         public const string DEFAULT_PWD = "password";
         public const string PFX_KEY = "pfx";
         public const string DEFAULT_PFX = "dotnetty.com";
-        
 
         public IDictionary<string, NettyProtocol> NettyProtocol { get; set; }
+        private readonly ILogger _logger;
+        private readonly ILoggerFactory _loggerFactory;
+        public NettyClientPool(ILoggerFactory loggerFactory) : base(loggerFactory)
+        {
+            _logger = loggerFactory.CreateLogger<NettyClientPool>();
+        }
+
         
-        //public Type EventLoopGroupType { get; set; }
-        //public Type ChannelType { get; set; }
-        //public IEventLoopGroup EventLoopGroup { get; set; }
-        //public IChannel TheChannel { get; set; }
+        
 
         private static readonly AttributeKey<IMessageListener> messageListenerKey = AttributeKey<IMessageListener>.ValueOf(typeof(NettyClientPool), nameof(IMessageListener));
         
@@ -95,7 +99,7 @@ namespace Zooyard.Rpc.NettyImpl
             client.GetAttribute(messageListenerKey).Set(messageListener);
             
             
-            return new NettyClient(group, client, messageListener, url);
+            return new NettyClient(group, client, messageListener, url, _loggerFactory);
         }
 
         public void ReceivedMessage(IChannelHandlerContext context, TransportMessage transportMessage)
@@ -118,14 +122,7 @@ namespace Zooyard.Rpc.NettyImpl
         public override void ChannelRead(IChannelHandlerContext context, object message)
         {
             var byteBuffer = message as IByteBuffer;
-            //var result = "";
-            //if (byteBuffer != null)
-            //{
-            //    result = byteBuffer.ToString(Encoding.UTF8);
-            //    Console.WriteLine($"Received from server:{result}");
-            //}
-            //var transportMessage = JsonConvert.DeserializeObject<TransportMessage>(result);
-
+            
             if (byteBuffer == null)
             {
                 throw new Exception("byte buffer is null");
@@ -146,77 +143,6 @@ namespace Zooyard.Rpc.NettyImpl
             context.CloseAsync();
         }
     }
-
-    //public class WebSocketClientHandler : SimpleChannelInboundHandler<object>
-    //{
-    //    //readonly WebSocketClientHandshaker handshaker;
-    //    readonly TaskCompletionSource completionSource;
-
-    //    public WebSocketClientHandler(WebSocketClientHandshaker handshaker)
-    //    {
-    //        //this.handshaker = handshaker;
-    //        this.completionSource = new TaskCompletionSource();
-    //    }
-
-    //    public Task HandshakeCompletion => this.completionSource.Task;
-
-    //    public override void ChannelActive(IChannelHandlerContext ctx) =>
-    //        this.handshaker.HandshakeAsync(ctx.Channel).LinkOutcome(this.completionSource);
-
-    //    public override void ChannelInactive(IChannelHandlerContext context)
-    //    {
-    //        Console.WriteLine("WebSocket Client disconnected!");
-    //    }
-
-    //    protected override void ChannelRead0(IChannelHandlerContext ctx, object msg)
-    //    {
-    //        IChannel ch = ctx.Channel;
-    //        if (!this.handshaker.IsHandshakeComplete)
-    //        {
-    //            try
-    //            {
-    //                this.handshaker.FinishHandshake(ch, (IFullHttpResponse)msg);
-    //                Console.WriteLine("WebSocket Client connected!");
-    //                this.completionSource.TryComplete();
-    //            }
-    //            catch (WebSocketHandshakeException e)
-    //            {
-    //                Console.WriteLine("WebSocket Client failed to connect");
-    //                this.completionSource.TrySetException(e);
-    //            }
-
-    //            return;
-    //        }
-
-
-    //        if (msg is IFullHttpResponse response)
-    //        {
-    //            throw new InvalidOperationException(
-    //                $"Unexpected FullHttpResponse (getStatus={response.Status}, content={response.Content.ToString(Encoding.UTF8)})");
-    //        }
-
-    //        if (msg is TextWebSocketFrame textFrame)
-    //        {
-    //            Console.WriteLine($"WebSocket Client received message: {textFrame.Text()}");
-    //        }
-    //        else if (msg is PongWebSocketFrame)
-    //        {
-    //            Console.WriteLine("WebSocket Client received pong");
-    //        }
-    //        else if (msg is CloseWebSocketFrame)
-    //        {
-    //            Console.WriteLine("WebSocket Client received closing");
-    //            ch.CloseAsync();
-    //        }
-    //    }
-
-    //    public override void ExceptionCaught(IChannelHandlerContext ctx, Exception exception)
-    //    {
-    //        Console.WriteLine("Exception: " + exception);
-    //        this.completionSource.TrySetException(exception);
-    //        ctx.CloseAsync();
-    //    }
-    //}
 
     public class NettyProtocol
     {

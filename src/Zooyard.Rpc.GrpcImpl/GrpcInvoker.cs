@@ -1,18 +1,21 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using Zooyard.Core;
 
 namespace Zooyard.Rpc.GrpcImpl
 {
     public class GrpcInvoker : IInvoker
     {
-        private object Instance { get; set; }
-        private int ClientTimeout { get; set; }
-        public GrpcInvoker(object instance,int clientTimeout)
+        private readonly object _instance;
+        private readonly int _clientTimeout;
+        private readonly ILogger _logger;
+        public GrpcInvoker(object instance,int clientTimeout,ILoggerFactory loggerFactory)
         {
-            Instance = instance;
-            ClientTimeout=clientTimeout;
+            _instance = instance;
+            _clientTimeout = clientTimeout;
+            _logger = loggerFactory.CreateLogger<GrpcInvoker>();
         }
-
+        
         public IResult Invoke(IInvocation invocation)
         {
             var paraTypes = new Type[invocation.Arguments.Length + 1];
@@ -24,10 +27,10 @@ namespace Zooyard.Rpc.GrpcImpl
             }
             paraTypes[invocation.Arguments.Length] = typeof(Grpc.Core.CallOptions);
             parasPlus[invocation.Arguments.Length] = new Grpc.Core.CallOptions()
-                .WithDeadline(DateTime.UtcNow.AddMilliseconds(ClientTimeout));
-            var method = Instance.GetType().GetMethod(invocation.MethodInfo.Name, paraTypes);
-            var value = method.Invoke(Instance, parasPlus);
-
+                .WithDeadline(DateTime.UtcNow.AddMilliseconds(_clientTimeout));
+            var method = _instance.GetType().GetMethod(invocation.MethodInfo.Name, paraTypes);
+            var value = method.Invoke(_instance, parasPlus);
+            _logger.LogInformation($"Invoke:{invocation.MethodInfo.Name}");
             var result = new RpcResult(value);
             return result;
         }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,13 +18,17 @@ namespace Zooyard.Rpc.ThriftImpl
         /// <summary>
         /// 传输层
         /// </summary>
-        public TClientTransport Transport { get; private set; }
-        public IDisposable Thriftclient { get; private set; }
+        private readonly TClientTransport _transport;
+        private readonly IDisposable _thriftclient;
+        private readonly ILoggerFactory _loggerFactory;
+        private readonly ILogger _logger;
 
-        public ThriftClient(TClientTransport transport, IDisposable thriftclient,URL url)
+        public ThriftClient(TClientTransport transport, IDisposable thriftclient, URL url, ILoggerFactory loggerFactory)
         {
-            this.Transport = transport;
-            this.Thriftclient = thriftclient;
+            _transport = transport;
+            _thriftclient = thriftclient;
+            _loggerFactory = loggerFactory;
+            _logger = loggerFactory.CreateLogger<ThriftClient>();
             this.Url = url;
         }
 
@@ -32,36 +37,39 @@ namespace Zooyard.Rpc.ThriftImpl
         {
             this.Open();
             //thrift client service
-            return new ThriftInvoker(Thriftclient);
+            return new ThriftInvoker(_thriftclient, _loggerFactory);
         }
 
         public override void Open()
         {
-            if (Transport != null && !Transport.IsOpen)
+            if (_transport != null && !_transport.IsOpen)
             {
-                Transport.OpenAsync().GetAwaiter().GetResult();
+                _transport.OpenAsync().GetAwaiter().GetResult();
             }
+            _logger.LogInformation("open");
         }
 
         public override void Close()
         {
-            if (Transport != null && Transport.IsOpen)
+            if (_transport != null && _transport.IsOpen)
             {
-                Transport.Close();
+                _transport.Close();
             }
+            _logger.LogInformation("close");
         }
 
         public override void Dispose()
         {
-            if (Transport != null)
+            if (_transport != null)
             {
                 Close();
-                Transport.Dispose();
+                _transport.Dispose();
             }
-            if (Thriftclient != null)
+            if (_thriftclient != null)
             {
-                Thriftclient.Dispose();
+                _thriftclient.Dispose();
             }
+            _logger.LogInformation("Dispose");
         }
         
 

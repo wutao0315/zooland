@@ -1,4 +1,5 @@
 ﻿using Akka.Actor;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
 using System.Threading;
@@ -8,14 +9,16 @@ namespace Zooyard.Rpc.AkkaImpl
 {
     public class AkkaInvoker : IInvoker
     {
-        private ActorSystem Instance { get; set; }
-        private URL Url { get; set; }
-        private int Timeout { get; set; }
-        public AkkaInvoker(ActorSystem instance,URL url,int timeout)
+        private readonly ActorSystem _instance;
+        private readonly URL _url;
+        private readonly int _timeout;
+        private readonly ILogger _logger;
+        public AkkaInvoker(ActorSystem instance,URL url,int timeout,ILoggerFactory loggerFactory)
         {
-            Instance = instance;
-            this.Url = url;
-            this.Timeout = timeout;
+            _instance = instance;
+            _url = url;
+            _timeout = timeout;
+            _logger = loggerFactory.CreateLogger<AkkaInvoker>();
         }
 
         public IResult Invoke(IInvocation invocation)
@@ -25,7 +28,7 @@ namespace Zooyard.Rpc.AkkaImpl
                 throw new Exception("akka not have muti parameters");
             }
 
-            var greeting = Instance.ActorSelection($"{Url.Protocol}://{Url.ServiceInterface.Replace(".","-")}@{Url.Host}:{Url.Port}/{Url.Path}/{invocation.MethodInfo.Name}");
+            var greeting = _instance.ActorSelection($"{_url.Protocol}://{_url.ServiceInterface.Replace(".","-")}@{_url.Host}:{_url.Port}/{_url.Path}/{invocation.MethodInfo.Name}");
 
             object value = null;
             try
@@ -45,20 +48,21 @@ namespace Zooyard.Rpc.AkkaImpl
                 else {
                     if (invocation.Arguments.Count() == 0)
                     {
-                        value = greeting.Ask(ActorRefs.Nobody, TimeSpan.FromMilliseconds(Timeout), cancelSource.Token).GetAwaiter().GetResult();
+                        value = greeting.Ask(ActorRefs.Nobody, TimeSpan.FromMilliseconds(_timeout), cancelSource.Token).GetAwaiter().GetResult();
                     }
                     else
                     {
-                        value = greeting.Ask(invocation.Arguments[0], TimeSpan.FromMilliseconds(Timeout), cancelSource.Token).GetAwaiter().GetResult();
+                        value = greeting.Ask(invocation.Arguments[0], TimeSpan.FromMilliseconds(_timeout), cancelSource.Token).GetAwaiter().GetResult();
                     }
                 }
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, ex.Message);
                 throw ex;
             }
-            
 
+            _logger.LogInformation($"Invoke:{invocation.MethodInfo.Name}");
             var result = new RpcResult(value);
             return result;
         }

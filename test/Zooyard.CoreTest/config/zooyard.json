@@ -1,5 +1,5 @@
 ﻿{
-  "zooland": {
+  "zooyard": {
     "RegisterUrl": "zooyard://localhost?interface=MemberThrift.ISessionService&MemberThrift.ISessionService.cluster=failfast",
     "ClientUrls": [
       "TCompactProtocol://127.0.0.1:10009?proxy=HelloService&interface=RpcContractThrift.IHelloService",
@@ -11,7 +11,7 @@
     ],
     "ClientPools": {
       "RpcContractThrift.IHelloService": "Zooyard.Rpc.ThriftImpl.ThriftClientPool, Zooyard.Rpc.ThriftImpl"
-        //,
+      //,
       //"RpcContractWcf.IHelloService": "Zooyard.Rpc.WcfImpl.WcfClientPool, Zooyard.Rpc.WcfImpl",
       //"RpcContractGrpc.IHelloService": "Zooyard.Rpc.GrpcImpl.GrpcClientPool, Zooyard.Rpc.GrpcImpl",
       //"RpcContractHttp.IHelloService": "Zooyard.Rpc.HttpImpl.HttpClientPool, Zooyard.Rpc.HttpImpl",

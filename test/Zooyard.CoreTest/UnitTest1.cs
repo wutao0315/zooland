@@ -25,7 +25,8 @@ namespace Zooyard.CoreTest
             IServiceCollection collection = new ServiceCollection();
             collection.Configure<ThriftOption>(config.GetSection("thrift"));
             collection.Configure<ZoolandOption>(config.GetSection("zooland"));
-            collection.AddThrift();
+            collection.AddLogging();
+            collection.AddThriftClient();
             collection.AddZooland(config);
 
             var bsp = collection.BuildServiceProvider();
