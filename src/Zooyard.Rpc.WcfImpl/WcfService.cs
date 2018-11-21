@@ -10,15 +10,28 @@ using System.ServiceModel.Description;
 
 namespace Zooyard.Rpc.WcfImpl
 {
-    public class WcfService:IDisposable
+    public class WcfService : IDisposable
     {
-        public object SingletonInstance { get; set; }
-        public Type ContractType { get; set; }
-        public IList<Uri> BaseAddresses { get; set; } = new List<Uri>();
-        public Binding TheBinding { get; set; }
+        private readonly object _singletonInstance;
+        private readonly Type _contractType;
+        private readonly IList<Uri> _baseAddresses= new List<Uri>();
+        private readonly Binding _binding;
+
 #if NET461
-        public IList<IServiceBehavior> ServiceBehaviors { get; set; }
-        private ServiceHost serviceHost { get; set; }
+        private readonly IList<IServiceBehavior> _serviceBehaviors;
+        private ServiceHost serviceHost;
+        public WcfService(object singletonInstance,
+        Type contractType,
+        IList<Uri> baseAddresses,
+        Binding binding,
+        IList<IServiceBehavior> serviceBehaviors)
+        {
+            _singletonInstance = singletonInstance;
+            _contractType = contractType;
+            _baseAddresses = baseAddresses;
+            _binding = binding;
+            _serviceBehaviors = serviceBehaviors;
+        }
 #endif 
         public void Open()
         {
@@ -29,15 +42,15 @@ namespace Zooyard.Rpc.WcfImpl
                 //smb.HttpGetEnabled = true;
 
 #if NET461
-                serviceHost = new ServiceHost(SingletonInstance, BaseAddresses.ToArray());
+                serviceHost = new ServiceHost(_singletonInstance, _baseAddresses.ToArray());
                 serviceHost.AddServiceEndpoint(
-                   ContractType,
-                   TheBinding,
-                   SingletonInstance.GetType().Name);
+                   _contractType,
+                   _binding,
+                   _singletonInstance.GetType().Name);
 
-                if (ServiceBehaviors != null)
+                if (_serviceBehaviors != null)
                 {
-                    foreach (var item in ServiceBehaviors)
+                    foreach (var item in _serviceBehaviors)
                     {
                         serviceHost.Description.Behaviors.Add(item);
                     }

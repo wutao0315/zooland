@@ -17,17 +17,24 @@ namespace Zooyard.Rpc.GrpcImpl
         public const string CREDENTIALS_KEY = "protocol";
         public const string DEFAULT_CREDENTIALS = "Insecure";
 
+
+        private readonly IDictionary<string, ChannelCredentials> _credentials;
+        private readonly IDictionary<string, Type> _grpcClientTypes;
         private readonly ILogger _logger;
         private readonly ILoggerFactory _loggerFactory;
-        public GrpcClientPool(ILoggerFactory loggerFactory) : base(loggerFactory)
+
+        public GrpcClientPool(
+            IDictionary<string, ChannelCredentials> credentials,
+            IDictionary<string, Type> grpcClientTypes,
+            ILoggerFactory loggerFactory) : base(loggerFactory)
         {
+            _credentials = credentials;
+            _grpcClientTypes = grpcClientTypes;
             _loggerFactory = loggerFactory;
             _logger = loggerFactory.CreateLogger<GrpcClientPool>();
         }
 
-        public IDictionary<string, ChannelCredentials> TheCredentials { get; set; }
-
-        public IDictionary<string, Type> TheGrpcClientTypes { get; set; }
+        
 
         protected override IClient CreateClient(URL url)
         {
@@ -37,7 +44,7 @@ namespace Zooyard.Rpc.GrpcImpl
 
 
             var proxyKey = url.GetParameter(PROXY_KEY);
-            if (string.IsNullOrEmpty(proxyKey) || !TheGrpcClientTypes.ContainsKey(proxyKey))
+            if (string.IsNullOrEmpty(proxyKey) || !_grpcClientTypes.ContainsKey(proxyKey))
             {
                 throw new RpcException("not find the proxy thrift client");
             }
@@ -51,18 +58,18 @@ namespace Zooyard.Rpc.GrpcImpl
             var credentials = ChannelCredentials.Insecure;
 
             var credentialsKey = url.GetParameter(CREDENTIALS_KEY, DEFAULT_CREDENTIALS);
-            if (TheCredentials!=null 
-                && TheCredentials.ContainsKey(credentialsKey) 
+            if (_credentials != null 
+                && _credentials.ContainsKey(credentialsKey) 
                 && credentialsKey!= DEFAULT_CREDENTIALS)
             {
-                credentials = TheCredentials[credentialsKey];
+                credentials = _credentials[credentialsKey];
             }
 
             Channel channel = new Channel(url.Host, url.Port, credentials, options);
 
 
             //实例化TheThriftClient
-            var client = Activator.CreateInstance(TheGrpcClientTypes[proxyKey], channel);
+            var client = Activator.CreateInstance(_grpcClientTypes[proxyKey], channel);
 
             return new GrpcClient(channel, client, url, credentials, timeout, _loggerFactory);
         }

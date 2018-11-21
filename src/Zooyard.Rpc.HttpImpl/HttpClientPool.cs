@@ -10,6 +10,8 @@ namespace Zooyard.Rpc.HttpImpl
     {
         public const string TIMEOUT_KEY = "http_timeout";
         public const int DEFAULT_TIMEOUT = 5000;
+
+
         private readonly ILogger _logger;
         private readonly ILoggerFactory _loggerFactory;
         public HttpClientPool(ILoggerFactory loggerFactory) : base(loggerFactory)

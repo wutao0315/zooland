@@ -1,82 +1,75 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+
+using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
-using Zooyard.Core;
-using Zooyard.Rpc.Cache;
-using Zooyard.Rpc.Cluster;
-using Zooyard.Rpc.LoadBalance;
+using System.Runtime.ExceptionServices;
 
 namespace Zooyard.Rpc.AkkaImpl.Extensions
 {
-    public class AkkaOption
+    /// <summary>
+    /// Helper code for the various activator services.
+    /// </summary>
+    internal static class ActivatorUtilities
     {
-        public IEnumerable<string> ActorConfig { get; set; }
-    }
-
-    public class AkkaServerOption
-    {
-        public string ActorName { get; set; }
-        public string ActorConfig { get; set; }
-        public IDictionary<string, string> Actors { get; set; }
-    }
-
-
-    public static class ServiceBuilderExtensions
-    {
-        public static void AddAkkaClient(this IServiceCollection services)
+        /// <summary>
+        /// Instantiate a type with constructor arguments provided directly and/or from an <see cref="IServiceProvider"/>.
+        /// </summary>
+        /// <param name="provider">The service provider used to resolve dependencies</param>
+        /// <param name="instanceType">The type to activate</param>
+        /// <param name="parameters">Constructor arguments not provided by the <paramref name="provider"/>.</param>
+        /// <returns>An activated object of type instanceType</returns>
+        public static object[] GetInstanceParameterValues(IServiceProvider provider, Type instanceType, params object[] parameters)
         {
-            services.AddSingleton((serviceProvider) => 
+            int bestLength = -1;
+            var seenPreferred = false;
+
+            ConstructorMatcher bestMatcher = null;
+
+            if (!instanceType.GetTypeInfo().IsAbstract)
             {
-                var option = serviceProvider.GetService<IOptions<AkkaOption>>().Value;
-                var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
-
-                var pool = new AkkaClientPool(
-                    actorConfig: string.Join("\n", option.ActorConfig),
-                    loggerFactory: loggerFactory
-                );
-
-                return pool;
-            });
-        }
-
-        public static void AddAkkaServer(this IServiceCollection services)
-        {
-            services.AddSingleton<IDictionary<string, ZooyardActor>>((serviceProvider) =>
-            {
-                var option = serviceProvider.GetService<IOptions<AkkaServerOption>>().Value;
-                var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
-
-                var result = new Dictionary<string, ZooyardActor>();
-                foreach (var item in option.Actors)
+                foreach (var constructor in instanceType
+                    .GetTypeInfo()
+                    .DeclaredConstructors
+                    .Where(c => !c.IsStatic && c.IsPublic))
                 {
-                    var actorType = Type.GetType(item.Value);
-                    var args = ActivatorUtilities.GetInstanceParameterValues(serviceProvider, actorType);
+                    var matcher = new ConstructorMatcher(constructor);
+                    var isPreferred = constructor.IsDefined(typeof(ActivatorUtilitiesConstructorAttribute), false);
+                    var length = matcher.Match(parameters);
 
-                    var actor = new ZooyardActor
+                    if (isPreferred)
                     {
-                        ActorType = actorType,
-                        Args = args
-                    };
-                    result.Add(item.Key, actor);
+                        if (seenPreferred)
+                        {
+                            ThrowMultipleCtorsMarkedWithAttributeException();
+                        }
+
+                        if (length == -1)
+                        {
+                            ThrowMarkedCtorDoesNotTakeAllProvidedArguments();
+                        }
+                    }
+
+                    if (isPreferred || bestLength < length)
+                    {
+                        bestLength = length;
+                        bestMatcher = matcher;
+                    }
+
+                    seenPreferred |= isPreferred;
                 }
+            }
 
-                return result;
-            });
-
-            services.AddSingleton((serviceProvider)=> 
+            if (bestMatcher == null)
             {
-                var option = serviceProvider.GetService<IOptions<AkkaServerOption>>().Value;
-                var actors = serviceProvider.GetService<IDictionary<string,ZooyardActor>>();
-                var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
-                return new AkkaServer(option.ActorName, option.ActorConfig,actors, loggerFactory);
-            });
+                var message = $"A suitable constructor for type '{instanceType}' could not be located. Ensure the type is concrete and services are registered for all parameters of a public constructor.";
+                throw new InvalidOperationException(message);
+            }
 
-
-
+            return bestMatcher.GetParameterValues(provider);
         }
 
         private class ConstructorMatcher
@@ -129,8 +122,8 @@ namespace Zooyard.Rpc.AkkaImpl.Extensions
                 }
                 return applyExactLength;
             }
-
-            public object CreateInstance(IServiceProvider provider)
+            
+            public object[] GetParameterValues(IServiceProvider provider)
             {
                 for (var index = 0; index != _parameters.Length; index++)
                 {
@@ -155,17 +148,18 @@ namespace Zooyard.Rpc.AkkaImpl.Extensions
                     }
                 }
 
-                try
-                {
-                    return _constructor.Invoke(_parameterValues);
-                }
-                catch (TargetInvocationException ex)
-                {
-                    //ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
-                    // The above line will always throw, but the compiler requires we throw explicitly.
-                    throw ex;
-                }
+                return _parameterValues;
             }
+        }
+
+        private static void ThrowMultipleCtorsMarkedWithAttributeException()
+        {
+            throw new InvalidOperationException($"Multiple constructors were marked with {nameof(ActivatorUtilitiesConstructorAttribute)}.");
+        }
+
+        private static void ThrowMarkedCtorDoesNotTakeAllProvidedArguments()
+        {
+            throw new InvalidOperationException($"Constructor marked with {nameof(ActivatorUtilitiesConstructorAttribute)} does not accept all given argument types.");
         }
     }
 }

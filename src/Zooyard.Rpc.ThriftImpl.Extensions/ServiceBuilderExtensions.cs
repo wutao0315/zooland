@@ -105,7 +105,8 @@ namespace Zooyard.Rpc.ThriftImpl.Extensions
             });
             
             services.AddSingleton<AsyncBaseServer>();
-
+            services.AddSingleton<ThriftServer>();
+            
         }
     }
 }

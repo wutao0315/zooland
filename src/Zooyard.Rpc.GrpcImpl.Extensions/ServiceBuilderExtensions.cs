@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Grpc.Core;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
@@ -11,22 +12,22 @@ using Zooyard.Rpc.LoadBalance;
 
 namespace Zooyard.Rpc.GrpcImpl.Extensions
 {
-    public class ThriftOption
+    public class GrpcOption
     {
-        public IDictionary<string,string> Clients { get; set; }
+        public IDictionary<string, string> Credentials { get; set; }
+        public IDictionary<string, string> Clients { get; set; }
     }
 
-    public class ThriftServerOption
+    public class GrpcServerOption
     {
-        public string ProtocolFactoryType { get; set; }
-        public ThriftTransportOption Transport { get; set; }
+        public IDictionary<string,string> Services { get; set; }
+        public IEnumerable<ServerPortOption> ServerPorts { get; set; }
     }
-    public class ThriftTransportOption
+    public class ServerPortOption
     {
-        public string TransportType { get; set; }
+        public string Host { get; set; }
         public int Port { get; set; }
-        public int ClientTimeOut { get; set; }
-        public bool UserBufferedSockets { get; set; }
+        public string Credentials { get; set; }
     }
 
     public static class ServiceBuilderExtensions
@@ -35,15 +36,33 @@ namespace Zooyard.Rpc.GrpcImpl.Extensions
         {
             services.AddSingleton((serviceProvder) => 
             {
-                var option = serviceProvder.GetService<IOptions<ThriftOption>>().Value;
+                var option = serviceProvder.GetService<IOptions<GrpcOption>>().Value;
                 var loggerFactory = serviceProvder.GetService<ILoggerFactory>();
-                var thriftClientTypes = new Dictionary<string, Type>();
-                foreach (var item in option.Clients)
+
+                var credentials = new Dictionary<string, ChannelCredentials>
                 {
-                    thriftClientTypes.Add(item.Key, Type.GetType(item.Value));
+                    { "Insecure", ChannelCredentials.Insecure}
+                };
+
+                if (option.Credentials?.Count>0)
+                {
+                    foreach (var item in option.Credentials)
+                    {
+                        var credential = serviceProvder.GetService(Type.GetType(item.Value)) as ChannelCredentials;
+                        credentials.Add(item.Key, credential);
+                    }
                 }
 
-                var pool = new GrpcClientPool( loggerFactory: loggerFactory
+                var grpcClientTypes = new Dictionary<string, Type>();
+                foreach (var item in option.Clients)
+                {
+                    grpcClientTypes.Add(item.Key, Type.GetType(item.Value));
+                }
+
+                var pool = new GrpcClientPool(
+                    credentials:credentials,
+                    grpcClientTypes:grpcClientTypes, 
+                    loggerFactory: loggerFactory
                 );
 
                 return pool;
@@ -56,8 +75,45 @@ namespace Zooyard.Rpc.GrpcImpl.Extensions
             where facade : class,ifacade
         {
             services.AddTransient<ifacade, facade>();
-          
 
+            services.AddSingleton<Server>();
+            services.AddSingleton<IEnumerable<ServerServiceDefinition>>((serviceProvder) => 
+            {
+                var option = serviceProvder.GetService<IOptions<GrpcServerOption>>().Value;
+                var result = new List<ServerServiceDefinition>();
+
+                foreach (var item in option.Services)
+                {
+                    var contractType = Type.GetType(item.Key);
+                    var implType = Type.GetType(item.Value);
+                    var implValue = serviceProvder.GetService(implType);
+                    var definition = contractType.GetMethod("BindService").Invoke(null, new[] { implValue }) as ServerServiceDefinition;
+                    result.Add(definition);
+                }
+
+                return result;
+            });
+
+            services.AddSingleton<IEnumerable<ServerPort>>((serviceProvder) => 
+            {
+                var option = serviceProvder.GetService<IOptions<GrpcServerOption>>().Value;
+                var result = new List<ServerPort>();
+                foreach (var item in option.ServerPorts)
+                {
+                    var defaultCredential = ServerCredentials.Insecure;
+                    if (!string.IsNullOrWhiteSpace(item.Credentials) 
+                    && item.Credentials!="default"
+                    && item.Credentials!= "Insecure"
+                    ) {
+                        var credentialType = Type.GetType(item.Credentials);
+                        defaultCredential = serviceProvder.GetService(credentialType) as ServerCredentials;
+                    }
+                    var port = new ServerPort(item.Host,item.Port, defaultCredential);
+                    result.Add(port);
+                }
+                return result;
+            });
+            services.AddSingleton<GrpcServer>();
         }
     }
 }

@@ -30,7 +30,7 @@ namespace Zooyard.Core.Extensions
 
     public static class ServiceBuilderExtensions
     {
-        public static void AddZooland(this IServiceCollection services, IConfiguration config)
+        public static void AddZoolandClient(this IServiceCollection services, IConfiguration config)
         {
             
             services.AddSingleton<IDictionary<string, IClientPool>>((serviceProvder) =>
@@ -118,6 +118,27 @@ namespace Zooyard.Core.Extensions
             }
             
 
+        }
+        public static void AddZoolandServer(this IServiceCollection services)
+        {
+            services.AddSingleton((serviceProvder) =>
+            {
+                var loggerFactory = serviceProvder.GetService<ILoggerFactory>();
+                var logger = loggerFactory.CreateLogger("Zooyard.Core.Extensions");
+                var servers = serviceProvder.GetServices<IServer>();
+                foreach (var server in servers)
+                {
+                    try
+                    {
+                        server.Export();
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex, ex.Message);
+                    }
+                }
+                return servers;
+            });
         }
     }
 }

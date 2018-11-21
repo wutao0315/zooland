@@ -31,10 +31,11 @@ namespace Zooyard.Rpc.NettyImpl
         public const string PFX_KEY = "pfx";
         public const string DEFAULT_PFX = "dotnetty.com";
 
-        public IDictionary<string, NettyProtocol> NettyProtocol { get; set; }
+        private readonly IDictionary<string, NettyProtocol> nettyProtocols;
         private readonly ILogger _logger;
         private readonly ILoggerFactory _loggerFactory;
-        public NettyClientPool(ILoggerFactory loggerFactory) : base(loggerFactory)
+        public NettyClientPool(IDictionary<string, NettyProtocol> nettyProtocols, ILoggerFactory loggerFactory) 
+            : base(loggerFactory)
         {
             _logger = loggerFactory.CreateLogger<NettyClientPool>();
         }
@@ -47,7 +48,7 @@ namespace Zooyard.Rpc.NettyImpl
 
         protected override IClient CreateClient(URL url)
         {
-            var protocol = NettyProtocol[url.Protocol];
+            var protocol = nettyProtocols[url.Protocol];
 
             IEventLoopGroup group = protocol.EventLoopGroupType
                    .GetConstructor(new Type[] { })

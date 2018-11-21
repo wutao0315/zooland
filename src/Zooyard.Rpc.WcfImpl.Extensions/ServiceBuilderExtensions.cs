@@ -3,11 +3,13 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using Zooyard.Core;
-using Zooyard.Rpc.Cache;
-using Zooyard.Rpc.Cluster;
-using Zooyard.Rpc.LoadBalance;
+using System.ServiceModel.Channels;
+
+#if NET461
+using System.ServiceModel;
+using System.ServiceModel.Description;
+using System.Linq;
+#endif 
 
 namespace Zooyard.Rpc.WcfImpl.Extensions
 {
@@ -16,28 +18,24 @@ namespace Zooyard.Rpc.WcfImpl.Extensions
         public IDictionary<string,string> Channels { get; set; }
         public IDictionary<string, string> Bindings { get; set; }
     }
-
+#if NET461
     public class WcfServerOption
     {
-        public string ProtocolFactoryType { get; set; }
-        public WcfTransportOption Transport { get; set; }
+        public string InstanceType { get; set; }
+        public string ContractType { get; set; }
+        public string BindingType { get; set; }
+        public IEnumerable<string> BaseAddresses { get; set; }
     }
-    public class WcfTransportOption
-    {
-        public string TransportType { get; set; }
-        public int Port { get; set; }
-        public int ClientTimeOut { get; set; }
-        public bool UserBufferedSockets { get; set; }
-    }
+#endif
 
     public static class ServiceBuilderExtensions
     {
         public static void AddWcfClient(this IServiceCollection services)
         {
-            services.AddSingleton((serviceProvder) => 
+            services.AddSingleton((serviceProvider) => 
             {
-                var option = serviceProvder.GetService<IOptions<WcfOption>>().Value;
-                var loggerFactory = serviceProvder.GetService<ILoggerFactory>();
+                var option = serviceProvider.GetService<IOptions<WcfOption>>().Value;
+                var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
                 var channelTypes = new Dictionary<string, Type>();
                 foreach (var item in option.Channels)
                 {
@@ -58,16 +56,40 @@ namespace Zooyard.Rpc.WcfImpl.Extensions
 
                 return pool;
             });
-
         }
-
-        public static void AddWcfServer<ifacade, facade>(this IServiceCollection services)
-            where ifacade : class
-            where facade : class,ifacade
+#if NET461
+        public static void AddWcfServer(this IServiceCollection services, IEnumerable<IServiceBehavior> behaviors= null)
         {
-            services.AddTransient<ifacade, facade>();
-          
 
+            services.AddSingleton<WSHttpBinding>();
+            services.AddSingleton<NetTcpBinding>();
+            services.AddSingleton<BasicHttpBinding>();
+            services.AddSingleton<NetHttpBinding>();
+
+            behaviors = behaviors ?? new List<IServiceBehavior> { new ServiceMetadataBehavior() };
+            
+
+            services.AddSingleton<IList<Uri>>((serviceProvider) => 
+            {
+                var option = serviceProvider.GetService<IOptions<WcfServerOption>>().Value;
+                var result = new List<Uri>();
+                foreach (var item in option.BaseAddresses)
+                {
+                    result.Add(new Uri(item));
+                }
+                return result;
+            });
+
+            services.AddSingleton((serviceProvider)=> 
+            {
+                var option = serviceProvider.GetService<IOptions<WcfServerOption>>().Value;
+                var instance = serviceProvider.GetService(Type.GetType(option.InstanceType));
+                var binding = serviceProvider.GetService(Type.GetType(option.BindingType)) as Binding;
+                var baseAddresses = serviceProvider.GetService<IList<Uri>>();
+                return new WcfService(instance,Type.GetType(option.ContractType), baseAddresses, binding, behaviors.ToList());
+            });
+            services.AddSingleton<WcfServer>();
         }
+#endif
     }
 }
