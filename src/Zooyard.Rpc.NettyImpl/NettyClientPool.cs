@@ -31,24 +31,19 @@ namespace Zooyard.Rpc.NettyImpl
         public const string PFX_KEY = "pfx";
         public const string DEFAULT_PFX = "dotnetty.com";
 
-        private readonly IDictionary<string, NettyProtocol> nettyProtocols;
+        private readonly IDictionary<string, NettyProtocol> _nettyProtocols;
         private readonly ILogger _logger;
         private readonly ILoggerFactory _loggerFactory;
         public NettyClientPool(IDictionary<string, NettyProtocol> nettyProtocols, ILoggerFactory loggerFactory) 
             : base(loggerFactory)
         {
             _logger = loggerFactory.CreateLogger<NettyClientPool>();
+            _nettyProtocols = nettyProtocols;
         }
-
-        
-        
-
-        private static readonly AttributeKey<IMessageListener> messageListenerKey = AttributeKey<IMessageListener>.ValueOf(typeof(NettyClientPool), nameof(IMessageListener));
-        
 
         protected override IClient CreateClient(URL url)
         {
-            var protocol = nettyProtocols[url.Protocol];
+            var protocol = _nettyProtocols[url.Protocol];
 
             IEventLoopGroup group = protocol.EventLoopGroupType
                    .GetConstructor(new Type[] { })
@@ -59,7 +54,7 @@ namespace Zooyard.Rpc.NettyImpl
                    .Invoke(new object[] { }) as IChannel;
 
             var isSsl = url.GetParameter(SSL_KEY, DEFAULT_SSL);
-           
+
             X509Certificate2 cert = null;
             string targetHost = null;
             if (isSsl)
@@ -90,29 +85,30 @@ namespace Zooyard.Rpc.NettyImpl
                     //pipeline.AddLast(new LoggingHandler());
                     //pipeline.AddLast(new LengthFieldPrepender(4));
                     //pipeline.AddLast(new LengthFieldBasedFrameDecoder(int.MaxValue, 0, 4, 0, 4));
-                    //pipeline.AddLast(new ClientHandler(ReceivedMessage));
-
                     pipeline.AddLast(protocol.ChannelHandlers?.ToArray());
+                    pipeline.AddLast(new ClientHandler(ReceivedMessage));
+
+                    
                 }));
-            
+
             var client = bootstrap.ConnectAsync(new IPEndPoint(IPAddress.Parse(url.Host), url.Port)).GetAwaiter().GetResult();
             var messageListener = new MessageListener();
             client.GetAttribute(messageListenerKey).Set(messageListener);
-            
-            
+
+
             return new NettyClient(group, client, messageListener, url, _loggerFactory);
         }
 
+        private static readonly AttributeKey<IMessageListener> messageListenerKey = AttributeKey<IMessageListener>.ValueOf(typeof(NettyClientPool), nameof(IMessageListener));
+        
         public void ReceivedMessage(IChannelHandlerContext context, TransportMessage transportMessage)
         {
             var ml = context.Channel.GetAttribute(messageListenerKey).Get();
             ml.OnReceived(transportMessage);
         }
-
-        
     }
 
-    public class ClientHandler : ChannelHandlerAdapter
+    internal class ClientHandler : ChannelHandlerAdapter
     {
         readonly Action<IChannelHandlerContext,TransportMessage> _receviedAction;
         public ClientHandler(Action<IChannelHandlerContext,TransportMessage> receviedAction)
@@ -149,6 +145,6 @@ namespace Zooyard.Rpc.NettyImpl
     {
         public Type EventLoopGroupType { get; set; }
         public Type ChannelType { get; set; }
-        public IList<IChannelHandler> ChannelHandlers { get; set; }
+        public IEnumerable<IChannelHandler> ChannelHandlers { get; set; }
     }
 }

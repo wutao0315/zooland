@@ -49,7 +49,9 @@ namespace Zooyard.Rpc.AkkaImpl
             {
                 _actorSystem.ActorOf(Props.Create(item.Value.ActorType,(item.Value.Args??new List<object>()).ToArray()), item.Key);
             }
-            _logger.LogInformation("Starting the akka server ...");
+
+            _logger.LogInformation($"Started the akka server ...");
+            Console.WriteLine($"Started the akka server ...");
         }
 
         public override void DoDispose()

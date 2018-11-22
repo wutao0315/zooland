@@ -23,8 +23,8 @@ namespace Zooyard.Rpc.WcfImpl
 
 
             // Step 3 of the hosting procedure: Add a service endpoint.
-
-            Console.WriteLine($"Starting the wcf server ...");
+            _logger.LogInformation($"Started the wcf server ...");
+            Console.WriteLine($"Started the wcf server ...");
            
         }
 

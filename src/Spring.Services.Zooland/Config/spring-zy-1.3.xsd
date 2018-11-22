@@ -35,6 +35,15 @@
           </xsd:documentation>
         </xsd:annotation>
       </xsd:element>
+      <xsd:element name="constructor-arg" type="objects:constructorArgument" minOccurs="0" maxOccurs="unbounded">
+        <xsd:annotation>
+          <xsd:documentation>
+            <![CDATA[
+  Defines constructor-arg of the factory that creates the channel.
+            ]]>
+          </xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
     </xsd:sequence>
     <xsd:attribute name="id" type="xsd:ID" use="optional">
       <xsd:annotation>
@@ -54,15 +63,7 @@
         </xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <!--<xsd:attribute name="endpointConfigurationName" type="objects:nonNullString" use="required">
-      <xsd:annotation>
-        <xsd:documentation>
-          <![CDATA[
-  The configuration name in the application configuration file used for the endpoint.
-          ]]>
-        </xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>-->
+    
   </xsd:complexType>
 
   <xsd:element name="zooyardFactory" type="zooyardFactoryType"/>

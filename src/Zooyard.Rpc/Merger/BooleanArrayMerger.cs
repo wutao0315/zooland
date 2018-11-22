@@ -1,9 +1,11 @@
-﻿using Zooyard.Core;
+﻿using System;
+using Zooyard.Core;
 
 namespace Zooyard.Rpc.Merger
 {
     public class BooleanArrayMerger : IMerger<bool[]>
     {
+
         public bool[] Merge(params bool[][] items)
         {
             int totalLen = 0;

@@ -29,6 +29,7 @@ using Spring.Objects.Factory.Config;
 using Spring.Objects.Factory.Support;
 using Spring.Core.TypeResolution;
 using Spring.Objects;
+using static Spring.Objects.Factory.Config.ConstructorArgumentValues;
 
 #endregion
 
@@ -88,6 +89,10 @@ namespace Spring.Services.Zooyard.Config
             {
                 id = parserContext.ReaderContext.GenerateObjectName(zooyardFactoryDefinition);
             }
+
+            var all = base.ParseConstructorArgSubElements(id, element, parserContext);
+
+            zooyardFactoryDefinition.ConstructorArgumentValues.AddAll(all);
 
             //zooyardFactoryDefinition.ConstructorArgumentValues.AddNamedArgumentValue("endpointConfigurationName", endpointConfigurationName);
 

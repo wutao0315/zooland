@@ -1,4 +1,5 @@
-﻿using Zooyard.Core;
+﻿using System;
+using Zooyard.Core;
 
 namespace Zooyard.Rpc.Merger
 {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Zooyard.Core;
 
 namespace Zooyard.Rpc.Merger
@@ -6,7 +7,7 @@ namespace Zooyard.Rpc.Merger
     public class ArrayMerger : IMerger<object[]>
     {
         public static ArrayMerger INSTANCE = new ArrayMerger();
-
+        
         public object[] Merge(params object[][] items)
         {
             if (items.Length == 0)
@@ -40,10 +41,10 @@ namespace Zooyard.Rpc.Merger
             {
                 for (int i = 0; i < array.Length; i++)
                 {
-                    result.SetValue(array[i], index++);
+                    result.SetValue(array.GetValue(i), index++);
                 }
             }
-            
+
             return (object[])result;
         }
     }

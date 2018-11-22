@@ -20,7 +20,8 @@ namespace Zooyard.Rpc.NettyImpl
         private readonly IEventLoopGroup _bossGroup;
         private readonly IEventLoopGroup _workerGroup;
         private readonly IServerChannel _serverChannel;
-        private readonly IList<IChannelHandler> _channelHandlers;
+        private readonly IEnumerable<IChannelHandler> _channelHandlers;
+        private readonly object _service;
         private readonly int _port;
         private readonly bool _isSsl = false;
         private readonly string _pfx = "dotnetty.com";
@@ -30,7 +31,8 @@ namespace Zooyard.Rpc.NettyImpl
         public NettyServer(IEventLoopGroup bossGroup, 
             IEventLoopGroup workerGroup, 
             IServerChannel serverChannel,
-            IList<IChannelHandler> channelHandlers,
+            IEnumerable<IChannelHandler> channelHandlers,
+            object service,
             int port,
             bool isSsl,
             string pfx,
@@ -42,6 +44,7 @@ namespace Zooyard.Rpc.NettyImpl
             _workerGroup = workerGroup;
             _serverChannel = serverChannel;
             _channelHandlers = channelHandlers;
+            _service = service;
             _port = port;
             _isSsl = isSsl;
             _pfx = pfx;
@@ -82,18 +85,18 @@ namespace Zooyard.Rpc.NettyImpl
                     //pipeline.AddLast(new LoggingHandler("SRV-CONN"));
                     //pipeline.AddLast(new LengthFieldPrepender(4));
                     //pipeline.AddLast(new LengthFieldBasedFrameDecoder(int.MaxValue, 0, 4, 0, 4));
-                    //pipeline.AddLast(new ServerHandler(TheService));
 
                     pipeline.AddLast(_channelHandlers?.ToArray());
-                    
+                    pipeline.AddLast(new ServerHandler(_service));
+
                 }));
             try
             {
                 _channel = bootstrap.BindAsync(_port).GetAwaiter().GetResult();
-                if (_logger.IsEnabled(Microsoft.Extensions.Logging.LogLevel.Debug))
-                {
-                    _logger.LogDebug($"server started on port:{_port}.");
-                }
+
+                _logger.LogInformation($"Started the netty server ...");
+                Console.WriteLine($"Started the netty server ...");
+               
             }
             catch(Exception ex)
             {
@@ -119,7 +122,7 @@ namespace Zooyard.Rpc.NettyImpl
         
     }
 
-    public class ServerHandler : ChannelHandlerAdapter
+    internal class ServerHandler : ChannelHandlerAdapter
     {
         readonly object _service;
         public ServerHandler(object service)

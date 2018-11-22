@@ -1,4 +1,6 @@
-﻿namespace Zooyard.Core
+﻿using System;
+
+namespace Zooyard.Core
 {
     public interface IMerger
     {

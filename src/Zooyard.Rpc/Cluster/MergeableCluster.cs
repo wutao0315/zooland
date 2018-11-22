@@ -13,13 +13,15 @@ namespace Zooyard.Rpc.Cluster
     {
         public override string Name => NAME;
         public const string NAME = "mergeable";
-        public IDictionary<Type, IMerger> DefaultMergers { get; set; }
-        public IDictionary<string, IMerger> MySelfMergers { get; set; }
         public const string MERGER_KEY = "merger";
 
+        private readonly IDictionary<Type, IMerger> _defaultMergers;
+        private readonly IDictionary<string, IMerger> _mySelfMergers;
         private readonly ILogger _logger;
-        public MergeableCluster(ILoggerFactory loggerFactory) : base(loggerFactory)
+        public MergeableCluster(IDictionary<Type, IMerger> defaultMergers, IDictionary<string, IMerger> mySelfMergers, ILoggerFactory loggerFactory) : base(loggerFactory)
         {
+            _defaultMergers = defaultMergers;
+            _mySelfMergers = mySelfMergers;
             _logger = loggerFactory.CreateLogger<MergeableCluster>();
         }
 
@@ -106,7 +108,7 @@ namespace Zooyard.Rpc.Cluster
             IDictionary<string, Task<IResult>> results = new Dictionary<string, Task<IResult>>();
             foreach (var invoker in invokers)
             {
-                var task = Task.Run<IResult>(() => 
+                var task = Task.Run(() => 
                 {
                     try
                     {
@@ -231,11 +233,11 @@ namespace Zooyard.Rpc.Cluster
                 IMerger resultMerger;
                 if (merger.ToLower() == "true" || merger.ToLower() == "default")
                 {
-                    resultMerger = MergerFactory.GetMerger(returnType, DefaultMergers);
+                    resultMerger = MergerFactory.GetMerger(returnType, _defaultMergers);
                 }
                 else
                 {
-                    resultMerger = MySelfMergers[merger];
+                    resultMerger = _mySelfMergers[merger];
                 }
 
                 if (resultMerger != null)

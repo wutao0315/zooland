@@ -1,13 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Zooyard.Core;
 
 namespace Zooyard.Rpc.Merger
 {
-    public class SetMerger : IMerger<ISet<object>>
+    public class SetMerger<T> : IMerger<ISet<T>>
     {
-        public ISet<object> Merge(params ISet<object>[] items)
+        public ISet<T> Merge(params ISet<T>[] items)
         {
-            var result = new HashSet<object>();
+            var result = new HashSet<T>();
             
             foreach (var item in items)
             {

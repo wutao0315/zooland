@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Grpc" Version="1.15.0" />
+    <PackageReference Include="Grpc" Version="1.16.0" />
   </ItemGroup>
 
   <ItemGroup>

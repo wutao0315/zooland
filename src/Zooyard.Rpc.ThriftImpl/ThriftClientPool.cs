@@ -15,6 +15,16 @@ namespace Zooyard.Rpc.ThriftImpl
 {
     public class ThriftClientPool : AbstractClientPool
     {
+        public const string TRANSPORT_KEY = "transport";
+        public const string DEFAULT_TRANSPORT = "TSocket";
+        public const string DEFAULT_PROTOCOL = "TBinaryProtocol";
+        public const string PROXY_KEY = "proxy";
+        public const string TIMEOUT_KEY = "tf_timeout";
+        public const int DEFAULT_TIMEOUT = 5000;
+
+        private readonly IDictionary<string, Type> _transportTypes;
+        private readonly IDictionary<string, Type> _protocolTypes;
+        private readonly IDictionary<string, Type> _clientTypes;
         private readonly ILogger _logger;
         private readonly ILoggerFactory _loggerFactory;
         public ThriftClientPool(ILoggerFactory loggerFactory):base(loggerFactory)
@@ -24,27 +34,13 @@ namespace Zooyard.Rpc.ThriftImpl
         }
         public ThriftClientPool(IDictionary<string, Type> transportTypes,
             IDictionary<string, Type> protocolTypes,
-            IDictionary<string, Type> thriftClientTypes,
+            IDictionary<string, Type> clientTypes,
             ILoggerFactory loggerFactory) :this(loggerFactory)
         {
-            TheTransportTypes = transportTypes;
-            TheProtocolTypes = protocolTypes;
-            TheThriftClientTypes = thriftClientTypes;
+            _transportTypes = transportTypes;
+            _protocolTypes = protocolTypes;
+            _clientTypes = clientTypes;
         }
-        public const string TRANSPORT_KEY = "transport";
-        public const string DEFAULT_TRANSPORT = "TSocket";
-
-        //public const string PROTOCOL_KEY = "protocol";
-        public const string DEFAULT_PROTOCOL = "TBinaryProtocol";
-
-        public const string PROXY_KEY = "proxy";
-
-        public const string TIMEOUT_KEY = "tf_timeout";
-        public const int DEFAULT_TIMEOUT = 5000;
-
-        public IDictionary<string,Type>  TheTransportTypes { get; set; }
-        public IDictionary<string, Type> TheProtocolTypes { get; set; }
-        public IDictionary<string, Type> TheThriftClientTypes { get; set; }
 
         protected override IClient CreateClient(URL url)
         {
@@ -54,30 +50,30 @@ namespace Zooyard.Rpc.ThriftImpl
             
             TClientTransport transport = new TSocketClientTransport(IPAddress.Parse(url.Host),url.Port, timeout);
             var transportKey = url.GetParameter(TRANSPORT_KEY, DEFAULT_TRANSPORT);
-            if (TheTransportTypes!=null 
-                && TheTransportTypes.ContainsKey(transportKey)
+            if (_transportTypes != null 
+                && _transportTypes.ContainsKey(transportKey)
                 && transportKey!= DEFAULT_TRANSPORT)
             {
-                transport = (TClientTransport)Activator.CreateInstance(TheTransportTypes[transportKey], IPAddress.Parse(url.Host), url.Port, timeout);
+                transport = (TClientTransport)Activator.CreateInstance(_transportTypes[transportKey], IPAddress.Parse(url.Host), url.Port, timeout);
             }
 
             //获取协议
             TProtocol protocol = new TBinaryProtocol(transport);
-            //var protocolKey = url.GetParameter(PROTOCOL_KEY, DEFAULT_PROTOCOL);
-            if (TheProtocolTypes!=null 
-                && TheProtocolTypes.ContainsKey(url.Protocol) 
+
+            if (_protocolTypes != null 
+                && _protocolTypes.ContainsKey(url.Protocol) 
                 && url.Protocol != DEFAULT_PROTOCOL)
             {
-                protocol = (TProtocol)Activator.CreateInstance(TheProtocolTypes[url.Protocol], transport);
+                protocol = (TProtocol)Activator.CreateInstance(_protocolTypes[url.Protocol], transport);
             }
 
             var proxyKey = url.GetParameter(PROXY_KEY);
-            if (string.IsNullOrEmpty(proxyKey) || !TheThriftClientTypes.ContainsKey(proxyKey))
+            if (string.IsNullOrEmpty(proxyKey) || !_clientTypes.ContainsKey(proxyKey))
             {
                 throw new RpcException($"not find the proxy thrift client{url.ToFullString()}");
             }
-            //实例化TheThriftClient
-            var client = (IDisposable)Activator.CreateInstance(TheThriftClientTypes[proxyKey], protocol);
+            //instance ThriftClient
+            var client = (IDisposable)Activator.CreateInstance(_clientTypes[proxyKey], protocol);
 
             return new ThriftClient(transport, client, url, _loggerFactory);
         }

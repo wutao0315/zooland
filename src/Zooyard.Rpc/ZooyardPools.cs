@@ -365,7 +365,8 @@ namespace Zooyard.Rpc
                 throw new Exception($"not find the {invocation.TargetType.FullName}'s urls,please config it ");
             }
 
-            if (Urls?[invocation.TargetType.FullName]?.Count() > 0)
+            if (Urls.ContainsKey(invocation.TargetType.FullName) 
+                && Urls?[invocation.TargetType.FullName]?.Count() > 0)
             {
                 var result = filterUrls(invocation, Urls[invocation.TargetType.FullName]);
                 if (result?.Count > 0)
@@ -375,7 +376,8 @@ namespace Zooyard.Rpc
                 }
             }
 
-            if (BadUrls?[invocation.TargetType.FullName]?.Count() > 0)
+            if (BadUrls.ContainsKey(invocation.TargetType.FullName) 
+                && BadUrls?[invocation.TargetType.FullName]?.Count() > 0)
             {
                 var result = filterUrls(invocation, BadUrls[invocation.TargetType.FullName].Select(w => w.Url).ToList());
                 if (result?.Count > 0)
@@ -555,7 +557,7 @@ namespace Zooyard.Rpc
                             badUrls.Remove(badUrl);
                         }
 
-                        _logger.LogInformation(badUrl.CurrentException,$"isolation url {badUrl.ToString()}");
+                        _logger.LogInformation(item.CurrentException,$"isolation url {item.ToString()}");
                         badUrls.Add(item);
                     }
                 }

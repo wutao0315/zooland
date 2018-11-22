@@ -13,28 +13,27 @@ namespace Zooyard.Core
 {
     public class ZooyardFactory<T>
     {
-        public ZooyardFactory() { }
-        public ZooyardFactory(IZooyardPools thePools, string app, string version) {
-            this.ThePools = thePools;
-            this.App = app;
-            this.Version = version;
+        public ZooyardFactory(IZooyardPools pools, string app, string version) {
+            _pools = pools;
+            _app = app;
+            _version = version;
         }
         /// <summary>
         /// remoting service pools
         /// </summary>
-        public IZooyardPools ThePools { get; set; }
+        private readonly IZooyardPools _pools;
         /// <summary>
         /// application name
         /// </summary>
-        public string App { get; set; }
+        private readonly string _app;
         /// <summary>
         /// api version
         /// </summary>
-        public string Version { get; set; }
+        private readonly string _version;
 
         public T CreateYard()
         {
-            var interceptor = new ServiceInterceptor<T>(ThePools, App, Version);
+            var interceptor = new ServiceInterceptor<T>(_pools, _app, _version);
             var result = InterfaceProxy.New<T>(interceptor);
             return result;
         }

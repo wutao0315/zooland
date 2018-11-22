@@ -15,13 +15,13 @@ namespace RpcProvider
         {
             Console.WriteLine($"from grpc CallName {request.Name} call Hello! [{ServiceName}]");
 
-            return Task.FromResult<RpcContractGrpc.Void>(new RpcContractGrpc.Void ());
+            return Task.FromResult(new RpcContractGrpc.Void ());
         }
         public override Task<NameResult> CallNameVoid(RpcContractGrpc.Void request, ServerCallContext context)
         {
             Console.WriteLine($"from grpc CallNameVoid call Hello! [{ServiceName}]");
             var name = $"from grpc hello CallNameVoid [{ServiceName}]";
-            return Task.FromResult<NameResult>(new NameResult {
+            return Task.FromResult(new NameResult {
                  Name= name
             });
         }

@@ -48,6 +48,9 @@
         "Version": "1.0",
         "ServiceType": "RpcContractNetty.IHelloService, RpcContractNetty"
       }
-    ]
+    ],
+    "Mergers": {
+      "hash": "Zooyard.Rpc.Merger.ArrayMerger, Zooyard.Rpc"
+    }
   }
 }

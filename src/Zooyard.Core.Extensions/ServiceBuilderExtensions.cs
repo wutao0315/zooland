@@ -11,6 +11,7 @@ using Zooyard.Rpc;
 using Zooyard.Rpc.Cache;
 using Zooyard.Rpc.Cluster;
 using Zooyard.Rpc.LoadBalance;
+using Zooyard.Rpc.Merger;
 
 namespace Zooyard.Core.Extensions
 {
@@ -20,6 +21,7 @@ namespace Zooyard.Core.Extensions
         public IList<string> ClientUrls { get; set; }
         public IDictionary<string, string> ClientPools { get; set; }
         public IList<ZoolandClientOption> Clients { get; set; }
+        public IDictionary<string, string> Mergers { get; set; }
     }
     public class ZoolandClientOption
     {
@@ -46,18 +48,65 @@ namespace Zooyard.Core.Extensions
                 return result;
             });
 
-            services.AddSingleton<ConsistentHashLoadBalance>();
-            services.AddSingleton<LeastActiveLoadBalance>();
-            services.AddSingleton<RandomLoadBalance>();
-            services.AddSingleton<RoundRobinLoadBalance>();
+            services.AddSingleton<ILoadBalance, ConsistentHashLoadBalance>();
+            services.AddSingleton<ILoadBalance, LeastActiveLoadBalance>();
+            services.AddSingleton<ILoadBalance, RandomLoadBalance>();
+            services.AddSingleton<ILoadBalance, RoundRobinLoadBalance>();
 
 
-            services.AddSingleton<BroadcastCluster>();
-            services.AddSingleton<FailbackCluster>();
-            services.AddSingleton<FailfastCluster>();
-            services.AddSingleton<FailoverCluster>();
-            services.AddSingleton<FailsafeCluster>();
-            services.AddSingleton<ForkingCluster>();
+            services.AddSingleton<ICluster, BroadcastCluster>();
+            services.AddSingleton<ICluster, FailbackCluster>();
+            services.AddSingleton<ICluster, FailfastCluster>();
+            services.AddSingleton<ICluster, FailoverCluster>();
+            services.AddSingleton<ICluster, FailsafeCluster>();
+            services.AddSingleton<ICluster, ForkingCluster>();
+
+
+            services.AddSingleton<ArrayMerger>();
+            services.AddSingleton<BooleanArrayMerger>();
+            services.AddSingleton<ByteArrayMerger>();
+            services.AddSingleton<CharArrayMerger>();
+            services.AddSingleton<DoubleArrayMerger>();
+            services.AddSingleton<FloatArrayMerger>();
+            services.AddSingleton<ShortArrayMerger>();
+            services.AddSingleton<IntArrayMerger>();
+            services.AddSingleton<LongArrayMerger>();
+            services.AddSingleton(typeof(ListMerger<>));
+            services.AddSingleton(typeof(DictionaryMerger<,>));
+            services.AddSingleton(typeof(SetMerger<>));
+
+            services.AddSingleton<IDictionary<Type, IMerger>>((serviceProvder) => 
+            {
+                var result = new Dictionary<Type, IMerger>
+                {
+                    {typeof(Array),serviceProvder.GetService<ArrayMerger>()},
+                    {typeof(bool),serviceProvder.GetService<BooleanArrayMerger>()},
+                    {typeof(byte),serviceProvder.GetService<ByteArrayMerger>()},
+                    {typeof(char),serviceProvder.GetService<CharArrayMerger>()},
+                    {typeof(double),serviceProvder.GetService<DoubleArrayMerger>()},
+                    {typeof(float),serviceProvder.GetService<FloatArrayMerger>()},
+                    {typeof(short), serviceProvder.GetService<ShortArrayMerger>()},
+                    {typeof(int),serviceProvder.GetService<IntArrayMerger>()},
+                    {typeof(long),serviceProvder.GetService<LongArrayMerger>() },
+                    {typeof(IEnumerable<>),serviceProvder.GetService(typeof(ListMerger<>)) as IMerger},
+                    {typeof(IDictionary<,>),serviceProvder.GetService(typeof(DictionaryMerger<,>)) as IMerger},
+                    {typeof(ISet<>), serviceProvder.GetService(typeof(SetMerger<>)) as IMerger}
+                };
+                return result;
+            });
+            services.AddSingleton<IDictionary<string, IMerger>>((serviceProvder) =>
+            {
+                var option = serviceProvder.GetService<IOptions<ZoolandOption>>().Value;
+                var result = new Dictionary<string, IMerger>();
+
+                foreach (var item in option.Mergers)
+                {
+                    var merger = serviceProvder.GetService(Type.GetType(item.Value)) as IMerger;
+                    result.Add(item.Key, merger);
+                }
+                return result;
+            });
+
             services.AddSingleton<MergeableCluster>();
 
 

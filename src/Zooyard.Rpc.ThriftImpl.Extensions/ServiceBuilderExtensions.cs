@@ -68,7 +68,7 @@ namespace Zooyard.Rpc.ThriftImpl.Extensions
                             { "TJSONProtocol",typeof(TJsonProtocol)},
                             { "TMultiplexedProtocol",typeof(TMultiplexedProtocol)},
                         },
-                    thriftClientTypes : thriftClientTypes,
+                    clientTypes: thriftClientTypes,
                     loggerFactory: loggerFactory
                 );
 

@@ -11,10 +11,9 @@ namespace Spring.Services.Zooyard
 {
     public class ZooyardFactoryObject<T> : ZooyardFactory<T>, IFactoryObject where T:class
     {
+        public ZooyardFactoryObject(IZooyardPools pools, string app, string version):base(pools, app, version){}
         #region Logging
-
         private static readonly ILog Log = LogManager.GetLogger(typeof(ZooyardFactoryObject<>));
-
         #endregion
         
         public Type ObjectType => typeof(T);

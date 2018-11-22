@@ -34,7 +34,8 @@ namespace Zooyard.Rpc.GrpcImpl
             }
             //开启服务
             _server.Start();
-            _logger.LogInformation("started the grpc server ...");
+            _logger.LogInformation($"Started the grpc server ...");
+            Console.WriteLine($"Started the grpc server ...");
         }
 
         public override void DoDispose()
