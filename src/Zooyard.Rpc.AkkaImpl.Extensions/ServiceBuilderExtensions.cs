@@ -20,7 +20,7 @@ namespace Zooyard.Rpc.AkkaImpl.Extensions
     public class AkkaServerOption
     {
         public string ActorName { get; set; }
-        public string ActorConfig { get; set; }
+        public IEnumerable<string> ActorConfig { get; set; }
         public IDictionary<string, string> Actors { get; set; }
     }
 
@@ -67,16 +67,14 @@ namespace Zooyard.Rpc.AkkaImpl.Extensions
                 return result;
             });
 
-            services.AddSingleton((serviceProvider)=> 
+            services.AddSingleton<IServer>((serviceProvider)=> 
             {
                 var option = serviceProvider.GetService<IOptions<AkkaServerOption>>().Value;
                 var actors = serviceProvider.GetService<IDictionary<string,ZooyardActor>>();
                 var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
-                return new AkkaServer(option.ActorName, option.ActorConfig,actors, loggerFactory);
+                var actorConfig = string.Join("\n", option.ActorConfig);
+                return new AkkaServer(option.ActorName, actorConfig, actors, loggerFactory);
             });
-
-
-
         }
 
         private class ConstructorMatcher

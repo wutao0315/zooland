@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using RpcContractThrift;
 
-namespace RpcProvider
+namespace RpcProviderCore
 {
     public class HelloServiceThriftImpl : HelloService.IAsync
     {

@@ -1,26 +1,79 @@
-﻿using System;
+﻿using DotNetty.Codecs;
+using DotNetty.Handlers.Logging;
+using DotNetty.Transport.Channels;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Spring.Context.Support;
+using Zooyard.Core.Extensions;
+using Zooyard.Rpc.AkkaImpl.Extensions;
+using Zooyard.Rpc.GrpcImpl.Extensions;
+using Zooyard.Rpc.HttpImpl.Extensions;
+using Zooyard.Rpc.NettyImpl.Extensions;
+using Zooyard.Rpc.ThriftImpl.Extensions;
+using Zooyard.Rpc.WcfImpl.Extensions;
 
-namespace RpcConsumer
+namespace RpcConsumerCore
 {
     class Program
     {
-        
         static void Main(string[] args)
         {
-            using (var context = ContextRegistry.GetContext())
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory() + "/Config")
+                .AddJsonFile("zooyard.akka.json", false, true)
+                .AddJsonFile("zooyard.grpc.json", false, true)
+                .AddJsonFile("zooyard.netty.json", false, true)
+                .AddJsonFile("zooyard.thrift.json", false, true)
+                .AddJsonFile("zooyard.wcf.json", false, true)
+                .AddJsonFile("zooyard.json", false, true);
+
+            var config = builder.Build();
+
+            IServiceCollection services = new ServiceCollection();
+            services.Configure<AkkaOption>(config.GetSection("akka"));
+            services.Configure<GrpcOption>(config.GetSection("grpc"));
+            services.Configure<NettyOption>(config.GetSection("netty"));
+            services.Configure<ThriftOption>(config.GetSection("thrift"));
+            services.Configure<WcfOption>(config.GetSection("wcf"));
+            services.Configure<ZoolandOption>(config.GetSection("zooyard"));
+            services.AddLogging();
+            services.AddAkkaClient();
+            services.AddGrpcClient();
+            services.AddHttpClient();
+
+            var handlers = new List<IChannelHandler>
+                        {
+                            new LoggingHandler(),
+                            new LengthFieldPrepender(lengthFieldLength:4),
+                            new LengthFieldBasedFrameDecoder(
+                                maxFrameLength: int.MaxValue,
+                                lengthFieldOffset:0,
+                                lengthFieldLength:4,
+                                lengthAdjustment:0,
+                                initialBytesToStrip:4)
+                        };
+            services.AddNettyClient(new Dictionary<string, IEnumerable<IChannelHandler>>
             {
-                var helloServiceThrift = context.GetObject<RpcContractThrift.IHelloService>();
-                var helloServiceGrpc = context.GetObject<RpcContractGrpc.IHelloService>();
-                var helloServiceWcf = context.GetObject<RpcContractWcf.IHelloService>();
-                var helloServiceHttp = context.GetObject<RpcContractHttp.IHelloService>();
-                var helloServiceAkka = context.GetObject<RpcContractAkka.IHelloService>();
-                var helloServiceNetty = context.GetObject<RpcContractNetty.IHelloService>();
+                { "socket", handlers},
+                { "libuv", handlers }
+            });
+
+            services.AddThriftClient();
+            services.AddWcfClient();
+            services.AddZoolandClient(config);
+
+            using (var bsp = services.BuildServiceProvider())
+            {
+                var helloServiceThrift = bsp.GetService<RpcContractThrift.IHelloService>();
+                var helloServiceGrpc = bsp.GetService<RpcContractGrpc.IHelloService>();
+                var helloServiceWcf = bsp.GetService<RpcContractWcf.IHelloService>();
+                var helloServiceHttp = bsp.GetService<RpcContractHttp.IHelloService>();
+                var helloServiceAkka = bsp.GetService<RpcContractAkka.IHelloService>();
+                var helloServiceNetty = bsp.GetService<RpcContractNetty.IHelloService>();
                 //RpcContractNetty.IHelloService helloServiceNetty = null;
 
                 while (true)
@@ -133,8 +186,10 @@ namespace RpcConsumer
                         break;
                     }
                 }
+
             }
-               
+
+                
 
         }
         private static void ThriftHello(RpcContractThrift.IHelloService helloServiceThrift, string helloword = "world")
@@ -202,7 +257,7 @@ namespace RpcConsumer
             var showResultWcf = helloServiceHttp.ShowHello(helloResultWcf);
             Console.WriteLine(showResultWcf);
         }
-        private static void AkkaHello(RpcContractAkka.IHelloService akkaServiceHttp,string helloword = "world")
+        private static void AkkaHello(RpcContractAkka.IHelloService akkaServiceHttp, string helloword = "world")
         {
             var callNameVoid = akkaServiceHttp.CallNameVoid();
             Console.WriteLine(callNameVoid);
@@ -217,9 +272,9 @@ namespace RpcConsumer
             helloResult.Name = helloword + "show perfect world";
             var showResultWcf = akkaServiceHttp.ShowHello(helloResult);
             Console.WriteLine(showResultWcf.Name);
-            
+
         }
-        private static void NettyHello(RpcContractNetty.IHelloService nettyServiceHttp,string helloword = "world")
+        private static void NettyHello(RpcContractNetty.IHelloService nettyServiceHttp, string helloword = "world")
         {
             var callNameVoid = nettyServiceHttp.CallNameVoid();
             Console.WriteLine(callNameVoid);
@@ -234,7 +289,7 @@ namespace RpcConsumer
             helloResult.Name = helloword + "show perfect world";
             var showResultNetty = nettyServiceHttp.ShowHello(helloResult);
             Console.WriteLine(showResultNetty);
-            
+
         }
         private static void CallWhile(Action<string> map)
         {

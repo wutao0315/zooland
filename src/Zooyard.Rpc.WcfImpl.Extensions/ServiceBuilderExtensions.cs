@@ -3,12 +3,12 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
-using System.ServiceModel.Channels;
-
 #if NET461
 using System.ServiceModel;
 using System.ServiceModel.Description;
 using System.Linq;
+using System.ServiceModel.Channels;
+using Zooyard.Core;
 #endif 
 
 namespace Zooyard.Rpc.WcfImpl.Extensions
@@ -88,7 +88,7 @@ namespace Zooyard.Rpc.WcfImpl.Extensions
                 var baseAddresses = serviceProvider.GetService<IList<Uri>>();
                 return new WcfService(instance,Type.GetType(option.ContractType), baseAddresses, binding, behaviors.ToList());
             });
-            services.AddSingleton<WcfServer>();
+            services.AddSingleton<IServer, WcfServer>();
         }
 #endif
     }

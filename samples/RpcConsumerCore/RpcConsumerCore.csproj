@@ -1,35 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-
-    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Config\zooyard.grpc.json~RF239f346b.TMP" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="DotNetty.Transport.Libuv" Version="0.6.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.1.1" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.1.1" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="2.1.1" />
-    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="2.1.1" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
-    <PackageReference Include="MSTest.TestAdapter" Version="1.3.2" />
-    <PackageReference Include="MSTest.TestFramework" Version="1.3.2" />
+    <PackageReference Include="Akka.Remote" Version="1.3.10" />
     <PackageReference Include="System.ServiceModel.Http" Version="4.5.3" />
     <PackageReference Include="System.ServiceModel.NetTcp" Version="4.5.3" />
+    <PackageReference Include="System.ServiceModel.Primitives" Version="4.5.3" />
+    <PackageReference Include="System.ServiceModel.Security" Version="4.5.3" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\samples\RpcContractAkka\RpcContractAkka.csproj" />
-    <ProjectReference Include="..\..\samples\RpcContractGrpc\RpcContractGrpc.csproj" />
-    <ProjectReference Include="..\..\samples\RpcContractHttp\RpcContractHttp.csproj" />
-    <ProjectReference Include="..\..\samples\RpcContractNetty\RpcContractNetty.csproj" />
-    <ProjectReference Include="..\..\samples\RpcContractThrift\RpcContractThrift.csproj" />
-    <ProjectReference Include="..\..\samples\RpcContractWcf\RpcContractWcf.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.Core.Extensions\Zooyard.Core.Extensions.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.Core\Zooyard.Core.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.Rpc.AkkaImpl.Extensions\Zooyard.Rpc.AkkaImpl.Extensions.csproj" />
@@ -45,27 +29,35 @@
     <ProjectReference Include="..\..\src\Zooyard.Rpc.WcfImpl.Extensions\Zooyard.Rpc.WcfImpl.Extensions.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.Rpc.WcfImpl\Zooyard.Rpc.WcfImpl.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.Rpc\Zooyard.Rpc.csproj" />
+    <ProjectReference Include="..\RpcContractAkka\RpcContractAkka.csproj" />
+    <ProjectReference Include="..\RpcContractGrpc\RpcContractGrpc.csproj" />
+    <ProjectReference Include="..\RpcContractHttp\RpcContractHttp.csproj" />
+    <ProjectReference Include="..\RpcContractNetty\RpcContractNetty.csproj" />
+    <ProjectReference Include="..\RpcContractThrift\RpcContractThrift.csproj" />
+    <ProjectReference Include="..\RpcContractWcf\RpcContractWcf.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Config\zooyard.grpc.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="Config\zooyard.akka.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Config\zooyard.netty.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Config\zooyard.wcf.json">
+    <None Update="Config\zooyard.grpc.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Config\zooyard.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Config\zooyard.netty.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Config\zooyard.thrift.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Config\zooyard.wcf.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
+
+  <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
 
 </Project>

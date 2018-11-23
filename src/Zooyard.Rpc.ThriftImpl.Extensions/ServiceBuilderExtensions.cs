@@ -3,17 +3,11 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using Thrift;
 using Thrift.Protocols;
 using Thrift.Server;
 using Thrift.Transports;
 using Thrift.Transports.Client;
-using Thrift.Transports.Server;
 using Zooyard.Core;
-using Zooyard.Rpc.Cache;
-using Zooyard.Rpc.Cluster;
-using Zooyard.Rpc.LoadBalance;
 
 namespace Zooyard.Rpc.ThriftImpl.Extensions
 {
@@ -22,18 +16,8 @@ namespace Zooyard.Rpc.ThriftImpl.Extensions
         public IDictionary<string,string> Clients { get; set; }
     }
 
-    public class ThriftServerOption
-    {
-        public string ProtocolFactoryType { get; set; }
-        public ThriftTransportOption Transport { get; set; }
-    }
-    public class ThriftTransportOption
-    {
-        public string TransportType { get; set; }
-        public int Port { get; set; }
-        public int ClientTimeOut { get; set; }
-        public bool UserBufferedSockets { get; set; }
-    }
+   
+
 
     public static class ServiceBuilderExtensions
     {
@@ -77,35 +61,10 @@ namespace Zooyard.Rpc.ThriftImpl.Extensions
 
         }
 
-        public static void AddThriftServer<ifacade, facade, processor>(this IServiceCollection services)
-            where processor : class, ITAsyncProcessor
-            where ifacade : class
-            where facade : class,ifacade
+        public static void AddThriftServer(this IServiceCollection services)
         {
-            services.AddTransient<ifacade, facade>();
-            services.AddTransient<ITAsyncProcessor, processor>();
-
-            services.AddSingleton((serviceProvider)=> 
-            {
-                var option = serviceProvider.GetService<IOptions<ThriftServerOption>>().Value;
-                var transportType =Type.GetType(option.Transport.TransportType);
-                var transport = transportType.GetConstructor(new[] {typeof(int), typeof(int), typeof(bool) })
-                .Invoke(new object[] {option.Transport.Port,option.Transport.ClientTimeOut,option.Transport.UserBufferedSockets })
-                 as TServerTransport;
-
-                return transport;
-            });
-
-            services.AddSingleton((serviceProvider) => {
-                var option = serviceProvider.GetService<IOptions<ThriftServerOption>>().Value;
-                var factoryType = Type.GetType(option.ProtocolFactoryType);
-                var factory = factoryType.GetConstructor(null).Invoke(null)
-                 as ITProtocolFactory;
-                return factory;
-            });
-            
-            services.AddSingleton<AsyncBaseServer>();
-            services.AddSingleton<ThriftServer>();
+            services.AddSingleton<TBaseServer, AsyncBaseServer>();
+            services.AddSingleton<IServer, ThriftServer>();
             
         }
     }

@@ -1,12 +1,15 @@
 ﻿using DotNetty.Buffers;
+using DotNetty.Common.Utilities;
 using DotNetty.Handlers.Tls;
 using DotNetty.Transport.Bootstrapping;
 using DotNetty.Transport.Channels;
+using DotNetty.Transport.Channels.Sockets;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Zooyard.Rpc.Support;
@@ -68,11 +71,15 @@ namespace Zooyard.Rpc.NettyImpl
 
             var bootstrap = new ServerBootstrap();
             bootstrap
-                .Group(_bossGroup, _workerGroup)
                 .ChannelFactory(()=> _serverChannel)
+                //.Option(ChannelOption.SoReuseaddr, Settings.TcpReuseAddr)
+                //.Option(ChannelOption.SoKeepalive, Settings.TcpKeepAlive)
+                //.Option(ChannelOption.TcpNodelay, Settings.TcpNoDelay)
+                .Option(ChannelOption.AutoRead, true)
                 .Option(ChannelOption.SoBacklog, 100)
-                .Handler(new DotNetty.Handlers.Logging.LoggingHandler("SRV-LSTN"))
                 .ChildOption(ChannelOption.Allocator, PooledByteBufferAllocator.Default)
+                .Group(_bossGroup, _workerGroup)
+                .Handler(new DotNetty.Handlers.Logging.LoggingHandler("SRV-LSTN"))
                 .ChildHandler(new ActionChannelInitializer<IChannel>(channel =>
                 {
                     var pipeline = channel.Pipeline;
@@ -82,17 +89,23 @@ namespace Zooyard.Rpc.NettyImpl
                         pipeline.AddLast("tls", TlsHandler.Server(tlsCertificate));
                     }
 
-                    //pipeline.AddLast(new LoggingHandler("SRV-CONN"));
+                    //pipeline.AddLast(new DotNetty.Handlers.Logging.LoggingHandler("SRV-CONN"));
                     //pipeline.AddLast(new LengthFieldPrepender(4));
                     //pipeline.AddLast(new LengthFieldBasedFrameDecoder(int.MaxValue, 0, 4, 0, 4));
 
                     pipeline.AddLast(_channelHandlers?.ToArray());
-                    pipeline.AddLast(new ServerHandler(_service));
+                    pipeline.AddLast(new ServerHandler(_service, _logger));
 
                 }));
+
+            //if (Settings.ReceiveBufferSize.HasValue) bootstrap.Option(ChannelOption.SoRcvbuf, Settings.ReceiveBufferSize.Value);
+            //if (Settings.SendBufferSize.HasValue) bootstrap.Option(ChannelOption.SoSndbuf, Settings.SendBufferSize.Value);
+            //if (Settings.WriteBufferHighWaterMark.HasValue) bootstrap.Option(ChannelOption.WriteBufferHighWaterMark, Settings.WriteBufferHighWaterMark.Value);
+            //if (Settings.WriteBufferLowWaterMark.HasValue) bootstrap.Option(ChannelOption.WriteBufferLowWaterMark, Settings.WriteBufferLowWaterMark.Value);
+
             try
             {
-                _channel = bootstrap.BindAsync(_port).GetAwaiter().GetResult();
+                _channel = bootstrap.BindAsync(IPAddress.Any,_port).GetAwaiter().GetResult();
 
                 _logger.LogInformation($"Started the netty server ...");
                 Console.WriteLine($"Started the netty server ...");
@@ -124,10 +137,13 @@ namespace Zooyard.Rpc.NettyImpl
 
     internal class ServerHandler : ChannelHandlerAdapter
     {
-        readonly object _service;
-        public ServerHandler(object service)
+        private readonly object _service;
+        private readonly ILogger _logger;
+
+        public ServerHandler(object service, ILogger logger)
         {
             _service = service;
+            _logger = logger;
         }
 
         #region Overrides of ChannelHandlerAdapter
@@ -138,12 +154,14 @@ namespace Zooyard.Rpc.NettyImpl
             //调用服务器端接口
             //将返回值编码
             //将返回值发送到客户端
-            var buffer = message as IByteBuffer;
-            if (buffer != null)
+            if (message is IByteBuffer buffer)
             {
                 var bytes = new byte[buffer.ReadableBytes];
                 buffer.ReadBytes(bytes);
                 var transportMessage = bytes.Desrialize<TransportMessage>();
+                context.FireChannelRead(transportMessage);
+                ReferenceCountUtil.SafeRelease(buffer);
+
                 var rpc = transportMessage.GetContent<RemoteInvokeMessage>();
 
                 var methodName = rpc.Method;
@@ -164,11 +182,12 @@ namespace Zooyard.Rpc.NettyImpl
                 {
                     remoteInvoker.ExceptionMessage = ex.Message;
                     remoteInvoker.StatusCode = 500;
+                    _logger.LogError(ex, ex.Message);
                 }
                 var resultData = TransportMessage.CreateInvokeResultMessage(transportMessage.Id, remoteInvoker);
                 var sendByte = resultData.Serialize();
                 var sendBuffer = Unpooled.WrappedBuffer(sendByte);
-                context.WriteAsync(sendBuffer);
+                context.WriteAndFlushAsync(sendBuffer).GetAwaiter().GetResult();
             }
 
         }
@@ -182,9 +201,8 @@ namespace Zooyard.Rpc.NettyImpl
         {
             //客户端主动断开需要应答，否则socket变成CLOSE_WAIT状态导致socket资源耗尽
             context.CloseAsync();
-            Console.WriteLine($"与服务器：{context.Channel.RemoteAddress}通信时发送了错误。");
-            //if (_logger.IsEnabled(LogLevel.Error))
-            //    _logger.LogError(exception, $"与服务器：{context.Channel.RemoteAddress}通信时发送了错误。");
+            Console.WriteLine($"server error on transport with {context.Channel.RemoteAddress}:{exception.Message}");
+            _logger.LogError(exception, $"server error on transport with {context.Channel.RemoteAddress}:{exception.Message}");
         }
 
         #endregion Overrides of ChannelHandlerAdapter

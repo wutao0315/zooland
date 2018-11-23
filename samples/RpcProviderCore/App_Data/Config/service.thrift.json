@@ -1,0 +1,9 @@
+﻿{
+  "thrift": {
+    "ProtocolFactoryType": "Thrift.Protocols.TCompactProtocol+Factory, Thrift",
+    "TransportType": "Thrift.Transports.Server.TServerSocketTransport, Thrift",
+    "Port": 10009,
+    "ClientTimeOut": 2000,
+    "UseBufferedSockets": true
+  }
+}

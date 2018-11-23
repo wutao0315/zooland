@@ -55,7 +55,7 @@ namespace Zooyard.Rpc.NettyImpl
         {
             if (_channel.Active || _channel.Open)
             {
-                _channel.DisconnectAsync().GetAwaiter().GetResult();
+                _channel.CloseAsync().GetAwaiter().GetResult();
             }
         }
 

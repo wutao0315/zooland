@@ -24,7 +24,7 @@ namespace Zooyard.Rpc.HttpImpl.Extensions
             where Startup : class
         {
             services.AddSingleton(WebHost.CreateDefaultBuilder(args).UseStartup<Startup>().Build());
-            services.AddSingleton<HttpServer>();
+            services.AddSingleton<IServer, HttpServer>();
         }
     }
 }

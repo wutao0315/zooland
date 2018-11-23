@@ -23,7 +23,6 @@ namespace Zooyard.Rpc.NettyImpl.Extensions
         public string Name { get; set; }
         public string EventLoopGroupType { get; set; }
         public string ChannelType { get; set; }
-        //public IEnumerable<string> Handlers { get; set; }
     }
 
     public class NettyServerOption
@@ -80,7 +79,7 @@ namespace Zooyard.Rpc.NettyImpl.Extensions
 
             services.AddSingleton<TcpServerSocketChannel>();
             
-            services.AddSingleton((serviceProvider)=> 
+            services.AddSingleton<IServer>((serviceProvider)=> 
             {
                 var option = serviceProvider.GetService<IOptions<NettyServerOption>>().Value;
                 var loggerFactory = serviceProvider.GetService<ILoggerFactory>();

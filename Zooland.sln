@@ -46,15 +46,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.Rpc.ThriftImpl", "s
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.Rpc.WcfImpl", "src\Zooyard.Rpc.WcfImpl\Zooyard.Rpc.WcfImpl.csproj", "{96599370-259A-47FF-BFBE-832C054F4311}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcContractAkka", "samples\RpcContractAkka\RpcContractAkka.csproj", "{9A94F120-847A-4BC6-8E1E-0BF957DB7EAA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcContractAkka", "samples\RpcContractAkka\RpcContractAkka.csproj", "{9A94F120-847A-4BC6-8E1E-0BF957DB7EAA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcContractGrpc", "samples\RpcContractGrpc\RpcContractGrpc.csproj", "{5AA7B78D-829A-42FA-B6E4-64AACFF45BC0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcContractGrpc", "samples\RpcContractGrpc\RpcContractGrpc.csproj", "{5AA7B78D-829A-42FA-B6E4-64AACFF45BC0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcContractHttp", "samples\RpcContractHttp\RpcContractHttp.csproj", "{316B206E-7834-4704-A04E-4A5B01BA239F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcContractHttp", "samples\RpcContractHttp\RpcContractHttp.csproj", "{316B206E-7834-4704-A04E-4A5B01BA239F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcContractThrift", "samples\RpcContractThrift\RpcContractThrift.csproj", "{F42A095A-BD90-4FEF-8826-15EE1B6D819D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcContractWcf", "samples\RpcContractWcf\RpcContractWcf.csproj", "{F7CF3768-F809-481D-9C45-44BB2FD4FA55}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcContractWcf", "samples\RpcContractWcf\RpcContractWcf.csproj", "{F7CF3768-F809-481D-9C45-44BB2FD4FA55}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcProvider", "samples\RpcProvider\RpcProvider.csproj", "{13A84864-D4F6-4D1E-A447-9332396BF6BD}"
 EndProject
@@ -70,15 +70,19 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{195EC2BD-3
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.CoreTest", "test\Zooyard.CoreTest\Zooyard.CoreTest.csproj", "{9F4D0F0E-CE5A-48D4-85DE-8A6228F6457A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zooyard.Rpc.AkkaImpl.Extensions", "src\Zooyard.Rpc.AkkaImpl.Extensions\Zooyard.Rpc.AkkaImpl.Extensions.csproj", "{BE4DD494-D557-4613-9C23-70661E2EAFCC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.Rpc.AkkaImpl.Extensions", "src\Zooyard.Rpc.AkkaImpl.Extensions\Zooyard.Rpc.AkkaImpl.Extensions.csproj", "{BE4DD494-D557-4613-9C23-70661E2EAFCC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zooyard.Rpc.GrpcImpl.Extensions", "src\Zooyard.Rpc.GrpcImpl.Extensions\Zooyard.Rpc.GrpcImpl.Extensions.csproj", "{05D28D41-756F-498B-A4E0-69AC4D1F10FE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.Rpc.GrpcImpl.Extensions", "src\Zooyard.Rpc.GrpcImpl.Extensions\Zooyard.Rpc.GrpcImpl.Extensions.csproj", "{05D28D41-756F-498B-A4E0-69AC4D1F10FE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zooyard.Rpc.HttpImpl.Extensions", "src\Zooyard.Rpc.HttpImpl.Extensions\Zooyard.Rpc.HttpImpl.Extensions.csproj", "{F9BEF2F7-60D4-49DB-86BA-A34A9058FCA4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.Rpc.HttpImpl.Extensions", "src\Zooyard.Rpc.HttpImpl.Extensions\Zooyard.Rpc.HttpImpl.Extensions.csproj", "{F9BEF2F7-60D4-49DB-86BA-A34A9058FCA4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zooyard.Rpc.NettyImpl.Extensions", "src\Zooyard.Rpc.NettyImpl.Extensions\Zooyard.Rpc.NettyImpl.Extensions.csproj", "{3E619433-E72D-466C-BE2D-956FF61F8A7B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.Rpc.NettyImpl.Extensions", "src\Zooyard.Rpc.NettyImpl.Extensions\Zooyard.Rpc.NettyImpl.Extensions.csproj", "{3E619433-E72D-466C-BE2D-956FF61F8A7B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zooyard.Rpc.WcfImpl.Extensions", "src\Zooyard.Rpc.WcfImpl.Extensions\Zooyard.Rpc.WcfImpl.Extensions.csproj", "{ACD1F3C0-A19F-472F-AA8D-C82838761D43}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.Rpc.WcfImpl.Extensions", "src\Zooyard.Rpc.WcfImpl.Extensions\Zooyard.Rpc.WcfImpl.Extensions.csproj", "{ACD1F3C0-A19F-472F-AA8D-C82838761D43}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcConsumerCore", "samples\RpcConsumerCore\RpcConsumerCore.csproj", "{FFD05F58-146E-4AF6-8C38-B4A826D2AE80}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcProviderCore", "samples\RpcProviderCore\RpcProviderCore.csproj", "{F81E992A-FF4C-4973-BEDE-2091E0C5DBB5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -190,6 +194,14 @@ Global
 		{ACD1F3C0-A19F-472F-AA8D-C82838761D43}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ACD1F3C0-A19F-472F-AA8D-C82838761D43}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ACD1F3C0-A19F-472F-AA8D-C82838761D43}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FFD05F58-146E-4AF6-8C38-B4A826D2AE80}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FFD05F58-146E-4AF6-8C38-B4A826D2AE80}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FFD05F58-146E-4AF6-8C38-B4A826D2AE80}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FFD05F58-146E-4AF6-8C38-B4A826D2AE80}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F81E992A-FF4C-4973-BEDE-2091E0C5DBB5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F81E992A-FF4C-4973-BEDE-2091E0C5DBB5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F81E992A-FF4C-4973-BEDE-2091E0C5DBB5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F81E992A-FF4C-4973-BEDE-2091E0C5DBB5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -221,6 +233,8 @@ Global
 		{F9BEF2F7-60D4-49DB-86BA-A34A9058FCA4} = {50C4867C-8931-45F0-B773-463C7B953969}
 		{3E619433-E72D-466C-BE2D-956FF61F8A7B} = {50C4867C-8931-45F0-B773-463C7B953969}
 		{ACD1F3C0-A19F-472F-AA8D-C82838761D43} = {50C4867C-8931-45F0-B773-463C7B953969}
+		{FFD05F58-146E-4AF6-8C38-B4A826D2AE80} = {1E4B38C1-0CF2-4E5C-AC4A-30B48CB3F7BA}
+		{F81E992A-FF4C-4973-BEDE-2091E0C5DBB5} = {1E4B38C1-0CF2-4E5C-AC4A-30B48CB3F7BA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4FBB3247-7E5E-40FB-85B2-67B3E3D57FCB}

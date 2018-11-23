@@ -1,0 +1,14 @@
+﻿{
+  "wcf": {
+    "Channels": {
+      "HelloService": "RpcContractWcf.HelloService.IHelloServiceWcf, RpcContractWcf"
+    },
+    "Bindings": {
+      "http": "System.ServiceModel.BasicHttpBinding, System.ServiceModel.Http",
+      "https": "System.ServiceModel.BasicHttpsBinding, System.ServiceModel.Http",
+      "net.http": "System.ServiceModel.NetHttpBinding, System.ServiceModel.NetTcp",
+      "net.https": "System.ServiceModel.NetHttpsBinding, System.ServiceModel.NetTcp",
+      "net.tcp": "System.ServiceModel.NetTcpBinding, System.ServiceModel.NetTcp"
+    }
+  }
+}

@@ -10,14 +10,14 @@ namespace Zooyard.Rpc.NettyImpl
 {
     public class NettyInvoker : IInvoker
     {
-        private readonly IChannel _client;
+        private readonly IChannel _channel;
         private readonly ILogger _logger;
         private readonly ConcurrentDictionary<string, TaskCompletionSource<TransportMessage>> _resultDictionary =
             new ConcurrentDictionary<string, TaskCompletionSource<TransportMessage>>();
 
-        public NettyInvoker(IChannel client,IMessageListener _messageListener,ILoggerFactory loggerFactory)
+        public NettyInvoker(IChannel channel,IMessageListener _messageListener,ILoggerFactory loggerFactory)
         {
-            _client = client;
+            _channel = channel;
             _messageListener.Received += MessageListener_Received;
             _logger = loggerFactory.CreateLogger<NettyInvoker>();
         }
@@ -42,7 +42,7 @@ namespace Zooyard.Rpc.NettyImpl
                     var bytes = transportMessage.Serialize();
                     var byteBuffers = Unpooled.WrappedBuffer(bytes);
 
-                    _client.WriteAndFlushAsync(byteBuffers).GetAwaiter().GetResult();
+                    _channel.WriteAndFlushAsync(byteBuffers).GetAwaiter().GetResult();
                 }
                 catch (Exception e)
                 {
@@ -61,9 +61,6 @@ namespace Zooyard.Rpc.NettyImpl
                 _logger.LogError(e,e.Message);
                 throw e;
             }
-
-
-            
         }
 
 
@@ -125,7 +122,7 @@ namespace Zooyard.Rpc.NettyImpl
                     task.SetResult(message);
                 }
             }
-
+            await Task.CompletedTask;
         }
     }
 }

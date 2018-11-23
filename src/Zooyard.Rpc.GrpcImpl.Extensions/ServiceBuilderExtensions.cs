@@ -70,12 +70,8 @@ namespace Zooyard.Rpc.GrpcImpl.Extensions
 
         }
 
-        public static void AddGrpcServer<ifacade, facade>(this IServiceCollection services)
-            where ifacade : class
-            where facade : class,ifacade
+        public static void AddGrpcServer(this IServiceCollection services)
         {
-            services.AddTransient<ifacade, facade>();
-
             services.AddSingleton<Server>();
             services.AddSingleton<IEnumerable<ServerServiceDefinition>>((serviceProvder) => 
             {
@@ -113,7 +109,7 @@ namespace Zooyard.Rpc.GrpcImpl.Extensions
                 }
                 return result;
             });
-            services.AddSingleton<GrpcServer>();
+            services.AddSingleton<IServer, GrpcServer>();
         }
     }
 }

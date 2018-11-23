@@ -16,6 +16,7 @@ namespace Zooyard.Rpc.WcfImpl
         {
             this.Url = url;
             _channel = channel;
+            _loggerFactory = loggerFactory;
             _logger = loggerFactory.CreateLogger<WcfClient>();
         }
 
