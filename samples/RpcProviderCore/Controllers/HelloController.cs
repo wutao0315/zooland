@@ -8,7 +8,7 @@ using System.Net.Http;
 
 namespace RpcProviderCore.Controllers
 {
-    [Route("api/v{version:apiVersion}/hello")]
+    [Route("hello")]
     [ApiController]
     public class HelloController : ControllerBase
     {

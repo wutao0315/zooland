@@ -1,8 +1,7 @@
 ﻿{
   "netty": {
-    "ServerChannelType": "DotNetty.Transport.Channels.Sockets.TcpServerSocketChannel, DotNetty.Transport",
+    "Url": "tcp://127.0.0.1:12121",
     "ServiceType": "RpcProviderCore.HelloServiceNettyImpl, RpcProviderCore",
-    "Port": 12121,
     "IsSsl": false,
     "Pfx": "",
     "Pwd": ""

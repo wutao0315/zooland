@@ -1,4 +1,5 @@
 ﻿using DotNetty.Buffers;
+using DotNetty.Codecs;
 using DotNetty.Common.Utilities;
 using DotNetty.Handlers.Tls;
 using DotNetty.Transport.Bootstrapping;
@@ -10,8 +11,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
+using Zooyard.Core;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.Rpc.NettyImpl
@@ -19,68 +22,62 @@ namespace Zooyard.Rpc.NettyImpl
     public class NettyServer : AbstractServer
     {
         //UseLibuv
-
-        private readonly IEventLoopGroup _bossGroup;
-        private readonly IEventLoopGroup _workerGroup;
-        private readonly IServerChannel _serverChannel;
-        private readonly IEnumerable<IChannelHandler> _channelHandlers;
+        
         private readonly object _service;
-        private readonly int _port;
         private readonly bool _isSsl = false;
         private readonly string _pfx = "dotnetty.com";
         private readonly string _pwd = "password";
 
+        private readonly IEventLoopGroup _serverEventLoopGroup;
+        protected internal volatile IChannel ServerChannel;
+        internal readonly ConcurrentSet<IChannel> ConnectionGroup;
+
         private readonly ILogger _logger;
-        public NettyServer(IEventLoopGroup bossGroup, 
-            IEventLoopGroup workerGroup, 
-            IServerChannel serverChannel,
-            IEnumerable<IChannelHandler> channelHandlers,
+        private readonly ILoggerFactory _loggerFactory;
+        public NettyServer(URL config,
             object service,
-            int port,
             bool isSsl,
             string pfx,
             string pwd,
             ILoggerFactory loggerFactory) : base(loggerFactory)
         {
+            _loggerFactory = loggerFactory;
             _logger = loggerFactory.CreateLogger<NettyServer>();
-            _bossGroup = bossGroup;
-            _workerGroup = workerGroup;
-            _serverChannel = serverChannel;
-            _channelHandlers = channelHandlers;
+            Settings = NettyTransportSettings.Create(config);
+            ConnectionGroup = new ConcurrentSet<IChannel>();
+
+            _serverEventLoopGroup = new MultithreadEventLoopGroup(Settings.ServerSocketWorkerPoolSize);
+            
             _service = service;
-            _port = port;
             _isSsl = isSsl;
             _pfx = pfx;
             _pwd = pwd;
         }
-        private IChannel _channel;
+        internal NettyTransportSettings Settings { get; }
 
-        public override void DoExport()
+       
+        private ServerBootstrap ServerFactory()
         {
-            if (_logger.IsEnabled(LogLevel.Debug))
-            {
-                _logger.LogDebug($"ready to start the server on port:{_port}.");
-            }
-                
-            
             X509Certificate2 tlsCertificate = null;
             if (_isSsl)
             {
                 tlsCertificate = new X509Certificate2(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{_pfx}.pfx"), _pwd);
             }
 
-            var bootstrap = new ServerBootstrap();
-            bootstrap
-                .ChannelFactory(()=> _serverChannel)
-                //.Option(ChannelOption.SoReuseaddr, Settings.TcpReuseAddr)
-                //.Option(ChannelOption.SoKeepalive, Settings.TcpKeepAlive)
-                //.Option(ChannelOption.TcpNodelay, Settings.TcpNoDelay)
+            var addressFamily = Settings.DnsUseIpv6 ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork;
+
+            var server = new ServerBootstrap()
+                .Group(_serverEventLoopGroup)
+                .Option(ChannelOption.SoReuseaddr, Settings.TcpReuseAddr)
+                .Option(ChannelOption.SoKeepalive, Settings.TcpKeepAlive)
+                .Option(ChannelOption.TcpNodelay, Settings.TcpNoDelay)
                 .Option(ChannelOption.AutoRead, true)
-                .Option(ChannelOption.SoBacklog, 100)
-                .ChildOption(ChannelOption.Allocator, PooledByteBufferAllocator.Default)
-                .Group(_bossGroup, _workerGroup)
-                .Handler(new DotNetty.Handlers.Logging.LoggingHandler("SRV-LSTN"))
-                .ChildHandler(new ActionChannelInitializer<IChannel>(channel =>
+                .Option(ChannelOption.SoBacklog, Settings.Backlog)
+                .Option(ChannelOption.Allocator, Settings.EnableBufferPooling ? (IByteBufferAllocator)PooledByteBufferAllocator.Default : UnpooledByteBufferAllocator.Default)
+                .ChannelFactory(() => Settings.EnforceIpFamily
+                    ? new TcpServerSocketChannel(addressFamily)
+                    : new TcpServerSocketChannel())
+                .ChildHandler(new ActionChannelInitializer<TcpSocketChannel>((channel =>
                 {
                     var pipeline = channel.Pipeline;
 
@@ -92,61 +89,149 @@ namespace Zooyard.Rpc.NettyImpl
                     //pipeline.AddLast(new DotNetty.Handlers.Logging.LoggingHandler("SRV-CONN"));
                     //pipeline.AddLast(new LengthFieldPrepender(4));
                     //pipeline.AddLast(new LengthFieldBasedFrameDecoder(int.MaxValue, 0, 4, 0, 4));
+                    pipeline.AddLast(new NettyLoggingHandler(_loggerFactory));
+                    SetInitialChannelPipeline(channel);
+                    //pipeline.AddLast(_channelHandlers?.ToArray());
+                    pipeline.AddLast(new ServerHandler(this, _service, _loggerFactory));
 
-                    pipeline.AddLast(_channelHandlers?.ToArray());
-                    pipeline.AddLast(new ServerHandler(_service, _logger));
+                })));
 
-                }));
+            if (Settings.ReceiveBufferSize.HasValue) server.Option(ChannelOption.SoRcvbuf, Settings.ReceiveBufferSize.Value);
+            if (Settings.SendBufferSize.HasValue) server.Option(ChannelOption.SoSndbuf, Settings.SendBufferSize.Value);
+            if (Settings.WriteBufferHighWaterMark.HasValue) server.Option(ChannelOption.WriteBufferHighWaterMark, Settings.WriteBufferHighWaterMark.Value);
+            if (Settings.WriteBufferLowWaterMark.HasValue) server.Option(ChannelOption.WriteBufferLowWaterMark, Settings.WriteBufferLowWaterMark.Value);
 
-            //if (Settings.ReceiveBufferSize.HasValue) bootstrap.Option(ChannelOption.SoRcvbuf, Settings.ReceiveBufferSize.Value);
-            //if (Settings.SendBufferSize.HasValue) bootstrap.Option(ChannelOption.SoSndbuf, Settings.SendBufferSize.Value);
-            //if (Settings.WriteBufferHighWaterMark.HasValue) bootstrap.Option(ChannelOption.WriteBufferHighWaterMark, Settings.WriteBufferHighWaterMark.Value);
-            //if (Settings.WriteBufferLowWaterMark.HasValue) bootstrap.Option(ChannelOption.WriteBufferLowWaterMark, Settings.WriteBufferLowWaterMark.Value);
+            return server;
+        }
 
-            try
+        private void SetInitialChannelPipeline(IChannel channel)
+        {
+            var pipeline = channel.Pipeline;
+
+            if (Settings.LogTransport)
             {
-                _channel = bootstrap.BindAsync(IPAddress.Any,_port).GetAwaiter().GetResult();
-
-                _logger.LogInformation($"Started the netty server ...");
-                Console.WriteLine($"Started the netty server ...");
-               
+                pipeline.AddLast("Logger", new NettyLoggingHandler(_loggerFactory));
             }
-            catch(Exception ex)
+
+            pipeline.AddLast("FrameDecoder", new LengthFieldBasedFrameDecoder(Settings.ByteOrder, Settings.MaxFrameSize, 0, 4, 0, 4, true));
+            if (Settings.BackwardsCompatibilityModeEnabled)
             {
-                _logger.LogError(ex, $"server start fail on port：{_port}。 ");
+                pipeline.AddLast("FrameEncoder", new HeliosBackwardsCompatabilityLengthFramePrepender(4, false));
             }
+            else
+            {
+                pipeline.AddLast("FrameEncoder", new LengthFieldPrepender(Settings.ByteOrder, 4, 0, false));
+            }
+        }
+        public override void DoExport()
+        {
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug($"ready to start the server on port:{Settings.Port}.");
+            }
+            var newServerChannel = ServerFactory().BindAsync(IPAddress.Any, Settings.Port).GetAwaiter().GetResult();
 
+            // Block reads until a handler actor is registered
+            // no incoming connections will be accepted until this value is reset
+            // it's possible that the first incoming association might come in though
+
+            //newServerChannel.Configuration.AutoRead = false;
+            ConnectionGroup.TryAdd(newServerChannel);
+            ServerChannel = newServerChannel;
+
+            _logger.LogInformation($"Started the netty server ...");
+            Console.WriteLine($"Started the netty server ...");
+            
         }
 
         public override void DoDispose()
         {
-
-            Task.Run(async () =>
+            try
             {
-                await _channel.CloseAsync();
-                await _channel.DisconnectAsync();
-                await _bossGroup.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(1));
-                await _workerGroup.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(1));
+                var tasks = new List<Task>();
+                foreach (var channel in ConnectionGroup)
+                {
+                    tasks.Add(channel.CloseAsync());
+                }
+                var all = Task.WhenAll(tasks);
+                all.ConfigureAwait(false).GetAwaiter().GetResult();
 
-            }).Wait();
+                var server = ServerChannel?.CloseAsync() ?? Task.CompletedTask;
+                server.ConfigureAwait(false).GetAwaiter().GetResult();
+
+                //return all.IsCompleted && server.IsCompleted;
+            }
+            finally
+            {
+                // free all of the connection objects we were holding onto
+                ConnectionGroup.Clear();
+#pragma warning disable 4014 // shutting down the worker groups can take up to 10 seconds each. Let that happen asnychronously.
+                _serverEventLoopGroup.ShutdownGracefullyAsync();
+#pragma warning restore 4014
+            }
 
         }
 
         
     }
+    internal abstract class ServerCommonHandlers : ChannelHandlerAdapter
+    {
+        protected readonly NettyServer Server;
+        private readonly ILogger _logger;
 
-    internal class ServerHandler : ChannelHandlerAdapter
+        protected ServerCommonHandlers(NettyServer server, ILoggerFactory loggerFactory)
+        {
+            Server = server;
+            _logger = loggerFactory.CreateLogger<ServerCommonHandlers>();
+        }
+
+
+        public override void ChannelActive(IChannelHandlerContext context)
+        {
+            base.ChannelActive(context);
+            if (!Server.ConnectionGroup.TryAdd(context.Channel))
+            {
+                _logger.LogWarning($"Unable to ADD channel [{context.Channel.LocalAddress}->{context.Channel.RemoteAddress}](Id={context.Channel.Id}) to connection group. May not shut down cleanly.");
+            }
+        }
+
+        public override void ChannelInactive(IChannelHandlerContext context)
+        {
+            base.ChannelInactive(context);
+            if (!Server.ConnectionGroup.TryRemove(context.Channel))
+            {
+                _logger.LogWarning($"Unable to REMOVE channel [{context.Channel.LocalAddress}->{context.Channel.RemoteAddress}](Id={ context.Channel.Id}) from connection group. May not shut down cleanly.");
+            }
+        }
+
+        public override void ExceptionCaught(IChannelHandlerContext context, Exception exception)
+        {
+            base.ExceptionCaught(context, exception);
+            _logger.LogError(exception, $"Error caught channel [{context.Channel.LocalAddress}->{context.Channel.RemoteAddress}](Id={context.Channel.Id})");
+        }
+
+    }
+    internal class ServerHandler : ServerCommonHandlers
     {
         private readonly object _service;
         private readonly ILogger _logger;
 
-        public ServerHandler(object service, ILogger logger)
+        public ServerHandler(NettyServer server, object service, ILoggerFactory loggerFactory):base(server, loggerFactory)
         {
             _service = service;
-            _logger = logger;
+            _logger = loggerFactory.CreateLogger<ServerHandler>() ;
         }
 
         #region Overrides of ChannelHandlerAdapter
+        public override void ChannelActive(IChannelHandlerContext context)
+        {
+            base.ChannelActive(context);
+        }
+        
+        public override void ChannelInactive(IChannelHandlerContext context)
+        {
+            base.ChannelInactive(context);
+        }
 
         public override void ChannelRead(IChannelHandlerContext context, object message)
         {
@@ -189,7 +274,7 @@ namespace Zooyard.Rpc.NettyImpl
                 var sendBuffer = Unpooled.WrappedBuffer(sendByte);
                 context.WriteAndFlushAsync(sendBuffer).GetAwaiter().GetResult();
             }
-
+            ReferenceCountUtil.SafeRelease(message);
         }
 
         public override void ChannelReadComplete(IChannelHandlerContext context)
@@ -197,13 +282,35 @@ namespace Zooyard.Rpc.NettyImpl
             context.Flush();
         }
 
+        /// <summary>
+        /// TBD
+        /// </summary>
+        /// <param name="context">TBD</param>
+        /// <param name="exception">TBD</param>
         public override void ExceptionCaught(IChannelHandlerContext context, Exception exception)
         {
-            //客户端主动断开需要应答，否则socket变成CLOSE_WAIT状态导致socket资源耗尽
+            var se = exception as SocketException;
+
+            if (se?.SocketErrorCode == SocketError.OperationAborted)
+            {
+                _logger.LogInformation("Socket read operation aborted. Connection is about to be closed. Channel [{0}->{1}](Id={2})",
+                    context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
+            }
+            else if (se?.SocketErrorCode == SocketError.ConnectionReset)
+            {
+                _logger.LogInformation("Connection was reset by the remote peer. Channel [{0}->{1}](Id={2})",
+                    context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
+            }
+            else
+            {
+                base.ExceptionCaught(context, exception);
+            }
+
+            Console.WriteLine($"Exception: {exception.Message}");
+            _logger.LogError(exception, exception.Message);
             context.CloseAsync();
-            Console.WriteLine($"server error on transport with {context.Channel.RemoteAddress}:{exception.Message}");
-            _logger.LogError(exception, $"server error on transport with {context.Channel.RemoteAddress}:{exception.Message}");
         }
+
 
         #endregion Overrides of ChannelHandlerAdapter
     }

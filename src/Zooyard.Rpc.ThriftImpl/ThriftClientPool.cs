@@ -70,7 +70,7 @@ namespace Zooyard.Rpc.ThriftImpl
             var proxyKey = url.GetParameter(PROXY_KEY);
             if (string.IsNullOrEmpty(proxyKey) || !_clientTypes.ContainsKey(proxyKey))
             {
-                throw new RpcException($"not find the proxy thrift client{url.ToFullString()}");
+                throw new RpcException($"not find the proxy thrift client {url.ToFullString()}");
             }
             //instance ThriftClient
             var client = (IDisposable)Activator.CreateInstance(_clientTypes[proxyKey], protocol);

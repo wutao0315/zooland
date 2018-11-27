@@ -1,4 +1,5 @@
 ﻿using DotNetty.Buffers;
+using DotNetty.Codecs;
 using DotNetty.Common.Utilities;
 using DotNetty.Handlers.Tls;
 using DotNetty.Transport.Bootstrapping;
@@ -10,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Security;
+using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
 using Zooyard.Core;
 using Zooyard.Rpc.Support;
@@ -34,10 +36,15 @@ namespace Zooyard.Rpc.NettyImpl
             _loggerFactory = loggerFactory;
             _logger = loggerFactory.CreateLogger<NettyClientPool>();
             _nettyProtocols = nettyProtocols;
+            
         }
+
+        internal NettyTransportSettings Settings { get; private set; }
 
         protected override IClient CreateClient(URL url)
         {
+            Settings = NettyTransportSettings.Create(url);
+
             var protocol = _nettyProtocols[url.Protocol];
 
             IEventLoopGroup group = protocol.EventLoopGroupType
@@ -64,10 +71,10 @@ namespace Zooyard.Rpc.NettyImpl
             var bootstrap = new Bootstrap();
             bootstrap
                 .ChannelFactory(() => clientChannel)
-                //.Option(ChannelOption.SoReuseaddr, Settings.TcpReuseAddr)
-                //.Option(ChannelOption.SoKeepalive, Settings.TcpKeepAlive)
-                //.Option(ChannelOption.TcpNodelay, Settings.TcpNoDelay)
-                //.Option(ChannelOption.ConnectTimeout, Settings.ConnectTimeout)
+                .Option(ChannelOption.SoReuseaddr, Settings.TcpReuseAddr)
+                .Option(ChannelOption.SoKeepalive, Settings.TcpKeepAlive)
+                .Option(ChannelOption.TcpNodelay, Settings.TcpNoDelay)
+                .Option(ChannelOption.ConnectTimeout, Settings.ConnectTimeout)
                 .Option(ChannelOption.AutoRead, true)
                 .Option(ChannelOption.Allocator, PooledByteBufferAllocator.Default)
                 .Group(group)
@@ -83,16 +90,18 @@ namespace Zooyard.Rpc.NettyImpl
                     //pipeline.AddLast(new LoggingHandler());
                     //pipeline.AddLast(new LengthFieldPrepender(4));
                     //pipeline.AddLast(new LengthFieldBasedFrameDecoder(int.MaxValue, 0, 4, 0, 4));
-                    pipeline.AddLast(protocol.ChannelHandlers?.ToArray());
+
+                    pipeline.AddLast(new NettyLoggingHandler(_loggerFactory));
+                    SetInitialChannelPipeline(channel);
                     pipeline.AddLast(new ClientHandler(ReceivedMessage, _loggerFactory));
 
                     
                 }));
 
-            //if (Settings.ReceiveBufferSize.HasValue) client.Option(ChannelOption.SoRcvbuf, Settings.ReceiveBufferSize.Value);
-            //if (Settings.SendBufferSize.HasValue) client.Option(ChannelOption.SoSndbuf, Settings.SendBufferSize.Value);
-            //if (Settings.WriteBufferHighWaterMark.HasValue) client.Option(ChannelOption.WriteBufferHighWaterMark, Settings.WriteBufferHighWaterMark.Value);
-            //if (Settings.WriteBufferLowWaterMark.HasValue) client.Option(ChannelOption.WriteBufferLowWaterMark, Settings.WriteBufferLowWaterMark.Value);
+            if (Settings.ReceiveBufferSize.HasValue) bootstrap.Option(ChannelOption.SoRcvbuf, Settings.ReceiveBufferSize.Value);
+            if (Settings.SendBufferSize.HasValue) bootstrap.Option(ChannelOption.SoSndbuf, Settings.SendBufferSize.Value);
+            if (Settings.WriteBufferHighWaterMark.HasValue) bootstrap.Option(ChannelOption.WriteBufferHighWaterMark, Settings.WriteBufferHighWaterMark.Value);
+            if (Settings.WriteBufferLowWaterMark.HasValue) bootstrap.Option(ChannelOption.WriteBufferLowWaterMark, Settings.WriteBufferLowWaterMark.Value);
 
 
             var client = bootstrap.ConnectAsync(new IPEndPoint(IPAddress.Parse(url.Host), url.Port)).GetAwaiter().GetResult();
@@ -109,6 +118,26 @@ namespace Zooyard.Rpc.NettyImpl
         {
             var ml = context.Channel.GetAttribute(messageListenerKey).Get();
             ml.OnReceived(transportMessage);
+        }
+
+        private void SetInitialChannelPipeline(IChannel channel)
+        {
+            var pipeline = channel.Pipeline;
+
+            if (Settings.LogTransport)
+            {
+                pipeline.AddLast("Logger", new NettyLoggingHandler(_loggerFactory));
+            }
+
+            pipeline.AddLast("FrameDecoder", new LengthFieldBasedFrameDecoder(Settings.ByteOrder, Settings.MaxFrameSize, 0, 4, 0, 4, true));
+            if (Settings.BackwardsCompatibilityModeEnabled)
+            {
+                pipeline.AddLast("FrameEncoder", new HeliosBackwardsCompatabilityLengthFramePrepender(4, false));
+            }
+            else
+            {
+                pipeline.AddLast("FrameEncoder", new LengthFieldPrepender(Settings.ByteOrder, 4, 0, false));
+            }
         }
     }
 
@@ -129,16 +158,37 @@ namespace Zooyard.Rpc.NettyImpl
                 var bytes = new byte[buffer.ReadableBytes];
                 buffer.ReadBytes(bytes);
                 var transportMessage = bytes.Desrialize<TransportMessage>();
-                context.FireChannelRead(transportMessage);
-                ReferenceCountUtil.SafeRelease(buffer);
                 _receviedAction(context, transportMessage);
             }
+            ReferenceCountUtil.SafeRelease(message);
         }
 
         public override void ChannelReadComplete(IChannelHandlerContext context) => context.Flush();
 
         public override void ExceptionCaught(IChannelHandlerContext context, Exception exception)
         {
+            var se = exception as SocketException;
+
+            if (se?.SocketErrorCode == SocketError.OperationAborted)
+            {
+                _logger.LogInformation("Socket read operation aborted. Connection is about to be closed. Channel [{0}->{1}](Id={2})",
+                    context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
+
+                //NotifyListener(new Disassociated(DisassociateInfo.Shutdown));
+            }
+            else if (se?.SocketErrorCode == SocketError.ConnectionReset)
+            {
+                _logger.LogInformation("Connection was reset by the remote peer. Channel [{0}->{1}](Id={2})",
+                    context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
+
+                //NotifyListener(new Disassociated(DisassociateInfo.Shutdown));
+            }
+            else
+            {
+                base.ExceptionCaught(context, exception);
+                //NotifyListener(new Disassociated(DisassociateInfo.Unknown));
+            }
+
             Console.WriteLine($"Exception: {exception.Message}");
             _logger.LogError(exception, exception.Message);
             context.CloseAsync();
@@ -149,6 +199,5 @@ namespace Zooyard.Rpc.NettyImpl
     {
         public Type EventLoopGroupType { get; set; }
         public Type ChannelType { get; set; }
-        public IEnumerable<IChannelHandler> ChannelHandlers { get; set; }
     }
 }

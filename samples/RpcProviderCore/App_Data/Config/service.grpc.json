@@ -3,10 +3,12 @@
     "Services": {
       "RpcContractGrpc.HelloService, RpcContractGrpc": "RpcProviderCore.HelloServiceGrpcImpl, RpcProviderCore"
     },
-    "ServerPorts": {
-      "Host": "127.0.0.1",
-      "Port": "10008",
-      "Credentials": "Insecure"
-    }
+    "ServerPorts": [
+      {
+        "Host": "127.0.0.1",
+        "Port": "10008",
+        "Credentials": "Insecure"
+      }
+    ]
   }
 }

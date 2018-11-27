@@ -54,6 +54,7 @@ namespace RpcProviderCore
                 .AddJsonFile("service.grpc.json", false, true)
                 .AddJsonFile("service.netty.json", false, true)
                 .AddJsonFile("service.thrift.json", false, true)
+                .AddJsonFile("service.http.json", false, true)
                 .AddJsonFile("service.json", false, true);
 
                     var config = builder.Build();
@@ -62,7 +63,7 @@ namespace RpcProviderCore
                     services.Configure<GrpcServerOption>(config.GetSection("grpc"));
                     services.Configure<NettyServerOption>(config.GetSection("netty"));
                     services.Configure<ThriftServerOption>(config.GetSection("thrift"));
-
+                    services.Configure<HttpServerOption>(config.GetSection("http"));
                     services.AddLogging();
 
                     services.AddTransient((serviceProvider) => "A");
@@ -82,18 +83,7 @@ namespace RpcProviderCore
                     });
 
                     services.AddTransient((serviceProvider) => new HelloServiceNettyImpl { ServiceName = "A" });
-                    var handlers = new List<IChannelHandler>
-                        {
-                            new LoggingHandler(),
-                            new LengthFieldPrepender(lengthFieldLength:4),
-                            new LengthFieldBasedFrameDecoder(
-                                maxFrameLength: int.MaxValue,
-                                lengthFieldOffset:0,
-                                lengthFieldLength:4,
-                                lengthAdjustment:0,
-                                initialBytesToStrip:4)
-                        };
-                    services.AddNettyServer(handlers);
+                    services.AddNettyServer();
 
 
                     services.AddTransient<RpcContractThrift.HelloService.IAsync>((serviceProvider) => new HelloServiceThriftImpl { ServiceName = "A" });

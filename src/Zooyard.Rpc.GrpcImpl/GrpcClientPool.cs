@@ -46,7 +46,7 @@ namespace Zooyard.Rpc.GrpcImpl
             var proxyKey = url.GetParameter(PROXY_KEY);
             if (string.IsNullOrEmpty(proxyKey) || !_grpcClientTypes.ContainsKey(proxyKey))
             {
-                throw new RpcException("not find the proxy thrift client");
+                throw new RpcException("not find the proxy grpc client");
             }
 
             var maxReceiveMessageLength = url.GetParameter(MAXLENGTH_KEY, DEFAULT_MAXLENGTH);

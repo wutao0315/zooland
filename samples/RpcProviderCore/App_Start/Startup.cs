@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -38,13 +37,13 @@ namespace RpcProviderCore.App_Start
                 iis.AutomaticAuthentication = false;
             });
             //Api version
-            services.AddApiVersioning(option => {
-                option.ReportApiVersions = true;
-                //option.ApiVersionReader = new HeaderApiVersionReader("api-version");
-                option.ApiVersionReader = new QueryStringApiVersionReader(parameterName: "version");
-                option.AssumeDefaultVersionWhenUnspecified = true;
-                option.DefaultApiVersion = new ApiVersion(1, 0);
-            });
+            //services.AddApiVersioning(option => {
+            //    option.ReportApiVersions = true;
+            //    //option.ApiVersionReader = new HeaderApiVersionReader("api-version");
+            //    option.ApiVersionReader = new QueryStringApiVersionReader(parameterName: "version");
+            //    option.AssumeDefaultVersionWhenUnspecified = true;
+            //    option.DefaultApiVersion = new ApiVersion(1, 0);
+            //});
 
             services.AddLogging();
 

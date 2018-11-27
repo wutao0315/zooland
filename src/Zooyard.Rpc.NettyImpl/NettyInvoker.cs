@@ -14,6 +14,7 @@ namespace Zooyard.Rpc.NettyImpl
         private readonly ILogger _logger;
         private readonly ConcurrentDictionary<string, TaskCompletionSource<TransportMessage>> _resultDictionary =
             new ConcurrentDictionary<string, TaskCompletionSource<TransportMessage>>();
+        private readonly int _clientTimeout = 5000;
 
         public NettyInvoker(IChannel channel,IMessageListener _messageListener,ILoggerFactory loggerFactory)
         {
@@ -50,11 +51,16 @@ namespace Zooyard.Rpc.NettyImpl
                     throw new Exception("connecting server error.", e);
                 }
 
-                var value = callbackTask.GetAwaiter().GetResult();
                 _logger.LogInformation($"Invoke:{invocation.MethodInfo.Name}");
-                return new RpcResult(value.Result);
-                
-
+                if (callbackTask.Wait(_clientTimeout / 2))
+                {
+                    var value = callbackTask.GetAwaiter().GetResult();
+                    return new RpcResult(value.Result);
+                }
+                else
+                {
+                    throw new TimeoutException($"connection time out in {_clientTimeout} ms");
+                }
             }
             catch (Exception e)
             {

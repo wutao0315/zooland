@@ -27,9 +27,8 @@ namespace Zooyard.Rpc.NettyImpl.Extensions
 
     public class NettyServerOption
     {
-        public string ServerChannelType { get; set; }
         public string ServiceType { get; set; }
-        public int Port { get; set; } = 12121;
+        public string Url { get; set; }
         public bool IsSsl { get; set; } = false;
         public string Pfx { get; set; } = "";
         public string Pwd { get; set; } = "";
@@ -38,7 +37,7 @@ namespace Zooyard.Rpc.NettyImpl.Extensions
 
     public static class ServiceBuilderExtensions
     {
-        public static void AddNettyClient(this IServiceCollection services, IDictionary<string, IEnumerable<IChannelHandler>> handlersDic)
+        public static void AddNettyClient(this IServiceCollection services)
         {
             services.AddSingleton((serviceProvider) => 
             {
@@ -49,17 +48,12 @@ namespace Zooyard.Rpc.NettyImpl.Extensions
                 var nettyProtocols = new Dictionary<string, NettyProtocol>();
                 foreach (var item in option.Protocols)
                 {
-                    IEnumerable<IChannelHandler> handlers = new List<IChannelHandler>();
-                    if (handlersDic?.ContainsKey(item.Name)??false)
-                    {
-                        handlers = handlersDic[item.Name];
-                    }
+                    
 
                     var value = new NettyProtocol
                     {
                         EventLoopGroupType = Type.GetType(item.EventLoopGroupType),
-                        ChannelType = Type.GetType(item.ChannelType),
-                        ChannelHandlers= handlers
+                        ChannelType = Type.GetType(item.ChannelType)
                     };
                     nettyProtocols.Add(item.Name, value);
                 }
@@ -74,24 +68,22 @@ namespace Zooyard.Rpc.NettyImpl.Extensions
 
         }
 
-        public static void AddNettyServer(this IServiceCollection services, IEnumerable<IChannelHandler> handlers = null)
+        public static void AddNettyServer(this IServiceCollection services)
         {
-
-            services.AddSingleton<TcpServerSocketChannel>();
+            
             
             services.AddSingleton<IServer>((serviceProvider)=> 
             {
                 var option = serviceProvider.GetService<IOptions<NettyServerOption>>().Value;
                 var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
-                
 
-            
+                var url = URL.valueOf(option.Url);
+
                 var service = serviceProvider.GetService(Type.GetType(option.ServiceType));
-                var serverChannel = serviceProvider.GetService(Type.GetType(option.ServerChannelType)) as IServerChannel;
-
-                var groups = serviceProvider.GetServices<IEventLoopGroup>();
+     
                 
-                return new NettyServer(groups.ElementAt(0), groups.ElementAt(1), serverChannel, handlers, service, option.Port, option.IsSsl, option.Pfx, option.Pwd, loggerFactory);
+                
+                return new NettyServer(url, service,  option.IsSsl, option.Pfx, option.Pwd, loggerFactory);
             });
             
 

@@ -417,24 +417,24 @@ namespace Zooyard.Rpc.Support
 
         private void PrintConsole()
         {
-            Console.WriteLine($"client pool information:{DateTime.Now.ToString("yyyy-MM-dd HH:mm:sss.fff")}");
-            Console.WriteLine("-----------------------------------------");
-            Console.WriteLine("client pools");
-            foreach (var pool in ClientsPool)
-            {
-                Console.WriteLine($"{pool.Value?.Count??0}:{pool.Key}");
-            }
-            Console.WriteLine("idleCount");
-            foreach (var item in idleCount)
-            {
-                Console.WriteLine($"{item.Value}:{item.Key}");
-            }
-            Console.WriteLine("activeCount");
-            foreach (var item in activeCount)
-            {
-                Console.WriteLine($"{item.Value}:{item.Key}");
-            }
-            Console.WriteLine("-----------------------------------------");
+            //Console.WriteLine($"client pool information:{DateTime.Now.ToString("yyyy-MM-dd HH:mm:sss.fff")}");
+            //Console.WriteLine("-----------------------------------------");
+            //Console.WriteLine("client pools");
+            //foreach (var pool in ClientsPool)
+            //{
+            //    Console.WriteLine($"{pool.Value?.Count??0}:{pool.Key}");
+            //}
+            //Console.WriteLine("idleCount");
+            //foreach (var item in idleCount)
+            //{
+            //    Console.WriteLine($"{item.Value}:{item.Key}");
+            //}
+            //Console.WriteLine("activeCount");
+            //foreach (var item in activeCount)
+            //{
+            //    Console.WriteLine($"{item.Value}:{item.Key}");
+            //}
+            //Console.WriteLine("-----------------------------------------");
         }
     }
 }

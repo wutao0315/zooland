@@ -44,23 +44,7 @@ namespace RpcConsumerCore
             services.AddAkkaClient();
             services.AddGrpcClient();
             services.AddHttpClient();
-
-            var handlers = new List<IChannelHandler>
-                        {
-                            new LoggingHandler(),
-                            new LengthFieldPrepender(lengthFieldLength:4),
-                            new LengthFieldBasedFrameDecoder(
-                                maxFrameLength: int.MaxValue,
-                                lengthFieldOffset:0,
-                                lengthFieldLength:4,
-                                lengthAdjustment:0,
-                                initialBytesToStrip:4)
-                        };
-            services.AddNettyClient(new Dictionary<string, IEnumerable<IChannelHandler>>
-            {
-                { "socket", handlers},
-                { "libuv", handlers }
-            });
+            services.AddNettyClient();
 
             services.AddThriftClient();
             services.AddWcfClient();
