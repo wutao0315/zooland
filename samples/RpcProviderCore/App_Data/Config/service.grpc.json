@@ -1,7 +1,7 @@
 ﻿{
   "grpc": {
     "Services": {
-      "RpcContractGrpc.HelloService, RpcContractGrpc": "RpcProviderCore.HelloServiceGrpcImpl, RpcProviderCore"
+      "RpcContractGrpc.HelloService, RpcContractGrpc": "RpcContractGrpc.HelloService+HelloServiceBase, RpcContractGrpc"
     },
     "ServerPorts": [
       {

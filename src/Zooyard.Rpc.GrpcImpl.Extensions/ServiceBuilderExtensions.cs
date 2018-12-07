@@ -83,7 +83,8 @@ namespace Zooyard.Rpc.GrpcImpl.Extensions
                     var contractType = Type.GetType(item.Key);
                     var implType = Type.GetType(item.Value);
                     var implValue = serviceProvder.GetService(implType);
-                    var definition = contractType.GetMethod("BindService").Invoke(null, new[] { implValue }) as ServerServiceDefinition;
+                    var definition = contractType.GetMethod("BindService",new[] { implType })
+                    .Invoke(null, new[] { implValue }) as ServerServiceDefinition;
                     result.Add(definition);
                 }
 

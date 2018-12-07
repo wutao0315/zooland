@@ -69,7 +69,7 @@ namespace RpcProviderCore
                     services.AddTransient((serviceProvider) => "A");
                     services.AddAkkaServer();
 
-                    services.AddTransient((serviceProvider) => new HelloServiceGrpcImpl { ServiceName = "A" });
+                    services.AddTransient<RpcContractGrpc.HelloService.HelloServiceBase>((serviceProvider) => new HelloServiceGrpcImpl { ServiceName = "A" });
                     services.AddGrpcServer();
 
 
