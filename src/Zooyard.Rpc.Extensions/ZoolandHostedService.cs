@@ -12,19 +12,30 @@ namespace Zooyard.Rpc.Extensions
     public class ZoolandHostedService : IHostedService
     {
         private readonly ILogger _logger;
-        private readonly IServer _server;
+        private readonly IEnumerable<IServer> _servers;
 
-        public ZoolandHostedService(ILogger<ZoolandHostedService> logger, IServer server)
+        public ZoolandHostedService(ILogger<ZoolandHostedService> logger, IEnumerable<IServer> servers)
         {
             _logger = logger;
-            _server = server;
+            _servers = servers;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("Zooland started...");
             Console.WriteLine("Zooland started...");
-            _server.Export();
+            try
+            {
+                foreach (var server in _servers)
+                {
+                    server.Export();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+            }
+            
             await Task.CompletedTask;
         }
 
@@ -32,7 +43,18 @@ namespace Zooyard.Rpc.Extensions
         {
             _logger.LogInformation("Zooland stopped...");
             Console.WriteLine("Zooland stopped...");
-            _server.Dispose();
+            try
+            {
+                foreach (var server in _servers)
+                {
+                    server.Dispose();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+            }
+           
             await Task.CompletedTask;
         }
     }
