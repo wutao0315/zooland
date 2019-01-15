@@ -2,15 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
-    <IsPackable>true</IsPackable>
-    <Description>zooyard.prc.thriftimpl</Description>
-    <PackageTags>zooyard,rpc,thrift</PackageTags>
   </PropertyGroup>
-
-  <PropertyGroup Condition="'$(OS)'=='Windows_NT'">
-    <TargetFrameworks>$(TargetFrameworks);net461</TargetFrameworks>
-  </PropertyGroup>
-
 
   <ItemGroup>
     <PackageReference Include="DotNetty.Handlers" Version="0.6.0" />

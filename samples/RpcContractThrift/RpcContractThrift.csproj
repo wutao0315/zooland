@@ -2,13 +2,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
-    <IsPackable>true</IsPackable>
-    <Description>RpcContractThrift</Description>
-    <PackageTags>zooyard,rpc,thrift</PackageTags>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(OS)'=='Windows_NT'">
-    <TargetFrameworks>$(TargetFrameworks);net461</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>

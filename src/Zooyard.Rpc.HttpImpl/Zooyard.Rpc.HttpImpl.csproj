@@ -2,13 +2,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
-    <IsPackable>true</IsPackable>
-    <Description>zooyard.prc.httpimpl</Description>
-    <PackageTags>zooyard,rpc</PackageTags>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(OS)'=='Windows_NT'">
-    <TargetFrameworks>$(TargetFrameworks);net461</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
