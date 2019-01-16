@@ -2,9 +2,13 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
-    <IsPackable>true</IsPackable>
-    <Description>zooyard.prc.wcfimpl.extensions</Description>
-    <PackageTags>zooyard,rpc,wcf</PackageTags>
+    <PackageLicenseUrl>https://github.com/wutao0315/zooland/blob/master/LICENSE</PackageLicenseUrl>
+    <Copyright>MIT</Copyright>
+    <PackageProjectUrl>https://github.com/wutao0315/zooland</PackageProjectUrl>
+    <PackageReleaseNotes />
+    <Description>Zooyard RPC Framework microservice</Description>
+    <Authors>wutao0315</Authors>
+    <Version>1.0.2</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(OS)'=='Windows_NT'">

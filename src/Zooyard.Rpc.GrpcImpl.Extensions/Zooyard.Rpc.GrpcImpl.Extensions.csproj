@@ -2,6 +2,13 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <PackageLicenseUrl>https://github.com/wutao0315/zooland/blob/master/LICENSE</PackageLicenseUrl>
+    <Copyright>MIT</Copyright>
+    <PackageProjectUrl>https://github.com/wutao0315/zooland</PackageProjectUrl>
+    <PackageReleaseNotes />
+    <Description>Zooyard RPC Framework microservice</Description>
+    <Authors>wutao0315</Authors>
+    <Version>1.0.2</Version>
   </PropertyGroup>
   
   <ItemGroup>
@@ -9,10 +16,6 @@
     <PackageReference Include="Microsoft.Extensions.Options" Version="2.2.0" />
   </ItemGroup>
   
-  <PropertyGroup Condition="'$(OS)'=='Windows_NT'">
-    <TargetFrameworks>$(TargetFrameworks);net461</TargetFrameworks>
-  </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\Zooyard.Core\Zooyard.Core.csproj" />
     <ProjectReference Include="..\Zooyard.Rpc.GrpcImpl\Zooyard.Rpc.GrpcImpl.csproj" />
