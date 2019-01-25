@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Zooyard.Core;
+using Zooyard.Core.Diagnositcs;
 
 namespace Zooyard.Rpc.Cluster
 {
@@ -12,7 +13,8 @@ namespace Zooyard.Rpc.Cluster
         public override string Name => NAME;
         public const string NAME = "failfast";
         private readonly ILogger _logger;
-        public FailfastCluster(ILoggerFactory loggerFactory) : base(loggerFactory)
+        public FailfastCluster(ILoggerFactory loggerFactory) 
+            : base(loggerFactory)
         {
             _logger = loggerFactory.CreateLogger<FailfastCluster>();
         }
@@ -25,7 +27,7 @@ namespace Zooyard.Rpc.Cluster
             Exception exception = null;
             var isThrow = false;
 
-            checkInvokers(urls, invocation);
+            checkInvokers(urls, invocation, address);
             var invoker = base.select(loadbalance, invocation, urls, null);
 
             if (_tracker.IsEnabled("LoadbalanceSelect"))
@@ -39,7 +41,9 @@ namespace Zooyard.Rpc.Cluster
                 try
                 {
                     var refer = client.Refer();
+                    _source.WriteConsumerBefore(invocation);
                     result = refer.Invoke(invocation);
+                    _source.WriteConsumerAfter(invocation, result);
                     pool.Recovery(client);
                     goodUrls.Add(invoker);
                 }

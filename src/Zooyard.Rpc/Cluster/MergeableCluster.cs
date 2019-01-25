@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Zooyard.Core;
+using Zooyard.Core.Diagnositcs;
 using Zooyard.Rpc.Merger;
 
 namespace Zooyard.Rpc.Cluster
@@ -18,7 +19,10 @@ namespace Zooyard.Rpc.Cluster
         private readonly IDictionary<Type, IMerger> _defaultMergers;
         private readonly IDictionary<string, IMerger> _mySelfMergers;
         private readonly ILogger _logger;
-        public MergeableCluster(IDictionary<Type, IMerger> defaultMergers, IDictionary<string, IMerger> mySelfMergers, ILoggerFactory loggerFactory) : base(loggerFactory)
+        public MergeableCluster(IDictionary<Type, IMerger> defaultMergers,
+            IDictionary<string, IMerger> mySelfMergers,
+            ILoggerFactory loggerFactory)
+            : base(loggerFactory)
         {
             _defaultMergers = defaultMergers;
             _mySelfMergers = mySelfMergers;
@@ -40,10 +44,10 @@ namespace Zooyard.Rpc.Cluster
             var badUrls = new List<BadUrl>();
             var invokers = urls;
 
-            string merger = address.GetMethodParameter(invocation.MethodInfo.Name, MERGER_KEY);
+            var merger = address.GetMethodParameter(invocation.MethodInfo.Name, MERGER_KEY);
+            // If a method doesn't have a merger, only invoke one Group
             if (string.IsNullOrEmpty(merger))
             {
-                // If a method doesn't have a merger, only invoke one Group
                 foreach (var invoker in invokers)
                 {
                     try
@@ -52,7 +56,9 @@ namespace Zooyard.Rpc.Cluster
                         try
                         {
                             var refer = client.Refer();
+                            _source.WriteConsumerBefore(invocation);
                             var invokeResult = refer.Invoke(invocation);
+                            _source.WriteConsumerAfter(invocation, invokeResult);
                             pool.Recovery(client);
                             goodUrls.Add(invoker);
                             return new ClusterResult(invokeResult, goodUrls, badUrls, null, false);
@@ -70,29 +76,8 @@ namespace Zooyard.Rpc.Cluster
                     }
                 }
 
-                try
-                {
-                    var client2 = pool.GetClient(invokers[0]);
-                    try
-                    {
-                        var refer2 = client2.Refer();
-                        var result2 = refer2.Invoke(invocation);
-                        pool.Recovery(client2);
-                        goodUrls.Add(invokers[0]);
-                        return new ClusterResult(result2, goodUrls, badUrls, null, false);
-                    }
-                    catch (Exception ex)
-                    {
-                        client2.Dispose();
-                        throw ex;
-                    }
-                }
-                catch (Exception e)
-                {
-                    badUrls.Add(new BadUrl { Url = invokers[0], BadTime = DateTime.Now, CurrentException = e });
-                    return new ClusterResult(new RpcResult(e), goodUrls, badUrls, e, true);
-                }
-                
+                var exMerger = new Exception($"merger: {merger} is null and the invokers is empty");
+                return new ClusterResult(new RpcResult(exMerger), goodUrls, badUrls, exMerger, true);
             }
 
             Type returnType;
@@ -105,7 +90,7 @@ namespace Zooyard.Rpc.Cluster
                 returnType = null;
             }
 
-            IDictionary<string, Task<IResult>> results = new Dictionary<string, Task<IResult>>();
+            var results = new Dictionary<string, Task<IResult>>();
             foreach (var invoker in invokers)
             {
                 var task = Task.Run(() => 
@@ -116,10 +101,12 @@ namespace Zooyard.Rpc.Cluster
                         try
                         {
                             var refer = client.Refer();
-                            var invoceResult = refer.Invoke(invocation);
+                            _source.WriteConsumerBefore(invocation);
+                            var invokeResult = refer.Invoke(invocation);
+                            _source.WriteConsumerAfter(invocation, invokeResult);
                             pool.Recovery(client);
                             goodUrls.Add(invoker);
-                            return invoceResult;
+                            return invokeResult;
                         }
                         catch (Exception ex)
                         {

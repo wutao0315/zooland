@@ -1,12 +1,15 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Zooyard.Core;
+using Zooyard.Core.Diagnositcs;
 
 namespace Zooyard.Rpc.Cluster
 {
     public abstract class AbstractCluster : ICluster
     {
+        protected static DiagnosticSource _source = new DiagnosticListener(Constant.DiagnosticListenerName);
         private readonly ILogger _logger;
         public const string TIMEOUT_KEY = "timeout";
         public const int DEFAULT_TIMEOUT = 1000;
@@ -78,7 +81,7 @@ namespace Zooyard.Rpc.Cluster
             if (invokers.Count == 1)
                 return invokers[0];
             // 如果只有两个invoker，退化成轮循
-            if (invokers.Count == 2 && selected != null && selected.Count > 0)
+            if (invokers.Count == 2 && selected?.Count > 0)
             {
                 return selected[0] == invokers[0] ? invokers[1] : invokers[0];
             }
@@ -105,13 +108,13 @@ namespace Zooyard.Rpc.Cluster
                         }
                         catch (Exception e)
                         {
-                            //_logger.Warn(e.Message+ " may because invokers list dynamic change, ignore.", e);
+                            _logger.LogWarning(e, e.Message+ " may because invokers list dynamic change, ignore.");
                         }
                     }
                 }
                 catch (Exception t)
                 {
-                    _logger.LogError(t,$"clustor relselect fail reason is :{t.Message} if can not slove ,you can set cluster.availablecheck=false in url");
+                    _logger.LogError(t, $"clustor relselect fail reason is :{t.Message} if can not slove ,you can set cluster.availablecheck=false in url");
                 }
             }
             return invoker;
@@ -181,16 +184,16 @@ namespace Zooyard.Rpc.Cluster
             return null;
         }
 
-        protected void checkInvokers(IList<URL> invokers, IInvocation invocation)
+        protected void checkInvokers(IList<URL> invokers, IInvocation invocation, URL address)
         {
             if (invokers == null || invokers.Count == 0)
             {
                 throw new RpcException("Failed to invoke the method "
                         + invocation.MethodInfo.Name + " in the service " + invocation.TargetType.Name
-                        //+ ". No provider available for the service " + directory.getUrl().getServiceKey()
-                        //+ " from registry " + directory.getUrl().getAddress()
+                        + ". No provider available for the service " + invocation.App
+                        + " from registry " + address
                         //+ " on the consumer " + NetUtils.getLocalHost()
-                        //+ " using the zooyard version " + Version.getVersion()
+                        + " using the zooyard version " + invocation.Version
                         + ". Please check if the providers have been started and registered.");
             }
         }

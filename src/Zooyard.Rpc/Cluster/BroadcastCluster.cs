@@ -2,13 +2,15 @@
 using System;
 using System.Collections.Generic;
 using Zooyard.Core;
+using Zooyard.Core.Diagnositcs;
 
 namespace Zooyard.Rpc.Cluster
 {
     public class BroadcastCluster : AbstractCluster
     {
         private readonly ILogger _logger;
-        public BroadcastCluster(ILoggerFactory loggerFactory):base(loggerFactory)
+        public BroadcastCluster(ILoggerFactory loggerFactory)
+            :base(loggerFactory)
         {
             _logger = loggerFactory.CreateLogger<BroadcastCluster>();
         }
@@ -16,7 +18,7 @@ namespace Zooyard.Rpc.Cluster
         public const string NAME = "broadcast";
         public override IClusterResult DoInvoke(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
         {
-            checkInvokers(urls, invocation);
+            checkInvokers(urls, invocation, address);
             RpcContext.GetContext().SetInvokers(urls);
             Exception exception = null;
             var goodUrls = new List<URL>();
@@ -31,7 +33,9 @@ namespace Zooyard.Rpc.Cluster
                     try
                     {
                         var refer = client.Refer();
+                        _source.WriteConsumerBefore(invocation);
                         result = refer.Invoke(invocation);
+                        _source.WriteConsumerAfter(invocation, result);
                         pool.Recovery(client);
                         goodUrls.Add(invoker);
                     }

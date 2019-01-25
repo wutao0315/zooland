@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Zooyard.Core;
 using Zooyard.Core.Atomic;
+using Zooyard.Core.Diagnositcs;
 
 namespace Zooyard.Rpc.Cluster
 {
@@ -15,7 +16,8 @@ namespace Zooyard.Rpc.Cluster
         public const int DEFAULT_FORKS = 2;
 
         private readonly ILogger _logger;
-        public ForkingCluster(ILoggerFactory loggerFactory) : base(loggerFactory)
+        public ForkingCluster(ILoggerFactory loggerFactory) 
+            : base(loggerFactory)
         {
             _logger = loggerFactory.CreateLogger<ForkingCluster>();
         }
@@ -26,7 +28,7 @@ namespace Zooyard.Rpc.Cluster
             var goodUrls = new List<URL>();
             var badUrls = new List<BadUrl>();
 
-            checkInvokers(urls, invocation);
+            checkInvokers(urls, invocation, address);
             IList<URL> selected;
 
             int forks = address.GetParameter(FORKS_KEY, DEFAULT_FORKS);
@@ -63,7 +65,9 @@ namespace Zooyard.Rpc.Cluster
                         try
                         {
                             var refer = client.Refer();
+                            _source.WriteConsumerBefore(invocation);
                             var resultInner = refer.Invoke(invocation);
+                            _source.WriteConsumerAfter(invocation, resultInner);
                             pool.Recovery(client);
                             goodUrls.Add(invoker);
                             return resultInner;

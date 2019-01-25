@@ -3,6 +3,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Zooyard.Core;
+using Zooyard.Core.Diagnositcs;
 
 namespace Zooyard.Rpc.Cluster
 {
@@ -16,7 +17,8 @@ namespace Zooyard.Rpc.Cluster
         private static readonly long RETRY_FAILED_PERIOD = 5 * 1000;
 
         private readonly ILogger _logger;
-        public FailbackCluster(ILoggerFactory loggerFactory) : base(loggerFactory)
+        public FailbackCluster(ILoggerFactory loggerFactory) 
+            : base(loggerFactory)
         {
             _logger = loggerFactory.CreateLogger<FailbackCluster>();
         }
@@ -70,7 +72,9 @@ namespace Zooyard.Rpc.Cluster
                 try
                 {
                     var refer = client.Refer();
+                    _source.WriteConsumerBefore(invocation);
                     var result = refer.Invoke(invocation);
+                    _source.WriteConsumerAfter(invocation, result);
                     pool.Recovery(client);
                     URL cluster;
                     failed.TryRemove(invocation ,out cluster);
@@ -90,7 +94,7 @@ namespace Zooyard.Rpc.Cluster
             IResult result = null;
             Exception exception = null;
 
-            checkInvokers(urls, invocation);
+            checkInvokers(urls, invocation, address);
             var invoker = base.select(loadbalance, invocation, urls, null);
 
             try
@@ -99,7 +103,9 @@ namespace Zooyard.Rpc.Cluster
                 try
                 {
                     var refer = client.Refer();
+                    _source.WriteConsumerBefore(invocation);
                     result = refer.Invoke(invocation);
+                    _source.WriteConsumerAfter(invocation, result);
                     pool.Recovery(client);
                     goodUrls.Add(invoker);
                 }

@@ -27,12 +27,12 @@ namespace Zooyard.Core
             Arguments = arguments;
             ArgumentTypes = arguments == null ? null : (from item in arguments select item.GetType()).ToArray();
         }
-        public string App { get; private set; }
-        public string Version { get; private set; }
-        public Type TargetType { get; private set; }
-        public MethodInfo MethodInfo { get; private set; }
-        public object[] Arguments { get; private set; }
-        public Type[] ArgumentTypes { get; private set; }
+        public string App { get; }
+        public string Version { get;}
+        public Type TargetType { get; }
+        public MethodInfo MethodInfo { get; }
+        public object[] Arguments { get; }
+        public Type[] ArgumentTypes { get; }
         public string AppPoint()
         {
             var result = string.IsNullOrWhiteSpace(App) ? "" : $"{App}.";

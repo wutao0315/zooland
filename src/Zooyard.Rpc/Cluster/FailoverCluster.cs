@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Zooyard.Core;
+using Zooyard.Core.Diagnositcs;
 
 namespace Zooyard.Rpc.Cluster
 {
@@ -13,7 +14,8 @@ namespace Zooyard.Rpc.Cluster
         public const string RETRIES_KEY = "retries";
         public const int DEFAULT_RETRIES = 2;
         private readonly ILogger _logger;
-        public FailoverCluster(ILoggerFactory loggerFactory) : base(loggerFactory)
+        public FailoverCluster(ILoggerFactory loggerFactory) 
+            : base(loggerFactory)
         {
             _logger = loggerFactory.CreateLogger<FailoverCluster>();
         }
@@ -25,7 +27,7 @@ namespace Zooyard.Rpc.Cluster
             //IResult result = null;
 
             var copyinvokers = urls;
-            checkInvokers(copyinvokers, invocation);
+            checkInvokers(copyinvokers, invocation, address);
 
             //*getUrl();
             int len = address.GetMethodParameter(invocation.MethodInfo.Name, RETRIES_KEY, DEFAULT_RETRIES) + 1;
@@ -46,7 +48,7 @@ namespace Zooyard.Rpc.Cluster
                     //*checkWhetherDestroyed();
                     //*copyinvokers = list(invocation);
                     //重新检查一下
-                    checkInvokers(copyinvokers, invocation);
+                    checkInvokers(copyinvokers, invocation, address);
                 }
                 var invoker = base.select(loadbalance, invocation, copyinvokers, invoked);
                 invoked.Add(invoker);
@@ -57,7 +59,9 @@ namespace Zooyard.Rpc.Cluster
                     try
                     {
                         var refer = client.Refer();
+                        _source.WriteConsumerBefore(invocation);
                         var result = refer.Invoke(invocation);
+                        _source.WriteConsumerAfter(invocation, result);
                         pool.Recovery(client);
                         if (le != null && _logger.IsEnabled(LogLevel.Warning))
                         {
