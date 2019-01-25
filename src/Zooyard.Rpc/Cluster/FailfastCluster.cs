@@ -1,12 +1,14 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Zooyard.Core;
 
 namespace Zooyard.Rpc.Cluster
 {
     public class FailfastCluster : AbstractCluster
     {
+        private static DiagnosticSource _tracker = new DiagnosticListener("Zooyard.Rpc.Cluster");
         public override string Name => NAME;
         public const string NAME = "failfast";
         private readonly ILogger _logger;
@@ -25,6 +27,11 @@ namespace Zooyard.Rpc.Cluster
 
             checkInvokers(urls, invocation);
             var invoker = base.select(loadbalance, invocation, urls, null);
+
+            if (_tracker.IsEnabled("LoadbalanceSelect"))
+            {
+                _tracker.Write("LoadbalanceSelect", new { invoker });
+            }
 
             try
             {
