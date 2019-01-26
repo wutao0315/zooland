@@ -56,15 +56,16 @@ namespace Zooyard.Rpc.Cluster
                         try
                         {
                             var refer = client.Refer();
-                            _source.WriteConsumerBefore(invocation);
+                            _source.WriteConsumerBefore(invoker, invocation);
                             var invokeResult = refer.Invoke(invocation);
-                            _source.WriteConsumerAfter(invocation, invokeResult);
+                            _source.WriteConsumerAfter(invoker, invocation, invokeResult);
                             pool.Recovery(client);
                             goodUrls.Add(invoker);
                             return new ClusterResult(invokeResult, goodUrls, badUrls, null, false);
                         }
                         catch (Exception ex)
                         {
+                            _source.WriteConsumerError(invoker,invocation ,ex);
                             pool.Recovery(client);
                             throw ex;
                         }
@@ -101,15 +102,16 @@ namespace Zooyard.Rpc.Cluster
                         try
                         {
                             var refer = client.Refer();
-                            _source.WriteConsumerBefore(invocation);
+                            _source.WriteConsumerBefore(invoker, invocation);
                             var invokeResult = refer.Invoke(invocation);
-                            _source.WriteConsumerAfter(invocation, invokeResult);
+                            _source.WriteConsumerAfter(invoker, invocation, invokeResult);
                             pool.Recovery(client);
                             goodUrls.Add(invoker);
                             return invokeResult;
                         }
                         catch (Exception ex)
                         {
+                            _source.WriteConsumerError(invoker,invocation ,ex);
                             pool.Recovery(client);
                             throw ex;
                         }

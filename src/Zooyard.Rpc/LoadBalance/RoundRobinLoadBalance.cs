@@ -10,7 +10,7 @@ namespace Zooyard.Rpc.LoadBalance
     {
         public override string Name => NAME;
         public const string NAME = "roundrobin";
-        private ConcurrentDictionary<string, AtomicPositiveInteger> sequences = new ConcurrentDictionary<String, AtomicPositiveInteger>();
+        private ConcurrentDictionary<string, AtomicPositiveInteger> sequences = new ConcurrentDictionary<string, AtomicPositiveInteger>();
 
         protected override URL doSelect(IList<URL> urls, IInvocation invocation)
         {
@@ -48,13 +48,13 @@ namespace Zooyard.Rpc.LoadBalance
                     {
                         var k = each.Key;
                         var v = each.Value;
-                        if (mod == 0 && v.getValue() > 0)
+                        if (mod == 0 && v.GetValue() > 0)
                         {
                             return k;
                         }
-                        if (v.getValue() > 0)
+                        if (v.GetValue() > 0)
                         {
-                            v.decrement();
+                            v.Decrement();
                             mod--;
                         }
                     }
@@ -73,17 +73,17 @@ namespace Zooyard.Rpc.LoadBalance
                 this.value = value;
             }
 
-            public int getValue()
+            public int GetValue()
             {
                 return value;
             }
 
-            public void setValue(int value)
+            public void SetValue(int value)
             {
                 this.value = value;
             }
 
-            public void decrement()
+            public void Decrement()
             {
                 this.value--;
             }

@@ -59,9 +59,9 @@ namespace Zooyard.Rpc.Cluster
                     try
                     {
                         var refer = client.Refer();
-                        _source.WriteConsumerBefore(invocation);
+                        _source.WriteConsumerBefore(invoker, invocation);
                         var result = refer.Invoke(invocation);
-                        _source.WriteConsumerAfter(invocation, result);
+                        _source.WriteConsumerAfter(invoker, invocation, result);
                         pool.Recovery(client);
                         if (le != null && _logger.IsEnabled(LogLevel.Warning))
                         {
@@ -72,25 +72,26 @@ namespace Zooyard.Rpc.Cluster
                                     + " (" + providers.Count + "/" + copyinvokers.Count
                                     + ") from the registry " + address.Address
                                     //+ " on the consumer " + NetUtils.GetLocalHost()
-                                    //+ " using the dubbo version " + Version.getVersion() + ". Last error is: "
-                                    + le.Message);
+                                    + " using the service version " + invocation.Version 
+                                    + ". Last error is: "+ le.Message);
                         }
                         goodUrls.Add(invoker);
                         return new ClusterResult(result,goodUrls,badUrls,le,false);
                     }
                     catch (Exception ex)
                     {
+                        _source.WriteConsumerError(invoker,invocation ,ex);
                         pool.Recovery(client);
                         throw ex;
                     }
-                //}
-                //catch (RpcException e)
-                //{
-                //    if (e.Biz)
-                //    { // biz exception.
-                //        throw e;
-                //    }
-                //    le = e;
+                }
+                catch (RpcException e)
+                {
+                    if (e.Biz)
+                    { // biz exception.
+                        throw e;
+                    }
+                    le = e;
                 }
                 catch (Exception e)
                 {
@@ -114,9 +115,10 @@ namespace Zooyard.Rpc.Cluster
                    + invocation.MethodInfo.Name + " in the service " + invocation.TargetType.FullName
                    + ". Tried " + len + " times of the providers " + string.Join(",", providers)
                    + " (" + providers.Count + "/" + copyinvokers.Count
-                   //+ ") from the registry " + directory.getUrl().getAddress()
-                   //+ " on the consumer " + NetUtils.getLocalHost() + " using the dubbo version "
-                   //+ Version.getVersion() + ". Last error is: "
+                   + ") from the registry " + address
+                   //+ " on the consumer " + NetUtils.getLocalHost() 
+                   + " using the service version " + invocation.Version 
+                   + ". Last error is: "
                    + (le != null ? le.Message : ""), le != null && le.InnerException != null ? le.InnerException : le);
 
             return new ClusterResult(new RpcResult(re), goodUrls, badUrls, re, true);

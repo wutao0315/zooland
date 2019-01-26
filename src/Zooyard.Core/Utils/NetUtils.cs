@@ -6,131 +6,21 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Net.Sockets;
 using System.Net;
-//using Common.Logging;
 
 namespace Zooyard.Core.Utils
 {
     public class NetUtils
     {
 
-        //private static readonly ILog _logger = LogManager.GetLogger("NetUtils");
-
         public const string LOCALHOST = "127.0.0.1";
 
         public const string ANYHOST = "0.0.0.0";
-
-        private const int RND_PORT_START = 30000;
-
-        private const int RND_PORT_RANGE = 10000;
-
-        private static readonly Random RANDOM = new Random(DateTime.UtcNow.Millisecond); //   DateTimeHelperClass.CurrentUnixTimeMillis());
-
-        public static int RandomPort
-        {
-            get
-            {
-                return RND_PORT_START + RANDOM.Next(RND_PORT_RANGE);
-            }
-        }
-
-        public static int AvailablePort
-        {
-            get
-            {
-                Socket ss = null;
-                //ServerSocket ss = null;
-                try
-                {
-                    ss = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                    ss.Bind(null);
-                    return RandomPort;
-                   
-                    //ss = new ServerSocket();
-                    //ss.bind(null);
-                    //return ss.LocalPort;
-                }
-                catch (Exception)//IOException
-                {
-                    return RandomPort;
-                }
-                finally
-                {
-                    if (ss != null)
-                    {
-                        try
-                        {
-                            ss.Dispose();
-                        }
-                        catch (Exception)//IOException
-                        {
-                        }
-                    }
-                }
-            }
-        }
-
-        public static int getAvailablePort(int port)
-        {
-            if (port <= 0)
-            {
-                return AvailablePort;
-            }
-            for (int i = port; i < MAX_PORT; i++)
-            {
-                Socket ss = null;
-                //ServerSocket ss = null;
-                try
-                {
-                    ss = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                    var add = IPAddress.Parse(LOCALHOST);
-                    var endPt = new IPEndPoint(add, i);
-                    ss.Bind(endPt);
-                    //ss = new ServerSocket(i);
-                    return i;
-                }
-                catch (Exception)//IOException
-                {
-                    // continue
-                }
-                finally
-                {
-                    if (ss != null)
-                    {
-                        try
-                        {
-                            ss.Dispose();
-                        }
-                        catch (Exception)//IOException
-                        {
-                        }
-                    }
-                }
-            }
-            return port;
-        }
-
-        private const int MIN_PORT = 0;
-
-        private const int MAX_PORT = 65535;
-
-        public static bool isInvalidPort(int port)
-        {
-            return port > MIN_PORT || port <= MAX_PORT;
-        }
-
-        private static readonly Regex ADDRESS_PATTERN = new Regex("^\\d{1,3}(\\.\\d{1,3}){3}\\:\\d{1,5}$", RegexOptions.Compiled);
-
-        public static bool isValidAddress(string address)
-        {
-            return ADDRESS_PATTERN.IsMatch(address);//.matcher(address).matches();
-        }
-
+        
         private static readonly Regex LOCAL_IP_PATTERN = new Regex("127(\\.\\d{1,3}){3}$", RegexOptions.Compiled);
 
         public static bool isLocalHost(string host)
         {
             return host != null && (LOCAL_IP_PATTERN.IsMatch(host) || host.Equals("localhost", StringComparison.CurrentCultureIgnoreCase));
-            //return host != null && (LOCAL_IP_PATTERN.matcher(host).matches() || host.Equals("localhost", StringComparison.CurrentCultureIgnoreCase));
         }
 
         public static bool isAnyHost(string host)
@@ -143,16 +33,8 @@ namespace Zooyard.Core.Utils
             return host == null || host.Length == 0 || host.Equals("localhost", StringComparison.CurrentCultureIgnoreCase) || host.Equals("0.0.0.0") || (LOCAL_IP_PATTERN.IsMatch(host));
         }
 
-        public static bool isValidLocalHost(string host)
-        {
-            return !isInvalidLocalHost(host);
-        }
+     
 
-        public static IPEndPoint getLocalSocketAddress(string host, int port)
-        {
-            return isInvalidLocalHost(host) ? new IPEndPoint(IPAddress.Parse(LOCALHOST), port) : new IPEndPoint(IPAddress.Parse(host), port);
-            //return isInvalidLocalHost(host) ? new InetSocketAddress(port) : new InetSocketAddress(host, port);
-        }
 
         private static readonly Regex IP_PATTERN = new Regex("\\d{1,3}(\\.\\d{1,3}){3,5}$", RegexOptions.Compiled);
 
@@ -164,8 +46,7 @@ namespace Zooyard.Core.Utils
                 return false;
             }
             
-            string name = address.ToString();
-            //string name = address.HostAddress;
+            var name = address.ToString();
             return (name != null && !ANYHOST.Equals(name) && !LOCALHOST.Equals(name) && IP_PATTERN.IsMatch(name));
         }
 
@@ -175,7 +56,6 @@ namespace Zooyard.Core.Utils
             {
                 IPAddress address = LocalAddress;
                 return address == null ? LOCALHOST : address.MapToIPv4().ToString();
-                //return address == null ? LOCALHOST : address.HostAddress;
             }
         }
 
@@ -188,24 +68,24 @@ namespace Zooyard.Core.Utils
             if (host.Contains("://"))
             {
                 var u = URL.valueOf(host);
-                if (NetUtils.isInvalidLocalHost(u.Host))
+                if (isInvalidLocalHost(u.Host))
                 {
-                    return u.SetHost(NetUtils.LocalHost).ToFullString();
+                    return u.SetHost(LocalHost).ToFullString();
                 }
             }
             else if (host.Contains(":"))
             {
                 int i = host.LastIndexOf(':');
-                if (NetUtils.isInvalidLocalHost(host.Substring(0, i)))
+                if (isInvalidLocalHost(host.Substring(0, i)))
                 {
-                    return NetUtils.LocalHost + host.Substring(i);
+                    return LocalHost + host.Substring(i);
                 }
             }
             else
             {
-                if (NetUtils.isInvalidLocalHost(host))
+                if (isInvalidLocalHost(host))
                 {
-                    return NetUtils.LocalHost;
+                    return LocalHost;
                 }
             }
             return host;
@@ -231,15 +111,6 @@ namespace Zooyard.Core.Utils
             }
         }
 
-        public static string LogHost
-        {
-            get
-            {
-                IPAddress address = LOCAL_ADDRESS;
-                
-                return address == null ? LOCALHOST : address.MapToIPv4().ToString();
-            }
-        }
 
         private static IPAddress LocalAddress0
         {
@@ -250,7 +121,6 @@ namespace Zooyard.Core.Utils
                 {
                     var localHost= Dns.GetHostAddresses(Dns.GetHostName());
                     localAddress = localHost[0].MapToIPv4();
-                    //localAddress = InetAddress.LocalHost;
                     if (isValidAddress(localAddress))
                     {
                         return localAddress;
@@ -299,7 +169,6 @@ namespace Zooyard.Core.Utils
                 var me = Dns.GetHostEntry(hostName);
 
                 return me.AddressList[0].MapToIPv4().ToString();
-                //return InetAddress.getByName(hostName).HostAddress;
             }
             catch (Exception)
             {
@@ -307,42 +176,8 @@ namespace Zooyard.Core.Utils
             }
         }
 
-        public static string toAddressString(DnsEndPoint address)
-        {
-            return address.Host + ":" + address.Port;
-            //return address.Address.HostAddress + ":" + address.Port;
-        }
 
-        public static IPEndPoint toAddress(string address)
-        {
-            int i = address.IndexOf(':');
-            string host;
-            int port;
-            if (i > -1)
-            {
-                host = address.Substring(0, i);
-                port = Convert.ToInt32(address.Substring(i + 1));
-            }
-            else
-            {
-                host = address;
-                port = 0;
-            }
-            return new IPEndPoint(IPAddress.Parse(host), port);
-        }
 
-        public static string toURL(string protocol, string host, int port, string path)
-        {
-            var sb = new StringBuilder();
-            sb.Append(protocol).Append("://");
-            sb.Append(host).Append(':').Append(port);
-            if (path[0] != '/')
-            {
-                sb.Append('/');
-            }
-            sb.Append(path);
-            return sb.ToString();
-        }
 
     }
 }

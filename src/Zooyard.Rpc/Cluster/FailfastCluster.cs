@@ -41,15 +41,15 @@ namespace Zooyard.Rpc.Cluster
                 try
                 {
                     var refer = client.Refer();
-                    _source.WriteConsumerBefore(invocation);
+                    _source.WriteConsumerBefore(invoker, invocation);
                     result = refer.Invoke(invocation);
-                    _source.WriteConsumerAfter(invocation, result);
+                    _source.WriteConsumerAfter(invoker, invocation, result);
                     pool.Recovery(client);
                     goodUrls.Add(invoker);
                 }
                 catch (Exception ex)
                 {
-
+                    _source.WriteConsumerError(invoker,invocation ,ex);
                     pool.Recovery(client);
                     throw ex;
                 }
@@ -71,7 +71,7 @@ namespace Zooyard.Rpc.Cluster
                     + " for service " + invocation.TargetType.FullName
                     + " method " + invocation.MethodInfo.Name
                     //+ " on consumer " + NetUtils.getLocalHost()
-                    //+ " use zooyard version " + Version.getVersion()
+                    + " use service version " + invocation.Version
                     + ", but no luck to perform the invocation. Last error is: " + e.Message, e.InnerException != null ? e.InnerException : e);
                 }
                 _logger.LogError(exception, exception.Message);

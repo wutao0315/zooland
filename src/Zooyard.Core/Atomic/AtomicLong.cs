@@ -5,10 +5,7 @@ namespace Zooyard.Core.Atomic
     public sealed class AtomicLong
     {
         long atomicValue;
-        public AtomicLong()
-        {
-
-        }
+        public AtomicLong() { }
         public AtomicLong(long originalValue)
         {
             this.atomicValue = originalValue;

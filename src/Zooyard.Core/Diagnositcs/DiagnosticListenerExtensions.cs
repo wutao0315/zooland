@@ -11,7 +11,7 @@ namespace Zooyard.Core.Diagnositcs
     {
         public const string DiagnosticListenerName = "ZooyardDiagnosticListener";
 
-        public const string ZooyardPrefix = "Zooyard.";
+        public const string ZooyardPrefix = "Zooyard.Rpc.";
 
         public const string ConsumerBefore = ZooyardPrefix + nameof(ConsumerBefore);
         public const string ConsumerAfter = ZooyardPrefix + nameof(ConsumerAfter);
@@ -23,29 +23,29 @@ namespace Zooyard.Core.Diagnositcs
     }
     public static class DiagnosticListenerExtensions
     {
-        public static void WriteConsumerBefore(this DiagnosticSource _this, IInvocation invocation)
+        public static void WriteConsumerBefore(this DiagnosticSource _this, URL url, IInvocation invocation)
         {
             if (!_this.IsEnabled(Constant.ConsumerBefore))
             {
                 return;
             }
-            _this.Write(Constant.ConsumerBefore, new { invocation });
+            _this.Write(Constant.ConsumerBefore, new { url, invocation  });
         }
-        public static void WriteConsumerAfter(this DiagnosticSource _this, IInvocation invocation, IResult clusterResult)
+        public static void WriteConsumerAfter(this DiagnosticSource _this, URL url, IInvocation invocation, IResult result)
         {
             if (!_this.IsEnabled(Constant.ConsumerAfter))
             {
                 return;
             }
-            _this.Write(Constant.ConsumerAfter, new { invocation, clusterResult });
+            _this.Write(Constant.ConsumerAfter, new { url, invocation, result });
         }
-        public static void WriteConsumerError(this DiagnosticSource _this, Exception exception)
+        public static void WriteConsumerError(this DiagnosticSource _this, URL url, IInvocation invocation, Exception exception)
         {
             if (!_this.IsEnabled(Constant.ConsumerAfter))
             {
                 return;
             }
-            _this.Write(Constant.ConsumerAfter, new { exception });
+            _this.Write(Constant.ConsumerAfter, new { url, invocation, exception });
         }
 
         public static void WriteProviderBefore(this DiagnosticSource _this)

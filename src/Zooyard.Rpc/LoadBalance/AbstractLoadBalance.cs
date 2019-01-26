@@ -35,7 +35,7 @@ namespace Zooyard.Rpc.LoadBalance
 
         int calculateWarmupWeight(int uptime, int warmup, int weight)
         {
-            int ww = (int)((float)uptime / ((float)warmup / (float)weight));
+            int ww = (int)(uptime / (warmup / weight));
             return ww < 1 ? 1 : (ww > weight ? weight : ww);
         }
 
@@ -43,14 +43,14 @@ namespace Zooyard.Rpc.LoadBalance
 
         protected int GetWeight(URL url, IInvocation invocation)
         {
-            int weight = url.GetMethodParameter<int>(invocation.MethodInfo.Name, WEIGHT_KEY, DEFAULT_WEIGHT);
+            int weight = url.GetMethodParameter(invocation.MethodInfo.Name, WEIGHT_KEY, DEFAULT_WEIGHT);
             if (weight > 0)
             {
-                long timestamp = url.GetParameter<long>(REMOTE_TIMESTAMP_KEY, 0L);
+                long timestamp = url.GetParameter(REMOTE_TIMESTAMP_KEY, 0L);
                 if (timestamp > 0L)
                 {
                     int uptime = (int)(DateTime.Now.CurrentTimeMillis() - timestamp);
-                    int warmup = url.GetParameter<int>(WARMUP_KEY, DEFAULT_WARMUP);
+                    int warmup = url.GetParameter(WARMUP_KEY, DEFAULT_WARMUP);
                     if (uptime > 0 && uptime < warmup)
                     {
                         weight = calculateWarmupWeight(uptime, warmup, weight);

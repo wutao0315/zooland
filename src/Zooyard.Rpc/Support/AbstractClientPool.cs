@@ -10,7 +10,16 @@ namespace Zooyard.Rpc.Support
     public abstract class AbstractClientPool : IClientPool
     {
         private readonly ILogger _logger;
-        
+        #region 构造方法
+        public AbstractClientPool(ILoggerFactory loggerFactory)
+        {
+            _logger = loggerFactory.CreateLogger<AbstractClientPool>();
+            //init
+            CreateResetEvent();
+            CreatePool();
+        }
+
+        #endregion
 
         #region 内部成员
         /// <summary>
@@ -92,16 +101,7 @@ namespace Zooyard.Rpc.Support
         }
         #endregion
 
-        #region 构造方法
-        public AbstractClientPool(ILoggerFactory loggerFactory)
-        {
-            _logger = loggerFactory.CreateLogger<AbstractClientPool>();
-            //init
-            CreateResetEvent();
-            CreatePool();
-        }
-
-        #endregion
+        
 
         #region 公有操作方法
 
@@ -216,24 +216,25 @@ namespace Zooyard.Rpc.Support
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposed)
+            if (disposed)
             {
-                if (disposing)
+                return;
+            }
+            if (disposing)
+            {
+                lock (locker)
                 {
-                    lock (locker)
+                    foreach (var item in ClientsPool.Keys)
                     {
-                        foreach (var item in ClientsPool.Keys)
+                        while (idleCount[item] > 0)
                         {
-                            while (idleCount[item] > 0)
-                            {
-                                var client = DequeueClient(item);
-                                DestoryClient(client);
-                            }
+                            var client = DequeueClient(item);
+                            DestoryClient(client);
                         }
                     }
                 }
-                disposed = true;
             }
+            disposed = true;
         }
 
 

@@ -1,5 +1,6 @@
 ﻿using Grpc.Core;
 using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
 using Zooyard.Core;
 using Zooyard.Rpc.Support;
 
@@ -24,13 +25,13 @@ namespace Zooyard.Rpc.GrpcImpl
             _loggerFactory = loggerFactory;
             _logger = loggerFactory.CreateLogger<GrpcClient>();
         }
+
+
+
        
-
-
-
         public override IInvoker Refer()
         {
-            if (_channel != null && _channel.State == ChannelState.Shutdown)
+            if (_channel?.State == ChannelState.Shutdown)
             {
                 _channel = new Channel(_channel.Target, _channelCredentials);
             }
@@ -38,7 +39,9 @@ namespace Zooyard.Rpc.GrpcImpl
             Open();
             //grpc client service
 
-            return new GrpcInvoker(_grpcClient, _clientTimeout,_loggerFactory);
+                
+
+            return new GrpcInvoker(_grpcClient, _clientTimeout, _loggerFactory);
         }
 
         public override void Open()

@@ -31,15 +31,16 @@ namespace Zooyard.Rpc.Cluster
                 try
                 {
                     var refer = client.Refer();
-                    _source.WriteConsumerBefore(invocation);
+                    _source.WriteConsumerBefore(invoker, invocation);
                     result = refer.Invoke(invocation);
-                    _source.WriteConsumerAfter(invocation, result);
+                    _source.WriteConsumerAfter(invoker, invocation, result);
                     pool.Recovery(client);
                     goodUrls.Add(invoker);
                     return new ClusterResult(result, goodUrls, badUrls, exception,false);
                 }
                 catch (Exception ex)
                 {
+                    _source.WriteConsumerError(invoker,invocation ,ex);
                     pool.Recovery(client);
                     throw ex;
                 }

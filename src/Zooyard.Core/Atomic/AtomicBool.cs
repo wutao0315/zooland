@@ -5,10 +5,7 @@ namespace Zooyard.Core.Atomic
     public sealed class AtomicBool
     {
         bool atomicValue;
-        public AtomicBool()
-        {
-
-        }
+        public AtomicBool() { }
         public AtomicBool(bool originalValue)
         {
             this.atomicValue = originalValue;

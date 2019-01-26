@@ -45,7 +45,7 @@ namespace Zooyard.Rpc.Cluster
                             }
                             catch (Exception t)
                             { // 防御性容错
-                                _logger.LogError(t,"Unexpected error occur at collect statistic");
+                                _logger.LogError(t, $"Unexpected error occur at collect statistic {t.Message}");
                             }
                         });
                         retryTimer.AutoReset = true;
@@ -72,15 +72,16 @@ namespace Zooyard.Rpc.Cluster
                 try
                 {
                     var refer = client.Refer();
-                    _source.WriteConsumerBefore(invocation);
+                    _source.WriteConsumerBefore(entry.Value, invocation);
                     var result = refer.Invoke(invocation);
-                    _source.WriteConsumerAfter(invocation, result);
+                    _source.WriteConsumerAfter(entry.Value, invocation, result);
                     pool.Recovery(client);
                     URL cluster;
                     failed.TryRemove(invocation ,out cluster);
                 }
                 catch (Exception e)
                 {
+                    _source.WriteConsumerError(entry.Value, invocation, e);
                     pool.Recovery(client);
                     _logger.LogError(e, $"Failed retry to invoke method {invocation.MethodInfo.Name}, waiting again.");
                 }
@@ -103,15 +104,15 @@ namespace Zooyard.Rpc.Cluster
                 try
                 {
                     var refer = client.Refer();
-                    _source.WriteConsumerBefore(invocation);
+                    _source.WriteConsumerBefore(invoker, invocation);
                     result = refer.Invoke(invocation);
-                    _source.WriteConsumerAfter(invocation, result);
+                    _source.WriteConsumerAfter(invoker, invocation, result);
                     pool.Recovery(client);
                     goodUrls.Add(invoker);
                 }
                 catch (Exception ex)
                 {
-
+                    _source.WriteConsumerError(invoker,invocation ,ex);
                     pool.Recovery(client);
                     throw ex;
                 }

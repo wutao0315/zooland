@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Zooyard.Core;
 using Zooyard.Rpc.Support;
 
@@ -34,7 +35,18 @@ namespace Zooyard.Rpc.GrpcImpl
             _logger = loggerFactory.CreateLogger<GrpcClientPool>();
         }
 
-        
+        //private AsyncAuthInterceptor CreateAuthInterceptor()
+        //{
+        //    return (context, metadata) =>
+        //    {
+        //        var entry = new Metadata.Entry("authentication", "");
+        //        if (entry != null)
+        //        {
+        //            metadata.Add(entry);
+        //        }
+        //        return Task.CompletedTask;
+        //    };
+        //}
 
         protected override IClient CreateClient(URL url)
         {
@@ -52,10 +64,12 @@ namespace Zooyard.Rpc.GrpcImpl
             var maxReceiveMessageLength = url.GetParameter(MAXLENGTH_KEY, DEFAULT_MAXLENGTH);
             var options = new List<ChannelOption>
             {
-                new ChannelOption(ChannelOptions.MaxReceiveMessageLength,maxReceiveMessageLength)
+                new ChannelOption(ChannelOptions.MaxReceiveMessageLength, maxReceiveMessageLength)
             };
 
+            //ChannelCredentials.Create(ChannelCredentials.Insecure, CallCredentials.FromInterceptor(CreateAuthInterceptor()));
             var credentials = ChannelCredentials.Insecure;
+            
 
             var credentialsKey = url.GetParameter(CREDENTIALS_KEY, DEFAULT_CREDENTIALS);
             if (_credentials != null 
@@ -65,10 +79,10 @@ namespace Zooyard.Rpc.GrpcImpl
                 credentials = _credentials[credentialsKey];
             }
 
-            Channel channel = new Channel(url.Host, url.Port, credentials, options);
+            var channel = new Channel(url.Host, url.Port, credentials, options);
 
 
-            //实例化TheThriftClient
+            //实例化GrpcClient
             var client = Activator.CreateInstance(_grpcClientTypes[proxyKey], channel);
 
             return new GrpcClient(channel, client, url, credentials, timeout, _loggerFactory);

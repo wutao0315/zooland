@@ -5,10 +5,7 @@ namespace Zooyard.Core.Atomic
     public sealed class AtomicInteger
     {
         int atomicValue;
-        public AtomicInteger()
-        {
-
-        }
+        public AtomicInteger() { }
         public AtomicInteger(int originalValue)
         {
             this.atomicValue = originalValue;

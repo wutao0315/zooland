@@ -17,55 +17,8 @@ namespace Zooyard.Core.Utils
 
         private static readonly Regex INT_PATTERN = new Regex("^\\d+$", RegexOptions.Compiled);
 
-        public static bool isBlank(string str)
-        {
-            if (str == null || str.Length == 0)
-            {
-                return true;
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// is empty string.
-        /// </summary>
-        /// <param name="str"> source string. </param>
-        /// <returns> is empty. </returns>
-        public static bool isEmpty(string str)
-        {
-            if (str == null || str.Length == 0)
-            {
-                return true;
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// is not empty string.
-        /// </summary>
-        /// <param name="str"> source string. </param>
-        /// <returns> is not empty. </returns>
-        public static bool isNotEmpty(string str)
-        {
-            return str != null && str.Length > 0;
-        }
-
-        /// 
-        /// <param name="s1"> </param>
-        /// <param name="s2"> </param>
-        /// <returns> equals </returns>
-        public static bool isEquals(string s1, string s2)
-        {
-            if (s1 == null && s2 == null)
-            {
-                return true;
-            }
-            if (s1 == null || s2 == null)
-            {
-                return false;
-            }
-            return s1.Equals(s2);
-        }
+        
+        
 
         /// <summary>
         /// is integer string.
@@ -180,7 +133,7 @@ namespace Zooyard.Core.Utils
         /// <returns> String. </returns>
         public static string translat(string src, string from, string to)
         {
-            if (isEmpty(src))
+            if (string.IsNullOrEmpty(src))
             {
                 return src;
             }
@@ -214,127 +167,8 @@ namespace Zooyard.Core.Utils
             return sb == null ? src : sb.ToString();
         }
 
-        /// <summary>
-        /// split.
-        /// </summary>
-        /// <param name="ch"> char. </param>
-        /// <returns> string array. </returns>
-        public static string[] Split(string str, char ch)
-        {
-            IList<string> list = null;
-            char c;
-            int ix = 0, len = str.Length;
-            for (int i = 0; i < len; i++)
-            {
-                c = str[i];
-                if (c == ch)
-                {
-                    if (list == null)
-                    {
-                        list = new List<string>();
-                    }
-                    list.Add(str.Substring(ix, i - ix));
-                    ix = i + 1;
-                }
-            }
-            if (ix > 0)
-            {
-                list.Add(str.Substring(ix));
-            }
-            return list == null ? EMPTY_STRING_ARRAY : list.ToArray();
-            //return list == null ? EMPTY_STRING_ARRAY : (string[])list.toArray(EMPTY_STRING_ARRAY);
-        }
-
-        /// <summary>
-        /// join string.
-        /// </summary>
-        /// <param name="array"> String array. </param>
-        /// <returns> String. </returns>
-        public static string join(string[] array)
-        {
-            if (array.Length == 0)
-            {
-                return "";
-            }
-            StringBuilder sb = new StringBuilder();
-            foreach (string s in array)
-            {
-                sb.Append(s);
-            }
-            return sb.ToString();
-        }
-
-        /// <summary>
-        /// join string like javascript.
-        /// </summary>
-        /// <param name="array"> String array. </param>
-        /// <param name="split"> split </param>
-        /// <returns> String. </returns>
-        public static string join(string[] array, char split)
-        {
-            if (array.Length == 0)
-            {
-                return "";
-            }
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < array.Length; i++)
-            {
-                if (i > 0)
-                {
-                    sb.Append(split);
-                }
-                sb.Append(array[i]);
-            }
-            return sb.ToString();
-        }
-
-        /// <summary>
-        /// join string like javascript.
-        /// </summary>
-        /// <param name="array"> String array. </param>
-        /// <param name="split"> split </param>
-        /// <returns> String. </returns>
-        public static string join(string[] array, string split)
-        {
-            if (array.Length == 0)
-            {
-                return "";
-            }
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < array.Length; i++)
-            {
-                if (i > 0)
-                {
-                    sb.Append(split);
-                }
-                sb.Append(array[i]);
-            }
-            return sb.ToString();
-        }
-
-        public static string join(ICollection<string> coll, string split)
-        {
-            if (coll.Count == 0)
-            {
-                return "";
-            }
-
-            StringBuilder sb = new StringBuilder();
-            bool isFirst = true;
-            foreach (string s in coll)
-            {
-                if (isFirst)
-                {
-                    isFirst = false;
-                }
-                else
-                {
-                    sb.Append(split);
-                }
-                sb.Append(s);
-            }
-            return sb.ToString();
-        }
+       
+        
 
         /// <summary>
         /// parse key-value pair.

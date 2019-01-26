@@ -142,32 +142,32 @@ namespace Zooyard.Core.Utils
             }
             return i.CompareAndSet(expect, update);
         }
-        public virtual byte byteValue()
+        public virtual byte ByteValue()
         {
             return (byte)i.Value;
         }
 
-        public virtual short shortValue()
+        public virtual short ShortValue()
         {
             return (short)i.Value;
         }
 
-        public virtual int intValue()
+        public virtual int IntValue()
         {
             return i.Value;
         }
 
-        public virtual long longValue()
+        public virtual long LongValue()
         {
             return i.Value;
         }
 
-        public virtual float floatValue()
+        public virtual float FloatValue()
         {
             return i.Value;
         }
 
-        public virtual double doubleValue()
+        public virtual double DoubleValue()
         {
             return i.Value;
         }
@@ -196,7 +196,7 @@ namespace Zooyard.Core.Utils
                 return false;
             }
             AtomicPositiveInteger other = (AtomicPositiveInteger)obj;
-            return i.Value == other.intValue();
+            return i.Value == other.IntValue();
         }
     }
 }

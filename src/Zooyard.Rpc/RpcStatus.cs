@@ -8,9 +8,9 @@ namespace Zooyard.Rpc
 {
     public class RpcStatus
     {
-        private static ConcurrentDictionary<string, RpcStatus> SERVICE_STATISTICS = new ConcurrentDictionary<String, RpcStatus>();
+        private static ConcurrentDictionary<string, RpcStatus> SERVICE_STATISTICS = new ConcurrentDictionary<string, RpcStatus>();
 
-        private static ConcurrentDictionary<string, ConcurrentDictionary<String, RpcStatus>> METHOD_STATISTICS = new ConcurrentDictionary<string, ConcurrentDictionary<String, RpcStatus>>();
+        private static ConcurrentDictionary<string, ConcurrentDictionary<string, RpcStatus>> METHOD_STATISTICS = new ConcurrentDictionary<string, ConcurrentDictionary<string, RpcStatus>>();
         private ConcurrentDictionary<string, object> values = new ConcurrentDictionary<string, object>();
         private AtomicInteger active = new AtomicInteger();
         private AtomicLong total = new AtomicLong();
@@ -20,22 +20,20 @@ namespace Zooyard.Rpc
         private AtomicLong maxElapsed = new AtomicLong();
         private AtomicLong failedMaxElapsed = new AtomicLong();
         private AtomicLong succeededMaxElapsed = new AtomicLong();
-        
-        /**
-         * 用来实现executes属性的并发限制（即控制能使用的线程数）
-         * 2017-08-21 yizhenqiang
-         */
+
+        /// <summary>
+        /// 用来实现executes属性的并发限制（即控制能使用的线程数）
+        /// </summary>
         private volatile Semaphore executesLimit;
         private volatile int executesPermits;
 
-        private RpcStatus()
-        {
-        }
+        private RpcStatus() { }
 
-        /**
-         * @param url
-         * @return status
-         */
+        /// <summary>
+        /// get status
+        /// </summary>
+        /// <param name="url">url</param>
+        /// <returns>status</returns>
         public static RpcStatus GetStatus(URL url)
         {
             var uri = url.ToIdentityString();
@@ -48,9 +46,10 @@ namespace Zooyard.Rpc
             return status;
         }
 
-        /**
-         * @param url
-         */
+        /// <summary>
+        /// remove status
+        /// </summary>
+        /// <param name="url">url</param>
         public static void RemoveStatus(URL url)
         {
             var uri = url.ToIdentityString();
@@ -58,18 +57,19 @@ namespace Zooyard.Rpc
             SERVICE_STATISTICS.TryRemove(uri,out rpcStatus);
         }
 
-        /**
-         * @param url
-         * @param methodName
-         * @return status
-         */
-        public static RpcStatus GetStatus(URL url, String methodName)
+        /// <summary>
+        /// get status
+        /// </summary>
+        /// <param name="url">url</param>
+        /// <param name="methodName">method name</param>
+        /// <returns></returns>
+        public static RpcStatus GetStatus(URL url, string methodName)
         {
             var uri = url.ToIdentityString();
 
             if (!METHOD_STATISTICS.ContainsKey(uri))
             {
-                METHOD_STATISTICS.GetOrAdd(uri, new ConcurrentDictionary<String, RpcStatus>());
+                METHOD_STATISTICS.GetOrAdd(uri, new ConcurrentDictionary<string, RpcStatus>());
                 //map = METHOD_STATISTICS[uri];
             }
             var map = METHOD_STATISTICS[uri];
@@ -84,10 +84,12 @@ namespace Zooyard.Rpc
             return status;
         }
 
-        /**
-         * @param url
-         */
-        public static void RemoveStatus(URL url, String methodName)
+        /// <summary>
+        /// remove status
+        /// </summary>
+        /// <param name="url">url</param>
+        /// <param name="methodName">method Name</param>
+        public static void RemoveStatus(URL url, string methodName)
         {
             var uri = url.ToIdentityString();
             if (!METHOD_STATISTICS.ContainsKey(uri))
@@ -96,17 +98,14 @@ namespace Zooyard.Rpc
                 RpcStatus rpcStatus = null;
                 map.TryRemove(methodName, out rpcStatus);
             }
-            
-            //if (map != null)
-            //{
-
-            //}
         }
 
-        /**
-         * @param url
-         */
-        public static void BeginCount(URL url, String methodName)
+        /// <summary>
+        /// begin count
+        /// </summary>
+        /// <param name="url">url</param>
+        /// <param name="methodName">method Name</param>
+        public static void BeginCount(URL url, string methodName)
         {
             beginCount(GetStatus(url));
             beginCount(GetStatus(url, methodName));
@@ -117,12 +116,14 @@ namespace Zooyard.Rpc
             status.active.IncrementAndGet();
         }
 
-        /**
-         * @param url
-         * @param elapsed
-         * @param succeeded
-         */
-        public static void EndCount(URL url, String methodName, long elapsed, bool succeeded)
+       /// <summary>
+       /// end count
+       /// </summary>
+       /// <param name="url"></param>
+       /// <param name="methodName"></param>
+       /// <param name="elapsed"></param>
+       /// <param name="succeeded"></param>
+        public static void EndCount(URL url, string methodName, long elapsed, bool succeeded)
         {
             endCount(GetStatus(url), elapsed, succeeded);
             endCount(GetStatus(url, methodName), elapsed, succeeded);
@@ -155,63 +156,58 @@ namespace Zooyard.Rpc
             }
         }
 
-        /**
-         * set value.
-         *
-         * @param key
-         * @param value
-         */
+        /// <summary>
+        /// set value.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
         public void Set(string key, object value)
         {
             values[key]= value;
         }
 
-        /**
-         * get value.
-         *
-         * @param key
-         * @return value
-         */
+        /// <summary>
+        ///  get value.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
         public object Get(string key)
         {
             return values[key];
         }
 
-        /**
-         * get active.
-         *
-         * @return active
-         */
+        /// <summary>
+        /// get active.
+        /// </summary>
+        /// <returns>active</returns>
         public int GetActive()
         {
             return active.Value;
         }
 
-        /**
-         * get total.
-         *
-         * @return total
-         */
+
+        /// <summary>
+        /// get total.
+        /// </summary>
+        /// <returns>total</returns>
         public long GetTotal()
         {
             return total.Value;
         }
 
-        /**
-         * get total elapsed.
-         *
-         * @return total elapsed
-         */
+        /// <summary>
+        ///  get total elapsed.
+        /// </summary>
+        /// <returns>total elapsed</returns>
         public long GetTotalElapsed()
         {
             return totalElapsed.Value;
         }
 
-        /**
-         * get average elapsed.
-         *
-         * @return average elapsed
-         */
+        /// <summary>
+        /// get average elapsed.
+        /// </summary>
+        /// <returns>average elapsed</returns>
         public long GetAverageElapsed()
         {
             long total = GetTotal();
@@ -222,41 +218,37 @@ namespace Zooyard.Rpc
             return GetTotalElapsed() / total;
         }
 
-        /**
-         * get max elapsed.
-         *
-         * @return max elapsed
-         */
+        /// <summary>
+        /// get max elapsed.
+        /// </summary>
+        /// <returns>max elapsed</returns>
         public long GetMaxElapsed()
         {
             return maxElapsed.Value;
         }
 
-        /**
-         * get failed.
-         *
-         * @return failed
-         */
+        /// <summary>
+        /// get failed.
+        /// </summary>
+        /// <returns>failed</returns>
         public int GetFailed()
         {
             return failed.Value;
         }
 
-        /**
-         * get failed elapsed.
-         *
-         * @return failed elapsed
-         */
+        /// <summary>
+        /// get failed elapsed.
+        /// </summary>
+        /// <returns>failed elapsed</returns>
         public long GetFailedElapsed()
         {
             return failedElapsed.Value;
         }
 
-        /**
-         * get failed average elapsed.
-         *
-         * @return failed average elapsed
-         */
+        /// <summary>
+        /// get failed average elapsed.
+        /// </summary>
+        /// <returns>failed average elapsed</returns>
         public long GetFailedAverageElapsed()
         {
             long failed = GetFailed();
@@ -267,41 +259,37 @@ namespace Zooyard.Rpc
             return GetFailedElapsed() / failed;
         }
 
-        /**
-         * get failed max elapsed.
-         *
-         * @return failed max elapsed
-         */
+        /// <summary>
+        /// get failed max elapsed.
+        /// </summary>
+        /// <returns>failed max elapsed</returns>
         public long GetFailedMaxElapsed()
         {
             return failedMaxElapsed.Value;
         }
 
-        /**
-         * get succeeded.
-         *
-         * @return succeeded
-         */
+        /// <summary>
+        /// get succeeded.
+        /// </summary>
+        /// <returns>succeeded</returns>
         public long GetSucceeded()
         {
             return GetTotal() - GetFailed();
         }
 
-        /**
-         * get succeeded elapsed.
-         *
-         * @return succeeded elapsed
-         */
+        /// <summary>
+        /// get succeeded elapsed.
+        /// </summary>
+        /// <returns>succeeded elapsed</returns>
         public long GetSucceededElapsed()
         {
             return GetTotalElapsed() - GetFailedElapsed();
         }
 
-        /**
-         * get succeeded average elapsed.
-         *
-         * @return succeeded average elapsed
-         */
+        /// <summary>
+        /// get succeeded average elapsed.
+        /// </summary>
+        /// <returns>succeeded average elapsed</returns>
         public long GetSucceededAverageElapsed()
         {
             long succeeded = GetSucceeded();
@@ -312,21 +300,19 @@ namespace Zooyard.Rpc
             return GetSucceededElapsed() / succeeded;
         }
 
-        /**
-         * get succeeded max elapsed.
-         *
-         * @return succeeded max elapsed.
-         */
+        /// <summary>
+        /// get succeeded max elapsed.
+        /// </summary>
+        /// <returns>succeeded max elapsed</returns>
         public long GetSucceededMaxElapsed()
         {
             return succeededMaxElapsed.Value;
         }
 
-        /**
-         * Calculate average TPS (Transaction per second).
-         *
-         * @return tps
-         */
+        /// <summary>
+        /// Calculate average TPS (Transaction per second)
+        /// </summary>
+        /// <returns></returns>
         public long GetAverageTps()
         {
             if (GetTotalElapsed() >= 1000L)
@@ -336,12 +322,11 @@ namespace Zooyard.Rpc
             return GetTotal();
         }
 
-        /**
-         * 获取限制线程数的信号量，信号量的许可数就是executes设置的值
-         * 2017-08-21 yizhenqiang
-         * @param maxThreadNum executes设置的值
-         * @return
-         */
+        /// <summary>
+        /// 获取限制线程数的信号量，信号量的许可数就是executes设置的值
+        /// </summary>
+        /// <param name="maxThreadNum"></param>
+        /// <returns></returns>
         public Semaphore GetSemaphore(int maxThreadNum)
         {
             if (maxThreadNum <= 0)
