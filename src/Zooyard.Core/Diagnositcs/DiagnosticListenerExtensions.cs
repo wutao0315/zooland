@@ -23,13 +23,13 @@ namespace Zooyard.Core.Diagnositcs
     }
     public static class DiagnosticListenerExtensions
     {
-        public static void WriteConsumerBefore(this DiagnosticSource _this, URL url, IInvocation invocation)
+        public static void WriteConsumerBefore(this DiagnosticSource _this, object instance, URL url, IInvocation invocation)
         {
             if (!_this.IsEnabled(Constant.ConsumerBefore))
             {
                 return;
             }
-            _this.Write(Constant.ConsumerBefore, new { url, invocation  });
+            _this.Write(Constant.ConsumerBefore, new { instance, url, invocation  });
         }
         public static void WriteConsumerAfter(this DiagnosticSource _this, URL url, IInvocation invocation, IResult result)
         {

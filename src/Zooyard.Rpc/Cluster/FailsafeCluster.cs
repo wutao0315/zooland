@@ -31,7 +31,7 @@ namespace Zooyard.Rpc.Cluster
                 try
                 {
                     var refer = client.Refer();
-                    _source.WriteConsumerBefore(invoker, invocation);
+                    _source.WriteConsumerBefore(refer.Instance, invoker, invocation);
                     result = refer.Invoke(invocation);
                     _source.WriteConsumerAfter(invoker, invocation, result);
                     pool.Recovery(client);
