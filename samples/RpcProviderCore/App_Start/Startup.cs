@@ -4,8 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using RpcContractWcf.HelloService;
+using SoapCore;
 using System;
 using System.Net.Http.Headers;
+using System.ServiceModel;
 
 namespace RpcProviderCore.App_Start
 {
@@ -62,7 +65,9 @@ namespace RpcProviderCore.App_Start
             {
                 app.UseExceptionHandler("/Home/Error");
             }
-            
+
+            app.UseSoapEndpoint<IHelloServiceWcf>("/Hello/HelloServiceWcfImpl", new BasicHttpBinding(), SoapSerializer.DataContractSerializer);
+
             //app.UseMiddleware<Middleware>();
 
             //app.UseMvc(routes =>

@@ -15,10 +15,7 @@ namespace Zooyard.Rpc.ThriftImpl.Extensions
     {
         public IDictionary<string,string> Clients { get; set; }
     }
-
-   
-
-
+    
     public static class ServiceBuilderExtensions
     {
         public static void AddThriftClient(this IServiceCollection services)
@@ -65,7 +62,6 @@ namespace Zooyard.Rpc.ThriftImpl.Extensions
         {
             services.AddSingleton<TBaseServer, AsyncBaseServer>();
             services.AddSingleton<IServer, ThriftServer>();
-            
         }
     }
 }

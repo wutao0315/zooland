@@ -19,6 +19,7 @@ using Zooyard.Core;
 using Microsoft.Extensions.Logging;
 using Thrift.Transports;
 using System;
+using RpcContractWcf.HelloService;
 
 namespace RpcProviderCore
 {
@@ -99,6 +100,7 @@ namespace RpcProviderCore
 
                     services.AddHttpServer<Startup>(args);
 
+                    services.AddTransient<IHelloServiceWcf, HelloServiceWcfImpl>();
                     //services.AddZoolandServer();
 
                 })
