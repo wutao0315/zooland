@@ -14,6 +14,11 @@ namespace Zooyard.Core
         /// <param name="client">连接</param>
         void Recovery(IClient client);
         /// <summary>
+        /// 销毁连接
+        /// </summary>
+        /// <param name="client">连接</param>
+        void DestoryClient(IClient client);
+        /// <summary>
         /// 超时清除
         /// </summary>
         /// <param name="overTime"></param>

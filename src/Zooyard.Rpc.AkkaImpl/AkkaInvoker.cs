@@ -20,7 +20,7 @@ namespace Zooyard.Rpc.AkkaImpl
             _timeout = timeout;
             _logger = loggerFactory.CreateLogger<AkkaInvoker>();
         }
-
+        public object Instance { get { return _instance; } }
         public IResult Invoke(IInvocation invocation)
         {
             if (invocation.Arguments.Count()>1)

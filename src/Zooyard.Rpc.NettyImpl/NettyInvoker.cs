@@ -22,7 +22,7 @@ namespace Zooyard.Rpc.NettyImpl
             _messageListener.Received += MessageListener_Received;
             _logger = loggerFactory.CreateLogger<NettyInvoker>();
         }
-
+        public object Instance { get { return _channel; } }
         public IResult Invoke(IInvocation invocation)
         {
             try

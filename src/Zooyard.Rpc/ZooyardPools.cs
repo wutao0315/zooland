@@ -81,12 +81,12 @@ namespace Zooyard.Rpc
         /// 构造函数
         /// </summary>
         /// <param name="pools"></param>
-        public ZooyardPools(ILoggerFactory loggerFactory,IDictionary<string, IClientPool> pools,
+        public ZooyardPools(ILoggerFactory loggerFactory, IDictionary<string, IClientPool> pools,
             IDictionary<string, ILoadBalance> loadbalances,
             IDictionary<string, ICluster> clusters,
             IDictionary<string, Type> caches,
             string address)
-            : this(loggerFactory,pools, loadbalances, clusters, caches, address, new List<string>()) { }
+            : this(loggerFactory, pools, loadbalances, clusters, caches, address, new List<string>()) { }
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -252,7 +252,7 @@ namespace Zooyard.Rpc
             {
                 throw new Exception($"not find the {invocation.TargetType.FullName}'s pool,please config it ");
             }
-            
+
             var clientPool = Pools[invocation.TargetType.FullName];
             clientPool.Address = Address;
             return clientPool;
@@ -316,14 +316,19 @@ namespace Zooyard.Rpc
         {
             var result = LoadBalances[RandomLoadBalance.NAME];
 
-            var key = this.Address.GetMethodParameter(invocation.MethodInfo.Name, LOADBANCE_KEY, "");
+            var key = this.Address.GetMethodParameter($"{invocation.TargetType.FullName}.{ invocation.MethodInfo.Name }", LOADBANCE_KEY, "");
 
-            if (string.IsNullOrEmpty(key) || key == RandomLoadBalance.NAME)
+            if (string.IsNullOrEmpty(key))
             {
                 key = this.Address.GetInterfaceParameter(invocation.TargetType.FullName, LOADBANCE_KEY, "");
             }
 
-            if (LoadBalances.ContainsKey(key) && key != RandomLoadBalance.NAME)
+            if (string.IsNullOrEmpty(key))
+            {
+                key = this.Address.GetParameter(LOADBANCE_KEY, "");
+            }
+
+            if (!string.IsNullOrEmpty(key) && LoadBalances.ContainsKey(key) && key != RandomLoadBalance.NAME)
             {
                 result = LoadBalances[key];
             }
@@ -339,13 +344,17 @@ namespace Zooyard.Rpc
         {
             var result = Clusters[FailoverCluster.NAME];
 
-            var key = this.Address.GetMethodParameter(invocation.MethodInfo.Name, CLUSTER_KEY, "");
+            var key = this.Address.GetMethodParameter($"{invocation.TargetType.FullName}.{ invocation.MethodInfo.Name }", CLUSTER_KEY, "");
 
-            if (string.IsNullOrEmpty(key) || key == FailoverCluster.NAME)
+            if (string.IsNullOrEmpty(key))
             {
                 key = this.Address.GetInterfaceParameter(invocation.TargetType.FullName, CLUSTER_KEY, "");
             }
-            if (Clusters.ContainsKey(key) && key != FailoverCluster.NAME)
+            if (string.IsNullOrEmpty(key))
+            {
+                key = this.Address.GetParameter(CLUSTER_KEY, "");
+            }
+            if (!string.IsNullOrEmpty(key) && Clusters.ContainsKey(key) && key != FailoverCluster.NAME)
             {
                 result = Clusters[key];
             }

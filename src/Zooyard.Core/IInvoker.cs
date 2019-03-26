@@ -2,6 +2,7 @@
 {
     public interface IInvoker
     {
+        object Instance { get; }
         IResult Invoke(IInvocation invocation);
     }
 }

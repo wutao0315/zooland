@@ -28,7 +28,7 @@ namespace Zooyard.Rpc.HttpImpl
 
 
         }
-
+        public object Instance { get { return _instance; } }
         public IResult Invoke(IInvocation invocation)
         {
             var parameterType = _url.GetMethodParameterAndDecoded(invocation.MethodInfo.Name, PARAMETERTYPE_KEY, DEFAULT_PARAMETERTYPE).ToLower();

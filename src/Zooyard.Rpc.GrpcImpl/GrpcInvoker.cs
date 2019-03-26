@@ -15,7 +15,7 @@ namespace Zooyard.Rpc.GrpcImpl
             _clientTimeout = clientTimeout;
             _logger = loggerFactory.CreateLogger<GrpcInvoker>();
         }
-        
+        public object Instance { get { return _instance; } }
         public IResult Invoke(IInvocation invocation)
         {
             var paraTypes = new Type[invocation.Arguments.Length + 1];

@@ -82,7 +82,7 @@ namespace Zooyard.Rpc.Cluster
                 catch (Exception e)
                 {
                     _source.WriteConsumerError(entry.Value, invocation, e);
-                    pool.Recovery(client);
+                    pool.DestoryClient(client);
                     _logger.LogError(e, $"Failed retry to invoke method {invocation.MethodInfo.Name}, waiting again.");
                 }
             }
@@ -112,8 +112,8 @@ namespace Zooyard.Rpc.Cluster
                 }
                 catch (Exception ex)
                 {
+                    pool.DestoryClient(client);
                     _source.WriteConsumerError(invoker,invocation ,ex);
-                    pool.Recovery(client);
                     throw ex;
                 }
             }

@@ -369,7 +369,7 @@ namespace Zooyard.Rpc.Support
         /// 销毁连接
         /// </summary>
         /// <param name="client">连接</param>
-        protected void DestoryClient(IClient client)
+        public void DestoryClient(IClient client)
         {
             if (client != null)
             {

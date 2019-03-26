@@ -14,6 +14,7 @@ namespace Zooyard.Rpc.ThriftImpl
             _logger = loggerFactory.CreateLogger<ThriftInvoker>();
         }
 
+        public object Instance { get { return _instance; } }
         public IResult Invoke(IInvocation invocation)
         {
             //var methodName = $"{invocation.MethodInfo.Name}Async";

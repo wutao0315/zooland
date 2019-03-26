@@ -12,7 +12,7 @@ namespace Zooyard.Rpc.WcfImpl
             _instance = instance;
             _logger = loggerFactory.CreateLogger<WcfInvoker>();
         }
-
+        public object Instance { get { return _instance; } }
         public IResult Invoke(IInvocation invocation)
         {
             var method = _instance.GetType().GetMethod(invocation.MethodInfo.Name, invocation.ArgumentTypes);

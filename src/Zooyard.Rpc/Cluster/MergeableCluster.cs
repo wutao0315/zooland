@@ -66,7 +66,7 @@ namespace Zooyard.Rpc.Cluster
                         catch (Exception ex)
                         {
                             _source.WriteConsumerError(invoker,invocation ,ex);
-                            pool.Recovery(client);
+                            pool.DestoryClient(client);
                             throw ex;
                         }
                     }
@@ -111,8 +111,8 @@ namespace Zooyard.Rpc.Cluster
                         }
                         catch (Exception ex)
                         {
+                            pool.DestoryClient(client);
                             _source.WriteConsumerError(invoker,invocation ,ex);
-                            pool.Recovery(client);
                             throw ex;
                         }
                     }

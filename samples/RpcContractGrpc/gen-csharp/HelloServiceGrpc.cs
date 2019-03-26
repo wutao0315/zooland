@@ -343,18 +343,18 @@ namespace RpcContractGrpc {
           .AddMethod(__Method_ShowHello, serviceImpl.ShowHello).Build();
     }
 
-    /// <summary>Register service method implementations with a service binder. Useful when customizing the service binding logic.
+    /// <summary>Register service method with a service binder with or without implementation. Useful when customizing the  service binding logic.
     /// Note: this method is part of an experimental API that can change or be removed without any prior notice.</summary>
     /// <param name="serviceBinder">Service methods will be bound by calling <c>AddMethod</c> on this object.</param>
     /// <param name="serviceImpl">An object implementing the server-side handling logic.</param>
     public static void BindService(grpc::ServiceBinderBase serviceBinder, HelloServiceBase serviceImpl)
     {
-      serviceBinder.AddMethod(__Method_CallNameVoid, serviceImpl.CallNameVoid);
-      serviceBinder.AddMethod(__Method_CallName, serviceImpl.CallName);
-      serviceBinder.AddMethod(__Method_CallVoid, serviceImpl.CallVoid);
-      serviceBinder.AddMethod(__Method_Hello, serviceImpl.Hello);
-      serviceBinder.AddMethod(__Method_SayHello, serviceImpl.SayHello);
-      serviceBinder.AddMethod(__Method_ShowHello, serviceImpl.ShowHello);
+      serviceBinder.AddMethod(__Method_CallNameVoid, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::RpcContractGrpc.Void, global::RpcContractGrpc.NameResult>(serviceImpl.CallNameVoid));
+      serviceBinder.AddMethod(__Method_CallName, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::RpcContractGrpc.NameResult, global::RpcContractGrpc.Void>(serviceImpl.CallName));
+      serviceBinder.AddMethod(__Method_CallVoid, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::RpcContractGrpc.Void, global::RpcContractGrpc.Void>(serviceImpl.CallVoid));
+      serviceBinder.AddMethod(__Method_Hello, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::RpcContractGrpc.NameResult, global::RpcContractGrpc.NameResult>(serviceImpl.Hello));
+      serviceBinder.AddMethod(__Method_SayHello, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::RpcContractGrpc.NameResult, global::RpcContractGrpc.HelloResult>(serviceImpl.SayHello));
+      serviceBinder.AddMethod(__Method_ShowHello, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::RpcContractGrpc.HelloResult, global::RpcContractGrpc.NameResult>(serviceImpl.ShowHello));
     }
 
   }
