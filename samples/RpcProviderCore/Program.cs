@@ -20,6 +20,7 @@ using Microsoft.Extensions.Logging;
 using Thrift.Transports;
 using System;
 using RpcContractWcf.HelloService;
+using Zooyard.Rpc.Extensions;
 
 namespace RpcProviderCore
 {
@@ -101,6 +102,8 @@ namespace RpcProviderCore
                     services.AddHttpServer<Startup>(args);
 
                     services.AddTransient<IHelloServiceWcf, HelloServiceWcfImpl>();
+
+                    services.AddHostedService<ZoolandHostedService>();
                     //services.AddZoolandServer();
 
                 })
@@ -111,31 +114,7 @@ namespace RpcProviderCore
 
             using (host)
             {
-                var logger = host.Services.GetService<ILogger<Program>>();
-                var servers = host.Services.GetServices<IServer>();
-                foreach (var server in servers)
-                {
-                    try
-                    {
-                        server.Export();
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.LogError(ex, ex.Message);
-                    }
-                }
                 host.Run();
-                foreach (var server in servers)
-                {
-                    try
-                    {
-                        server.Dispose();
-                    }
-                    catch (System.Exception ex)
-                    {
-                        logger.LogError(ex, ex.Message);
-                    }
-                }
             }
         }
     }

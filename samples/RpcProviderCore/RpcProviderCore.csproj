@@ -23,6 +23,7 @@
     <ProjectReference Include="..\..\src\Zooyard.Core\Zooyard.Core.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.Rpc.AkkaImpl.Extensions\Zooyard.Rpc.AkkaImpl.Extensions.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.Rpc.AkkaImpl\Zooyard.Rpc.AkkaImpl.csproj" />
+    <ProjectReference Include="..\..\src\Zooyard.Rpc.Extensions\Zooyard.Rpc.Extensions.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.Rpc.GrpcImpl.Extensions\Zooyard.Rpc.GrpcImpl.Extensions.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.Rpc.GrpcImpl\Zooyard.Rpc.GrpcImpl.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.Rpc.HttpImpl.Extensions\Zooyard.Rpc.HttpImpl.Extensions.csproj" />
