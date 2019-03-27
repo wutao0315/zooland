@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Support\AbstractClientPool.cs~RF3da5ad.TMP" />
     <None Remove="Support\AbstractClientPool.cs~RF4cf5010.TMP" />
   </ItemGroup>
 

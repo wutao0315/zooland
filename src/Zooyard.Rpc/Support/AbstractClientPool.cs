@@ -189,7 +189,7 @@ namespace Zooyard.Rpc.Support
                     //更新最近触发时间
                     client.ActiveTime = DateTime.Now;
                     //连接回归连接池
-                    EnqueueClient(client.Url.ToString(), client);
+                    EnqueueClient(urlKey, client);
                     //发通知信号，连接池有连接变动
                     resetEvent.Set();
                     _logger.LogInformation($"recovery to update:[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
