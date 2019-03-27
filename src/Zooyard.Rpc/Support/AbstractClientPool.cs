@@ -34,7 +34,7 @@ namespace Zooyard.Rpc.Support
         /// <summary>
         /// 空闲连接数
         /// </summary>
-        protected volatile ConcurrentDictionary<string, int> idleCount=new ConcurrentDictionary<string, int> ();
+        protected volatile ConcurrentDictionary<string, int> idleCount = new ConcurrentDictionary<string, int>();
 
         //protected volatile int idleCount = 0;
 
@@ -128,6 +128,7 @@ namespace Zooyard.Rpc.Support
                         {
                             DestoryClient(client);
                         }
+                        _logger.LogInformation($"get client [{client.Version}:{client.Url.ToString()}] from queue");
                     }
 
                     //连接池无空闲连接	
@@ -148,6 +149,7 @@ namespace Zooyard.Rpc.Support
                             {
                                 throw new InvalidOperationException("connection access failed. please confirm call service status.", innerErr);
                             }
+                            _logger.LogInformation($"create new client [{client.Version}:{client.Url.ToString()}]");
                         }
                     }
 
@@ -193,7 +195,20 @@ namespace Zooyard.Rpc.Support
                 }
             }
         }
-
+        /// <summary>
+        /// 销毁连接
+        /// </summary>
+        /// <param name="client">连接</param>
+        public void DestoryClient(IClient client)
+        {
+            if (client != null)
+            {
+                client.Close();
+                client.Dispose();
+                activeCount[client.Url.ToString()]--;
+                _logger.LogInformation($"DestoryClient :{client.Version}:{client.Url.ToString()}");
+            }
+        }
         /// <summary>
         /// 重置连接池
         /// </summary>
@@ -291,6 +306,7 @@ namespace Zooyard.Rpc.Support
             ClientsPool[url].Enqueue(client);
             //clientsPool.Enqueue(client);
             idleCount[url]++;
+            activeCount[url]--;
         }
 
         /// <summary>
@@ -303,6 +319,7 @@ namespace Zooyard.Rpc.Support
             if (ClientsPool[url].TryDequeue(out client))
             {
                 idleCount[url]--;
+                activeCount[url]++;
             }
             return client;
         }
@@ -332,6 +349,7 @@ namespace Zooyard.Rpc.Support
                     }
                     activeCount[url.ToString()]++;
                     client.Reset();
+
                     return client;
                 }
             }
@@ -365,19 +383,7 @@ namespace Zooyard.Rpc.Support
             }
         }
 
-        /// <summary>
-        /// 销毁连接
-        /// </summary>
-        /// <param name="client">连接</param>
-        public void DestoryClient(IClient client)
-        {
-            if (client != null)
-            {
-                client.Close();
-                client.Dispose();
-                activeCount[client.Url.ToString()]--;
-            }
-        }
+        
         /// <summary>
         /// 超时清除
         /// </summary>
