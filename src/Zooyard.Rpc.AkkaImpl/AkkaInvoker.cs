@@ -4,24 +4,25 @@ using System;
 using System.Linq;
 using System.Threading;
 using Zooyard.Core;
+using Zooyard.Rpc.Support;
 
 namespace Zooyard.Rpc.AkkaImpl
 {
-    public class AkkaInvoker : IInvoker
+    public class AkkaInvoker : AbstractInvoker
     {
         private readonly ActorSystem _instance;
         private readonly URL _url;
         private readonly int _timeout;
         private readonly ILogger _logger;
-        public AkkaInvoker(ActorSystem instance,URL url,int timeout,ILoggerFactory loggerFactory)
+        public AkkaInvoker(ActorSystem instance,URL url,int timeout,ILoggerFactory loggerFactory) : base(loggerFactory)
         {
             _instance = instance;
             _url = url;
             _timeout = timeout;
             _logger = loggerFactory.CreateLogger<AkkaInvoker>();
         }
-        public object Instance { get { return _instance; } }
-        public IResult Invoke(IInvocation invocation)
+        public override object Instance { get { return _instance; } }
+        protected override IResult HandleInvoke(IInvocation invocation)
         {
             if (invocation.Arguments.Count()>1)
             {

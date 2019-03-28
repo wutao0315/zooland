@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading;
 using Zooyard.Core;
 
@@ -180,8 +181,8 @@ namespace Zooyard.Rpc.Support
                 if ((idleCount.ContainsKey(urlKey)
                     && idleCount[urlKey] >= MaxIdle))//|| this.Version != client.Version
                 {
-                    DestoryClient(client);
                     _logger.LogInformation($"recovery to destory idle overflow:[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
+                    DestoryClient(client);
                     Console.WriteLine($"recovery to destory idle overflow:[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
                 }
                 else
@@ -247,6 +248,8 @@ namespace Zooyard.Rpc.Support
                         while (idleCount[item] > 0)
                         {
                             var client = DequeueClient(item);
+                            var urlKey = client.Url.ToString();
+                            _logger.LogInformation($"Dispose :[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
                             DestoryClient(client);
                         }
                     }
@@ -398,15 +401,16 @@ namespace Zooyard.Rpc.Support
                 var list = new List<IClient>();
                 while (idleCount[item]>0)
                 {
-                    // Console.WriteLine($"client idleCount:{idleCount[item]}");
                     var client = DequeueClient(item);
                     if (client==null)
                     {
                         continue;
                     }
+                    var urlKey = client.Url.ToString();
                     if (client.ActiveTime<=DateTime.MinValue || client.ActiveTime < overTime)
                     {
-                        Console.WriteLine($"client time over:{client.Version}:{client.Url.ToString()}");
+                        Console.WriteLine($"client time over:[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
+                        _logger.LogInformation($"client time over:[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
                         DestoryClient(client);
                     }
                     else

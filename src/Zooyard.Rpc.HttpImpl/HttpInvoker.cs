@@ -2,10 +2,11 @@
 using Newtonsoft.Json;
 using System.Net.Http;
 using Zooyard.Core;
+using Zooyard.Rpc.Support;
 
 namespace Zooyard.Rpc.HttpImpl
 {
-    public class HttpInvoker : IInvoker
+    public class HttpInvoker : AbstractInvoker
     {
         public const string PARAMETERTYPE_KEY = "parametertype";
         public const string DEFAULT_PARAMETERTYPE = "json";
@@ -19,7 +20,7 @@ namespace Zooyard.Rpc.HttpImpl
         /// </summary>
         protected bool[] isOpen = new bool[] { false };
 
-        public HttpInvoker(HttpClient instance,URL url, bool[] isOpen,ILoggerFactory loggerFactory)
+        public HttpInvoker(HttpClient instance,URL url, bool[] isOpen,ILoggerFactory loggerFactory) : base(loggerFactory)
         {
             _instance = instance;
             _url = url;
@@ -28,8 +29,8 @@ namespace Zooyard.Rpc.HttpImpl
 
 
         }
-        public object Instance { get { return _instance; } }
-        public IResult Invoke(IInvocation invocation)
+        public override object Instance { get { return _instance; } }
+        protected override IResult HandleInvoke(IInvocation invocation)
         {
             var parameterType = _url.GetMethodParameterAndDecoded(invocation.MethodInfo.Name, PARAMETERTYPE_KEY, DEFAULT_PARAMETERTYPE).ToLower();
             var method = _url.GetMethodParameterAndDecoded(invocation.MethodInfo.Name, METHODTYPE_KEY, DEFAULT_METHODTYPE).ToLower();

@@ -1,22 +1,23 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
 using Zooyard.Core;
+using Zooyard.Rpc.Support;
 
 namespace Zooyard.Rpc.GrpcImpl
 {
-    public class GrpcInvoker : IInvoker
+    public class GrpcInvoker : AbstractInvoker
     {
         private readonly object _instance;
         private readonly int _clientTimeout;
         private readonly ILogger _logger;
-        public GrpcInvoker(object instance,int clientTimeout,ILoggerFactory loggerFactory)
+        public GrpcInvoker(object instance,int clientTimeout,ILoggerFactory loggerFactory) : base(loggerFactory)
         {
             _instance = instance;
             _clientTimeout = clientTimeout;
             _logger = loggerFactory.CreateLogger<GrpcInvoker>();
         }
-        public object Instance { get { return _instance; } }
-        public IResult Invoke(IInvocation invocation)
+        public override object Instance { get { return _instance; } }
+        protected override IResult HandleInvoke(IInvocation invocation)
         {
             var paraTypes = new Type[invocation.Arguments.Length + 1];
             var parasPlus = new object[invocation.Arguments.Length + 1];

@@ -5,10 +5,11 @@ using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Zooyard.Core;
+using Zooyard.Rpc.Support;
 
 namespace Zooyard.Rpc.NettyImpl
 {
-    public class NettyInvoker : IInvoker
+    public class NettyInvoker : AbstractInvoker
     {
         private readonly IChannel _channel;
         private readonly ILogger _logger;
@@ -16,14 +17,14 @@ namespace Zooyard.Rpc.NettyImpl
             new ConcurrentDictionary<string, TaskCompletionSource<TransportMessage>>();
         private readonly int _clientTimeout = 5000;
 
-        public NettyInvoker(IChannel channel,IMessageListener _messageListener,ILoggerFactory loggerFactory)
+        public NettyInvoker(IChannel channel,IMessageListener _messageListener,ILoggerFactory loggerFactory) : base(loggerFactory)
         {
             _channel = channel;
             _messageListener.Received += MessageListener_Received;
             _logger = loggerFactory.CreateLogger<NettyInvoker>();
         }
-        public object Instance { get { return _channel; } }
-        public IResult Invoke(IInvocation invocation)
+        public override object Instance { get { return _channel; } }
+        protected override IResult HandleInvoke(IInvocation invocation)
         {
             try
             {
