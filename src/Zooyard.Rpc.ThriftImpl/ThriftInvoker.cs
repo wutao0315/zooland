@@ -30,17 +30,7 @@ namespace Zooyard.Rpc.ThriftImpl
             var method = Instance.GetType().GetMethod(methodName, argumentTypes.ToArray());
 
             var taskInvoke = method.Invoke(Instance, arguments.ToArray());
-
-            //if (invocation.MethodInfo.ReturnType == typeof(void))
-            //{
-            //    var task = taskInvoke as Task;
-            //    if (task != null)
-            //    {
-            //        task.GetAwaiter().GetResult();
-            //    }
-            //    return new RpcResult();
-            //}
-
+            
             var awaiter = taskInvoke.GetType().GetMethod("GetAwaiter").Invoke(taskInvoke,new object[] { });
             var value = awaiter.GetType().GetMethod("GetResult").Invoke(awaiter, new object[] { });
             return new RpcResult(value);
