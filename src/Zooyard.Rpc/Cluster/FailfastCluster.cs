@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Zooyard.Core;
 using Zooyard.Core.Diagnositcs;
+using Zooyard.Core.Utils;
 
 namespace Zooyard.Rpc.Cluster
 {
@@ -64,7 +65,7 @@ namespace Zooyard.Rpc.Cluster
                     + " select from all providers " + string.Join(",", urls)
                     + " for service " + invocation.TargetType.FullName
                     + " method " + invocation.MethodInfo.Name
-                    //+ " on consumer " + NetUtils.getLocalHost()
+                    + " on consumer " + Local.HostName
                     + " use service version " + invocation.Version
                     + ", but no luck to perform the invocation. Last error is: " + e.Message, e.InnerException != null ? e.InnerException : e);
                 }

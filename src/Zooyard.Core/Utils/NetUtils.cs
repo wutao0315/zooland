@@ -15,7 +15,7 @@ namespace Zooyard.Core.Utils
         public const string LOCALHOST = "127.0.0.1";
 
         public const string ANYHOST = "0.0.0.0";
-        
+
         private static readonly Regex LOCAL_IP_PATTERN = new Regex("127(\\.\\d{1,3}){3}$", RegexOptions.Compiled);
 
         public static bool isLocalHost(string host)
@@ -33,19 +33,19 @@ namespace Zooyard.Core.Utils
             return host == null || host.Length == 0 || host.Equals("localhost", StringComparison.CurrentCultureIgnoreCase) || host.Equals("0.0.0.0") || (LOCAL_IP_PATTERN.IsMatch(host));
         }
 
-     
+
 
 
         private static readonly Regex IP_PATTERN = new Regex("\\d{1,3}(\\.\\d{1,3}){3,5}$", RegexOptions.Compiled);
 
         private static bool isValidAddress(IPAddress address)
         {
-            
+
             if (address == null || IPAddress.IsLoopback(address))
             {
                 return false;
             }
-            
+
             var name = address.ToString();
             return (name != null && !ANYHOST.Equals(name) && !LOCALHOST.Equals(name) && IP_PATTERN.IsMatch(name));
         }
@@ -119,7 +119,7 @@ namespace Zooyard.Core.Utils
                 IPAddress localAddress = null;
                 try
                 {
-                    var localHost= Dns.GetHostAddresses(Dns.GetHostName());
+                    var localHost = Dns.GetHostAddresses(Dns.GetHostName());
                     localAddress = localHost[0].MapToIPv4();
                     if (isValidAddress(localAddress))
                     {
@@ -133,8 +133,9 @@ namespace Zooyard.Core.Utils
                 try
                 {
                     string hostName = Dns.GetHostName();
-                    var addresses= Dns.GetHostAddresses(hostName);
-                    if (addresses!=null) {
+                    var addresses = Dns.GetHostAddresses(hostName);
+                    if (addresses != null)
+                    {
                         foreach (var item in addresses)
                         {
                             try
@@ -166,14 +167,39 @@ namespace Zooyard.Core.Utils
         {
             try
             {
-                var me = Dns.GetHostEntry(hostName);
-
-                return me.AddressList[0].MapToIPv4().ToString();
+                var ips = Dns.GetHostAddresses(hostName);
+                foreach (var ip in ips)
+                {
+                    if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                    {
+                        return ip.ToString();
+                    }
+                    else
+                    {
+                        if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+                        {
+                            return ip.ToString();
+                        }
+                    }
+                }
+                return hostName;
             }
             catch (Exception)
             {
                 return hostName;
             }
+            
+
+            //try
+            //{
+            //    var me = Dns.GetHostEntry(hostName);
+
+            //    return me.AddressList[0].MapToIPv4().ToString();
+            //}
+            //catch (Exception)
+            //{
+            //    return hostName;
+            //}
         }
 
 

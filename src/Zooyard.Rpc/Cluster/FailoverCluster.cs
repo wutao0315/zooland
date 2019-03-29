@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Zooyard.Core;
 using Zooyard.Core.Diagnositcs;
+using Zooyard.Core.Utils;
 
 namespace Zooyard.Rpc.Cluster
 {
@@ -71,7 +72,7 @@ namespace Zooyard.Rpc.Cluster
                                     + ", but there have been failed providers " + string.Join(",", providers)
                                     + " (" + providers.Count + "/" + copyinvokers.Count
                                     + ") from the registry " + address.Address
-                                    //+ " on the consumer " + NetUtils.GetLocalHost()
+                                    + " on the consumer " + Local.HostName
                                     + " using the service version " + invocation.Version 
                                     + ". Last error is: "+ le.Message);
                         }

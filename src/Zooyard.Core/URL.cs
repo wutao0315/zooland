@@ -811,7 +811,7 @@ namespace Zooyard.Core
             {
                 return this;
             }
-            return AddParameters(StringUtils.parseQueryString(query));
+            return AddParameters(StringUtils.ParseQueryString(query));
         }
 
         public URL RemoveParameter(string key)

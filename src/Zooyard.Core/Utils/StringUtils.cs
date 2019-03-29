@@ -11,165 +11,12 @@ namespace Zooyard.Core.Utils
     public sealed class StringUtils
     {
         //private static readonly ILog _logger = LogManager.GetLogger("StringUtils");
-        public static readonly string[] EMPTY_STRING_ARRAY = new string[0];
+        //public static readonly string[] EMPTY_STRING_ARRAY = new string[0];
 
         private static readonly Regex KVP_PATTERN = new Regex("([_.a-zA-Z0-9][-_.a-zA-Z0-9]*)[=](.*)", RegexOptions.Compiled);  //key value pair pattern.
 
-        private static readonly Regex INT_PATTERN = new Regex("^\\d+$", RegexOptions.Compiled);
-
+        //private static readonly Regex INT_PATTERN = new Regex("^\\d+$", RegexOptions.Compiled);
         
-        
-
-        /// <summary>
-        /// is integer string.
-        /// </summary>
-        /// <param name="str"> </param>
-        /// <returns> is integer </returns>
-        public static bool isInteger(string str)
-        {
-            if (str == null || str.Length == 0)
-            {
-                return false;
-            }
-            return INT_PATTERN.IsMatch(str);
-        }
-
-        public static int parseInteger(string str)
-        {
-            if (!isInteger(str))
-            {
-                return 0;
-            }
-            return Convert.ToInt32(str);
-        }
-
-        public static bool isContains(string values, string value)
-        {
-            if (values == null || values.Length == 0)
-            {
-                return false;
-            }
-            return isContains(URL.COMMA_SPLIT_PATTERN.Split(values), value);
-        }
-
-        /// 
-        /// <param name="values"> </param>
-        /// <param name="value"> </param>
-        /// <returns> contains </returns>
-        public static bool isContains(string[] values, string value)
-        {
-            if (value != null && value.Length > 0 && values != null && values.Length > 0)
-            {
-                foreach (string v in values)
-                {
-                    if (value.Equals(v))
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        public static bool isNumeric(string str)
-        {
-            if (str == null)
-            {
-                return false;
-            }
-            int sz = str.Length;
-            for (int i = 0; i < sz; i++)
-            {
-                if (char.IsDigit(str[i]) == false)
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        /// 
-        /// <param name="e"> </param>
-        /// <returns> string </returns>
-        public static string ToString(Exception e)
-        {
-            Console.Write(e.GetType().FullName);
-            if (e.Message != null)
-            {
-                //p.print(": " + e.Message);
-                Console.Write(": " + e.Message);
-            }
-            Console.WriteLine();
-            //p.println();
-            try
-            {
-                Console.Write(e);
-                //e.printStackTrace(p);
-                return e.Message.ToString();
-            }
-            finally
-            {
-                //p.close();
-            }
-        }
-
-        /// 
-        /// <param name="msg"> </param>
-        /// <param name="e"> </param>
-        /// <returns> string </returns>
-        public static string ToString(string msg, Exception e)
-        {
-            Console.WriteLine(msg);
-            Console.Write(e);
-            return e.Message;
-        }
-
-        /// <summary>
-        /// translat.
-        /// </summary>
-        /// <param name="src"> source string. </param>
-        /// <param name="from"> src char table. </param>
-        /// <param name="to"> target char table. </param>
-        /// <returns> String. </returns>
-        public static string translat(string src, string from, string to)
-        {
-            if (string.IsNullOrEmpty(src))
-            {
-                return src;
-            }
-            StringBuilder sb = null;
-            int ix;
-            char c;
-            for (int i = 0, len = src.Length; i < len; i++)
-            {
-                c = src[i];
-                ix = from.IndexOf(c);
-                if (ix == -1)
-                {
-                    if (sb != null)
-                    {
-                        sb.Append(c);
-                    }
-                }
-                else
-                {
-                    if (sb == null)
-                    {
-                        sb = new StringBuilder(len);
-                        sb.Append(src, 0, i);
-                    }
-                    if (ix < to.Length)
-                    {
-                        sb.Append(to[ix]);
-                    }
-                }
-            }
-            return sb == null ? src : sb.ToString();
-        }
-
-       
-        
-
         /// <summary>
         /// parse key-value pair.
         /// </summary>
@@ -192,18 +39,12 @@ namespace Zooyard.Core.Utils
             return map;
         }
 
-        public static string getQueryStringValue(string qs, string key)
-        {
-            var map = StringUtils.parseQueryString(qs);
-            return map[key];
-        }
-
         /// <summary>
         /// parse query string to Parameters.
         /// </summary>
         /// <param name="qs"> query string. </param>
         /// <returns> Parameters instance. </returns>
-        public static IDictionary<string, string> parseQueryString(string qs)
+        public static IDictionary<string, string> ParseQueryString(string qs)
         {
             if (qs == null || qs.Length == 0)
             {
@@ -212,89 +53,90 @@ namespace Zooyard.Core.Utils
             return parseKeyValuePair(qs, "&");
         }
 
-        public static string getServiceKey(IDictionary<string, string> ps)
-        {
-            var buf = new StringBuilder();
+        //public static string GetServiceKey(IDictionary<string, string> ps)
+        //{
+        //    var buf = new StringBuilder();
 
-            if (ps.ContainsKey(URL.GROUP_KEY)) 
-            {
-                var group = ps[URL.GROUP_KEY];
-                if (!string.IsNullOrEmpty(group))
-                {
-                    buf.Append(group).Append("/");
-                }
-            }
+        //    if (ps.ContainsKey(URL.GROUP_KEY)) 
+        //    {
+        //        var group = ps[URL.GROUP_KEY];
+        //        if (!string.IsNullOrEmpty(group))
+        //        {
+        //            buf.Append(group).Append("/");
+        //        }
+        //    }
             
-            buf.Append(ps[URL.INTERFACE_KEY]);
-            if (ps.ContainsKey(URL.VERSION_KEY)) 
-            {
-                var version = ps[URL.VERSION_KEY];
-                if (!string.IsNullOrEmpty(version))
-                {
-                    buf.Append(":").Append(version);
-                }
-            }
+        //    buf.Append(ps[URL.INTERFACE_KEY]);
+        //    if (ps.ContainsKey(URL.VERSION_KEY)) 
+        //    {
+        //        var version = ps[URL.VERSION_KEY];
+        //        if (!string.IsNullOrEmpty(version))
+        //        {
+        //            buf.Append(":").Append(version);
+        //        }
+        //    }
            
-            return buf.ToString();
-        }
+        //    return buf.ToString();
+        //}
 
-        public static string toQueryString(IDictionary<string, string> ps)
-        {
-            var buf = new StringBuilder();
-            if (ps != null && ps.Count > 0)
-            {
-                foreach (KeyValuePair<string, string> entry in (new SortedDictionary<string, string>(ps)))
-                {
-                    var key = entry.Key;
-                    var value = entry.Value;
-                    if (!string.IsNullOrEmpty(key)&&!string.IsNullOrEmpty(value))
-                    {
-                        if (buf.Length > 0)
-                        {
-                            buf.Append("&");
-                        }
-                        buf.Append(key);
-                        buf.Append("=");
-                        buf.Append(value);
-                    }
-                }
-            }
-            return buf.ToString();
-        }
+        //public static string ToQueryString(IDictionary<string, string> ps)
+        //{
+        //    var buf = new StringBuilder();
+        //    if (ps != null && ps.Count > 0)
+        //    {
+        //        foreach (KeyValuePair<string, string> entry in (new SortedDictionary<string, string>(ps)))
+        //        {
+        //            var key = entry.Key;
+        //            var value = entry.Value;
+        //            if (!string.IsNullOrEmpty(key)&&!string.IsNullOrEmpty(value))
+        //            {
+        //                if (buf.Length > 0)
+        //                {
+        //                    buf.Append("&");
+        //                }
+        //                buf.Append(key);
+        //                buf.Append("=");
+        //                buf.Append(value);
+        //            }
+        //        }
+        //    }
+        //    return buf.ToString();
+        //}
 
-        public static string camelToSplitName(string camelName, string split)
-        {
-            if (camelName == null || camelName.Length == 0)
-            {
-                return camelName;
-            }
-            StringBuilder buf = null;
-            for (int i = 0; i < camelName.Length; i++)
-            {
-                char ch = camelName[i];
-                if (ch >= 'A' && ch <= 'Z')
-                {
-                    if (buf == null)
-                    {
-                        buf = new StringBuilder();
-                        if (i > 0)
-                        {
-                            buf.Append(camelName.Substring(0, i));
-                        }
-                    }
-                    if (i > 0)
-                    {
-                        buf.Append(split);
-                    }
-                    buf.Append(char.ToLower(ch));
-                }
-                else if (buf != null)
-                {
-                    buf.Append(ch);
-                }
-            }
-            return buf == null ? camelName : buf.ToString();
-        }
+        //public static string CamelToSplitName(string camelName, string split)
+        //{
+        //    if (camelName == null || camelName.Length == 0)
+        //    {
+        //        return camelName;
+        //    }
+        //    StringBuilder buf = null;
+        //    for (int i = 0; i < camelName.Length; i++)
+        //    {
+        //        char ch = camelName[i];
+        //        if (ch >= 'A' && ch <= 'Z')
+        //        {
+        //            if (buf == null)
+        //            {
+        //                buf = new StringBuilder();
+        //                if (i > 0)
+        //                {
+        //                    buf.Append(camelName.Substring(0, i));
+        //                }
+        //            }
+        //            if (i > 0)
+        //            {
+        //                buf.Append(split);
+        //            }
+        //            buf.Append(char.ToLower(ch));
+        //        }
+        //        else if (buf != null)
+        //        {
+        //            buf.Append(ch);
+        //        }
+        //    }
+        //    return buf == null ? camelName : buf.ToString();
+        //}
+
         public static string ToArgumentString(ParameterInfo[] parameterInfos, object[] args)
         {
             var buf = new StringBuilder();
