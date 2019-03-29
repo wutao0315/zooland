@@ -178,19 +178,18 @@ namespace RpcConsumerCore
         }
         private static void ThriftHello(RpcContractThrift.IHelloService helloServiceThrift, string helloword = "world")
         {
-            var token = CancellationToken.None;
-            var callNameVoid = helloServiceThrift.CallNameVoidAsync(token).GetAwaiter().GetResult();
+            var callNameVoid = helloServiceThrift.CallNameVoid();
             Console.WriteLine(callNameVoid);
-            helloServiceThrift.CallNameAsync(helloword, token).GetAwaiter().GetResult();
+            helloServiceThrift.CallName(helloword);
             Console.WriteLine("CallName called");
-            helloServiceThrift.CallVoidAsync(token).GetAwaiter().GetResult();
+            helloServiceThrift.CallVoid();
             Console.WriteLine("CallVoid called");
-            var hello = helloServiceThrift.HelloAsync(helloword, token).GetAwaiter().GetResult();
+            var hello = helloServiceThrift.Hello(helloword);
             Console.WriteLine(hello);
-            var helloResult = helloServiceThrift.SayHelloAsync(helloword + "perfect world", token).GetAwaiter().GetResult();
-            Console.WriteLine($"{helloResult.Name},{helloResult.Gender},{helloResult.Head}", token);
+            var helloResult = helloServiceThrift.SayHello(helloword + "perfect world");
+            Console.WriteLine($"{helloResult.Name},{helloResult.Gender},{helloResult.Head}");
             helloResult.Name = helloword + "show perfect world";
-            var showResult = helloServiceThrift.ShowHelloAsync(helloResult, token).GetAwaiter().GetResult();
+            var showResult = helloServiceThrift.ShowHello(helloResult);
             Console.WriteLine(showResult);
         }
         private static void GrpcHello(RpcContractGrpc.IHelloService helloServiceGrpc, string helloword = "world")

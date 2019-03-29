@@ -10,11 +10,11 @@ namespace RpcContractThrift
 {
     public interface IHelloService
     {
-        Task<string> CallNameVoidAsync(CancellationToken cancellationToken);
-        Task CallNameAsync(string name, CancellationToken cancellationToken);
-        Task CallVoidAsync(CancellationToken cancellationToken);
-        Task<string> HelloAsync(string name, CancellationToken cancellationToken);
-        Task<HelloData> SayHelloAsync(string name, CancellationToken cancellationToken);
-        Task<string> ShowHelloAsync(HelloData name, CancellationToken cancellationToken);
+        string CallNameVoid();
+        void CallName(string name);
+        void CallVoid();
+        string Hello(string name);
+        HelloData SayHello(string name);
+        string ShowHello(HelloData name);
     }
 }
