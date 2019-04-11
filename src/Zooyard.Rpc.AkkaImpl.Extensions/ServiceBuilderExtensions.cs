@@ -31,7 +31,7 @@ namespace Zooyard.Rpc.AkkaImpl.Extensions
         {
             services.AddSingleton((serviceProvider) => 
             {
-                var option = serviceProvider.GetService<IOptions<AkkaOption>>().Value;
+                var option = serviceProvider.GetService<IOptionsMonitor<AkkaOption>>().CurrentValue;
                 var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
 
                 var pool = new AkkaClientPool(
@@ -47,7 +47,7 @@ namespace Zooyard.Rpc.AkkaImpl.Extensions
         {
             services.AddSingleton<IDictionary<string, ZooyardActor>>((serviceProvider) =>
             {
-                var option = serviceProvider.GetService<IOptions<AkkaServerOption>>().Value;
+                var option = serviceProvider.GetService<IOptionsMonitor<AkkaServerOption>>().CurrentValue;
                 var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
 
                 var result = new Dictionary<string, ZooyardActor>();
@@ -69,7 +69,7 @@ namespace Zooyard.Rpc.AkkaImpl.Extensions
 
             services.AddSingleton<IServer>((serviceProvider)=> 
             {
-                var option = serviceProvider.GetService<IOptions<AkkaServerOption>>().Value;
+                var option = serviceProvider.GetService<IOptionsMonitor<AkkaServerOption>>().CurrentValue;
                 var actors = serviceProvider.GetService<IDictionary<string,ZooyardActor>>();
                 var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
                 var actorConfig = string.Join("\n", option.ActorConfig);

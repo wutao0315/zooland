@@ -41,7 +41,7 @@ namespace Zooyard.Rpc.NettyImpl.Extensions
         {
             services.AddSingleton((serviceProvider) => 
             {
-                var option = serviceProvider.GetService<IOptions<NettyOption>>().Value;
+                var option = serviceProvider.GetService<IOptionsMonitor<NettyOption>>().CurrentValue;
                 var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
                 
 
@@ -74,7 +74,7 @@ namespace Zooyard.Rpc.NettyImpl.Extensions
             
             services.AddSingleton<IServer>((serviceProvider)=> 
             {
-                var option = serviceProvider.GetService<IOptions<NettyServerOption>>().Value;
+                var option = serviceProvider.GetService<IOptionsMonitor<NettyServerOption>>().CurrentValue;
                 var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
 
                 var url = URL.valueOf(option.Url);

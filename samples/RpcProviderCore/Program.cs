@@ -92,7 +92,7 @@ namespace RpcProviderCore
                     services.AddTransient<ITAsyncProcessor, RpcContractThrift.HelloService.AsyncProcessor>();
                     services.AddSingleton<TServerTransport>((serviceProvider) =>
                     {
-                        var option = serviceProvider.GetService<IOptions<ThriftServerOption>>().Value;
+                        var option = serviceProvider.GetService<IOptionsMonitor<ThriftServerOption>>().CurrentValue;
                         return new Thrift.Transports.Server.TServerSocketTransport(option.Port, option.ClientTimeOut, option.UseBufferedSockets);
                     });
                     services.AddSingleton<Thrift.Protocols.ITProtocolFactory>(new Thrift.Protocols.TCompactProtocol.Factory());

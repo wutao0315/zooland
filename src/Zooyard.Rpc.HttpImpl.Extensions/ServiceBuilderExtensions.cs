@@ -33,7 +33,7 @@ namespace Zooyard.Rpc.HttpImpl.Extensions
         {
             services.AddSingleton((serviceProvider) =>
             {
-                var option = serviceProvider.GetService<IOptions<HttpServerOption>>().Value;
+                var option = serviceProvider.GetService<IOptionsMonitor<HttpServerOption>>().CurrentValue;
                 var host = new WebHostBuilder()
                 .UseKestrel()
                 .UseContentRoot(Directory.GetCurrentDirectory())

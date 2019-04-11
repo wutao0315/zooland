@@ -8,7 +8,7 @@
     <PackageReleaseNotes />
     <Description>Zooyard RPC Framework microservice</Description>
     <Authors>wutao0315</Authors>
-    <Version>1.0.5</Version>
+    <Version>1.0.6</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 

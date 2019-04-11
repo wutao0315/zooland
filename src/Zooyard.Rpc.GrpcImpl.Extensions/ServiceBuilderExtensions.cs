@@ -36,7 +36,7 @@ namespace Zooyard.Rpc.GrpcImpl.Extensions
         {
             services.AddSingleton((serviceProvder) => 
             {
-                var option = serviceProvder.GetService<IOptions<GrpcOption>>().Value;
+                var option = serviceProvder.GetService<IOptionsMonitor<GrpcOption>>().CurrentValue;
                 var loggerFactory = serviceProvder.GetService<ILoggerFactory>();
 
                 var credentials = new Dictionary<string, ChannelCredentials>
@@ -75,7 +75,7 @@ namespace Zooyard.Rpc.GrpcImpl.Extensions
             services.AddSingleton<Server>();
             services.AddSingleton<IEnumerable<ServerServiceDefinition>>((serviceProvder) => 
             {
-                var option = serviceProvder.GetService<IOptions<GrpcServerOption>>().Value;
+                var option = serviceProvder.GetService<IOptionsMonitor<GrpcServerOption>>().CurrentValue;
                 var result = new List<ServerServiceDefinition>();
 
                 foreach (var item in option.Services)
@@ -93,7 +93,7 @@ namespace Zooyard.Rpc.GrpcImpl.Extensions
 
             services.AddSingleton<IEnumerable<ServerPort>>((serviceProvder) => 
             {
-                var option = serviceProvder.GetService<IOptions<GrpcServerOption>>().Value;
+                var option = serviceProvder.GetService<IOptionsMonitor<GrpcServerOption>>().CurrentValue;
                 var result = new List<ServerPort>();
                 foreach (var item in option.ServerPorts)
                 {

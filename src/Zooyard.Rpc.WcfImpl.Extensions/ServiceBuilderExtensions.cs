@@ -34,7 +34,7 @@ namespace Zooyard.Rpc.WcfImpl.Extensions
         {
             services.AddSingleton((serviceProvider) => 
             {
-                var option = serviceProvider.GetService<IOptions<WcfOption>>().Value;
+                var option = serviceProvider.GetService<IOptionsMonitor<WcfOption>>().CurrentValue;
                 var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
                 var channelTypes = new Dictionary<string, Type>();
                 foreach (var item in option.Channels)
@@ -71,7 +71,7 @@ namespace Zooyard.Rpc.WcfImpl.Extensions
 
             services.AddSingleton<IList<Uri>>((serviceProvider) => 
             {
-                var option = serviceProvider.GetService<IOptions<WcfServerOption>>().Value;
+                var option = serviceProvider.GetService<IOptionsMonitor<WcfServerOption>>().CurrentValue;
                 var result = new List<Uri>();
                 foreach (var item in option.BaseAddresses)
                 {
@@ -82,7 +82,7 @@ namespace Zooyard.Rpc.WcfImpl.Extensions
 
             services.AddSingleton((serviceProvider)=> 
             {
-                var option = serviceProvider.GetService<IOptions<WcfServerOption>>().Value;
+                var option = serviceProvider.GetService<IOptionsMonitor<WcfServerOption>>().CurrentValue;
                 var instance = serviceProvider.GetService(Type.GetType(option.InstanceType));
                 var binding = serviceProvider.GetService(Type.GetType(option.BindingType)) as Binding;
                 var baseAddresses = serviceProvider.GetService<IList<Uri>>();

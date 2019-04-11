@@ -22,7 +22,7 @@ namespace Zooyard.Rpc.ThriftImpl.Extensions
         {
             services.AddSingleton((serviceProvder) => 
             {
-                var option = serviceProvder.GetService<IOptions<ThriftOption>>().Value;
+                var option = serviceProvder.GetService<IOptionsMonitor<ThriftOption>>().CurrentValue;
                 var loggerFactory = serviceProvder.GetService<ILoggerFactory>();
                 var thriftClientTypes = new Dictionary<string, Type>();
                 foreach (var item in option.Clients)

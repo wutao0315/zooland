@@ -32,12 +32,12 @@ namespace Zooyard.Core.Extensions
 
     public static class ServiceBuilderExtensions
     {
-        public static void AddZoolandClient(this IServiceCollection services, IConfiguration config)
+        public static void AddZoolandClient(this IServiceCollection services, IConfiguration config, string zooyard= "zooyard")
         {
             
             services.AddSingleton<IDictionary<string, IClientPool>>((serviceProvder) =>
             {
-                var option = serviceProvder.GetService<IOptions<ZoolandOption>>().Value;
+                var option = serviceProvder.GetService<IOptionsMonitor<ZoolandOption>>().CurrentValue;
                 var result = new Dictionary<string, IClientPool>();
 
                 foreach (var item in option.ClientPools)
@@ -96,7 +96,7 @@ namespace Zooyard.Core.Extensions
             });
             services.AddSingleton<IDictionary<string, IMerger>>((serviceProvder) =>
             {
-                var option = serviceProvder.GetService<IOptions<ZoolandOption>>().Value;
+                var option = serviceProvder.GetService<IOptionsMonitor<ZoolandOption>>().CurrentValue;
                 var result = new Dictionary<string, IMerger>();
 
                 foreach (var item in option.Mergers)
@@ -119,7 +119,7 @@ namespace Zooyard.Core.Extensions
 
             services.AddSingleton<IZooyardPools>((serviceProvder)=> 
             {
-                var option = serviceProvder.GetService<IOptions<ZoolandOption>>().Value;
+                var option = serviceProvder.GetService<IOptionsMonitor<ZoolandOption>>().CurrentValue;
                 var clientPools = serviceProvder.GetService<IDictionary<string,IClientPool>>();
                 var loggerFactory = serviceProvder.GetService<ILoggerFactory>();
 
@@ -142,7 +142,7 @@ namespace Zooyard.Core.Extensions
             });
 
             var optionData = new ZoolandOption();
-            config.Bind("zooyard", optionData);
+            config.Bind(zooyard, optionData);
 
             foreach (var item in optionData.Clients)
             {
