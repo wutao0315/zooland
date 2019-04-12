@@ -1,54 +1,56 @@
 ﻿{
   "zooyard": {
     "RegisterUrl": "zooyard://localhost?interface=MemberThrift.ISessionService&MemberThrift.ISessionService.cluster=failfast",
-    "ClientUrls": [
-      "TCompactProtocol://127.0.0.1:10009?proxy=HelloService&interface=RpcContractThrift.IHelloService",
-      "http://127.0.0.1:10010/Hello/HelloServiceWcfImpl?proxy=HelloService&interface=RpcContractWcf.IHelloService&binding=http",
-      "grpc://127.0.0.1:10008?proxy=HelloService&interface=RpcContractGrpc.IHelloService",
-      "http://localhost:10010/hello?proxy=HelloService&interface=RpcContractHttp.IHelloService&CallNameVoid.parametertype=url&CallNameVoid.methodtype=get&CallName.parametertype=url&CallName.methodtype=get&CallVoid.parametertype=url&CallVoid.methodtype=get&Hello.parametertype=url&Hello.methodtype=get&SayHello.parametertype=url&SayHello.methodtype=get&ShowHello.methodtype=post",
-      "akka.tcp://localhost:10011/user?proxy=HelloService&interface=RpcContractAkka.IHelloService&cluster=failfast",
-      "socket://127.0.0.1:12121?interface=RpcContractNetty.IHelloService&cluster=failfast"
-    ],
-    "ClientPools": {
-      "RpcContractThrift.IHelloService": "Zooyard.Rpc.ThriftImpl.ThriftClientPool, Zooyard.Rpc.ThriftImpl",
-      "RpcContractWcf.IHelloService": "Zooyard.Rpc.WcfImpl.WcfClientPool, Zooyard.Rpc.WcfImpl",
-      "RpcContractGrpc.IHelloService": "Zooyard.Rpc.GrpcImpl.GrpcClientPool, Zooyard.Rpc.GrpcImpl",
-      "RpcContractHttp.IHelloService": "Zooyard.Rpc.HttpImpl.HttpClientPool, Zooyard.Rpc.HttpImpl",
-      "RpcContractAkka.IHelloService": "Zooyard.Rpc.AkkaImpl.AkkaClientPool, Zooyard.Rpc.AkkaImpl",
-      "RpcContractNetty.IHelloService": "Zooyard.Rpc.NettyImpl.NettyClientPool, Zooyard.Rpc.NettyImpl"
-    },
-    "Clients": [
-      {
-        "App": "thrift_helloservice",
+    "Clients": {
+      "thrift_helloservice": {
         "Version": "1.0",
-        "ServiceType": "RpcContractThrift.IHelloService, RpcContractThrift"
+        "ServiceType": "RpcContractThrift.IHelloService, RpcContractThrift",
+        "PoolType": "Zooyard.Rpc.ThriftImpl.ThriftClientPool, Zooyard.Rpc.ThriftImpl",
+        "Urls": [
+          "TCompactProtocol://127.0.0.1:10009?proxy=HelloService"
+        ]
       },
-      {
-        "App": "wcf_helloservice",
+      "wcf_helloservice": {
         "Version": "1.0",
-        "ServiceType": "RpcContractWcf.IHelloService, RpcContractWcf"
+        "ServiceType": "RpcContractWcf.IHelloService, RpcContractWcf",
+        "PoolType": "Zooyard.Rpc.WcfImpl.WcfClientPool, Zooyard.Rpc.WcfImpl",
+        "Urls": [
+          "http://127.0.0.1:10010/Hello/HelloServiceWcfImpl?proxy=HelloService&binding=http"
+        ]
       },
-      {
-        "App": "grpc_helloservice",
+      "grpc_helloservice": {
         "Version": "1.0",
-        "ServiceType": "RpcContractGrpc.IHelloService, RpcContractGrpc"
+        "ServiceType": "RpcContractGrpc.IHelloService, RpcContractGrpc",
+        "PoolType": "Zooyard.Rpc.GrpcImpl.GrpcClientPool, Zooyard.Rpc.GrpcImpl",
+        "Urls": [
+          "grpc://127.0.0.1:10008?proxy=HelloService"
+        ]
       },
-      {
-        "App": "http_helloservice",
+      "http_helloservice": {
         "Version": "1.0",
-        "ServiceType": "RpcContractHttp.IHelloService, RpcContractHttp"
+        "ServiceType": "RpcContractHttp.IHelloService, RpcContractHttp",
+        "PoolType": "Zooyard.Rpc.HttpImpl.HttpClientPool, Zooyard.Rpc.HttpImpl",
+        "Urls": [
+          "http://localhost:10010/hello?proxy=HelloService&CallNameVoid.parametertype=url&CallNameVoid.methodtype=get&CallName.parametertype=url&CallName.methodtype=get&CallVoid.parametertype=url&CallVoid.methodtype=get&Hello.parametertype=url&Hello.methodtype=get&SayHello.parametertype=url&SayHello.methodtype=get&ShowHello.methodtype=post"
+        ]
       },
-      {
-        "App": "akka_helloservice",
+      "akka_helloservice": {
         "Version": "1.0",
-        "ServiceType": "RpcContractAkka.IHelloService, RpcContractAkka"
+        "ServiceType": "RpcContractAkka.IHelloService, RpcContractAkka",
+        "PoolType": "Zooyard.Rpc.AkkaImpl.AkkaClientPool, Zooyard.Rpc.AkkaImpl",
+        "Urls": [
+          "akka.tcp://localhost:10011/user?proxy=HelloService&cluster=failfast"
+        ]
       },
-      {
-        "App": "netty_helloservice",
+      "netty_helloservice": {
         "Version": "1.0",
-        "ServiceType": "RpcContractNetty.IHelloService, RpcContractNetty"
+        "ServiceType": "RpcContractNetty.IHelloService, RpcContractNetty",
+        "PoolType": "Zooyard.Rpc.NettyImpl.NettyClientPool, Zooyard.Rpc.NettyImpl",
+        "Urls": [
+          "socket://127.0.0.1:12121?cluster=failfast"
+        ]
       }
-    ],
+    },
     "Mergers": {
       "hash": "Zooyard.Rpc.Merger.ArrayMerger, Zooyard.Rpc"
     }

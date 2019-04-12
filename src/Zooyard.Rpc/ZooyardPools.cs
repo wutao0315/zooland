@@ -86,7 +86,7 @@ namespace Zooyard.Rpc
             IDictionary<string, ICluster> clusters,
             IDictionary<string, Type> caches,
             string address)
-            : this(loggerFactory, pools, loadbalances, clusters, caches, address, new List<string>()) { }
+            : this(loggerFactory, pools, loadbalances, clusters, caches, address, new Dictionary<string, IList<string>> ()) { }
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -96,7 +96,7 @@ namespace Zooyard.Rpc
             IDictionary<string, ICluster> clusters,
             IDictionary<string, Type> caches,
             string address,
-            IList<string> urls)
+            IDictionary<string, IList<string>>  urls)
         {
             _logger = loggerFactory.CreateLogger<ZooyardPools>();
             this.Pools = new ConcurrentDictionary<string, IClientPool>(pools);
@@ -106,15 +106,10 @@ namespace Zooyard.Rpc
             this.Urls = new ConcurrentDictionary<string, IList<URL>>();
             this.BadUrls = new ConcurrentDictionary<string, IList<BadUrl>>();
             //参数
-            var u = new List<URL>();
             foreach (var url in urls)
             {
-                u.Add(URL.valueOf(url));
-            }
-
-            foreach (var item in u.GroupBy(w => w.ServiceInterface))
-            {
-                this.Urls.TryAdd(item.Key, item.ToList());
+                var list = url.Value.Select(w => URL.valueOf(w).AddParameterIfAbsent("interface",url.Key)).ToList();
+                this.Urls.TryAdd(url.Key, list);
             }
 
             this.Caches = new ConcurrentDictionary<string, ICache>();

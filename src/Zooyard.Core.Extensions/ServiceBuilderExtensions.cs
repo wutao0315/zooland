@@ -18,16 +18,18 @@ namespace Zooyard.Core.Extensions
     public class ZoolandOption
     {
         public string RegisterUrl { get; set; }
-        public IList<string> ClientUrls { get; set; }
-        public IDictionary<string, string> ClientPools { get; set; }
-        public IList<ZoolandClientOption> Clients { get; set; }
+        public IDictionary<string, ZoolandClientOption> Clients { get; set; }
         public IDictionary<string, string> Mergers { get; set; }
     }
     public class ZoolandClientOption
     {
-        public string App { get; set; }
         public string Version { get; set; }
         public string ServiceType { get; set; }
+        public IList<string> Urls { get; set; }
+        public string PoolType { get; set; }
+
+        private Type _service;
+        internal Type Service { get { return _service == null ? _service = Type.GetType(ServiceType) : _service; } }
     }
 
     public static class ServiceBuilderExtensions
@@ -40,10 +42,10 @@ namespace Zooyard.Core.Extensions
                 var option = serviceProvder.GetService<IOptionsMonitor<ZoolandOption>>().CurrentValue;
                 var result = new Dictionary<string, IClientPool>();
 
-                foreach (var item in option.ClientPools)
+                foreach (var item in option.Clients)
                 {
-                    var pool = serviceProvder.GetService(Type.GetType(item.Value)) as IClientPool;
-                    result.Add(item.Key, pool);
+                    var pool = serviceProvder.GetService(Type.GetType(item.Value.PoolType)) as IClientPool;
+                    result.Add(item.Value.Service.FullName, pool);
                 }
                 return result;
             });
@@ -137,7 +139,13 @@ namespace Zooyard.Core.Extensions
                     clusters.Add(item.Name,item);
                 }
 
-                var zooyardPools = new ZooyardPools(loggerFactory, clientPools, loadBalances, clusters, caches, option.RegisterUrl, option.ClientUrls);
+                var clientUrls = new Dictionary<string, IList<string>>();
+                foreach (var item in option.Clients.Values)
+                {
+                    clientUrls.Add(item.Service.FullName, item.Urls);
+                }
+
+                var zooyardPools = new ZooyardPools(loggerFactory, clientPools, loadBalances, clusters, caches, option.RegisterUrl, clientUrls);
                 return zooyardPools;
             });
 
@@ -146,14 +154,14 @@ namespace Zooyard.Core.Extensions
 
             foreach (var item in optionData.Clients)
             {
-                var serviceType = Type.GetType(item.ServiceType);
+                var serviceType = Type.GetType(item.Value.ServiceType);
                 var genericType = typeof(ZooyardFactory<>);
                 var factoryType = genericType.MakeGenericType(new []{ serviceType });
                 services.AddSingleton(factoryType, (serviceProvder) =>
                 {
                     var pools = serviceProvder.GetService<IZooyardPools>();
                     var zooyardFactory = factoryType.GetConstructor(new[] { typeof(IZooyardPools),typeof(string),typeof(string) })
-                    .Invoke(new object[] { pools,item.App,item.Version });
+                    .Invoke(new object[] { pools, item.Key, item.Value.Version });
                     return zooyardFactory;
                 });
 
@@ -168,9 +176,5 @@ namespace Zooyard.Core.Extensions
             
 
         }
-        //public static void AddZoolandServer(this IServiceCollection services)
-        //{
-          
-        //}
     }
 }

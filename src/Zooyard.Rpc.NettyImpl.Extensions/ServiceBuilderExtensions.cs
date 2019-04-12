@@ -16,11 +16,10 @@ namespace Zooyard.Rpc.NettyImpl.Extensions
 {
     public class NettyOption
     {
-        public IEnumerable<NettyPortocolOption> Protocols { get; set; }
+        public IDictionary<string, NettyPortocolOption> Protocols { get; set; }
     }
     public class NettyPortocolOption
     {
-        public string Name { get; set; }
         public string EventLoopGroupType { get; set; }
         public string ChannelType { get; set; }
     }
@@ -52,10 +51,10 @@ namespace Zooyard.Rpc.NettyImpl.Extensions
 
                     var value = new NettyProtocol
                     {
-                        EventLoopGroupType = Type.GetType(item.EventLoopGroupType),
-                        ChannelType = Type.GetType(item.ChannelType)
+                        EventLoopGroupType = Type.GetType(item.Value.EventLoopGroupType),
+                        ChannelType = Type.GetType(item.Value.ChannelType)
                     };
-                    nettyProtocols.Add(item.Name, value);
+                    nettyProtocols.Add(item.Key, value);
                 }
                 
                 var pool = new NettyClientPool(

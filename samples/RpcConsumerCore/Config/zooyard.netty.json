@@ -1,16 +1,14 @@
 ﻿{
   "netty": {
-    "Protocols": [
-      {
-        "Name": "socket",
+    "Protocols": {
+      "socket": {
         "EventLoopGroupType": "DotNetty.Transport.Channels.MultithreadEventLoopGroup, DotNetty.Transport",
         "ChannelType": "DotNetty.Transport.Channels.Sockets.TcpSocketChannel, DotNetty.Transport"
       },
-      {
-        "Name": "libuv",
+      "libuv": {
         "EventLoopGroupType": "DotNetty.Transport.Libuv.EventLoopGroup, DotNetty.Transport.Libuv",
         "ChannelType": "DotNetty.Transport.Libuv.TcpChannel, DotNetty.Transport.Libuv"
       }
-    ]
+    }
   }
 }
