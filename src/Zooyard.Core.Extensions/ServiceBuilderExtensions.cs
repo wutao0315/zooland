@@ -15,22 +15,7 @@ using Zooyard.Rpc.Merger;
 
 namespace Zooyard.Core.Extensions
 {
-    public class ZoolandOption
-    {
-        public string RegisterUrl { get; set; }
-        public IDictionary<string, ZoolandClientOption> Clients { get; set; }
-        public IDictionary<string, string> Mergers { get; set; }
-    }
-    public class ZoolandClientOption
-    {
-        public string Version { get; set; }
-        public string ServiceType { get; set; }
-        public IList<string> Urls { get; set; }
-        public string PoolType { get; set; }
-
-        private Type _service;
-        internal Type Service { get { return _service == null ? _service = Type.GetType(ServiceType) : _service; } }
-    }
+   
 
     public static class ServiceBuilderExtensions
     {
@@ -39,7 +24,7 @@ namespace Zooyard.Core.Extensions
             
             services.AddSingleton<IDictionary<string, IClientPool>>((serviceProvder) =>
             {
-                var option = serviceProvder.GetService<IOptionsMonitor<ZoolandOption>>().CurrentValue;
+                var option = serviceProvder.GetService<IOptionsMonitor<ZooyardOption>>().CurrentValue;
                 var result = new Dictionary<string, IClientPool>();
 
                 foreach (var item in option.Clients)
@@ -98,7 +83,7 @@ namespace Zooyard.Core.Extensions
             });
             services.AddSingleton<IDictionary<string, IMerger>>((serviceProvder) =>
             {
-                var option = serviceProvder.GetService<IOptionsMonitor<ZoolandOption>>().CurrentValue;
+                var option = serviceProvder.GetService<IOptionsMonitor<ZooyardOption>>().CurrentValue;
                 var result = new Dictionary<string, IMerger>();
 
                 foreach (var item in option.Mergers)
@@ -121,7 +106,7 @@ namespace Zooyard.Core.Extensions
 
             services.AddSingleton<IZooyardPools>((serviceProvder)=> 
             {
-                var option = serviceProvder.GetService<IOptionsMonitor<ZoolandOption>>().CurrentValue;
+                var option = serviceProvder.GetService<IOptionsMonitor<ZooyardOption>>();
                 var clientPools = serviceProvder.GetService<IDictionary<string,IClientPool>>();
                 var loggerFactory = serviceProvder.GetService<ILoggerFactory>();
 
@@ -139,17 +124,11 @@ namespace Zooyard.Core.Extensions
                     clusters.Add(item.Name,item);
                 }
 
-                var clientUrls = new Dictionary<string, IList<string>>();
-                foreach (var item in option.Clients.Values)
-                {
-                    clientUrls.Add(item.Service.FullName, item.Urls);
-                }
-
-                var zooyardPools = new ZooyardPools(loggerFactory, clientPools, loadBalances, clusters, caches, option.RegisterUrl, clientUrls);
+                var zooyardPools = new ZooyardPools(loggerFactory, clientPools, loadBalances, clusters, caches, option);
                 return zooyardPools;
             });
 
-            var optionData = new ZoolandOption();
+            var optionData = new ZooyardOption();
             config.Bind(zooyard, optionData);
 
             foreach (var item in optionData.Clients)

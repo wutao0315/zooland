@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Zooyard.Core;
 using Zooyard.Core.Extensions;
 using Zooyard.Rpc.AkkaImpl.Extensions;
 using Zooyard.Rpc.GrpcImpl.Extensions;
@@ -39,7 +40,7 @@ namespace RpcConsumerCore
             services.Configure<NettyOption>(config.GetSection("netty"));
             services.Configure<ThriftOption>(config.GetSection("thrift"));
             services.Configure<WcfOption>(config.GetSection("wcf"));
-            services.Configure<ZoolandOption>(config.GetSection("zooyard"));
+            services.Configure<ZooyardOption>(config.GetSection("zooyard"));
             services.AddLogging();
             services.AddAkkaClient();
             services.AddGrpcClient();

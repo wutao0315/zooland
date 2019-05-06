@@ -13,6 +13,7 @@ using DotNetty.Transport.Channels;
 using System.Collections.Generic;
 using DotNetty.Handlers.Logging;
 using DotNetty.Codecs;
+using Zooyard.Core;
 
 namespace Zooyard.CoreTest
 {
@@ -39,7 +40,7 @@ namespace Zooyard.CoreTest
             services.Configure<NettyOption>(config.GetSection("netty"));
             services.Configure<ThriftOption>(config.GetSection("thrift"));
             services.Configure<WcfOption>(config.GetSection("wcf"));
-            services.Configure<ZoolandOption>(config.GetSection("zooyard"));
+            services.Configure<ZooyardOption>(config.GetSection("zooyard"));
             services.AddLogging();
             services.AddAkkaClient();
             services.AddGrpcClient();

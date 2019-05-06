@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -44,9 +45,9 @@ namespace Zooyard.Rpc
         /// </summary>
         public ConcurrentDictionary<string, IList<BadUrl>> BadUrls { get; private set; }
         /// <summary>
-        /// 注册中心发现机制
+        /// 注册中心的配置
         /// </summary>
-        public IRegistryHost RegistryHost { get; set; }
+        private readonly IOptionsMonitor<ZooyardOption> _clients;
         /// <summary>
         /// the service pools
         /// key ApplicationName,
@@ -81,35 +82,25 @@ namespace Zooyard.Rpc
         /// 构造函数
         /// </summary>
         /// <param name="pools"></param>
-        public ZooyardPools(ILoggerFactory loggerFactory, IDictionary<string, IClientPool> pools,
+        public ZooyardPools(ILoggerFactory loggerFactory, 
+            IDictionary<string, IClientPool> pools,
             IDictionary<string, ILoadBalance> loadbalances,
             IDictionary<string, ICluster> clusters,
             IDictionary<string, Type> caches,
-            string address)
-            : this(loggerFactory, pools, loadbalances, clusters, caches, address, new Dictionary<string, IList<string>> ()) { }
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="pools"></param>
-        public ZooyardPools(ILoggerFactory loggerFactory, IDictionary<string, IClientPool> pools,
-            IDictionary<string, ILoadBalance> loadbalances,
-            IDictionary<string, ICluster> clusters,
-            IDictionary<string, Type> caches,
-            string address,
-            IDictionary<string, IList<string>>  urls)
+            IOptionsMonitor<ZooyardOption> clients)
         {
             _logger = loggerFactory.CreateLogger<ZooyardPools>();
             this.Pools = new ConcurrentDictionary<string, IClientPool>(pools);
             this.LoadBalances = new ConcurrentDictionary<string, ILoadBalance>(loadbalances);
             this.Clusters = new ConcurrentDictionary<string, ICluster>(clusters);
-            this.Address = URL.valueOf(address);
+            this.Address = URL.valueOf(clients.CurrentValue.RegisterUrl);
             this.Urls = new ConcurrentDictionary<string, IList<URL>>();
             this.BadUrls = new ConcurrentDictionary<string, IList<BadUrl>>();
             //参数
-            foreach (var url in urls)
+            foreach (var item in clients.CurrentValue.Clients.Values)
             {
-                var list = url.Value.Select(w => URL.valueOf(w).AddParameterIfAbsent("interface",url.Key)).ToList();
-                this.Urls.TryAdd(url.Key, list);
+                var list = item.Urls.Select(w => URL.valueOf(w).AddParameterIfAbsent("interface", item.Service.FullName)).ToList();
+                this.Urls.TryAdd(item.Service.FullName, list);
             }
 
             this.Caches = new ConcurrentDictionary<string, ICache>();
@@ -122,44 +113,84 @@ namespace Zooyard.Rpc
             }
 
             Init();
-        }
 
+            _clients = clients;
+            _clients.OnChange(OnChanged);
+        }
+        private void OnChanged(ZooyardOption value, string name)
+        {
+            _logger.LogInformation($"{name} has changed:{ value.ToString()}");
+            Console.WriteLine($"{name} has changed:{ value.ToString()}");
+
+            this.Address = URL.valueOf(value.RegisterUrl);
+
+            foreach (var item in value.Clients)
+            {
+                var list = item.Value.Urls.Select(w => URL.valueOf(w).AddParameterIfAbsent("interface", item.Value.Service.FullName)).ToList();
+                //优先移除被隔离了的URL
+                if (this.BadUrls.ContainsKey(item.Key))
+                {
+                    var removeUrls = new List<BadUrl>();
+                    foreach (var badUrl in this.BadUrls[item.Key])
+                    {
+                        var exitsUrl = list.FirstOrDefault(w => w.ToIdentityString() == badUrl.Url.ToIdentityString());
+                        if (exitsUrl == null)
+                        {
+                            removeUrls.Add(badUrl);
+                        }
+                    }
+                    foreach (var url in removeUrls)
+                    {
+                        this.BadUrls[item.Key].Remove(url);
+                    }
+                }
+
+                if (this.Urls.ContainsKey(item.Key))
+                {
+                    //移除注销的提供者
+                    var removeUrls = new List<URL>();
+                    foreach (var url in this.Urls[item.Key])
+                    {
+                        var exitsUrl = list.FirstOrDefault(w => w.ToIdentityString() == url.ToIdentityString());
+                        if (exitsUrl == null)
+                        {
+                            removeUrls.Add(url);
+                        }
+                    }
+                    foreach (var url in removeUrls)
+                    {
+                        this.Urls[item.Key].Remove(url);
+                    }
+
+                    //发现新的提供者
+                    foreach (var i in list)
+                    {
+                        var exitsUrl = this.Urls[item.Key].FirstOrDefault(w => w.ToIdentityString() == i.ToIdentityString());
+                        var exitsBadUrl = this.BadUrls?[item.Key]?.FirstOrDefault(w=>w.Url.ToIdentityString() == i.ToIdentityString());
+                        if (exitsUrl == null && exitsBadUrl == null)
+                        {
+                            this.Urls[item.Key].Add(i);
+                        }
+                    }
+                }
+                else
+                {
+                    this.Urls.TryAdd(item.Key, list);
+                }
+            }
+        }
         /// <summary>
         /// 初始化调用
         /// </summary>
         public void Init()
         {
-            //路径地址-用于初始化基础数据
-            if (Address.Protocol.ToLower().StartsWith("registry"))// 用户指定URL，指定的URL 对点对直连地址
-            {
-                // 通过注册中心配置拼装URL
-                var urls = this.RegistryHost.FindAll();
-                foreach (var item in urls.GroupBy(w => w.ServiceInterface))
-                {
-                    if (this.Urls.ContainsKey(item.Key))
-                    {
-                        foreach (var i in item)
-                        {
-                            if (!this.Urls[item.Key].Contains(i))
-                            {
-                                this.Urls[item.Key].Add(i);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        this.Urls.TryAdd(item.Key, item.ToList());
-                    }
-                }
-            }
-
             // 定时或者在接收到推送的消息后  主动-维护Pools集合
             var internalCycle = this.Address.GetParameter(CYCLE_PERIOD_KEY, DEFAULT_CYCLE_PERIOD);
 
             cycleTimer = new System.Timers.Timer(internalCycle);
             cycleTimer.Elapsed += new System.Timers.ElapsedEventHandler((object sender, System.Timers.ElapsedEventArgs events) =>
             {
-                // 收集统计信息
+                // 定时循环处理过期链接
                 try
                 {
                     cycleProcess();
@@ -178,7 +209,7 @@ namespace Zooyard.Rpc
             recoveryTimer = new System.Timers.Timer(internalRecovery);
             recoveryTimer.Elapsed += new System.Timers.ElapsedEventHandler((object sender, System.Timers.ElapsedEventArgs events) =>
             {
-                // 收集统计信息
+                // 定时循环恢复隔离区到正常区
                 try
                 {
                     recoveryProcess();
