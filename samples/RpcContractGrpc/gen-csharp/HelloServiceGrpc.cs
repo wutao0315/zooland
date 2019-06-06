@@ -68,6 +68,7 @@ namespace RpcContractGrpc {
     }
 
     /// <summary>Base class for server-side implementations of HelloService</summary>
+    [grpc::BindServiceMethod(typeof(HelloService), "BindService")]
     public abstract partial class HelloServiceBase
     {
       public virtual global::System.Threading.Tasks.Task<global::RpcContractGrpc.NameResult> CallNameVoid(global::RpcContractGrpc.Void request, grpc::ServerCallContext context)
