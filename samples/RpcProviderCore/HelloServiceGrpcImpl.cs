@@ -11,11 +11,23 @@ namespace RpcProviderCore
     public class HelloServiceGrpcImpl : HelloService.HelloServiceBase
     {
         public string ServiceName { get; set; }
+        
         public override Task<RpcContractGrpc.Void> CallName(NameResult request, ServerCallContext context)
         {
-            Console.WriteLine($"from grpc CallName {request.Name} call Hello! [{ServiceName}]");
+            try
+            {
+                Console.WriteLine($"from grpc CallName {request.Name} call Hello! [{ServiceName}]");
 
-            return Task.FromResult(new RpcContractGrpc.Void ());
+                return Task.FromResult(new RpcContractGrpc.Void());
+            }
+            catch (Exception ex)
+            {
+                var md = new Metadata();
+                md.Add("err", ex.Message);
+                context.WriteResponseHeadersAsync(md);
+                return Task.FromResult(new RpcContractGrpc.Void());
+            }
+            
         }
         public override Task<NameResult> CallNameVoid(RpcContractGrpc.Void request, ServerCallContext context)
         {
