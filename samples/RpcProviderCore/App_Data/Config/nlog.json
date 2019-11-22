@@ -1,0 +1,177 @@
+﻿{
+  "autoReload": true,
+  "throwConfigExceptions": true,
+  "internalLogLevel": "info",
+  "internalLogFile": "${basedir}/App_Data/nlog/internal-nlog.txt",
+  "extensions": {
+    "NLog.Extensions.Logging": {
+      "assembly": "NLog.Extensions.Logging"
+    }
+  },
+  "variables": {
+    "var_logdir": "c:/temp"
+  },
+  "default-wrapper": {
+    "type": "AsyncWrapper",
+    "overflowAction": "Block"
+  },
+  "targets": {
+    "all-file": {
+      "type": "File",
+      "fileName": "${basedir}/App_Data/logs/error/nlog-all-${shortdate}.log",
+      "layout": {
+        "type": "JsonLayout",
+        "Attributes": [
+          {
+            "name": "timestamp",
+            "layout": "${date:format=o}"
+          },
+          {
+            "name": "level",
+            "layout": "${level}"
+          },
+          {
+            "name": "logger",
+            "layout": "${logger}"
+          },
+          {
+            "name": "message",
+            "layout": "${message:raw=true}"
+          },
+          {
+            "name": "properties",
+            "encode": false,
+            "layout": {
+              "type": "JsonLayout",
+              "includeallproperties": "true"
+            }
+          }
+        ]
+      }
+    },
+    "own-console": {
+      "type": "LimitingWrapper",
+      "interval": "00:00:01",
+      "messageLimit": 100,
+      "target": {
+        "type": "Console",
+        "layout": "${longdate}|${event-properties:item=EventId_Id:whenEmpty=0}|${uppercase:${level}}|${logger}|${message} ${exception:format=tostring}|${callsite}"
+      }
+    },
+    "requestLog": {
+      "type": "AsyncWrapper",
+      "target": {
+        "type": "RetryingWrapper",
+        "retryCount": "3",
+        "target": {
+          "type": "File",
+          "fileName": "${basedir}/App_Data/requests/${event-context:item=Path}.log",
+          "encoding": "utf-8",
+          "archiveAboveSize": 50000000,
+          "maxArchiveFiles": 100,
+          "layout": "${longdate}${message}"
+        }
+      }
+    },
+    "operateLog": {
+      "type": "AsyncWrapper",
+      "target": {
+        "type": "RetryingWrapper",
+        "retryCount": "3",
+        "target": {
+          "type": "Database",
+          "dbProvider": "System.Data.SqlClient",
+          "dbUserName": "sa",
+          "connectionString": "Data Source=127.0.0.1;Initial Catalog=Test;User ID=sa;Password=123456;",
+          "commandText": " insert into [dbo].[SYS_LOG_OPERATE] ([APP],[USER_ID],[USER_NAME],[NICK_NAME],[SESSION_ID],[PATH],[MESSAGE],[METHOD],[REQUEST],[RESPONSE],[STATUS_CODE],[IP_ADDRESS],[PORT],[ELAPSED]) values (@App, @UserId, @UserName, @NickName,@SessionId, @Path, @Message, @Method, @Request, @Response, @StatusCode, @IpAddress, @Port, @Elapsed);",
+          "parameters": [
+            {
+              "name": "@App",
+              "layout": "defaultApp"
+            },
+            {
+              "name": "@UserId",
+              "layout": "${event-context:item=UserId}"
+            },
+            {
+              "name": "@UserName",
+              "layout": "${event-context:item=UserName}"
+            },
+            {
+              "name": "@NickName",
+              "layout": "${event-context:item=NickName}"
+            },
+            {
+              "name": "@SessionId",
+              "layout": "${event-context:item=SessionId}"
+            },
+            {
+              "name": "@Path",
+              "layout": "${event-context:item=Path}"
+            },
+            {
+              "name": "@Message",
+              "layout": "${event-context:item=Message}"
+            },
+            {
+              "name": "@Method",
+              "layout": "${event-context:item=Method}"
+            },
+            {
+              "name": "@Request",
+              "layout": "${event-context:item=Request}"
+            },
+            {
+              "name": "@Response",
+              "layout": "${event-context:item=Response}"
+            },
+            {
+              "name": "@StatusCode",
+              "layout": "${event-context:item=StatusCode}"
+            },
+            {
+              "name": "@IpAddress",
+              "layout": "${event-context:item=IpAddress}"
+            },
+            {
+              "name": "@Port",
+              "layout": "${event-context:item=Port}"
+            },
+            {
+              "name": "@Elapsed",
+              "layout": "${event-context:item=Elapsed}"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "rules": [
+    {
+      "logger": "*",
+      "minLevel": "Trace",
+      "writeTo": "all-file"
+    },
+    {
+      "logger": "Microsoft.*",
+      "maxLevel": "Info",
+      "final": true
+    },
+    {
+      "logger": "Keeper.Support.*",
+      "maxLevel": "Info",
+      "final": true
+    },
+    {
+      "logger": "*",
+      "minLevel": "Debug",
+      "writeTo": "own-console",
+      "filters": {
+        "whenRepeated": {
+          "layout": "${message}",
+          "action": "Ignore"
+        }
+      }
+    }
+  ]
+}

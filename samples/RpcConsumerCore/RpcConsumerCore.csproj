@@ -38,6 +38,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Config\nlog.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Config\zooyard.akka.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

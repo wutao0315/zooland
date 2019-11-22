@@ -21,6 +21,9 @@ using Thrift.Transports;
 using System;
 using RpcContractWcf.HelloService;
 using Zooyard.Rpc.Extensions;
+using NLog;
+using NLog.Extensions.Logging;
+using NLog.Extensions.Hosting;
 
 namespace RpcProviderCore
 {
@@ -45,7 +48,11 @@ namespace RpcProviderCore
                     var env = hostingContext.HostingEnvironment;
                     //load json settings
 
+                    var nlogSection = config.Build().GetSection("NLog");
+                    LogManager.Configuration = new NLogLoggingConfiguration(nlogSection);
+
                 })
+                .UseNLog()
                 .ConfigureServices((hostingContext, services) =>
                 {
                     var env = hostingContext.HostingEnvironment;
@@ -57,7 +64,8 @@ namespace RpcProviderCore
                 .AddJsonFile("service.netty.json", false, true)
                 .AddJsonFile("service.thrift.json", false, true)
                 .AddJsonFile("service.http.json", false, true)
-                .AddJsonFile("service.json", false, true);
+                .AddJsonFile("service.json", false, true)
+                .AddJsonFile("nlog.json", false, true);
 
                     var config = builder.Build();
 

@@ -320,9 +320,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="App_Data\Config\log4net.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <None Include="App_Data\Config\NLog.config" />
     <None Include="App_Data\Config\Spring\controller.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
