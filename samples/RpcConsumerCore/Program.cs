@@ -30,7 +30,8 @@ namespace RpcConsumerCore
                 .AddJsonFile("zooyard.netty.json", false, true)
                 .AddJsonFile("zooyard.thrift.json", false, true)
                 .AddJsonFile("zooyard.wcf.json", false, true)
-                .AddJsonFile("zooyard.json", false, true);
+                .AddJsonFile("zooyard.json", false, true)
+                .AddJsonFile("nlog.json", false, true);
 
             var config = builder.Build();
 
