@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Zooyard.Core;
 
 namespace Zooyard.Rpc.Support
@@ -10,7 +11,9 @@ namespace Zooyard.Rpc.Support
         public abstract URL Url { get; }
         public abstract IInvoker Refer();
         public abstract void Open();
+        public abstract Task OpenAsync();
         public abstract void Close();
+        public abstract Task CloseAsync();
         public abstract void Dispose();
         public virtual void Reset() { }
     }

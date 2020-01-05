@@ -59,9 +59,12 @@ namespace Zooyard.Rpc.GrpcImpl.Extensions
                     grpcClientTypes.Add(item.Key, Type.GetType(item.Value));
                 }
 
+                var interceptors = serviceProvder.GetServices<ClientInterceptor>();
+
                 var pool = new GrpcClientPool(
                     credentials:credentials,
                     grpcClientTypes:grpcClientTypes, 
+                    interceptors: interceptors,
                     loggerFactory: loggerFactory
                 );
 

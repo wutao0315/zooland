@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Net.Http;
+using System.Threading.Tasks;
 using Zooyard.Core;
 using Zooyard.Rpc.Support;
 
@@ -62,6 +63,16 @@ namespace Zooyard.Rpc.HttpImpl
         public override void Close()
         {
             
+        }
+
+        public override async Task OpenAsync()
+        {
+
+        }
+
+        public override async Task CloseAsync()
+        {
+
         }
 
         /// <summary>

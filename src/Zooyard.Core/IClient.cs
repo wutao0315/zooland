@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace Zooyard.Core
 {
@@ -9,7 +10,9 @@ namespace Zooyard.Core
         string Version { get; }
         DateTime ActiveTime { get; set; }
         void Open();
+        Task OpenAsync();
         void Close();
+        Task CloseAsync();
         void Reset();
         
     }

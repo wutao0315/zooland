@@ -38,7 +38,7 @@ namespace Zooyard.Rpc.HttpImpl
         /// <summary>
         /// http客户端
         /// </summary>
-        protected System.Net.Http.HttpClient client;
+        protected HttpClient client;
 
         /// <summary>
         /// http客户端状态标识
@@ -50,7 +50,7 @@ namespace Zooyard.Rpc.HttpImpl
         /// </summary>
         /// <param name="client">http长连接客户端</param>
         /// <param name="isOpen">http客户端状态标识</param>
-        public HttpStub(System.Net.Http.HttpClient client, bool[] isOpen)
+        public HttpStub(HttpClient client, bool[] isOpen)
         {
             this.client = client;
             openFlag = isOpen;
@@ -59,13 +59,7 @@ namespace Zooyard.Rpc.HttpImpl
         /// <summary>
         /// Http头
         /// </summary>
-        public HttpRequestHeaders Headers
-        {
-            get
-            {
-                return client.DefaultRequestHeaders;
-            }
-        }
+        public HttpRequestHeaders Headers { get=> client.DefaultRequestHeaders; }
 
         /// <summary>
         /// 对象公共字段或属性以键值对有序字典输出，不包含Null值

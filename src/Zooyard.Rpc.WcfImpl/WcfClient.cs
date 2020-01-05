@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
 using System.ServiceModel;
+using System.Threading.Tasks;
 using Zooyard.Core;
 using Zooyard.Rpc.Support;
 
@@ -28,15 +29,25 @@ namespace Zooyard.Rpc.WcfImpl
 
         public override void Open()
         {
+            OpenAsync().ConfigureAwait(false);
+        }
+
+        public override async Task OpenAsync()
+        {
 
             if (_channel.State != CommunicationState.Opened &&
                _channel.State != CommunicationState.Opening)
             {
                 _channel.Open();
+                await Task.CompletedTask;
             }
         }
 
         public override void Close()
+        {
+            CloseAsync().ConfigureAwait(false);
+        }
+        public override async Task CloseAsync()
         {
             if (_channel.State != CommunicationState.Closed &&
                  _channel.State != CommunicationState.Closing)
@@ -44,8 +55,9 @@ namespace Zooyard.Rpc.WcfImpl
                 try
                 {
                     _channel.Close();
+                    await Task.CompletedTask;
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     _logger.LogError(e, e.Message);
                 }

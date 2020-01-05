@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using System;
 using System.Net;
+using System.Threading.Tasks;
 using Zooyard.Core;
 using Zooyard.Rpc.Support;
 
@@ -44,18 +45,27 @@ namespace Zooyard.Rpc.NettyImpl
 
         public override void Open()
         {
+            OpenAsync().ConfigureAwait(false);
+        }
+        public override async Task OpenAsync()
+        {
             if (!_channel.Open || !_channel.Active)
             {
                 var k = new IPEndPoint(IPAddress.Parse(Url.Host), Url.Port);
-                _channel.ConnectAsync(k).GetAwaiter().GetResult();
+                await _channel.ConnectAsync(k);
             }
         }
 
         public override void Close()
         {
+            CloseAsync().ConfigureAwait(false);
+        }
+
+        public override async Task CloseAsync()
+        {
             if (_channel.Active || _channel.Open)
             {
-                _channel.CloseAsync().GetAwaiter().GetResult();
+                await _channel.CloseAsync();
             }
         }
 

@@ -42,18 +42,29 @@ namespace Zooyard.Rpc.ThriftImpl
 
         public override void Open()
         {
+            OpenAsync().ConfigureAwait(false);
+        }
+
+        public override async Task OpenAsync()
+        {
             if (_transport != null && !_transport.IsOpen)
             {
-                _transport.OpenAsync().GetAwaiter().GetResult();
+                await _transport.OpenAsync();
             }
             _logger.LogInformation("open");
         }
 
         public override void Close()
         {
+            CloseAsync().ConfigureAwait(false);
+        }
+
+        public override async Task CloseAsync()
+        {
             if (_transport != null && _transport.IsOpen)
             {
                 _transport.Close();
+                await Task.CompletedTask;
             }
             _logger.LogInformation("close");
         }
