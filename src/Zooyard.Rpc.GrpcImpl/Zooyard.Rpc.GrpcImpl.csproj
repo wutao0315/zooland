@@ -8,12 +8,12 @@
     <PackageReleaseNotes />
     <Description>Zooyard RPC Framework microservice</Description>
     <Authors>wutao0315</Authors>
-    <Version>1.0.9</Version>
+    <Version>1.1.0</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Grpc" Version="2.25.0" />
+    <PackageReference Include="Grpc" Version="2.26.0" />
   </ItemGroup>
 
   <ItemGroup>

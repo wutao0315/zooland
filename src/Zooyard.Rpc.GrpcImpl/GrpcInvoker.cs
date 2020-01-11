@@ -27,8 +27,14 @@ namespace Zooyard.Rpc.GrpcImpl
                 parasPlus[i] = invocation.Arguments[i];
             }
             paraTypes[invocation.Arguments.Length] = typeof(Grpc.Core.CallOptions);
-            parasPlus[invocation.Arguments.Length] = new Grpc.Core.CallOptions()
-                .WithDeadline(DateTime.UtcNow.AddMilliseconds(_clientTimeout));
+
+            var callOption = new Grpc.Core.CallOptions();
+            if (_clientTimeout>0) 
+            {
+                callOption.WithDeadline(DateTime.UtcNow.AddMilliseconds(_clientTimeout));
+            }
+            parasPlus[invocation.Arguments.Length] = callOption;
+                
             var method = _instance.GetType().GetMethod(invocation.MethodInfo.Name, paraTypes);
             var value = method.Invoke(_instance, parasPlus);
             _logger.LogInformation($"Invoke:{invocation.MethodInfo.Name}");
