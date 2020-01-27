@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.Rpc.GrpcImpl
@@ -15,7 +16,7 @@ namespace Zooyard.Rpc.GrpcImpl
         private readonly IEnumerable<ServerInterceptor> _interceptors;
 
         private readonly ILogger _logger;
-        private readonly Server _server;
+        private Server _server;
         public GrpcServer(Server server, 
             IEnumerable<ServerServiceDefinition> services,
             IEnumerable<ServerPort> ports,
@@ -56,7 +57,15 @@ namespace Zooyard.Rpc.GrpcImpl
             //向注册中心发送注销请求
             if (_server != null)
             {
-                _server.ShutdownAsync().ConfigureAwait(false);
+                try
+                {
+                    _server.ShutdownAsync().GetAwaiter().GetResult();
+                    _server = null;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogInformation(ex, ex.ToString());
+                }
             }
         }
     }
