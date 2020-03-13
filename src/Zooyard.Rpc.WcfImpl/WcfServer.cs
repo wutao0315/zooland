@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.Rpc.WcfImpl
@@ -16,21 +17,22 @@ namespace Zooyard.Rpc.WcfImpl
         }
 
         public IList<WcfService> Services { get; set; } = new List<WcfService>();
-        public override void DoExport()
+        public override async Task DoExport()
         {
             //open service
             _server.Open();
 
-
+            await Task.CompletedTask;
             // Step 3 of the hosting procedure: Add a service endpoint.
             _logger.LogInformation($"Started the wcf server ...");
             Console.WriteLine($"Started the wcf server ...");
            
         }
 
-        public override void DoDispose()
+        public override async Task DoDispose()
         {
             _server.Dispose();
+            await Task.CompletedTask;
         }
     }
 }

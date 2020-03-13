@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.Rpc.AkkaImpl
@@ -43,19 +44,20 @@ namespace Zooyard.Rpc.AkkaImpl
         }
 
        
-        public override void DoExport()
+        public override async Task DoExport()
         {
             foreach (var item in _actors)
             {
                 _actorSystem.ActorOf(Props.Create(item.Value.ActorType,(item.Value.Args??new List<object>()).ToArray()), item.Key);
             }
-
+            await Task.CompletedTask;
             _logger.LogInformation($"Started the akka server ...");
             Console.WriteLine($"Started the akka server ...");
         }
 
-        public override void DoDispose()
+        public override async Task DoDispose()
         {
+            await Task.CompletedTask;
             _actorSystem.Dispose();
         }
     }

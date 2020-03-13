@@ -67,7 +67,7 @@ namespace Zooyard.Core
             //调用上下文
             var icn = new RpcInvocation(_app, _version, target, methodInfo, args);
             
-            var result = _clientPools.Invoke(icn);
+            var result = _clientPools.Invoke(icn).GetAwaiter().GetResult();
             return result.Value;
         }
     }

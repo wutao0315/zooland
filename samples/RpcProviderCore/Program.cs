@@ -24,6 +24,10 @@ using NLog;
 using NLog.Extensions.Logging;
 using NLog.Extensions.Hosting;
 using Microsoft.AspNetCore.Hosting;
+using Zooyard.Rpc.GrpcImpl;
+using Grpc.Core.Interceptors;
+using Grpc.Core;
+using System.Threading.Tasks;
 
 namespace RpcProviderCore
 {
@@ -72,8 +76,13 @@ namespace RpcProviderCore
                 services.AddTransient((serviceProvider) => "A");
                 services.AddAkkaServer();
 
+                //services.AddSingleton<ClientInterceptor, ClientGrpcInterceptor>();
+                services.AddSingleton<ServerInterceptor, ServerGrpcInterceptor>();
+
                 services.AddTransient<RpcContractGrpc.HelloService.HelloServiceBase>((serviceProvider) => new HelloServiceGrpcImpl { ServiceName = "A" });
                 services.AddGrpcServer();
+
+             
 
 
                 services.AddSingleton<IEventLoopGroup>((serviceProvider) =>
@@ -112,95 +121,109 @@ namespace RpcProviderCore
             {
                 webBuilder.UseStartup<Startup>();
             });
-        //static void Main(string[] args)
-        //{
+    }
 
-        //    var host = new HostBuilder()
-        //        .UseConsoleLifetime()
-        //        .ConfigureAppConfiguration((hostingContext, config) =>
-        //        {
-        //            hostingContext.HostingEnvironment.ApplicationName = "MemberThrift.ServerHost";
-        //            hostingContext.HostingEnvironment.ContentRootPath = Directory.GetCurrentDirectory();
-        //            var env = hostingContext.HostingEnvironment;
-        //            //load json settings
+    public class ClientGrpcInterceptor : ClientInterceptor
+    {
 
-        //            var nlogSection = config.Build().GetSection("NLog");
-        //            LogManager.Configuration = new NLogLoggingConfiguration(nlogSection);
+        public override TResponse BlockingUnaryCall<TRequest, TResponse>(TRequest request, ClientInterceptorContext<TRequest, TResponse> context, BlockingUnaryCallContinuation<TRequest, TResponse> continuation)
+        {
+            var metadata = new Metadata();
+            metadata.Add(new Metadata.Entry("test", "test"));
+            var options = context.Options.WithHeaders(metadata);
+            context = new ClientInterceptorContext<TRequest, TResponse>(context.Method, context.Host, options);
+            var response = continuation(request, context);
+            return response;
+        }
 
-        //        })
-        //        .UseNLog()
-        //        .ConfigureServices((hostingContext, services) =>
-        //        {
-        //            var env = hostingContext.HostingEnvironment;
+        public override AsyncUnaryCall<TResponse> AsyncUnaryCall<TRequest, TResponse>(TRequest request, ClientInterceptorContext<TRequest, TResponse> context, AsyncUnaryCallContinuation<TRequest, TResponse> continuation)
+        {
+            var metadata = new Metadata();
+            metadata.Add(new Metadata.Entry("test", "test"));
+            var options = context.Options.WithHeaders(metadata);
+            context = new ClientInterceptorContext<TRequest, TResponse>(context.Method, context.Host, options);
+            var response = continuation(request, context);
 
-        //            var builder = new ConfigurationBuilder()
-        //        .SetBasePath(Directory.GetCurrentDirectory() + @"\App_Data\Config")
-        //        .AddJsonFile("service.akka.json", false, true)
-        //        .AddJsonFile("service.grpc.json", false, true)
-        //        .AddJsonFile("service.netty.json", false, true)
-        //        .AddJsonFile("service.thrift.json", false, true)
-        //        .AddJsonFile("service.http.json", false, true)
-        //        .AddJsonFile("service.json", false, true)
-        //        .AddJsonFile("nlog.json", false, true);
+            var responseAsync = response.ResponseAsync.ContinueWith<TResponse>((r) => r.Result);
+            return new AsyncUnaryCall<TResponse>(responseAsync, response.ResponseHeadersAsync, response.GetStatus, response.GetTrailers, response.Dispose);
 
-        //            var config = builder.Build();
+        }
+    }
+    public class ServerGrpcInterceptor : ServerInterceptor
+    {
+        public override TResponse BlockingUnaryCall<TRequest, TResponse>(TRequest request, ClientInterceptorContext<TRequest, TResponse> context, BlockingUnaryCallContinuation<TRequest, TResponse> continuation)
+        {
+            var metadata = new Metadata();
+            metadata.Add(new Metadata.Entry("test", "test"));
+            var options = context.Options.WithHeaders(metadata);
+            context = new ClientInterceptorContext<TRequest, TResponse>(context.Method, context.Host, options);
+            var response = continuation(request, context);
+            return response;
+        }
 
-        //            services.Configure<AkkaServerOption>(config.GetSection("akka"));
-        //            services.Configure<GrpcServerOption>(config.GetSection("grpc"));
-        //            services.Configure<NettyServerOption>(config.GetSection("netty"));
-        //            services.Configure<ThriftServerOption>(config.GetSection("thrift"));
-        //            services.Configure<HttpServerOption>(config.GetSection("http"));
-        //            services.AddLogging();
+        public override AsyncUnaryCall<TResponse> AsyncUnaryCall<TRequest, TResponse>(TRequest request, ClientInterceptorContext<TRequest, TResponse> context, AsyncUnaryCallContinuation<TRequest, TResponse> continuation)
+        {
+            var metadata = new Metadata();
+            metadata.Add(new Metadata.Entry("test", "test"));
+            var options = context.Options.WithHeaders(metadata);
+            context = new ClientInterceptorContext<TRequest, TResponse>(context.Method, context.Host, options);
+            var response = continuation(request, context);
 
-        //            services.AddTransient((serviceProvider) => "A");
-        //            services.AddAkkaServer();
+            var responseAsync = response.ResponseAsync.ContinueWith<TResponse>((r) => r.Result);
+            return new AsyncUnaryCall<TResponse>(responseAsync, response.ResponseHeadersAsync, response.GetStatus, response.GetTrailers, response.Dispose);
 
-        //            services.AddTransient<RpcContractGrpc.HelloService.HelloServiceBase>((serviceProvider) => new HelloServiceGrpcImpl { ServiceName = "A" });
-        //            services.AddGrpcServer();
+        }
+        public override async Task<TResponse> UnaryServerHandler<TRequest, TResponse>(TRequest request, ServerCallContext context, UnaryServerMethod<TRequest, TResponse> continuation)
+        {
+            try
+            {
+                var response = await continuation(request, context);
+                return response;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+        // 客户端流式调用拦截
+        public override async Task<TResponse> ClientStreamingServerHandler<TRequest, TResponse>(IAsyncStreamReader<TRequest> requestStream, ServerCallContext context, ClientStreamingServerMethod<TRequest, TResponse> continuation)
+        {
+            try
+            {
+                var response = await continuation(requestStream, context);
+                return response;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
 
+        // 服务端流式调用拦截
+        public override async Task ServerStreamingServerHandler<TRequest, TResponse>(TRequest request, IServerStreamWriter<TResponse> responseStream, ServerCallContext context, ServerStreamingServerMethod<TRequest, TResponse> continuation) 
+        {
+            try
+            {
+                await continuation(request, responseStream, context);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
 
-        //            services.AddSingleton<IEventLoopGroup>((serviceProvider) =>
-        //            {
-        //                return new MultithreadEventLoopGroup(1);
-        //            });
-        //            services.AddSingleton<IEventLoopGroup>((serviceProvider) =>
-        //            {
-        //                return new MultithreadEventLoopGroup();
-        //            });
-
-        //            services.AddTransient((serviceProvider) => new HelloServiceNettyImpl { ServiceName = "A" });
-        //            services.AddNettyServer();
-
-
-        //            services.AddTransient<RpcContractThrift.HelloService.IAsync>((serviceProvider) => new HelloServiceThriftImpl { ServiceName = "A" });
-        //            services.AddTransient<ITAsyncProcessor, RpcContractThrift.HelloService.AsyncProcessor>();
-        //            services.AddSingleton<TServerTransport>((serviceProvider) =>
-        //            {
-        //                var option = serviceProvider.GetService<IOptionsMonitor<ThriftServerOption>>().CurrentValue;
-        //                return new Thrift.Transports.Server.TServerSocketTransport(option.Port, option.ClientTimeOut, option.UseBufferedSockets);
-        //            });
-        //            services.AddSingleton<Thrift.Protocols.ITProtocolFactory>(new Thrift.Protocols.TCompactProtocol.Factory());
-
-        //            services.AddThriftServer();
-
-        //            services.AddHttpServer<Startup>(args);
-
-        //            services.AddTransient<IHelloServiceWcf, HelloServiceWcfImpl>();
-
-        //            services.AddHostedService<ZoolandHostedService>();
-        //            //services.AddZoolandServer();
-
-        //        })
-        //        .ConfigureLogging((hostingContext, logging) =>
-        //        {
-
-        //        }).Build();
-
-        //    using (host)
-        //    {
-        //        host.Run();
-        //    }
-        //}
+        // 双向流调用拦截
+        public override async Task DuplexStreamingServerHandler<TRequest, TResponse>(IAsyncStreamReader<TRequest> requestStream, IServerStreamWriter<TResponse> responseStream, ServerCallContext context, DuplexStreamingServerMethod<TRequest, TResponse> continuation) 
+        {
+            try
+            {
+                await continuation(requestStream, responseStream, context);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
     }
     public class ThriftServerOption
     {

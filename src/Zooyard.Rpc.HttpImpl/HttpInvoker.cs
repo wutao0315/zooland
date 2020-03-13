@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System.Net.Http;
+using System.Threading.Tasks;
 using Zooyard.Core;
 using Zooyard.Rpc.Support;
 
@@ -30,13 +31,13 @@ namespace Zooyard.Rpc.HttpImpl
 
         }
         public override object Instance { get { return _instance; } }
-        protected override IResult HandleInvoke(IInvocation invocation)
+        protected override async Task<IResult> HandleInvoke(IInvocation invocation)
         {
             var parameterType = _url.GetMethodParameterAndDecoded(invocation.MethodInfo.Name, PARAMETERTYPE_KEY, DEFAULT_PARAMETERTYPE).ToLower();
             var method = _url.GetMethodParameterAndDecoded(invocation.MethodInfo.Name, METHODTYPE_KEY, DEFAULT_METHODTYPE).ToLower();
             var parameters = invocation.MethodInfo.GetParameters();
             var stub = new HttpStub(_instance, isOpen);
-            var value = stub.Request($"/{_url.Path}/{invocation.MethodInfo.Name.ToLower()}", parameterType, method, parameters, invocation.Arguments).GetAwaiter().GetResult();
+            var value = await stub.Request($"/{_url.Path}/{invocation.MethodInfo.Name.ToLower()}", parameterType, method, parameters, invocation.Arguments);
             
             if (invocation.MethodInfo.ReturnType.IsValueType)
             {

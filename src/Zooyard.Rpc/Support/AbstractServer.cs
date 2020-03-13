@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
 using Zooyard.Core;
 
 namespace Zooyard.Rpc.Support
@@ -17,10 +18,10 @@ namespace Zooyard.Rpc.Support
         public string Address { get; set; }
 
 
-        public void Export()
+        public async Task Export()
         {
             //first start the service provider
-            DoExport();
+            await DoExport();
             _logger.LogInformation("Export");
             if (!string.IsNullOrWhiteSpace(Address))
             {
@@ -39,12 +40,12 @@ namespace Zooyard.Rpc.Support
                 RegistryHost.DeregisterService(url);
             }
             //them stop the provider
-            DoDispose();
+            DoDispose().ConfigureAwait(false);
             _logger.LogInformation("Dispose");
         }
 
-        public abstract void DoDispose();
+        public abstract Task DoDispose();
         
-        public abstract void DoExport();
+        public abstract Task DoExport();
     }
 }

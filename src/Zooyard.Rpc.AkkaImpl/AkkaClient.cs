@@ -23,33 +23,26 @@ namespace Zooyard.Rpc.AkkaImpl
             _logger = loggerFactory.CreateLogger<AkkaClient>();
         }
 
-        public override IInvoker Refer()
+        public override async Task<IInvoker> Refer()
         {
+            await Task.CompletedTask;
             return new AkkaInvoker(_actorSystem, Url, _timeout, _loggerFactory);
         }
 
-        public override void Open()
-        {
-        }
-
-        public override async Task OpenAsync()
+        public override async Task Open()
         {
             await Task.CompletedTask;
         }
 
-        public override void Close()
+        public override async Task Close()
         {
-            _actorSystem.Dispose();
+            await DisposeAsync();
         }
 
-        public override async Task CloseAsync()
+        public override async Task DisposeAsync()
         {
             _actorSystem.Dispose();
             await Task.CompletedTask;
-        }
-        public override void Dispose()
-        {
-            _actorSystem.Dispose();
         }
     }
 }

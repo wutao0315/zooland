@@ -22,21 +22,22 @@ namespace Zooyard.Rpc.ThriftImpl
         }
         
         
-        public override void DoExport()
+        public override async Task DoExport()
         {
             //run the server
-            Task.Run(()=> 
+            await Task.Run(async()=> 
             {
-                _server.ServeAsync(CancellationToken.None).GetAwaiter().GetResult();
+                await _server.ServeAsync(CancellationToken.None);
             });
 
             _logger.LogInformation($"Started the thrift server ...");
             Console.WriteLine($"Started the thrift server ...");
         }
 
-        public override void DoDispose()
+        public override async Task DoDispose()
         {
             //unregiste from register center
+            await Task.CompletedTask;
             _server.Stop();
             _logger.LogInformation("stoped the thrift server ...");
         }

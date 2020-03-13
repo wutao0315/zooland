@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Zooyard.Core;
 using Zooyard.Core.Diagnositcs;
 
@@ -59,7 +60,7 @@ namespace Zooyard.Rpc.Cluster
 
 
 
-        void retryFailed(IClientPool pool)
+        async Task retryFailed(IClientPool pool)
         {
             if (failed.Count == 0)
             {
@@ -71,9 +72,9 @@ namespace Zooyard.Rpc.Cluster
                 var client = pool.GetClient(entry.Value);
                 try
                 {
-                    var refer = client.Refer();
+                    var refer = await client.Refer();
                     _source.WriteConsumerBefore(refer.Instance, entry.Value, invocation);
-                    var result = refer.Invoke(invocation);
+                    var result = await refer.Invoke(invocation);
                     _source.WriteConsumerAfter(entry.Value, invocation, result);
                     pool.Recovery(client);
                     URL cluster;
@@ -88,7 +89,7 @@ namespace Zooyard.Rpc.Cluster
             }
         }
 
-        public override IClusterResult DoInvoke(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
+        public override async Task<IClusterResult> DoInvoke(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
         {
             var goodUrls = new List<URL>();
             var badUrls = new List<BadUrl>();
@@ -103,9 +104,9 @@ namespace Zooyard.Rpc.Cluster
                 var client = pool.GetClient(invoker);
                 try
                 {
-                    var refer = client.Refer();
+                    var refer = await client.Refer();
                     _source.WriteConsumerBefore(refer.Instance, invoker, invocation);
-                    result = refer.Invoke(invocation);
+                    result = await refer.Invoke(invocation);
                     _source.WriteConsumerAfter(invoker, invocation, result);
                     pool.Recovery(client);
                     goodUrls.Add(invoker);

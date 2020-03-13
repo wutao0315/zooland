@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Zooyard.Core
 {
     public interface ICluster
     {
         string Name { get; }
-        IClusterResult DoInvoke(IClientPool pool,ILoadBalance loadbalance, URL address,IList<URL> urls, IInvocation invocation);
+        Task<IClusterResult> DoInvoke(IClientPool pool,ILoadBalance loadbalance, URL address,IList<URL> urls, IInvocation invocation);
     }
 }

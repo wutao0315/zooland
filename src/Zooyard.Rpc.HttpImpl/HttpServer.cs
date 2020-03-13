@@ -4,6 +4,7 @@ using System;
 using Zooyard.Rpc.Support;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using System.Threading.Tasks;
 
 namespace Zooyard.Rpc.HttpImpl
 {
@@ -18,11 +19,11 @@ namespace Zooyard.Rpc.HttpImpl
         }
 
 
-        public override void DoExport()
+        public override async Task DoExport()
         {
             try
             {
-                _server.Run();
+                await _server.RunAsync();
                 _logger.LogDebug("http server started");
             }
             catch (Exception ex)
@@ -32,8 +33,9 @@ namespace Zooyard.Rpc.HttpImpl
 
         }
 
-        public override void DoDispose()
+        public override async Task DoDispose()
         {
+            await _server.StopAsync();
             _server.Dispose();
         }
     }

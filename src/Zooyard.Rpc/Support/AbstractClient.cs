@@ -9,12 +9,14 @@ namespace Zooyard.Rpc.Support
         public virtual string Version { get { return Url.GetParameter(URL.VERSION_KEY); } }
         public DateTime ActiveTime { get; set; } = DateTime.Now;
         public abstract URL Url { get; }
-        public abstract IInvoker Refer();
-        public abstract void Open();
-        public abstract Task OpenAsync();
-        public abstract void Close();
-        public abstract Task CloseAsync();
-        public abstract void Dispose();
+        public abstract Task<IInvoker> Refer();
+        public abstract Task Open();
+        public abstract Task Close();
+        public abstract Task DisposeAsync();
+        public void Dispose() 
+        {
+            DisposeAsync().ConfigureAwait(false);
+        }
         public virtual void Reset() { }
     }
 }

@@ -33,19 +33,14 @@ namespace Zooyard.Rpc.ThriftImpl
         }
 
 
-        public override IInvoker Refer()
+        public override async Task<IInvoker> Refer()
         {
-            this.Open();
+            await this.Open();
             //thrift client service
             return new ThriftInvoker(_thriftclient, _loggerFactory);
         }
 
-        public override void Open()
-        {
-            OpenAsync().ConfigureAwait(false);
-        }
-
-        public override async Task OpenAsync()
+        public override async Task Open()
         {
             if (_transport != null && !_transport.IsOpen)
             {
@@ -54,12 +49,8 @@ namespace Zooyard.Rpc.ThriftImpl
             _logger.LogInformation("open");
         }
 
-        public override void Close()
-        {
-            CloseAsync().ConfigureAwait(false);
-        }
 
-        public override async Task CloseAsync()
+        public override async Task Close()
         {
             if (_transport != null && _transport.IsOpen)
             {
@@ -69,11 +60,12 @@ namespace Zooyard.Rpc.ThriftImpl
             _logger.LogInformation("close");
         }
 
-        public override void Dispose()
+
+        public override async Task DisposeAsync()
         {
             if (_transport != null)
             {
-                Close();
+                await Close();
                 _transport.Dispose();
             }
             if (_thriftclient != null)

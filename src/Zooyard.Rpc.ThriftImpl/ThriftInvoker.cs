@@ -19,7 +19,7 @@ namespace Zooyard.Rpc.ThriftImpl
         }
 
         public override object Instance { get { return _instance; } }
-        protected override IResult HandleInvoke(IInvocation invocation)
+        protected override async Task<IResult> HandleInvoke(IInvocation invocation)
         {
             var methodName = $"{invocation.MethodInfo.Name}Async";
             var argumentTypes = new List<Type>(invocation.ArgumentTypes);

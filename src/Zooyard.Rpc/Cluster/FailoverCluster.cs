@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Zooyard.Core;
 using Zooyard.Core.Diagnositcs;
 using Zooyard.Core.Utils;
@@ -21,7 +22,7 @@ namespace Zooyard.Rpc.Cluster
             _logger = loggerFactory.CreateLogger<FailoverCluster>();
         }
 
-        public override IClusterResult DoInvoke(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
+        public override async Task<IClusterResult> DoInvoke(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
         {
             var goodUrls = new List<URL>();
             var badUrls = new List<BadUrl>();
@@ -59,9 +60,9 @@ namespace Zooyard.Rpc.Cluster
                     var client = pool.GetClient(invoker);
                     try
                     {
-                        var refer = client.Refer();
+                        var refer = await client.Refer();
                         _source.WriteConsumerBefore(refer.Instance, invoker, invocation);
-                        var result = refer.Invoke(invocation);
+                        var result = await refer.Invoke(invocation);
                         _source.WriteConsumerAfter(invoker, invocation, result);
                         pool.Recovery(client);
                         if (le != null && _logger.IsEnabled(LogLevel.Warning))

@@ -11,55 +11,53 @@ namespace Zooyard.Rpc.GrpcImpl
 {
     public class GrpcServer : AbstractServer
     {
-        private readonly IEnumerable<ServerServiceDefinition> _services;
-        private readonly IEnumerable<ServerPort> _ports;
-        private readonly IEnumerable<ServerInterceptor> _interceptors;
-
         private readonly ILogger _logger;
         private Server _server;
-        public GrpcServer(Server server, 
-            IEnumerable<ServerServiceDefinition> services,
+        public GrpcServer(IEnumerable<ServerServiceDefinition> services,
             IEnumerable<ServerPort> ports,
             IEnumerable<ServerInterceptor> interceptors,
             ILoggerFactory loggerFactory) 
             : base(loggerFactory)
         {
             _logger = loggerFactory.CreateLogger<GrpcServer>();
-            _server = server;
-            _services = services;
-            _ports = ports;
-            _interceptors = interceptors;
-        }
 
 
-        public override void DoExport()
-        {
-            foreach (var item in _services)
+
+            _server = new Server();
+
+            foreach (var item in services)
             {
-                if (_interceptors?.Count() > 0) 
+                if (interceptors?.Count() > 0)
                 {
-                    item.Intercept(_interceptors.ToArray());
+                    item.Intercept(interceptors.ToArray());
                 }
                 _server.Services.Add(item);
             }
-            foreach (var item in _ports)
+            foreach (var item in ports)
             {
                 _server.Ports.Add(item);
             }
-            //开启服务
-            _server.Start();
-            _logger.LogInformation($"Started the grpc server ...");
-            Console.WriteLine($"Started the grpc server ...");
         }
 
-        public override void DoDispose()
+
+        public override async Task DoExport()
+        {
+            
+            //开启服务
+            _server.Start();
+            await Task.CompletedTask;
+            var ports = _server.Ports.Select(w=>w.Port);
+            _logger.LogInformation($"Started the grpc server on{string.Join(",",ports)} ...");
+        }
+
+        public override async Task DoDispose()
         {
             //向注册中心发送注销请求
             if (_server != null)
             {
                 try
                 {
-                    _server.ShutdownAsync().GetAwaiter().GetResult();
+                    await _server.ShutdownAsync();
                     _server = null;
                 }
                 catch (Exception ex)

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
+using System.Threading.Tasks;
 using Zooyard.Core;
 using Zooyard.Rpc.Support;
 
@@ -17,7 +18,7 @@ namespace Zooyard.Rpc.GrpcImpl
             _logger = loggerFactory.CreateLogger<GrpcInvoker>();
         }
         public override object Instance { get { return _instance; } }
-        protected override IResult HandleInvoke(IInvocation invocation)
+        protected override async Task<IResult> HandleInvoke(IInvocation invocation)
         {
             var paraTypes = new Type[invocation.Arguments.Length + 1];
             var parasPlus = new object[invocation.Arguments.Length + 1];
@@ -37,6 +38,7 @@ namespace Zooyard.Rpc.GrpcImpl
                 
             var method = _instance.GetType().GetMethod(invocation.MethodInfo.Name, paraTypes);
             var value = method.Invoke(_instance, parasPlus);
+            await Task.CompletedTask;
             _logger.LogInformation($"Invoke:{invocation.MethodInfo.Name}");
             var result = new RpcResult(value);
             return result;

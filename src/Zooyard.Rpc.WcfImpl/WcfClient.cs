@@ -21,20 +21,14 @@ namespace Zooyard.Rpc.WcfImpl
             _logger = loggerFactory.CreateLogger<WcfClient>();
         }
 
-        public override IInvoker Refer()
+        public override async Task<IInvoker> Refer()
         {
             Open();
             return new WcfInvoker(_channel, _loggerFactory);
         }
 
-        public override void Open()
+        public override async Task Open()
         {
-            OpenAsync().ConfigureAwait(false);
-        }
-
-        public override async Task OpenAsync()
-        {
-
             if (_channel.State != CommunicationState.Opened &&
                _channel.State != CommunicationState.Opening)
             {
@@ -43,11 +37,8 @@ namespace Zooyard.Rpc.WcfImpl
             }
         }
 
-        public override void Close()
-        {
-            CloseAsync().ConfigureAwait(false);
-        }
-        public override async Task CloseAsync()
+
+        public override async Task Close()
         {
             if (_channel.State != CommunicationState.Closed &&
                  _channel.State != CommunicationState.Closing)
@@ -64,7 +55,7 @@ namespace Zooyard.Rpc.WcfImpl
             }
         }
 
-        public override void Dispose()
+        public override async Task DisposeAsync()
         {
             if (_channel.State != CommunicationState.Closed &&
                  _channel.State != CommunicationState.Closing)
@@ -73,6 +64,7 @@ namespace Zooyard.Rpc.WcfImpl
                 {
                     _channel.Close();
                     _channel.Abort();
+                    await Task.CompletedTask;
                 }
                 catch (Exception e)
                 {

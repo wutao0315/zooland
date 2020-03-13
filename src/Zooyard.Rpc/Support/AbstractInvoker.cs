@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
 using Zooyard.Core;
 
 namespace Zooyard.Rpc.Support
@@ -11,12 +12,12 @@ namespace Zooyard.Rpc.Support
             _logger = loggerFactory.CreateLogger<AbstractInvoker>();
         }
         public abstract object Instance { get; }
-        public virtual IResult Invoke(IInvocation invocation)
+        public virtual async Task<IResult> Invoke(IInvocation invocation)
         {
             _logger.LogInformation($"{invocation.App}:{invocation.Version}:{invocation.TargetType.FullName}:{invocation.MethodInfo.Name}");
-            var result = HandleInvoke(invocation);
+            var result = await HandleInvoke(invocation);
             return result;
         }
-        protected abstract IResult HandleInvoke(IInvocation invocation);
+        protected abstract Task<IResult> HandleInvoke(IInvocation invocation);
     }
 }

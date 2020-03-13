@@ -22,7 +22,7 @@ namespace Zooyard.Rpc.Cluster
             _logger = loggerFactory.CreateLogger<ForkingCluster>();
         }
 
-        public override IClusterResult DoInvoke(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
+        public override async Task<IClusterResult> DoInvoke(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
         {
             //IResult result = null;
             var goodUrls = new List<URL>();
@@ -58,15 +58,15 @@ namespace Zooyard.Rpc.Cluster
             var index = 0;
             foreach (var invoker in selected)
             {
-                var task = Task.Run<IResult>(() => {
+                var task = Task.Run<IResult>(async() => {
                     try
                     {
                         var client = pool.GetClient(invoker);
                         try
                         {
-                            var refer = client.Refer();
+                            var refer = await client.Refer();
                             _source.WriteConsumerBefore(refer.Instance, invoker, invocation);
-                            var resultInner = refer.Invoke(invocation);
+                            var resultInner = await refer.Invoke(invocation);
                             _source.WriteConsumerAfter(invoker, invocation, resultInner);
                             pool.Recovery(client);
                             goodUrls.Add(invoker);
@@ -95,7 +95,7 @@ namespace Zooyard.Rpc.Cluster
             try
             {
                 var retIndex=Task.WaitAny(taskList,timeout);
-                var ret= taskList[retIndex].Result;
+                var ret= await taskList[retIndex];
                 if (ret.HasException)
                 {
                     Exception e = ret.Exception;

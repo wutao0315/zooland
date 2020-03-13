@@ -38,7 +38,7 @@ namespace Zooyard.Rpc.Cluster
             }
             return key;
         }
-        public override IClusterResult DoInvoke(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
+        public override async Task<IClusterResult> DoInvoke(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
         {
             var goodUrls = new List<URL>();
             var badUrls = new List<BadUrl>();
@@ -55,9 +55,9 @@ namespace Zooyard.Rpc.Cluster
                         var client = pool.GetClient(invoker);
                         try
                         {
-                            var refer = client.Refer();
+                            var refer = await client.Refer();
                             _source.WriteConsumerBefore(refer.Instance, invoker, invocation);
-                            var invokeResult = refer.Invoke(invocation);
+                            var invokeResult = await refer.Invoke(invocation);
                             _source.WriteConsumerAfter(invoker, invocation, invokeResult);
                             pool.Recovery(client);
                             goodUrls.Add(invoker);
@@ -94,16 +94,16 @@ namespace Zooyard.Rpc.Cluster
             var results = new Dictionary<string, Task<IResult>>();
             foreach (var invoker in invokers)
             {
-                var task = Task.Run(() => 
+                var task = Task.Run(async() => 
                 {
                     try
                     {
                         var client = pool.GetClient(invoker);
                         try
                         {
-                            var refer = client.Refer();
+                            var refer = await client.Refer();
                             _source.WriteConsumerBefore(refer.Instance, invoker, invocation);
-                            var invokeResult = refer.Invoke(invocation);
+                            var invokeResult = await refer.Invoke(invocation);
                             _source.WriteConsumerAfter(invoker, invocation, invokeResult);
                             pool.Recovery(client);
                             goodUrls.Add(invoker);
@@ -136,7 +136,7 @@ namespace Zooyard.Rpc.Cluster
             {
                 try
                 {
-                    var r = entry.Value.Result;
+                    var r = await entry.Value;
                     if (r.HasException)
                     {
                         _logger.LogError(r.Exception, $"Invoke {entry.Key} {getGroupDescFromServiceKey(entry.Key)}  failed: {r.Exception.Message}");

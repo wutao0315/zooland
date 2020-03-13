@@ -37,7 +37,7 @@ namespace Zooyard.Rpc.GrpcImpl
 
 
        
-        public override IInvoker Refer()
+        public override async Task<IInvoker> Refer()
         {
             if (_channel?.State == ChannelState.Shutdown)
             {
@@ -45,19 +45,14 @@ namespace Zooyard.Rpc.GrpcImpl
             }
            
 
-            Open();
+            await Open();
             //grpc client service
 
 
             return new GrpcInvoker(_grpcClient, _clientTimeout, _loggerFactory);
         }
 
-        public override void Open()
-        {
-            OpenAsync().ConfigureAwait(false);
-        }
-
-        public override async Task OpenAsync()
+        public override async Task Open()
         {
             if (_channel.State != ChannelState.Ready)
             {
@@ -69,12 +64,8 @@ namespace Zooyard.Rpc.GrpcImpl
             }
         }
 
-        public override void Close()
-        {
-            CloseAsync().ConfigureAwait(false);
-        }
 
-        public override async Task CloseAsync()
+        public override async Task Close()
         {
             if (_channel != null)
             {
@@ -82,9 +73,9 @@ namespace Zooyard.Rpc.GrpcImpl
             }
         }
 
-        public override void Dispose()
+        public override async Task DisposeAsync()
         {
-            CloseAsync().ConfigureAwait(false);
+            await Close();
         }
     }
 }

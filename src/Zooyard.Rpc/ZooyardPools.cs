@@ -4,6 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Zooyard.Core;
 using Zooyard.Core.Utils;
 using Zooyard.Rpc.Cache;
@@ -490,7 +491,7 @@ namespace Zooyard.Rpc
         /// </summary>
         /// <param name="invocation"></param>
         /// <returns></returns>
-        public IResult Invoke(IInvocation invocation)
+        public async Task<IResult> Invoke(IInvocation invocation)
         {
             //cache
             var cache = this.GetCache(invocation);
@@ -507,7 +508,7 @@ namespace Zooyard.Rpc
                     return new RpcResult(value);
                 }
 
-                var resultInner = this.InvokeInner(invocation);
+                var resultInner = await this.InvokeInner(invocation);
                 if (!resultInner.HasException)
                 {
                     cache.Put(key, resultInner.Value);
@@ -515,7 +516,7 @@ namespace Zooyard.Rpc
                 return resultInner;
             }
 
-            var result = this.InvokeInner(invocation);
+            var result = await this.InvokeInner(invocation);
             return result;
         }
 
@@ -541,7 +542,7 @@ namespace Zooyard.Rpc
         /// </summary>
         /// <param name="invocation"></param>
         /// <returns></returns>
-        private IResult InvokeInner(IInvocation invocation)
+        private async Task<IResult> InvokeInner(IInvocation invocation)
         {
             var urls = this.GetUrls(invocation);
 
@@ -558,7 +559,7 @@ namespace Zooyard.Rpc
 
             var pool = this.GetClientPool(invocation);
 
-            var result = cluster.DoInvoke(pool, loadbalance, this.Address, urls, invocation);
+            var result = await cluster.DoInvoke(pool, loadbalance, this.Address, urls, invocation);
 
             lock (locker)
             {

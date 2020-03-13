@@ -123,13 +123,13 @@ namespace Zooyard.Rpc.NettyImpl
                 pipeline.AddLast("FrameEncoder", new LengthFieldPrepender(Settings.ByteOrder, 4, 0, false));
             }
         }
-        public override void DoExport()
+        public override async Task DoExport()
         {
             if (_logger.IsEnabled(LogLevel.Debug))
             {
                 _logger.LogDebug($"ready to start the server on port:{Settings.Port}.");
             }
-            var newServerChannel = ServerFactory().BindAsync(IPAddress.Any, Settings.Port).GetAwaiter().GetResult();
+            var newServerChannel = await ServerFactory().BindAsync(IPAddress.Any, Settings.Port);
 
             // Block reads until a handler actor is registered
             // no incoming connections will be accepted until this value is reset
@@ -144,30 +144,34 @@ namespace Zooyard.Rpc.NettyImpl
             
         }
 
-        public override void DoDispose()
+        public override async Task DoDispose()
         {
             try
             {
-                var tasks = new List<Task>();
                 foreach (var channel in ConnectionGroup)
                 {
-                    tasks.Add(channel.CloseAsync());
+                    await channel.CloseAsync();
                 }
-                var all = Task.WhenAll(tasks);
-                all.ConfigureAwait(false).GetAwaiter().GetResult();
+                await ServerChannel?.CloseAsync();
 
-                var server = ServerChannel?.CloseAsync() ?? Task.CompletedTask;
-                server.ConfigureAwait(false).GetAwaiter().GetResult();
+                //var tasks = new List<Task>();
+                //foreach (var channel in ConnectionGroup)
+                //{
+                //    tasks.Add(channel.CloseAsync());
+                //}
+                //var all = Task.WhenAll(tasks);
+                //all.ConfigureAwait(false).GetAwaiter().GetResult();
 
-                //return all.IsCompleted && server.IsCompleted;
+                //var server = ServerChannel?.CloseAsync() ?? Task.CompletedTask;
+                //server.ConfigureAwait(false).GetAwaiter().GetResult();
+
             }
             finally
             {
                 // free all of the connection objects we were holding onto
                 ConnectionGroup.Clear();
-#pragma warning disable 4014 // shutting down the worker groups can take up to 10 seconds each. Let that happen asnychronously.
-                _serverEventLoopGroup.ShutdownGracefullyAsync();
-#pragma warning restore 4014
+                // shutting down the worker groups can take up to 10 seconds each. Let that happen asnychronously.
+               await _serverEventLoopGroup.ShutdownGracefullyAsync();
             }
 
         }

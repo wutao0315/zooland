@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Zooyard.Core;
 using Zooyard.Rpc.Support;
 
@@ -22,7 +23,7 @@ namespace Zooyard.Rpc.AkkaImpl
             _logger = loggerFactory.CreateLogger<AkkaInvoker>();
         }
         public override object Instance { get { return _instance; } }
-        protected override IResult HandleInvoke(IInvocation invocation)
+        protected override async Task<IResult> HandleInvoke(IInvocation invocation)
         {
             if (invocation.Arguments.Count()>1)
             {
@@ -63,6 +64,7 @@ namespace Zooyard.Rpc.AkkaImpl
                 throw ex;
             }
 
+            await Task.CompletedTask;
             _logger.LogInformation($"Invoke:{invocation.MethodInfo.Name}");
             var result = new RpcResult(value);
             return result;

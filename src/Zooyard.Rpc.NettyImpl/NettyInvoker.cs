@@ -24,7 +24,7 @@ namespace Zooyard.Rpc.NettyImpl
             _logger = loggerFactory.CreateLogger<NettyInvoker>();
         }
         public override object Instance { get { return _channel; } }
-        protected override IResult HandleInvoke(IInvocation invocation)
+        protected override async Task<IResult> HandleInvoke(IInvocation invocation)
         {
             try
             {
@@ -44,7 +44,7 @@ namespace Zooyard.Rpc.NettyImpl
                     var bytes = transportMessage.Serialize();
                     var byteBuffers = Unpooled.WrappedBuffer(bytes);
 
-                    _channel.WriteAndFlushAsync(byteBuffers).GetAwaiter().GetResult();
+                    await _channel.WriteAndFlushAsync(byteBuffers);
                 }
                 catch (Exception e)
                 {
@@ -55,7 +55,7 @@ namespace Zooyard.Rpc.NettyImpl
                 _logger.LogInformation($"Invoke:{invocation.MethodInfo.Name}");
                 if (callbackTask.Wait(_clientTimeout / 2))
                 {
-                    var value = callbackTask.GetAwaiter().GetResult();
+                    var value = await callbackTask;
                     return new RpcResult(value.Result);
                 }
                 else

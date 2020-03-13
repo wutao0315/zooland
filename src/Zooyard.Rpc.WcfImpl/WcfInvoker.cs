@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
 using Zooyard.Core;
 using Zooyard.Rpc.Support;
 
@@ -14,10 +15,11 @@ namespace Zooyard.Rpc.WcfImpl
             _logger = loggerFactory.CreateLogger<WcfInvoker>();
         }
         public override object Instance { get { return _instance; } }
-        protected override IResult HandleInvoke(IInvocation invocation)
+        protected override async Task<IResult> HandleInvoke(IInvocation invocation)
         {
             var method = _instance.GetType().GetMethod(invocation.MethodInfo.Name, invocation.ArgumentTypes);
             var value = method.Invoke(_instance, invocation.Arguments);
+            await Task.CompletedTask;
             _logger.LogInformation($"Invoke:{invocation.MethodInfo.Name}");
             return new RpcResult(value);
         }

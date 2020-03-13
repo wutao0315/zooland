@@ -36,18 +36,14 @@ namespace Zooyard.Rpc.NettyImpl
         }
 
 
-        public override IInvoker Refer()
+        public override async Task<IInvoker> Refer()
         {
-            this.Open();
+            await this.Open();
 
             return new NettyInvoker(_channel, _messageListener, _loggerFactory);
         }
 
-        public override void Open()
-        {
-            OpenAsync().ConfigureAwait(false);
-        }
-        public override async Task OpenAsync()
+        public override async Task Open()
         {
             if (!_channel.Open || !_channel.Active)
             {
@@ -56,12 +52,7 @@ namespace Zooyard.Rpc.NettyImpl
             }
         }
 
-        public override void Close()
-        {
-            CloseAsync().ConfigureAwait(false);
-        }
-
-        public override async Task CloseAsync()
+        public override async Task Close()
         {
             if (_channel.Active || _channel.Open)
             {
@@ -69,15 +60,15 @@ namespace Zooyard.Rpc.NettyImpl
             }
         }
 
-        public override void Dispose()
+        public override async Task DisposeAsync()
         {
-            Close();
-            _channel.CloseAsync().GetAwaiter().GetResult();
+            await Close();
+            await _channel.CloseAsync();
             if (!_eventLoopGroup.IsShutdown || !_eventLoopGroup.IsTerminated)
             {
                 var quietPeriod = Url.GetParameter(QUIETPERIOD_KEY, DEFAULT_QUIETPERIOD);
                 var timeout = Url.GetParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
-                _eventLoopGroup.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(quietPeriod), TimeSpan.FromSeconds(timeout)).GetAwaiter().GetResult();
+                await _eventLoopGroup.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(quietPeriod), TimeSpan.FromSeconds(timeout));
             }
         }
     }

@@ -75,7 +75,6 @@ namespace Zooyard.Rpc.GrpcImpl.Extensions
 
         public static void AddGrpcServer(this IServiceCollection services)
         {
-            services.AddSingleton<Server>();
             services.AddSingleton<IEnumerable<ServerServiceDefinition>>((serviceProvder) => 
             {
                 var option = serviceProvder.GetService<IOptionsMonitor<GrpcServerOption>>().CurrentValue;
