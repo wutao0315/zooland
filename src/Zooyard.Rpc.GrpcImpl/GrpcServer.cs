@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Zooyard.Core;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.Rpc.GrpcImpl
@@ -16,8 +17,9 @@ namespace Zooyard.Rpc.GrpcImpl
         public GrpcServer(IEnumerable<ServerServiceDefinition> services,
             IEnumerable<ServerPort> ports,
             IEnumerable<ServerInterceptor> interceptors,
+            IRegistryService registryService,
             ILoggerFactory loggerFactory) 
-            : base(loggerFactory)
+            : base(registryService, loggerFactory)
         {
             _logger = loggerFactory.CreateLogger<GrpcServer>();
 

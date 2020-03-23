@@ -12,6 +12,14 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="IRegistryHealthChecks.cs" />
+    <Compile Remove="IRegistryHost.cs" />
+    <Compile Remove="IRegistryKeyValues.cs" />
+    <Compile Remove="IRegistryService.cs" />
+    <Compile Remove="IRegistryServiceFind.cs" />
+  </ItemGroup>
+
 
   <ItemGroup>
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="4.7.0" />

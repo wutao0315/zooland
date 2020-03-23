@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Thrift;
 using Thrift.Server;
+using Zooyard.Core;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.Rpc.ThriftImpl
@@ -15,7 +16,10 @@ namespace Zooyard.Rpc.ThriftImpl
     {
         private readonly ILogger _logger;
         private readonly TBaseServer _server;
-        public ThriftServer(TBaseServer server , ILoggerFactory loggerFactory):base(loggerFactory)
+        public ThriftServer(TBaseServer server ,
+            IRegistryService registryService,
+            ILoggerFactory loggerFactory)
+            :base(registryService, loggerFactory)
         {
             _logger = loggerFactory.CreateLogger<ThriftServer>();
             _server = server;

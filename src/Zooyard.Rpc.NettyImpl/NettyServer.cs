@@ -39,7 +39,9 @@ namespace Zooyard.Rpc.NettyImpl
             bool isSsl,
             string pfx,
             string pwd,
-            ILoggerFactory loggerFactory) : base(loggerFactory)
+            IRegistryService registryService,
+            ILoggerFactory loggerFactory)
+            : base(registryService, loggerFactory)
         {
             _loggerFactory = loggerFactory;
             _logger = loggerFactory.CreateLogger<NettyServer>();

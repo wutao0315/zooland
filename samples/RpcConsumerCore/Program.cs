@@ -10,12 +10,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Zooyard.Core;
 using Zooyard.Core.Extensions;
-using Zooyard.Rpc.AkkaImpl.Extensions;
+//using Zooyard.Rpc.AkkaImpl.Extensions;
 using Zooyard.Rpc.GrpcImpl.Extensions;
 using Zooyard.Rpc.HttpImpl.Extensions;
 using Zooyard.Rpc.NettyImpl.Extensions;
-using Zooyard.Rpc.ThriftImpl.Extensions;
-using Zooyard.Rpc.WcfImpl.Extensions;
+//using Zooyard.Rpc.ThriftImpl.Extensions;
+//using Zooyard.Rpc.WcfImpl.Extensions;
 
 namespace RpcConsumerCore
 {
@@ -25,81 +25,82 @@ namespace RpcConsumerCore
         {
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory() + "/Config")
-                .AddJsonFile("zooyard.akka.json", false, true)
+                //.AddJsonFile("zooyard.akka.json", false, true)
                 .AddJsonFile("zooyard.grpc.json", false, true)
                 .AddJsonFile("zooyard.netty.json", false, true)
-                .AddJsonFile("zooyard.thrift.json", false, true)
-                .AddJsonFile("zooyard.wcf.json", false, true)
+                //.AddJsonFile("zooyard.thrift.json", false, true)
+                //.AddJsonFile("zooyard.wcf.json", false, true)
                 .AddJsonFile("zooyard.json", false, true)
                 .AddJsonFile("nlog.json", false, true);
 
             var config = builder.Build();
 
             IServiceCollection services = new ServiceCollection();
-            services.Configure<AkkaOption>(config.GetSection("akka"));
+            //services.Configure<AkkaOption>(config.GetSection("akka"));
             services.Configure<GrpcOption>(config.GetSection("grpc"));
             services.Configure<NettyOption>(config.GetSection("netty"));
-            services.Configure<ThriftOption>(config.GetSection("thrift"));
-            services.Configure<WcfOption>(config.GetSection("wcf"));
+            //services.Configure<ThriftOption>(config.GetSection("thrift"));
+            //services.Configure<WcfOption>(config.GetSection("wcf"));
             services.Configure<ZooyardOption>(config.GetSection("zooyard"));
             services.AddLogging();
-            services.AddAkkaClient();
+            //services.AddAkkaClient();
             services.AddGrpcClient();
             services.AddHttpClient();
             services.AddNettyClient();
 
-            services.AddThriftClient();
-            services.AddWcfClient();
+            //services.AddThriftClient();
+            //services.AddWcfClient();
             services.AddZoolandClient(config);
 
             using (var bsp = services.BuildServiceProvider())
             {
-                var helloServiceThrift = bsp.GetService<RpcContractThrift.IHelloService>();
+                //var helloServiceThrift = bsp.GetService<RpcContractThrift.IHelloService>();
                 var helloServiceGrpc = bsp.GetService<RpcContractGrpc.IHelloService>();
-                var helloServiceWcf = bsp.GetService<RpcContractWcf.IHelloService>();
+                //var helloServiceWcf = bsp.GetService<RpcContractWcf.IHelloService>();
                 var helloServiceHttp = bsp.GetService<RpcContractHttp.IHelloService>();
-                var helloServiceAkka = bsp.GetService<RpcContractAkka.IHelloService>();
+                //var helloServiceAkka = bsp.GetService<RpcContractAkka.IHelloService>();
                 var helloServiceNetty = bsp.GetService<RpcContractNetty.IHelloService>();
                 //RpcContractNetty.IHelloService helloServiceNetty = null;
 
                 while (true)
                 {
-                    Console.WriteLine("请选择:wcf | grpc | thrift | http | akka | netty | all");
+                    //Console.WriteLine("请选择:wcf | grpc | thrift | http | akka | netty | all");
+                    Console.WriteLine("请选择:grpc | http | netty | all");
                     var mode = Console.ReadLine().ToLower();
                     switch (mode)
                     {
-                        case "wcf":
-                            CallWhile((helloword) => { WcfHello(helloServiceWcf, helloword); });
-                            break;
+                        //case "wcf":
+                        //    CallWhile((helloword) => { WcfHello(helloServiceWcf, helloword); });
+                        //    break;
                         case "grpc":
                             CallWhile((helloword) => { GrpcHello(helloServiceGrpc, helloword); });
                             break;
-                        case "thrift":
-                            CallWhile((helloword) => { ThriftHello(helloServiceThrift, helloword); });
-                            break;
+                        //case "thrift":
+                        //    CallWhile((helloword) => { ThriftHello(helloServiceThrift, helloword); });
+                        //    break;
                         case "http":
                             CallWhile((helloword) => { HttpHello(helloServiceHttp, helloword); });
                             break;
-                        case "akka":
-                            CallWhile((helloword) => { AkkaHello(helloServiceAkka, helloword); });
-                            break;
+                        //case "akka":
+                        //    CallWhile((helloword) => { AkkaHello(helloServiceAkka, helloword); });
+                        //    break;
                         case "netty":
                             CallWhile((helloword) => { NettyHello(helloServiceNetty, helloword); });
                             break;
                         case "all":
                             for (int i = 0; i < 3; i++)
                             {
-                                Task.Run(() =>
-                                {
-                                    try
-                                    {
-                                        WcfHello(helloServiceWcf);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        throw ex;
-                                    }
-                                });
+                                //Task.Run(() =>
+                                //{
+                                //    try
+                                //    {
+                                //        WcfHello(helloServiceWcf);
+                                //    }
+                                //    catch (Exception ex)
+                                //    {
+                                //        throw ex;
+                                //    }
+                                //});
                                 Task.Run(() =>
                                 {
                                     try
@@ -112,18 +113,18 @@ namespace RpcConsumerCore
                                     }
 
                                 });
-                                Task.Run(() =>
-                                {
-                                    try
-                                    {
-                                        ThriftHello(helloServiceThrift);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        throw ex;
-                                    }
+                                //Task.Run(() =>
+                                //{
+                                //    try
+                                //    {
+                                //        ThriftHello(helloServiceThrift);
+                                //    }
+                                //    catch (Exception ex)
+                                //    {
+                                //        throw ex;
+                                //    }
 
-                                });
+                                //});
                                 Task.Run(() =>
                                 {
                                     try
@@ -137,19 +138,19 @@ namespace RpcConsumerCore
                                     }
 
                                 });
-                                Task.Run(() =>
-                                {
+                                //Task.Run(() =>
+                                //{
 
-                                    try
-                                    {
-                                        AkkaHello(helloServiceAkka);
-                                    }
-                                    catch (Exception ex)
-                                    {
+                                //    try
+                                //    {
+                                //        AkkaHello(helloServiceAkka);
+                                //    }
+                                //    catch (Exception ex)
+                                //    {
 
-                                        throw ex;
-                                    }
-                                });
+                                //        throw ex;
+                                //    }
+                                //});
                                 Task.Run(() =>
                                 {
 
@@ -178,22 +179,22 @@ namespace RpcConsumerCore
                 
 
         }
-        private static void ThriftHello(RpcContractThrift.IHelloService helloServiceThrift, string helloword = "world")
-        {
-            var callNameVoid = helloServiceThrift.CallNameVoid();
-            Console.WriteLine(callNameVoid);
-            helloServiceThrift.CallName(helloword);
-            Console.WriteLine("CallName called");
-            helloServiceThrift.CallVoid();
-            Console.WriteLine("CallVoid called");
-            var hello = helloServiceThrift.Hello(helloword);
-            Console.WriteLine(hello);
-            var helloResult = helloServiceThrift.SayHello(helloword + "perfect world");
-            Console.WriteLine($"{helloResult.Name},{helloResult.Gender},{helloResult.Head}");
-            helloResult.Name = helloword + "show perfect world";
-            var showResult = helloServiceThrift.ShowHello(helloResult);
-            Console.WriteLine(showResult);
-        }
+        //private static void ThriftHello(RpcContractThrift.IHelloService helloServiceThrift, string helloword = "world")
+        //{
+        //    var callNameVoid = helloServiceThrift.CallNameVoid();
+        //    Console.WriteLine(callNameVoid);
+        //    helloServiceThrift.CallName(helloword);
+        //    Console.WriteLine("CallName called");
+        //    helloServiceThrift.CallVoid();
+        //    Console.WriteLine("CallVoid called");
+        //    var hello = helloServiceThrift.Hello(helloword);
+        //    Console.WriteLine(hello);
+        //    var helloResult = helloServiceThrift.SayHello(helloword + "perfect world");
+        //    Console.WriteLine($"{helloResult.Name},{helloResult.Gender},{helloResult.Head}");
+        //    helloResult.Name = helloword + "show perfect world";
+        //    var showResult = helloServiceThrift.ShowHello(helloResult);
+        //    Console.WriteLine(showResult);
+        //}
         private static void GrpcHello(RpcContractGrpc.IHelloService helloServiceGrpc, string helloword = "world")
         {
             var callNameVoid = helloServiceGrpc.CallNameVoid(new RpcContractGrpc.Void());
@@ -210,22 +211,22 @@ namespace RpcConsumerCore
             var showResult = helloServiceGrpc.ShowHello(helloResult);
             Console.WriteLine(showResult.Name);
         }
-        private static void WcfHello(RpcContractWcf.IHelloService helloServiceWcf, string helloword = "world")
-        {
-            var callNameVoid = helloServiceWcf.CallNameVoid();
-            Console.WriteLine(callNameVoid);
-            helloServiceWcf.CallName(helloword);
-            Console.WriteLine("CallName called");
-            helloServiceWcf.CallVoid();
-            Console.WriteLine("CallVoid called");
-            var helloWcf = helloServiceWcf.Hello(helloword);
-            Console.WriteLine(helloWcf);
-            var helloResultWcf = helloServiceWcf.SayHello($"{helloword} perfect world");
-            Console.WriteLine($"{helloResultWcf.Name},{helloResultWcf.Gender},{helloResultWcf.Head}");
-            helloResultWcf.Name = helloword + "show perfect world";
-            var showResultWcf = helloServiceWcf.ShowHello(helloResultWcf);
-            Console.WriteLine(showResultWcf);
-        }
+        //private static void WcfHello(RpcContractWcf.IHelloService helloServiceWcf, string helloword = "world")
+        //{
+        //    var callNameVoid = helloServiceWcf.CallNameVoid();
+        //    Console.WriteLine(callNameVoid);
+        //    helloServiceWcf.CallName(helloword);
+        //    Console.WriteLine("CallName called");
+        //    helloServiceWcf.CallVoid();
+        //    Console.WriteLine("CallVoid called");
+        //    var helloWcf = helloServiceWcf.Hello(helloword);
+        //    Console.WriteLine(helloWcf);
+        //    var helloResultWcf = helloServiceWcf.SayHello($"{helloword} perfect world");
+        //    Console.WriteLine($"{helloResultWcf.Name},{helloResultWcf.Gender},{helloResultWcf.Head}");
+        //    helloResultWcf.Name = helloword + "show perfect world";
+        //    var showResultWcf = helloServiceWcf.ShowHello(helloResultWcf);
+        //    Console.WriteLine(showResultWcf);
+        //}
         private static void HttpHello(RpcContractHttp.IHelloService helloServiceHttp, string helloword = "world")
         {
             var callNameVoid = helloServiceHttp.CallNameVoid();
@@ -242,23 +243,22 @@ namespace RpcConsumerCore
             var showResultWcf = helloServiceHttp.ShowHello(helloResultWcf);
             Console.WriteLine(showResultWcf);
         }
-        private static void AkkaHello(RpcContractAkka.IHelloService akkaServiceHttp, string helloword = "world")
-        {
-            var callNameVoid = akkaServiceHttp.CallNameVoid();
-            Console.WriteLine(callNameVoid);
-            akkaServiceHttp.CallName(new RpcContractAkka.NameResult { Name = helloword });
-            Console.WriteLine("CallName called");
-            akkaServiceHttp.CallVoid();
-            Console.WriteLine("CallVoid called");
-            var hello = akkaServiceHttp.Hello(new RpcContractAkka.NameResult { Name = helloword });
-            Console.WriteLine(hello.Name);
-            var helloResult = akkaServiceHttp.SayHello(new RpcContractAkka.NameResult { Name = $"{helloword} perfect world" });
-            Console.WriteLine($"{helloResult.Name},{helloResult.Gender},{helloResult.Head}");
-            helloResult.Name = helloword + "show perfect world";
-            var showResultWcf = akkaServiceHttp.ShowHello(helloResult);
-            Console.WriteLine(showResultWcf.Name);
-
-        }
+        //private static void AkkaHello(RpcContractAkka.IHelloService akkaServiceHttp, string helloword = "world")
+        //{
+        //    var callNameVoid = akkaServiceHttp.CallNameVoid();
+        //    Console.WriteLine(callNameVoid);
+        //    akkaServiceHttp.CallName(new RpcContractAkka.NameResult { Name = helloword });
+        //    Console.WriteLine("CallName called");
+        //    akkaServiceHttp.CallVoid();
+        //    Console.WriteLine("CallVoid called");
+        //    var hello = akkaServiceHttp.Hello(new RpcContractAkka.NameResult { Name = helloword });
+        //    Console.WriteLine(hello.Name);
+        //    var helloResult = akkaServiceHttp.SayHello(new RpcContractAkka.NameResult { Name = $"{helloword} perfect world" });
+        //    Console.WriteLine($"{helloResult.Name},{helloResult.Gender},{helloResult.Head}");
+        //    helloResult.Name = helloword + "show perfect world";
+        //    var showResultWcf = akkaServiceHttp.ShowHello(helloResult);
+        //    Console.WriteLine(showResultWcf.Name);
+        //}
         private static void NettyHello(RpcContractNetty.IHelloService nettyServiceHttp, string helloword = "world")
         {
             var callNameVoid = nettyServiceHttp.CallNameVoid();

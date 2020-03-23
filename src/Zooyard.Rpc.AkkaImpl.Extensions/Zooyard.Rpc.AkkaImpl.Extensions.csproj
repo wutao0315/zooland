@@ -19,7 +19,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Zooyard.Core\Zooyard.Core.csproj" />
-    <ProjectReference Include="..\Zooyard.Rpc.AkkaImpl\Zooyard.Rpc.AkkaImpl.csproj" />
     <ProjectReference Include="..\Zooyard.Rpc\Zooyard.Rpc.csproj" />
   </ItemGroup>
 

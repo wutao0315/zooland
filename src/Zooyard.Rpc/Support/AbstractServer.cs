@@ -7,14 +7,15 @@ namespace Zooyard.Rpc.Support
     public abstract class AbstractServer : IServer
     {
         private readonly ILogger _logger;
-        public AbstractServer(ILoggerFactory loggerFactory)
-        {
-            _logger = loggerFactory.CreateLogger<AbstractServer>();
-        }
         /// <summary>
         /// 注册中心发现机制
         /// </summary>
-        public IRegistryHost RegistryHost { get; set; }
+        private readonly IRegistryService _registryService;
+        public AbstractServer(IRegistryService registryService, ILoggerFactory loggerFactory)
+        {
+            _logger = loggerFactory.CreateLogger<AbstractServer>();
+            _registryService = registryService;
+        }
         public string Address { get; set; }
 
 
@@ -25,9 +26,9 @@ namespace Zooyard.Rpc.Support
             _logger.LogInformation("Export");
             if (!string.IsNullOrWhiteSpace(Address))
             {
-                var url = URL.valueOf(Address);
                 //registe this provoder
-                RegistryHost.RegisterService(url);
+                var url = URL.valueOf(Address);
+                await _registryService.RegisterService(url);
             }
         }
 
@@ -37,10 +38,10 @@ namespace Zooyard.Rpc.Support
             {
                 var url = URL.valueOf(Address);
                 //first unregiste this provider
-                RegistryHost.DeregisterService(url);
+                _registryService.UnregisterService(url).GetAwaiter().GetResult();
             }
             //them stop the provider
-            DoDispose().ConfigureAwait(false);
+            DoDispose().GetAwaiter().GetResult();
             _logger.LogInformation("Dispose");
         }
 

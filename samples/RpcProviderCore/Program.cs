@@ -8,17 +8,17 @@ using System.Collections.Generic;
 using System.IO;
 using Thrift;
 using Zooyard.Core.Extensions;
-using Zooyard.Rpc.AkkaImpl.Extensions;
+//using Zooyard.Rpc.AkkaImpl.Extensions;
 using Zooyard.Rpc.GrpcImpl.Extensions;
 using Zooyard.Rpc.NettyImpl.Extensions;
-using Zooyard.Rpc.ThriftImpl.Extensions;
+//using Zooyard.Rpc.ThriftImpl.Extensions;
 using Zooyard.Rpc.HttpImpl.Extensions;
 using Microsoft.Extensions.Hosting;
 using Zooyard.Core;
 using Microsoft.Extensions.Logging;
 using Thrift.Transports;
 using System;
-using RpcContractWcf.HelloService;
+//using RpcContractWcf.HelloService;
 using Zooyard.Rpc.Extensions;
 using NLog;
 using NLog.Extensions.Logging;
@@ -41,7 +41,7 @@ namespace RpcProviderCore
         public static IHostBuilder CreateHostBuilder(string[] args) =>
         Host.CreateDefaultBuilder(args)
             .ConfigureAppConfiguration((hostingContext, config) => {
-                hostingContext.HostingEnvironment.ApplicationName = "MemberThrift.ServerHost";
+                hostingContext.HostingEnvironment.ApplicationName = "RpcProviderCore";
                 hostingContext.HostingEnvironment.ContentRootPath = Directory.GetCurrentDirectory();
                 var env = hostingContext.HostingEnvironment;
                 //load json settings
@@ -56,25 +56,30 @@ namespace RpcProviderCore
 
                 var builder = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory() + @"\App_Data\Config")
-            .AddJsonFile("service.akka.json", false, true)
+            //.AddJsonFile("service.akka.json", false, true)
             .AddJsonFile("service.grpc.json", false, true)
             .AddJsonFile("service.netty.json", false, true)
-            .AddJsonFile("service.thrift.json", false, true)
+            //.AddJsonFile("service.thrift.json", false, true)
             .AddJsonFile("service.http.json", false, true)
             .AddJsonFile("service.json", false, true)
             .AddJsonFile("nlog.json", false, true);
 
                 var config = builder.Build();
 
-                services.Configure<AkkaServerOption>(config.GetSection("akka"));
+                //services.Configure<AkkaServerOption>(config.GetSection("akka"));
                 services.Configure<GrpcServerOption>(config.GetSection("grpc"));
                 services.Configure<NettyServerOption>(config.GetSection("netty"));
-                services.Configure<ThriftServerOption>(config.GetSection("thrift"));
+                //services.Configure<ThriftServerOption>(config.GetSection("thrift"));
                 services.Configure<HttpServerOption>(config.GetSection("http"));
                 services.AddLogging();
 
+                //实现注册接口代码
+                services.AddSingleton<IRegistryService>((provider)=> {
+                    return default(IRegistryService);
+                });
+
                 services.AddTransient((serviceProvider) => "A");
-                services.AddAkkaServer();
+                //services.AddAkkaServer();
 
                 //services.AddSingleton<ClientInterceptor, ClientGrpcInterceptor>();
                 services.AddSingleton<ServerInterceptor, ServerGrpcInterceptor>();
@@ -98,20 +103,20 @@ namespace RpcProviderCore
                 services.AddNettyServer();
 
 
-                services.AddTransient<RpcContractThrift.HelloService.IAsync>((serviceProvider) => new HelloServiceThriftImpl { ServiceName = "A" });
-                services.AddTransient<ITAsyncProcessor, RpcContractThrift.HelloService.AsyncProcessor>();
-                services.AddSingleton<TServerTransport>((serviceProvider) =>
-                {
-                    var option = serviceProvider.GetService<IOptionsMonitor<ThriftServerOption>>().CurrentValue;
-                    return new Thrift.Transports.Server.TServerSocketTransport(option.Port, option.ClientTimeOut, option.UseBufferedSockets);
-                });
-                services.AddSingleton<Thrift.Protocols.ITProtocolFactory>(new Thrift.Protocols.TCompactProtocol.Factory());
+                //services.AddTransient<RpcContractThrift.HelloService.IAsync>((serviceProvider) => new HelloServiceThriftImpl { ServiceName = "A" });
+                //services.AddTransient<ITAsyncProcessor, RpcContractThrift.HelloService.AsyncProcessor>();
+                //services.AddSingleton<TServerTransport>((serviceProvider) =>
+                //{
+                //    var option = serviceProvider.GetService<IOptionsMonitor<ThriftServerOption>>().CurrentValue;
+                //    return new Thrift.Transports.Server.TServerSocketTransport(option.Port, option.ClientTimeOut, option.UseBufferedSockets);
+                //});
+                //services.AddSingleton<Thrift.Protocols.ITProtocolFactory>(new Thrift.Protocols.TCompactProtocol.Factory());
 
-                services.AddThriftServer();
+                //services.AddThriftServer();
 
                 services.AddHttpServer<Startup>(args);
 
-                services.AddTransient<IHelloServiceWcf, HelloServiceWcfImpl>();
+                //services.AddTransient<IHelloServiceWcf, HelloServiceWcfImpl>();
 
                 services.AddHostedService<ZoolandHostedService>();
                 //services.AddZoolandServer();

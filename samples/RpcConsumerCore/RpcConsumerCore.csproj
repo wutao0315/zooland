@@ -6,6 +6,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Config\zooyard.akka.json" />
+    <None Remove="Config\zooyard.thrift.json" />
+    <None Remove="Config\zooyard.wcf.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Akka.Remote" Version="1.4.1" />
     <PackageReference Include="System.ServiceModel.Http" Version="4.7.0" />
     <PackageReference Include="System.ServiceModel.NetTcp" Version="4.7.0" />
@@ -16,32 +22,20 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Zooyard.Core.Extensions\Zooyard.Core.Extensions.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.Core\Zooyard.Core.csproj" />
-    <ProjectReference Include="..\..\src\Zooyard.Rpc.AkkaImpl.Extensions\Zooyard.Rpc.AkkaImpl.Extensions.csproj" />
-    <ProjectReference Include="..\..\src\Zooyard.Rpc.AkkaImpl\Zooyard.Rpc.AkkaImpl.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.Rpc.GrpcImpl.Extensions\Zooyard.Rpc.GrpcImpl.Extensions.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.Rpc.GrpcImpl\Zooyard.Rpc.GrpcImpl.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.Rpc.HttpImpl.Extensions\Zooyard.Rpc.HttpImpl.Extensions.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.Rpc.HttpImpl\Zooyard.Rpc.HttpImpl.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.Rpc.NettyImpl.Extensions\Zooyard.Rpc.NettyImpl.Extensions.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.Rpc.NettyImpl\Zooyard.Rpc.NettyImpl.csproj" />
-    <ProjectReference Include="..\..\src\Zooyard.Rpc.ThriftImpl.Extensions\Zooyard.Rpc.ThriftImpl.Extensions.csproj" />
-    <ProjectReference Include="..\..\src\Zooyard.Rpc.ThriftImpl\Zooyard.Rpc.ThriftImpl.csproj" />
-    <ProjectReference Include="..\..\src\Zooyard.Rpc.WcfImpl.Extensions\Zooyard.Rpc.WcfImpl.Extensions.csproj" />
-    <ProjectReference Include="..\..\src\Zooyard.Rpc.WcfImpl\Zooyard.Rpc.WcfImpl.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.Rpc\Zooyard.Rpc.csproj" />
-    <ProjectReference Include="..\RpcContractAkka\RpcContractAkka.csproj" />
     <ProjectReference Include="..\RpcContractGrpc\RpcContractGrpc.csproj" />
     <ProjectReference Include="..\RpcContractHttp\RpcContractHttp.csproj" />
     <ProjectReference Include="..\RpcContractNetty\RpcContractNetty.csproj" />
-    <ProjectReference Include="..\RpcContractThrift\RpcContractThrift.csproj" />
-    <ProjectReference Include="..\RpcContractWcf\RpcContractWcf.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <None Update="Config\nlog.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Config\zooyard.akka.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Config\zooyard.grpc.json">
@@ -51,12 +45,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Config\zooyard.netty.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Config\zooyard.thrift.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Config\zooyard.wcf.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

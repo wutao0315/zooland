@@ -277,10 +277,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Spring.Services.Zooland\Spring.Services.Zooyard.csproj">
-      <Project>{048438b8-ce56-44fe-ac54-23754154c521}</Project>
-      <Name>Spring.Services.Zooyard</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\src\Zooyard.Core\Zooyard.Core.csproj">
       <Project>{eabd730a-25f2-42cf-92f2-84049a0a7599}</Project>
       <Name>Zooyard.Core</Name>

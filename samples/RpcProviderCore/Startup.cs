@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using RpcContractWcf.HelloService;
+//using RpcContractWcf.HelloService;
 using SoapCore;
 using System;
 using System.Net.Http.Headers;
@@ -63,7 +63,7 @@ namespace RpcProviderCore
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
            
-            app.UseSoapEndpoint<IHelloServiceWcf>("/Hello/HelloServiceWcfImpl", new BasicHttpBinding(), SoapSerializer.DataContractSerializer);
+            //app.UseSoapEndpoint<IHelloServiceWcf>("/Hello/HelloServiceWcfImpl", new BasicHttpBinding(), SoapSerializer.DataContractSerializer);
 
             app.UseRouting();
             app.UseEndpoints(endpoints =>

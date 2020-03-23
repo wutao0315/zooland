@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Zooyard.Core;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.Rpc.WcfImpl
@@ -10,7 +11,8 @@ namespace Zooyard.Rpc.WcfImpl
     {
         private readonly ILogger _logger;
         private readonly WcfService _server;
-        public WcfServer(WcfService server, ILoggerFactory loggerFactory) : base(loggerFactory)
+        public WcfServer(WcfService server, IRegistryService registryService, ILoggerFactory loggerFactory) 
+            : base(registryService, loggerFactory)
         {
             _logger = loggerFactory.CreateLogger<WcfServer>();
             _server = server;

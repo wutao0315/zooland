@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Zooyard.Core;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.Rpc.AkkaImpl
@@ -31,15 +32,18 @@ namespace Zooyard.Rpc.AkkaImpl
         //";
 
         private readonly ILogger _logger;
-        public AkkaServer(ActorSystem actorSystem, IDictionary<string, ZooyardActor> actors, ILoggerFactory loggerFactory) 
-            : base(loggerFactory)
+        public AkkaServer(ActorSystem actorSystem,
+            IDictionary<string, ZooyardActor> actors,
+            IRegistryService registryService, 
+            ILoggerFactory loggerFactory) 
+            : base(registryService, loggerFactory)
         {
             _logger = loggerFactory.CreateLogger<AkkaServer>();
             _actorSystem = actorSystem;
             _actors = actors;
         }
-        public AkkaServer(string actorName, string actorConfig, IDictionary<string, ZooyardActor> actors, ILoggerFactory loggerFactory) 
-            : this(ActorSystem.Create(actorName.Replace(".", "-"), ConfigurationFactory.ParseString(actorConfig)), actors, loggerFactory)
+        public AkkaServer(string actorName, string actorConfig, IDictionary<string, ZooyardActor> actors, IRegistryService registryService, ILoggerFactory loggerFactory) 
+            : this(ActorSystem.Create(actorName.Replace(".", "-"), ConfigurationFactory.ParseString(actorConfig)), actors,registryService, loggerFactory)
         {
         }
 

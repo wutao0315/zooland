@@ -5,6 +5,7 @@ using Zooyard.Rpc.Support;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using System.Threading.Tasks;
+using Zooyard.Core;
 
 namespace Zooyard.Rpc.HttpImpl
 {
@@ -12,7 +13,8 @@ namespace Zooyard.Rpc.HttpImpl
     {
         private readonly ILogger _logger;
         private readonly IWebHost _server;
-        public HttpServer(IWebHost server, ILoggerFactory loggerFactory) : base(loggerFactory)
+        public HttpServer(IWebHost server, IRegistryService registryService, ILoggerFactory loggerFactory)
+            : base(registryService, loggerFactory)
         {
             _logger = loggerFactory.CreateLogger<HttpServer>();
             _server = server;
