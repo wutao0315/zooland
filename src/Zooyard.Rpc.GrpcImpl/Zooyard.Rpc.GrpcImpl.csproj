@@ -15,9 +15,4 @@
   <ItemGroup>
     <PackageReference Include="Grpc" Version="2.27.0" />
   </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Zooyard.Core\Zooyard.Core.csproj" />
-    <ProjectReference Include="..\Zooyard.Rpc\Zooyard.Rpc.csproj" />
-  </ItemGroup>
 </Project>

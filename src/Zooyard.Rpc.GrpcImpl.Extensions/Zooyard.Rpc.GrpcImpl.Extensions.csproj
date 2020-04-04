@@ -16,11 +16,5 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.2" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="3.1.2" />
   </ItemGroup>
-  
-  <ItemGroup>
-    <ProjectReference Include="..\Zooyard.Core\Zooyard.Core.csproj" />
-    <ProjectReference Include="..\Zooyard.Rpc.GrpcImpl\Zooyard.Rpc.GrpcImpl.csproj" />
-    <ProjectReference Include="..\Zooyard.Rpc\Zooyard.Rpc.csproj" />
-  </ItemGroup>
 
 </Project>
