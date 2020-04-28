@@ -77,7 +77,7 @@ namespace Zooyard.Rpc.HttpImpl
             _transport.DefaultRequestHeaders.Connection.TryParseAdd("Keep-Alive");
         }
 
-        public override async Task DisposeAsync()
+        public override async ValueTask DisposeAsync()
         {
             await Task.CompletedTask;
             if (_transport != null)

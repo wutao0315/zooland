@@ -47,7 +47,7 @@ namespace Zooyard.Rpc.Extensions
             {
                 foreach (var server in _servers)
                 {
-                    server.Dispose();
+                    await server.DisposeAsync();
                 }
             }
             catch (Exception ex)
@@ -55,7 +55,6 @@ namespace Zooyard.Rpc.Extensions
                 _logger.LogError(ex, ex.Message);
             }
            
-            await Task.CompletedTask;
         }
     }
 }

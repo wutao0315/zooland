@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Zooyard.Core
 {
-    public interface IServer : IDisposable
+    public interface IServer : IAsyncDisposable
     {
         Task Export();
     }

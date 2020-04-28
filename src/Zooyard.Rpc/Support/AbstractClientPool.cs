@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using Zooyard.Core;
 
 namespace Zooyard.Rpc.Support
@@ -202,13 +203,13 @@ namespace Zooyard.Rpc.Support
         /// 销毁连接
         /// </summary>
         /// <param name="client">连接</param>
-        public void DestoryClient(IClient client)
+        public async Task DestoryClient(IClient client)
         {
             if (client != null)
             {
                 var urlKey = client.Url.ToString();
-                client.Close();
-                client.Dispose();
+                await client.Close();
+                await client.DisposeAsync();
                 activeCount[urlKey]--;
                 _logger.LogInformation($"DestoryClient :[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
             }

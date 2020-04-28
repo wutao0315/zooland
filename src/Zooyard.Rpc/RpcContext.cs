@@ -70,15 +70,6 @@ namespace Zooyard.Rpc
                     return false;
                 }
                 string host = address.Host;
-                //if (address.Host == null)
-                //{
-                //    host = Dns.GetHostByAddress(address.Address).HostName;
-                //}
-                //else
-                //{
-                //    host = address.Address.ToString();
-                //    //host = address.Address.HostAddress;
-                //}
                 return url.Port != address.Port || !NetUtils.filterLocalHost(url.Ip).Equals(NetUtils.filterLocalHost(host));
             }
         }
@@ -102,16 +93,6 @@ namespace Zooyard.Rpc
                     return false;
                 }
                 string host = address.Host;
-                //if (address.Address == null)
-                //{
-                //    host = Dns.GetHostByAddress(address.Address).HostName;
-                //    //host = address.HostName;
-                //}
-                //else
-                //{
-                //    host = address.Address.ToString();
-                //    //host = address.Address.HostAddress;
-                //}
                 return url.Port == address.Port && NetUtils.filterLocalHost(url.Ip).Equals(NetUtils.filterLocalHost(host));
             }
         }

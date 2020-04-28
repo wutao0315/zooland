@@ -32,16 +32,16 @@ namespace Zooyard.Rpc.Support
             }
         }
 
-        public void Dispose()
+        public async ValueTask DisposeAsync()
         {
             if (!string.IsNullOrWhiteSpace(Address))
             {
                 var url = URL.valueOf(Address);
                 //first unregiste this provider
-                _registryService.UnregisterService(url).GetAwaiter().GetResult();
+                await _registryService.UnregisterService(url);
             }
             //them stop the provider
-            DoDispose().GetAwaiter().GetResult();
+            await DoDispose();
             _logger.LogInformation("Dispose");
         }
 

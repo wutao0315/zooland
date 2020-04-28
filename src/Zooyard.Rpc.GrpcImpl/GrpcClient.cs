@@ -73,7 +73,7 @@ namespace Zooyard.Rpc.GrpcImpl
             }
         }
 
-        public override async Task DisposeAsync()
+        public override async ValueTask DisposeAsync()
         {
             await Close();
         }

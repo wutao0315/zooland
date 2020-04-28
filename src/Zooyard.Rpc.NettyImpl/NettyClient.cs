@@ -60,7 +60,7 @@ namespace Zooyard.Rpc.NettyImpl
             }
         }
 
-        public override async Task DisposeAsync()
+        public override async ValueTask DisposeAsync()
         {
             await Close();
             await _channel.CloseAsync();

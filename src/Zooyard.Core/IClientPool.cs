@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace Zooyard.Core
 {
@@ -17,7 +18,7 @@ namespace Zooyard.Core
         /// 销毁连接
         /// </summary>
         /// <param name="client">连接</param>
-        void DestoryClient(IClient client);
+        Task DestoryClient(IClient client);
         /// <summary>
         /// 超时清除
         /// </summary>
