@@ -1,19 +1,19 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System;
 using System.Threading.Tasks;
 using Zooyard.Core;
+using Zooyard.Core.Logging;
 
 namespace Zooyard.Rpc.Support
 {
     public abstract class AbstractServer : IServer
     {
-        private readonly ILogger _logger;
+        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(AbstractServer));
         /// <summary>
         /// 注册中心发现机制
         /// </summary>
         private readonly IRegistryService _registryService;
-        public AbstractServer(IRegistryService registryService, ILoggerFactory loggerFactory)
+        public AbstractServer(IRegistryService registryService)
         {
-            _logger = loggerFactory.CreateLogger<AbstractServer>();
             _registryService = registryService;
         }
         public string Address { get; set; }
@@ -23,7 +23,7 @@ namespace Zooyard.Rpc.Support
         {
             //first start the service provider
             await DoExport();
-            _logger.LogInformation("Export");
+            Logger().Information("Export");
             if (!string.IsNullOrWhiteSpace(Address))
             {
                 //registe this provoder
@@ -42,7 +42,7 @@ namespace Zooyard.Rpc.Support
             }
             //them stop the provider
             await DoDispose();
-            _logger.LogInformation("Dispose");
+            Logger().Information("Dispose");
         }
 
         public abstract Task DoDispose();

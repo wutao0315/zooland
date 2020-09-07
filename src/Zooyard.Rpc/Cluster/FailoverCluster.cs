@@ -1,26 +1,21 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Zooyard.Core;
 using Zooyard.Core.Diagnositcs;
+using Zooyard.Core.Logging;
 using Zooyard.Core.Utils;
 
 namespace Zooyard.Rpc.Cluster
 {
     public class FailoverCluster : AbstractCluster
     {
+        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(FailoverCluster));
         public override string Name => NAME;
         public const string NAME = "failover";
         public const string RETRIES_KEY = "retries";
         public const int DEFAULT_RETRIES = 2;
-        private readonly ILogger _logger;
-        public FailoverCluster(ILoggerFactory loggerFactory) 
-            : base(loggerFactory)
-        {
-            _logger = loggerFactory.CreateLogger<FailoverCluster>();
-        }
 
         public override async Task<IClusterResult> DoInvoke(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
         {
@@ -65,24 +60,24 @@ namespace Zooyard.Rpc.Cluster
                         var result = await refer.Invoke(invocation);
                         _source.WriteConsumerAfter(invoker, invocation, result);
                         pool.Recovery(client);
-                        if (le != null && _logger.IsEnabled(LogLevel.Warning))
+                        if (le != null)
                         {
-                            _logger.LogWarning(le, "Although retry the method " + invocation.MethodInfo.Name
+                            Logger().Warn(le, "Although retry the method " + invocation.MethodInfo.Name
                                     + " in the service " + invocation.TargetType.FullName
                                     + " was successful by the provider " + invoker.Address
                                     + ", but there have been failed providers " + string.Join(",", providers)
                                     + " (" + providers.Count + "/" + copyinvokers.Count
                                     + ") from the registry " + address.Address
                                     + " on the consumer " + Local.HostName
-                                    + " using the service version " + invocation.Version 
-                                    + ". Last error is: "+ le.Message);
+                                    + " using the service version " + invocation.Version
+                                    + ". Last error is: " + le.Message);
                         }
                         goodUrls.Add(invoker);
                         return new ClusterResult(result,goodUrls,badUrls,le,false);
                     }
                     catch (Exception ex)
                     {
-                        pool.DestoryClient(client);
+                        await pool.DestoryClient(client).ConfigureAwait(false);
                         _source.WriteConsumerError(invoker,invocation ,ex);
                         throw ex;
                     }

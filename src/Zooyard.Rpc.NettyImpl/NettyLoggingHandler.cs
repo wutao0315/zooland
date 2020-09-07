@@ -1,11 +1,11 @@
 ﻿using DotNetty.Buffers;
 using DotNetty.Transport.Channels;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using Zooyard.Core.Logging;
 
 namespace Zooyard.Rpc.NettyImpl
 {
@@ -16,100 +16,89 @@ namespace Zooyard.Rpc.NettyImpl
     /// </summary>
     internal class NettyLoggingHandler : ChannelHandlerAdapter
     {
-        private readonly ILogger _logger;
-
-        public NettyLoggingHandler(ILoggerFactory loggerFactory)
-        {
-            this._logger = loggerFactory.CreateLogger<NettyLoggingHandler>();
-        }
+        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(NettyLoggingHandler));
 
         public override void ChannelRegistered(IChannelHandlerContext ctx)
         {
-            _logger.LogDebug("Channel {0} registered", ctx.Channel);
+            Logger().Debug($"Channel {ctx.Channel} registered");
             ctx.FireChannelRegistered();
         }
 
         public override void ChannelUnregistered(IChannelHandlerContext ctx)
         {
-            _logger.LogDebug("Channel {0} unregistered", ctx.Channel);
+            Logger().Debug($"Channel {ctx.Channel} unregistered");
             ctx.FireChannelUnregistered();
         }
 
         public override void ChannelActive(IChannelHandlerContext ctx)
         {
-            _logger.LogDebug("Channel {0} active", ctx.Channel);
+            Logger().Debug($"Channel {ctx.Channel} active");
             ctx.FireChannelActive();
         }
 
         public override void ChannelInactive(IChannelHandlerContext ctx)
         {
-            _logger.LogDebug("Channel {0} inactive", ctx.Channel);
+            Logger().Debug($"Channel {ctx.Channel} inactive");
             ctx.FireChannelInactive();
         }
 
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
         {
-            _logger.LogError(cause, "Channel {0} caught exception", ctx.Channel);
+            Logger().Error(cause, $"Channel {ctx.Channel} caught exception");
             ctx.FireExceptionCaught(cause);
         }
 
         public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
         {
-            _logger.LogDebug("Channel {0} triggered user event [{1}]", ctx.Channel, evt);
+            Logger().Debug($"Channel {ctx.Channel} triggered user event [{evt}]");
             ctx.FireUserEventTriggered(evt);
         }
 
-        public override Task BindAsync(IChannelHandlerContext ctx, EndPoint localAddress)
+        public override async Task BindAsync(IChannelHandlerContext ctx, EndPoint localAddress)
         {
-            _logger.LogInformation("Channel {0} bind to address {1}", ctx.Channel, localAddress);
-            return ctx.BindAsync(localAddress);
+            Logger().Information($"Channel {ctx.Channel} bind to address {localAddress}");
+            await ctx.BindAsync(localAddress);
         }
 
-        public override Task ConnectAsync(IChannelHandlerContext ctx, EndPoint remoteAddress, EndPoint localAddress)
+        public override async Task ConnectAsync(IChannelHandlerContext ctx, EndPoint remoteAddress, EndPoint localAddress)
         {
-            _logger.LogInformation("Channel {0} connect (remote: {1}, local: {2})", ctx.Channel, remoteAddress, localAddress);
-            return ctx.ConnectAsync(remoteAddress, localAddress);
+            Logger().Information($"Channel {ctx.Channel} connect (remote: {remoteAddress}, local: {localAddress})");
+            await ctx.ConnectAsync(remoteAddress, localAddress);
         }
 
-        public override Task DisconnectAsync(IChannelHandlerContext ctx)
+        public override async Task DisconnectAsync(IChannelHandlerContext ctx)
         {
-            _logger.LogInformation("Channel {0} disconnect", ctx.Channel);
-            return ctx.DisconnectAsync();
+            Logger().Information($"Channel {ctx.Channel} disconnect");
+            await ctx.DisconnectAsync();
         }
 
-        public override Task CloseAsync(IChannelHandlerContext ctx)
+        public override async Task CloseAsync(IChannelHandlerContext ctx)
         {
-            _logger.LogInformation("Channel {0} close", ctx.Channel);
-            return ctx.CloseAsync();
+            Logger().Information($"Channel {ctx.Channel} close");
+            await ctx.CloseAsync();
         }
 
-        public override Task DeregisterAsync(IChannelHandlerContext ctx)
+        public override async Task DeregisterAsync(IChannelHandlerContext ctx)
         {
-            _logger.LogDebug("Channel {0} deregister", ctx.Channel);
-            return ctx.DeregisterAsync();
+            Logger().Debug($"Channel {ctx.Channel} deregister");
+            await ctx.DeregisterAsync();
         }
 
         public override void ChannelRead(IChannelHandlerContext ctx, object message)
         {
-            if (_logger.IsEnabled(LogLevel.Debug))
-            {
-                _logger.LogDebug("Channel {0} received a message ({1}) of type [{2}]", ctx.Channel, message, message == null ? "NULL" : message.GetType().TypeQualifiedName());
-            }
+            Logger().Debug($"Channel {ctx.Channel} received a message ({message}) of type [{(message == null ? "NULL" : message.GetType().TypeQualifiedName())}]");
             ctx.FireChannelRead(message);
         }
 
-        public override Task WriteAsync(IChannelHandlerContext ctx, object message)
+        public override async Task WriteAsync(IChannelHandlerContext ctx, object message)
         {
-            if (_logger.IsEnabled(LogLevel.Debug))
-            {
-                _logger.LogDebug("Channel {0} writing a message ({1}) of type [{2}]", ctx.Channel, message, message == null ? "NULL" : message.GetType().TypeQualifiedName());
-            }
-            return ctx.WriteAsync(message);
+            Logger().Debug($"Channel {ctx.Channel} writing a message ({message}) of type [{(message == null ? "NULL" : message.GetType().TypeQualifiedName())}]");
+            await ctx.WriteAsync(message);
         }
 
         public override void Flush(IChannelHandlerContext ctx)
         {
-            _logger.LogDebug("Channel {0} flushing", ctx.Channel);
+            Logger().Debug($"Channel {ctx.Channel} flushing");
             ctx.Flush();
         }
 
@@ -125,13 +114,13 @@ namespace Zooyard.Rpc.NettyImpl
 
         protected string Format(IChannelHandlerContext ctx, string eventName, object arg)
         {
-            if (arg is IByteBuffer)
+            if (arg is IByteBuffer buffer)
             {
-                return this.FormatByteBuffer(ctx, eventName, (IByteBuffer)arg);
+                return this.FormatByteBuffer(ctx, eventName, buffer);
             }
-            else if (arg is IByteBufferHolder)
+            else if (arg is IByteBufferHolder holder)
             {
-                return this.FormatByteBufferHolder(ctx, eventName, (IByteBufferHolder)arg);
+                return this.FormatByteBufferHolder(ctx, eventName, holder);
             }
             else
             {

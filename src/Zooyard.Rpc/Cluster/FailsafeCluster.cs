@@ -1,31 +1,27 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Zooyard.Core;
 using Zooyard.Core.Diagnositcs;
+using Zooyard.Core.Logging;
 
 namespace Zooyard.Rpc.Cluster
 {
     public class FailsafeCluster : AbstractCluster
     {
+        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(FailsafeCluster));
         public override string Name => NAME;
         public const string NAME = "failsafe";
-        private readonly ILogger _logger;
-        public FailsafeCluster(ILoggerFactory loggerFactory)
-            : base(loggerFactory)
-        {
-            _logger = loggerFactory.CreateLogger<FailsafeCluster>();
-        }
+
 
         public override async Task<IClusterResult> DoInvoke(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
         {
-            IResult result = null;
             var goodUrls = new List<URL>();
             var badUrls = new List<BadUrl>();
             Exception exception = null;
             checkInvokers(urls, invocation, address);
             var invoker = base.select(loadbalance, invocation, urls, null);
+            IResult result;
             try
             {
                 var client = pool.GetClient(invoker);
@@ -37,12 +33,12 @@ namespace Zooyard.Rpc.Cluster
                     _source.WriteConsumerAfter(invoker, invocation, result);
                     pool.Recovery(client);
                     goodUrls.Add(invoker);
-                    return new ClusterResult(result, goodUrls, badUrls, exception,false);
+                    return new ClusterResult(result, goodUrls, badUrls, exception, false);
                 }
                 catch (Exception ex)
                 {
-                    pool.DestoryClient(client);
-                    _source.WriteConsumerError(invoker,invocation ,ex);
+                    await pool.DestoryClient(client).ConfigureAwait(false);
+                    _source.WriteConsumerError(invoker, invocation, ex);
                     throw ex;
                 }
             }
@@ -50,7 +46,7 @@ namespace Zooyard.Rpc.Cluster
             {
                 exception = e;
                 badUrls.Add(new BadUrl { Url = invoker, BadTime = DateTime.Now, CurrentException = exception });
-                _logger.LogError(e, $"Failsafe ignore exception: {e.Message}");
+                Logger().Error(e, $"Failsafe ignore exception: {e.Message}");
                 result = new RpcResult(e); // ignore
             }
             return new ClusterResult(result, goodUrls, badUrls,exception,false);

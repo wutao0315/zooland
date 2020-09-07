@@ -1,21 +1,22 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using Zooyard.Core;
+using Zooyard.Core.Logging;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.Rpc.GrpcImpl
 {
     public class GrpcInvoker : AbstractInvoker
     {
+        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(GrpcInvoker));
+
         private readonly object _instance;
         private readonly int _clientTimeout;
-        private readonly ILogger _logger;
-        public GrpcInvoker(object instance,int clientTimeout,ILoggerFactory loggerFactory) : base(loggerFactory)
+       
+        public GrpcInvoker(object instance,int clientTimeout)
         {
             _instance = instance;
             _clientTimeout = clientTimeout;
-            _logger = loggerFactory.CreateLogger<GrpcInvoker>();
         }
         public override object Instance { get { return _instance; } }
         protected override async Task<IResult> HandleInvoke(IInvocation invocation)
@@ -39,7 +40,7 @@ namespace Zooyard.Rpc.GrpcImpl
             var method = _instance.GetType().GetMethod(invocation.MethodInfo.Name, paraTypes);
             var value = method.Invoke(_instance, parasPlus);
             await Task.CompletedTask;
-            _logger.LogInformation($"Invoke:{invocation.MethodInfo.Name}");
+            Logger().Information($"Invoke:{invocation.MethodInfo.Name}");
             var result = new RpcResult(value);
             return result;
         }

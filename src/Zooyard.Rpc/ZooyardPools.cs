@@ -1,11 +1,11 @@
-﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Zooyard.Core;
+using Zooyard.Core.Logging;
 using Zooyard.Core.Utils;
 using Zooyard.Rpc.Cache;
 using Zooyard.Rpc.Cluster;
@@ -18,6 +18,8 @@ namespace Zooyard.Rpc
     /// </summary>
     public class ZooyardPools : IZooyardPools
     {
+        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ZooyardPools));
+
         public const string CACHE_KEY = "cache";
         public const string CLUSTER_KEY = "cluster";
         public const string LOADBANCE_KEY = "loadbance";
@@ -30,7 +32,6 @@ namespace Zooyard.Rpc
         public const string RECOVERY_TIME_KEY = "recoverytime";
         public const int DEFAULT_RECOVERY_TIME = 5;
         public const string APP_KEY = "app";
-        private readonly ILogger _logger;
         /// <summary>
         /// address
         /// if address's protocol is 'registry', the urls will request register center for all urls
@@ -83,14 +84,12 @@ namespace Zooyard.Rpc
         /// 构造函数
         /// </summary>
         /// <param name="pools"></param>
-        public ZooyardPools(ILoggerFactory loggerFactory, 
-            IDictionary<string, IClientPool> pools,
+        public ZooyardPools(IDictionary<string, IClientPool> pools,
             IDictionary<string, ILoadBalance> loadbalances,
             IDictionary<string, ICluster> clusters,
             IDictionary<string, Type> caches,
             IOptionsMonitor<ZooyardOption> clients)
         {
-            _logger = loggerFactory.CreateLogger<ZooyardPools>();
             this.Pools = new ConcurrentDictionary<string, IClientPool>(pools);
             this.LoadBalances = new ConcurrentDictionary<string, ILoadBalance>(loadbalances);
             this.Clusters = new ConcurrentDictionary<string, ICluster>(clusters);
@@ -120,7 +119,7 @@ namespace Zooyard.Rpc
         }
         private void OnChanged(ZooyardOption value, string name)
         {
-            _logger.LogInformation($"{name} has changed:{ value.ToString()}");
+            Logger().Information($"{name} has changed:{ value.ToString()}");
             Console.WriteLine($"{name} has changed:{ value.ToString()}");
 
             this.Address = URL.valueOf(value.RegisterUrl);
@@ -198,7 +197,7 @@ namespace Zooyard.Rpc
                 }
                 catch (Exception t)
                 {   // 防御性容错
-                    _logger.LogError("Unexpected error occur at collect statistic", t);
+                    Logger().Error(t, "Unexpected error occur at collect statistic");
                 }
             });
             cycleTimer.AutoReset = true;
@@ -217,7 +216,7 @@ namespace Zooyard.Rpc
                 }
                 catch (Exception t)
                 {   // 防御性容错
-                    _logger.LogError("Unexpected error occur at collect statistic", t);
+                    Logger().Error(t, "Unexpected error occur at collect statistic");
                 }
             });
             recoveryTimer.AutoReset = true;
@@ -256,7 +255,7 @@ namespace Zooyard.Rpc
                             this.Urls[badUrls.Key].Add(badUrl.Url);
                             list.Add(badUrl);
                             Console.WriteLine($"auto timer recovery url {badUrl.Url.ToString()}");
-                            _logger.LogInformation($"recovery:{badUrl.Url.ToString()}");
+                            Logger().Information($"recovery:{badUrl.Url.ToString()}");
                         }
                     }
                     foreach (var item in list)
@@ -407,7 +406,7 @@ namespace Zooyard.Rpc
                 var result = filterUrls(invocation, Urls[invocation.TargetType.FullName]);
                 if (result?.Count > 0)
                 {
-                    _logger.LogInformation("from good urls");
+                    Logger().Information("from good urls");
                     return result;
                 }
             }
@@ -418,7 +417,7 @@ namespace Zooyard.Rpc
                 var result = filterUrls(invocation, BadUrls[invocation.TargetType.FullName].Select(w => w.Url).ToList());
                 if (result?.Count > 0)
                 {
-                    _logger.LogInformation("from bad urls");
+                    Logger().Information("from bad urls");
                     return result;
                 }
             }
@@ -503,8 +502,8 @@ namespace Zooyard.Rpc
                 var value = cache.Get(key);
                 if (value != null)
                 {
-                    _logger.LogInformation($"call from cache:{key}");
-                    _logger.LogInformation($"cache type:{cache.GetType().FullName}");
+                    Logger().Information($"call from cache:{key}");
+                    Logger().Information($"cache type:{cache.GetType().FullName}");
                     return new RpcResult(value);
                 }
 
@@ -593,7 +592,7 @@ namespace Zooyard.Rpc
                             badUrls.Remove(badUrl);
                         }
 
-                        _logger.LogInformation(item.CurrentException,$"isolation url {item.ToString()}");
+                        Logger().Information(item.CurrentException,$"isolation url {item.ToString()}");
                         badUrls.Add(item);
                     }
                 }
@@ -610,7 +609,7 @@ namespace Zooyard.Rpc
                         if (!goodUrls.Contains(badUrl.Url))
                         {
                             goodUrls.Add(badUrl.Url);
-                            _logger.LogInformation($"recovery url {badUrl.ToString()}");
+                            Logger().Information($"recovery url {badUrl.ToString()}");
                         }
 
                     }

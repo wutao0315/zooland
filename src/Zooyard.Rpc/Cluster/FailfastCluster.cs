@@ -1,24 +1,21 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Zooyard.Core;
 using Zooyard.Core.Diagnositcs;
+using Zooyard.Core.Logging;
 using Zooyard.Core.Utils;
 
 namespace Zooyard.Rpc.Cluster
 {
     public class FailfastCluster : AbstractCluster
     {
+        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(FailfastCluster));
+
         public override string Name => NAME;
         public const string NAME = "failfast";
-        private readonly ILogger _logger;
-        public FailfastCluster(ILoggerFactory loggerFactory) 
-            : base(loggerFactory)
-        {
-            _logger = loggerFactory.CreateLogger<FailfastCluster>();
-        }
+
 
         public override async Task<IClusterResult> DoInvoke(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
         {
@@ -45,7 +42,7 @@ namespace Zooyard.Rpc.Cluster
                 }
                 catch (Exception ex)
                 {
-                    pool.DestoryClient(client);
+                    await pool.DestoryClient(client).ConfigureAwait(false);
                     _source.WriteConsumerError(invoker,invocation ,ex);
                     throw ex;
                 }
@@ -70,7 +67,7 @@ namespace Zooyard.Rpc.Cluster
                     + " use service version " + invocation.Version
                     + ", but no luck to perform the invocation. Last error is: " + e.Message, e.InnerException != null ? e.InnerException : e);
                 }
-                _logger.LogError(exception, exception.Message);
+                Logger().Error(exception, exception.Message);
                 badUrls.Add(new BadUrl { Url = invoker, BadTime = DateTime.Now, CurrentException = exception });
             }
 

@@ -1,27 +1,27 @@
 ﻿using DotNetty.Buffers;
 using DotNetty.Transport.Channels;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Zooyard.Core;
+using Zooyard.Core.Logging;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.Rpc.NettyImpl
 {
     public class NettyInvoker : AbstractInvoker
     {
+        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(NettyInvoker));
+
         private readonly IChannel _channel;
-        private readonly ILogger _logger;
         private readonly ConcurrentDictionary<string, TaskCompletionSource<TransportMessage>> _resultDictionary =
             new ConcurrentDictionary<string, TaskCompletionSource<TransportMessage>>();
         private readonly int _clientTimeout = 5000;
 
-        public NettyInvoker(IChannel channel,IMessageListener _messageListener,ILoggerFactory loggerFactory) : base(loggerFactory)
+        public NettyInvoker(IChannel channel,IMessageListener _messageListener)
         {
             _channel = channel;
             _messageListener.Received += MessageListener_Received;
-            _logger = loggerFactory.CreateLogger<NettyInvoker>();
         }
         public override object Instance { get { return _channel; } }
         protected override async Task<IResult> HandleInvoke(IInvocation invocation)
@@ -48,11 +48,11 @@ namespace Zooyard.Rpc.NettyImpl
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(e, e.Message);
+                    Logger().Error(e, e.Message);
                     throw new Exception("connecting server error.", e);
                 }
 
-                _logger.LogInformation($"Invoke:{invocation.MethodInfo.Name}");
+                Logger().Information($"Invoke:{invocation.MethodInfo.Name}");
                 if (callbackTask.Wait(_clientTimeout / 2))
                 {
                     var value = await callbackTask;
@@ -65,7 +65,7 @@ namespace Zooyard.Rpc.NettyImpl
             }
             catch (Exception e)
             {
-                _logger.LogError(e,e.Message);
+                Logger().Error(e,e.Message);
                 throw e;
             }
         }
@@ -78,10 +78,7 @@ namespace Zooyard.Rpc.NettyImpl
         /// <returns>远程调用结果消息模型。</returns>
         private async Task<RemoteInvokeResultMessage> RegisterResultCallbackAsync(string id)
         {
-            if (_logger.IsEnabled(LogLevel.Debug))
-            {
-                _logger.LogDebug($"ready to recive message Id：{id} response content。");
-            }
+            Logger().Debug($"ready to recive message Id：{id} response content。");
 
             var task = new TaskCompletionSource<TransportMessage>();
             _resultDictionary.TryAdd(id, task);
@@ -92,7 +89,7 @@ namespace Zooyard.Rpc.NettyImpl
             }
             catch (Exception e)
             {
-                _logger.LogError(e, e.Message);
+                Logger().Error(e, e.Message);
                 return null;
             }
             finally
@@ -105,11 +102,8 @@ namespace Zooyard.Rpc.NettyImpl
 
         private async Task MessageListener_Received(TransportMessage message)
         {
-            if (_logger.IsEnabled(LogLevel.Trace))
-            {
-                _logger.LogTrace($"serivce customer recive the message:{message.Id} ");
-            }
-                
+            Logger().Information($"serivce customer recive the message:{message.Id} ");
+
 
             TaskCompletionSource<TransportMessage> task;
             if (!_resultDictionary.TryGetValue(message.Id, out task))

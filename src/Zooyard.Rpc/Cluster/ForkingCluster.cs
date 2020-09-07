@@ -1,26 +1,21 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Zooyard.Core;
 using Zooyard.Core.Atomic;
 using Zooyard.Core.Diagnositcs;
+using Zooyard.Core.Logging;
 
 namespace Zooyard.Rpc.Cluster
 {
     public class ForkingCluster : AbstractCluster
     {
+        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ForkingCluster));
+
         public override string Name => NAME;
         public const string NAME = "forking";
         public const string FORKS_KEY = "forks";
         public const int DEFAULT_FORKS = 2;
-
-        private readonly ILogger _logger;
-        public ForkingCluster(ILoggerFactory loggerFactory) 
-            : base(loggerFactory)
-        {
-            _logger = loggerFactory.CreateLogger<ForkingCluster>();
-        }
 
         public override async Task<IClusterResult> DoInvoke(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
         {
@@ -58,7 +53,7 @@ namespace Zooyard.Rpc.Cluster
             var index = 0;
             foreach (var invoker in selected)
             {
-                var task = Task.Run<IResult>(async() => {
+                var task = Task.Run(async() => {
                     try
                     {
                         var client = pool.GetClient(invoker);
@@ -74,7 +69,7 @@ namespace Zooyard.Rpc.Cluster
                         }
                         catch (Exception ex)
                         {
-                            pool.DestoryClient(client);
+                            await pool.DestoryClient(client).ConfigureAwait(false);
                             _source.WriteConsumerError(invoker,invocation ,ex);
                             throw ex;
                         }
@@ -99,7 +94,7 @@ namespace Zooyard.Rpc.Cluster
                 if (ret.HasException)
                 {
                     Exception e = ret.Exception;
-                    throw new RpcException(e is RpcException? ((RpcException) e).Code : 0, "Failed to forking invoke provider " + selected + ", but no luck to perform the invocation. Last error is: " + e.Message, e.InnerException != null ? e.InnerException : e);
+                    throw new RpcException(e is RpcException exception ? exception.Code : 0, "Failed to forking invoke provider " + selected + ", but no luck to perform the invocation. Last error is: " + e.Message, e.InnerException != null ? e.InnerException : e);
                 }
                 return new ClusterResult(ret, goodUrls, badUrls, null,false);
             }

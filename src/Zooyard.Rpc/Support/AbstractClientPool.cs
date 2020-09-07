@@ -1,21 +1,20 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Zooyard.Core;
+using Zooyard.Core.Logging;
 
 namespace Zooyard.Rpc.Support
 {
     public abstract class AbstractClientPool : IClientPool
     {
-        private readonly ILogger _logger;
+        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(AbstractClientPool));
         #region 构造方法
-        public AbstractClientPool(ILoggerFactory loggerFactory)
+        public AbstractClientPool()
         {
-            _logger = loggerFactory.CreateLogger<AbstractClientPool>();
             //init
             CreateResetEvent();
             CreatePool();
@@ -103,8 +102,6 @@ namespace Zooyard.Rpc.Support
         }
         #endregion
 
-        
-
         #region 公有操作方法
 
         /// <summary>
@@ -131,7 +128,7 @@ namespace Zooyard.Rpc.Support
                         {
                             DestoryClient(client);
                         }
-                        _logger.LogInformation($"get client [{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}] from queue");
+                        Logger().Information($"get client [{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}] from queue");
                     }
 
                     //连接池无空闲连接	
@@ -152,7 +149,7 @@ namespace Zooyard.Rpc.Support
                             {
                                 throw new InvalidOperationException("connection access failed. please confirm call service status.", innerErr);
                             }
-                            _logger.LogInformation($"create new client [{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
+                            Logger().Information($"create new client [{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
                         }
                     }
 
@@ -182,7 +179,7 @@ namespace Zooyard.Rpc.Support
                 if ((idleCount.ContainsKey(urlKey)
                     && idleCount[urlKey] >= MaxIdle))//|| this.Version != client.Version
                 {
-                    _logger.LogInformation($"recovery to destory idle overflow:[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
+                    Logger().Information($"recovery to destory idle overflow:[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
                     DestoryClient(client);
                     Console.WriteLine($"recovery to destory idle overflow:[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
                 }
@@ -194,7 +191,7 @@ namespace Zooyard.Rpc.Support
                     EnqueueClient(urlKey, client);
                     //发通知信号，连接池有连接变动
                     resetEvent.Set();
-                    _logger.LogInformation($"recovery to update:[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
+                    Logger().Information($"recovery to update:[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
                     Console.WriteLine($"recovery to update:[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
                 }
             }
@@ -211,7 +208,7 @@ namespace Zooyard.Rpc.Support
                 await client.Close();
                 await client.DisposeAsync();
                 activeCount[urlKey]--;
-                _logger.LogInformation($"DestoryClient :[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
+                Logger().Information($"DestoryClient :[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
             }
         }
         /// <summary>
@@ -250,7 +247,7 @@ namespace Zooyard.Rpc.Support
                         {
                             var client = DequeueClient(item);
                             var urlKey = client.Url.ToString();
-                            _logger.LogInformation($"Dispose :[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
+                            Logger().Information($"Dispose :[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
                             DestoryClient(client);
                         }
                     }
@@ -362,7 +359,7 @@ namespace Zooyard.Rpc.Support
             }
             catch (Exception e)
             {
-                _logger.LogError(e,e.Message);
+                Logger().Error(e,e.Message);
                 err = e;
             }
             
@@ -385,7 +382,7 @@ namespace Zooyard.Rpc.Support
             catch (Exception e)
             {
                 err = e;
-                _logger.LogError(e, e.Message);
+                Logger().Error(e, e.Message);
                 return false;
             }
         }
@@ -411,7 +408,7 @@ namespace Zooyard.Rpc.Support
                     if (client.ActiveTime<=DateTime.MinValue || client.ActiveTime < overTime)
                     {
                         Console.WriteLine($"client time over:[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
-                        _logger.LogInformation($"client time over:[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
+                        Logger().Information($"client time over:[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
                         DestoryClient(client);
                     }
                     else

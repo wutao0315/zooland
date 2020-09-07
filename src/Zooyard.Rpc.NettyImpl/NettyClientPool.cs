@@ -4,7 +4,6 @@ using DotNetty.Common.Utilities;
 using DotNetty.Handlers.Tls;
 using DotNetty.Transport.Bootstrapping;
 using DotNetty.Transport.Channels;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,12 +13,15 @@ using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
 using Zooyard.Core;
+using Zooyard.Core.Logging;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.Rpc.NettyImpl
 {
     public class NettyClientPool : AbstractClientPool
     {
+        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(NettyClientPool));
+
         public const string SSL_KEY = "ssl";
         public const bool DEFAULT_SSL = false;
         public const string PWD_KEY = "pwd";
@@ -28,13 +30,8 @@ namespace Zooyard.Rpc.NettyImpl
         public const string DEFAULT_PFX = "dotnetty.com";
 
         private readonly IDictionary<string, NettyProtocol> _nettyProtocols;
-        private readonly ILogger _logger;
-        private readonly ILoggerFactory _loggerFactory;
-        public NettyClientPool(IDictionary<string, NettyProtocol> nettyProtocols, ILoggerFactory loggerFactory) 
-            : base(loggerFactory)
+        public NettyClientPool(IDictionary<string, NettyProtocol> nettyProtocols) 
         {
-            _loggerFactory = loggerFactory;
-            _logger = loggerFactory.CreateLogger<NettyClientPool>();
             _nettyProtocols = nettyProtocols;
             
         }
@@ -91,9 +88,9 @@ namespace Zooyard.Rpc.NettyImpl
                     //pipeline.AddLast(new LengthFieldPrepender(4));
                     //pipeline.AddLast(new LengthFieldBasedFrameDecoder(int.MaxValue, 0, 4, 0, 4));
 
-                    pipeline.AddLast(new NettyLoggingHandler(_loggerFactory));
+                    pipeline.AddLast(new NettyLoggingHandler());
                     SetInitialChannelPipeline(channel);
-                    pipeline.AddLast(new ClientHandler(ReceivedMessage, _loggerFactory));
+                    pipeline.AddLast(new ClientHandler(ReceivedMessage));
 
                     
                 }));
@@ -109,7 +106,7 @@ namespace Zooyard.Rpc.NettyImpl
             client.GetAttribute(messageListenerKey).Set(messageListener);
 
 
-            return new NettyClient(group, client, messageListener, url, _loggerFactory);
+            return new NettyClient(group, client, messageListener, url);
         }
 
         private static readonly AttributeKey<IMessageListener> messageListenerKey = AttributeKey<IMessageListener>.ValueOf(typeof(NettyClientPool), nameof(IMessageListener));
@@ -126,7 +123,7 @@ namespace Zooyard.Rpc.NettyImpl
 
             if (Settings.LogTransport)
             {
-                pipeline.AddLast("Logger", new NettyLoggingHandler(_loggerFactory));
+                pipeline.AddLast("Logger", new NettyLoggingHandler());
             }
 
             pipeline.AddLast("FrameDecoder", new LengthFieldBasedFrameDecoder(Settings.ByteOrder, Settings.MaxFrameSize, 0, 4, 0, 4, true));
@@ -143,12 +140,11 @@ namespace Zooyard.Rpc.NettyImpl
 
     internal class ClientHandler : ChannelHandlerAdapter
     {
+        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ClientHandler));
         private readonly Action<IChannelHandlerContext,TransportMessage> _receviedAction;
-        private ILogger _logger;
-        public ClientHandler(Action<IChannelHandlerContext,TransportMessage> receviedAction, ILoggerFactory loggerFactory)
+        public ClientHandler(Action<IChannelHandlerContext,TransportMessage> receviedAction)
         {
             _receviedAction = receviedAction;
-            _logger = loggerFactory.CreateLogger<ClientHandler>();
         }
 
         public override void ChannelRead(IChannelHandlerContext context, object message)
@@ -171,15 +167,13 @@ namespace Zooyard.Rpc.NettyImpl
 
             if (se?.SocketErrorCode == SocketError.OperationAborted)
             {
-                _logger.LogInformation("Socket read operation aborted. Connection is about to be closed. Channel [{0}->{1}](Id={2})",
-                    context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
+                Logger().Information($"Socket read operation aborted. Connection is about to be closed. Channel [{context.Channel.LocalAddress}->{context.Channel.RemoteAddress}](Id={context.Channel.Id})");
 
                 //NotifyListener(new Disassociated(DisassociateInfo.Shutdown));
             }
             else if (se?.SocketErrorCode == SocketError.ConnectionReset)
             {
-                _logger.LogInformation("Connection was reset by the remote peer. Channel [{0}->{1}](Id={2})",
-                    context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
+                Logger().Information($"Connection was reset by the remote peer. Channel [{context.Channel.LocalAddress}->{context.Channel.RemoteAddress}](Id={context.Channel.Id})");
 
                 //NotifyListener(new Disassociated(DisassociateInfo.Shutdown));
             }
@@ -190,7 +184,7 @@ namespace Zooyard.Rpc.NettyImpl
             }
 
             Console.WriteLine($"Exception: {exception.Message}");
-            _logger.LogError(exception, exception.Message);
+            Logger().Error(exception, exception.Message);
             context.CloseAsync();
         }
     }

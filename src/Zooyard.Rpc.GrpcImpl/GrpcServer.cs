@@ -1,30 +1,25 @@
 ﻿using Grpc.Core;
 using Grpc.Core.Interceptors;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Zooyard.Core;
+using Zooyard.Core.Logging;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.Rpc.GrpcImpl
 {
     public class GrpcServer : AbstractServer
     {
-        private readonly ILogger _logger;
+        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(GrpcServer));
         private Server _server;
         public GrpcServer(IEnumerable<ServerServiceDefinition> services,
             IEnumerable<ServerPort> ports,
             IEnumerable<ServerInterceptor> interceptors,
-            IRegistryService registryService,
-            ILoggerFactory loggerFactory) 
-            : base(registryService, loggerFactory)
+            IRegistryService registryService) 
+            : base(registryService)
         {
-            _logger = loggerFactory.CreateLogger<GrpcServer>();
-
-
-
             _server = new Server();
 
             foreach (var item in services)
@@ -49,7 +44,7 @@ namespace Zooyard.Rpc.GrpcImpl
             _server.Start();
             await Task.CompletedTask;
             var ports = _server.Ports.Select(w=>w.Port);
-            _logger.LogInformation($"Started the grpc server on{string.Join(",",ports)} ...");
+            Logger().Information($"Started the grpc server on{string.Join(",",ports)} ...");
         }
 
         public override async Task DoDispose()
@@ -64,7 +59,7 @@ namespace Zooyard.Rpc.GrpcImpl
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogInformation(ex, ex.ToString());
+                    Logger().Information(ex, ex.ToString());
                 }
             }
         }

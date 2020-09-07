@@ -1,15 +1,17 @@
 ﻿using DotNetty.Transport.Channels;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Net;
 using System.Threading.Tasks;
 using Zooyard.Core;
+using Zooyard.Core.Logging;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.Rpc.NettyImpl
 {
     public class NettyClient : AbstractClient
     {
+        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(NettyClient));
+
         public const string QUIETPERIOD_KEY = "quietPeriod";
         public const int DEFAULT_QUIETPERIOD = 100;
         public const string TIMEOUT_KEY = "timeout";
@@ -17,22 +19,18 @@ namespace Zooyard.Rpc.NettyImpl
 
         public override URL Url { get; }
 
-        private readonly ILoggerFactory _loggerFactory;
-        private readonly ILogger _logger;
         private readonly IEventLoopGroup _eventLoopGroup;
         private readonly IChannel _channel;
         private readonly IMessageListener _messageListener;
 
         // private static readonly AttributeKey<EndPoint> origEndPointKey = AttributeKey<EndPoint>.ValueOf(typeof(NettyClientPool), nameof(EndPoint));
 
-        public NettyClient(IEventLoopGroup eventLoopGroup, IChannel channel,IMessageListener messageListener ,URL url,ILoggerFactory loggerFactory)
+        public NettyClient(IEventLoopGroup eventLoopGroup, IChannel channel,IMessageListener messageListener ,URL url)
         {
             this.Url = url;
             _eventLoopGroup = eventLoopGroup;
             _channel = channel;
             _messageListener = messageListener;
-            _loggerFactory = loggerFactory;
-            _logger = loggerFactory.CreateLogger<NettyClient>();
         }
 
 
@@ -40,7 +38,7 @@ namespace Zooyard.Rpc.NettyImpl
         {
             await this.Open();
 
-            return new NettyInvoker(_channel, _messageListener, _loggerFactory);
+            return new NettyInvoker(_channel, _messageListener);
         }
 
         public override async Task Open()

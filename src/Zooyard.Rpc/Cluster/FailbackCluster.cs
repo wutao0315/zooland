@@ -1,10 +1,10 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Zooyard.Core;
 using Zooyard.Core.Diagnositcs;
+using Zooyard.Core.Logging;
 
 namespace Zooyard.Rpc.Cluster
 {
@@ -13,16 +13,11 @@ namespace Zooyard.Rpc.Cluster
     /// </summary>
     public class FailbackCluster : AbstractCluster
     {
+        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(FailbackCluster));
         public override string Name => NAME;
         public const string NAME = "failback";
         private static readonly long RETRY_FAILED_PERIOD = 5 * 1000;
 
-        private readonly ILogger _logger;
-        public FailbackCluster(ILoggerFactory loggerFactory) 
-            : base(loggerFactory)
-        {
-            _logger = loggerFactory.CreateLogger<FailbackCluster>();
-        }
         private ConcurrentDictionary<IInvocation, URL> failed = new ConcurrentDictionary<IInvocation, URL>();
         private System.Timers.Timer retryTimer;
 
@@ -37,16 +32,16 @@ namespace Zooyard.Rpc.Cluster
                     if (retryTimer == null)
                     {
                         retryTimer = new System.Timers.Timer(RETRY_FAILED_PERIOD);
-                        retryTimer.Elapsed += new System.Timers.ElapsedEventHandler((object sender, System.Timers.ElapsedEventArgs events) =>
+                        retryTimer.Elapsed += new System.Timers.ElapsedEventHandler(async (object sender, System.Timers.ElapsedEventArgs events) =>
                         {
                             // 收集统计信息
                             try
                             {
-                                retryFailed(pool);
+                                await retryFailed(pool).ConfigureAwait(false);
                             }
                             catch (Exception t)
                             { // 防御性容错
-                                _logger.LogError(t, $"Unexpected error occur at collect statistic {t.Message}");
+                                Logger().Error(t, $"Unexpected error occur at collect statistic {t.Message}");
                             }
                         });
                         retryTimer.AutoReset = true;
@@ -83,8 +78,8 @@ namespace Zooyard.Rpc.Cluster
                 catch (Exception e)
                 {
                     _source.WriteConsumerError(entry.Value, invocation, e);
-                    pool.DestoryClient(client);
-                    _logger.LogError(e, $"Failed retry to invoke method {invocation.MethodInfo.Name}, waiting again.");
+                    await pool.DestoryClient(client).ConfigureAwait(false);
+                    Logger().Error(e, $"Failed retry to invoke method {invocation.MethodInfo.Name}, waiting again.");
                 }
             }
         }
@@ -93,12 +88,12 @@ namespace Zooyard.Rpc.Cluster
         {
             var goodUrls = new List<URL>();
             var badUrls = new List<BadUrl>();
-            IResult result = null;
             Exception exception = null;
 
             checkInvokers(urls, invocation, address);
             var invoker = base.select(loadbalance, invocation, urls, null);
 
+            IResult result;
             try
             {
                 var client = pool.GetClient(invoker);
@@ -113,15 +108,15 @@ namespace Zooyard.Rpc.Cluster
                 }
                 catch (Exception ex)
                 {
-                    pool.DestoryClient(client);
-                    _source.WriteConsumerError(invoker,invocation ,ex);
+                    await pool.DestoryClient(client).ConfigureAwait(false);
+                    _source.WriteConsumerError(invoker, invocation, ex);
                     throw ex;
                 }
             }
             catch (Exception e)
             {
-                _logger.LogError(e, $"Failback to invoke method {invocation.MethodInfo.Name}, wait for retry in background. Ignored exception:{e.Message}");
-                addFailed(pool,invocation, invoker);
+                Logger().Error(e, $"Failback to invoke method {invocation.MethodInfo.Name}, wait for retry in background. Ignored exception:{e.Message}");
+                addFailed(pool, invocation, invoker);
                 result = new RpcResult(); // ignore
                 exception = e;
                 badUrls.Add(new BadUrl { Url = invoker, BadTime = DateTime.Now, CurrentException = exception });

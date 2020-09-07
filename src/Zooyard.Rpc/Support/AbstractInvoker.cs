@@ -1,20 +1,18 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System;
 using System.Threading.Tasks;
 using Zooyard.Core;
+using Zooyard.Core.Logging;
 
 namespace Zooyard.Rpc.Support
 {
     public abstract class AbstractInvoker : IInvoker
     {
-        private readonly ILogger _logger;
-        public AbstractInvoker(ILoggerFactory loggerFactory)
-        {
-            _logger = loggerFactory.CreateLogger<AbstractInvoker>();
-        }
+        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(AbstractClientPool));
+       
         public abstract object Instance { get; }
         public virtual async Task<IResult> Invoke(IInvocation invocation)
         {
-            _logger.LogInformation($"{invocation.App}:{invocation.Version}:{invocation.TargetType.FullName}:{invocation.MethodInfo.Name}");
+            Logger().Information($"{invocation.App}:{invocation.Version}:{invocation.TargetType.FullName}:{invocation.MethodInfo.Name}");
             var result = await HandleInvoke(invocation);
             return result;
         }

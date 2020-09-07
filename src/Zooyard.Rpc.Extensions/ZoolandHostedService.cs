@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Zooyard.Core;
+using Zooyard.Core.Logging;
 
 namespace Zooyard.Rpc.Extensions
 {
@@ -14,10 +15,10 @@ namespace Zooyard.Rpc.Extensions
         private readonly ILogger _logger;
         private readonly IEnumerable<IServer> _servers;
 
-        public ZoolandHostedService(ILogger<ZoolandHostedService> logger, IEnumerable<IServer> servers)
+        public ZoolandHostedService(IEnumerable<IServer> servers, ILogger<ZoolandHostedService> logger)
         {
-            _logger = logger;
             _servers = servers;
+            _logger = logger;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -28,7 +29,7 @@ namespace Zooyard.Rpc.Extensions
             {
                 foreach (var server in _servers)
                 {
-                    server.Export();
+                    await server.Export().ConfigureAwait(false);
                 }
             }
             catch (Exception ex)

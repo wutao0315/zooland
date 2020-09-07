@@ -1,17 +1,19 @@
 ﻿using Grpc.Core;
 using Grpc.Core.Interceptors;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Zooyard.Core;
+using Zooyard.Core.Logging;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.Rpc.GrpcImpl
 {
     public class GrpcClientPool : AbstractClientPool
     {
+        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(GrpcClient));
+
         public const string PROXY_KEY = "proxy";
         public const string TIMEOUT_KEY = "grpc_timeout";
         public const int DEFAULT_TIMEOUT = 5000;
@@ -24,20 +26,16 @@ namespace Zooyard.Rpc.GrpcImpl
         private readonly IDictionary<string, ChannelCredentials> _credentials;
         private readonly IDictionary<string, Type> _grpcClientTypes;
         private readonly IEnumerable<ClientInterceptor> _interceptors;
-        private readonly ILogger _logger;
-        private readonly ILoggerFactory _loggerFactory;
+
 
         public GrpcClientPool(
             IDictionary<string, ChannelCredentials> credentials,
             IDictionary<string, Type> grpcClientTypes,
-            IEnumerable<ClientInterceptor> interceptors,
-            ILoggerFactory loggerFactory) : base(loggerFactory)
+            IEnumerable<ClientInterceptor> interceptors)
         {
             _credentials = credentials;
             _grpcClientTypes = grpcClientTypes;
             _interceptors = interceptors;
-            _loggerFactory = loggerFactory;
-            _logger = loggerFactory.CreateLogger<GrpcClientPool>();
         }
 
         protected override IClient CreateClient(URL url)
@@ -79,13 +77,13 @@ namespace Zooyard.Rpc.GrpcImpl
                 //实例化GrpcClient
                 var client = Activator.CreateInstance(_grpcClientTypes[proxyKey], callInvoker);
 
-                return new GrpcClient(channel, client, url, credentials, timeout, _loggerFactory);
+                return new GrpcClient(channel, client, url, credentials, timeout);
             }
             else {
                 //实例化GrpcClient
                 var client = Activator.CreateInstance(_grpcClientTypes[proxyKey], channel);
 
-                return new GrpcClient(channel, client, url, credentials, timeout, _loggerFactory);
+                return new GrpcClient(channel, client, url, credentials, timeout);
             }
         }
     }

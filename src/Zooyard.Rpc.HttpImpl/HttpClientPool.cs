@@ -1,7 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Net.Http;
 using Zooyard.Core;
+using Zooyard.Core.Logging;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.Rpc.HttpImpl
@@ -11,15 +11,8 @@ namespace Zooyard.Rpc.HttpImpl
         public const string TIMEOUT_KEY = "http_timeout";
         public const int DEFAULT_TIMEOUT = 5000;
 
-
-        private readonly ILogger _logger;
-        private readonly ILoggerFactory _loggerFactory;
-        public HttpClientPool(ILoggerFactory loggerFactory) : base(loggerFactory)
-        {
-            _loggerFactory = loggerFactory;
-            _logger = loggerFactory.CreateLogger<HttpClientPool>();
-        }
-
+        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(HttpClientPool));
+       
         protected override IClient CreateClient(URL url)
         {
             //实例化TheTransport
@@ -34,7 +27,7 @@ namespace Zooyard.Rpc.HttpImpl
             client.BaseAddress = new Uri($"{url.Protocol}://{url.Host}:{url.Port}");
 
 
-            return new HttpClientImpl(client, url,timeout, _loggerFactory);
+            return new HttpClientImpl(client, url,timeout);
         }
     }
 }

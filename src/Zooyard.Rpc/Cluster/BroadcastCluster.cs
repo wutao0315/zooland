@@ -1,20 +1,15 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Zooyard.Core;
 using Zooyard.Core.Diagnositcs;
+using Zooyard.Core.Logging;
 
 namespace Zooyard.Rpc.Cluster
 {
     public class BroadcastCluster : AbstractCluster
     {
-        private readonly ILogger _logger;
-        public BroadcastCluster(ILoggerFactory loggerFactory)
-            :base(loggerFactory)
-        {
-            _logger = loggerFactory.CreateLogger<BroadcastCluster>();
-        }
+        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(BroadcastCluster));
         public override string Name => NAME;
         public const string NAME = "broadcast";
         public override async Task<IClusterResult> DoInvoke(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
@@ -42,7 +37,7 @@ namespace Zooyard.Rpc.Cluster
                     }
                     catch (Exception ex)
                     {
-                        pool.DestoryClient(client);
+                        await pool.DestoryClient(client).ConfigureAwait(false);
                         _source.WriteConsumerError(invoker,invocation ,ex);
                         throw ex;
                     }
@@ -51,7 +46,7 @@ namespace Zooyard.Rpc.Cluster
                 {
                     exception = e;
                     badUrls.Add(new BadUrl { Url = invoker, BadTime = DateTime.Now, CurrentException = exception });
-                    _logger.LogWarning(e, e.Message);
+                    Logger().Warn(e, e.Message);
                 }
             }
             if (exception != null)

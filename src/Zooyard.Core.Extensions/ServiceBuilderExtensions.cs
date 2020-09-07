@@ -1,12 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using Zooyard.Core;
 using Zooyard.Rpc;
 using Zooyard.Rpc.Cache;
 using Zooyard.Rpc.Cluster;
@@ -15,7 +11,7 @@ using Zooyard.Rpc.Merger;
 
 namespace Zooyard.Core.Extensions
 {
-   
+
 
     public static class ServiceBuilderExtensions
     {
@@ -108,7 +104,6 @@ namespace Zooyard.Core.Extensions
             {
                 var option = serviceProvder.GetService<IOptionsMonitor<ZooyardOption>>();
                 var clientPools = serviceProvder.GetService<IDictionary<string,IClientPool>>();
-                var loggerFactory = serviceProvder.GetService<ILoggerFactory>();
 
                 var loadbalanceList = serviceProvder.GetServices<ILoadBalance>();
                 var loadBalances = new Dictionary<string, ILoadBalance>();
@@ -124,7 +119,7 @@ namespace Zooyard.Core.Extensions
                     clusters.Add(item.Name,item);
                 }
 
-                var zooyardPools = new ZooyardPools(loggerFactory, clientPools, loadBalances, clusters, caches, option);
+                var zooyardPools = new ZooyardPools(clientPools, loadBalances, clusters, caches, option);
                 return zooyardPools;
             });
 

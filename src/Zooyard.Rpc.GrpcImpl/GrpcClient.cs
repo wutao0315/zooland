@@ -1,37 +1,32 @@
 ﻿using Grpc.Core;
-using Grpc.Core.Interceptors;
-using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
-using System.Linq;
+using System;
 using System.Threading.Tasks;
 using Zooyard.Core;
+using Zooyard.Core.Logging;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.Rpc.GrpcImpl
 {
     public class GrpcClient : AbstractClient
     {
+        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(GrpcClient));
+
         public override URL Url { get; }
         private Channel _channel;
         private readonly ChannelCredentials _channelCredentials;
         private readonly int _clientTimeout;
         private readonly object _grpcClient;
-        private readonly ILoggerFactory _loggerFactory;
-        private readonly ILogger _logger;
         public GrpcClient(Channel channel, 
             object grpcClient, 
             URL url, 
             ChannelCredentials channelCredentials,
-            int clientTimeout,
-            ILoggerFactory loggerFactory)
+            int clientTimeout)
         {
             this.Url = url;
             _channel = channel;
             _channelCredentials = channelCredentials;
             _grpcClient = grpcClient;
             _clientTimeout = clientTimeout;
-            _loggerFactory = loggerFactory;
-            _logger = loggerFactory.CreateLogger<GrpcClient>();
         }
 
 
@@ -48,8 +43,7 @@ namespace Zooyard.Rpc.GrpcImpl
             await Open();
             //grpc client service
 
-
-            return new GrpcInvoker(_grpcClient, _clientTimeout, _loggerFactory);
+            return new GrpcInvoker(_grpcClient, _clientTimeout);
         }
 
         public override async Task Open()

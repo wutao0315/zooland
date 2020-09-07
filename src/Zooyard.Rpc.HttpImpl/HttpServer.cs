@@ -1,22 +1,20 @@
-﻿
-using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using Zooyard.Rpc.Support;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using System.Threading.Tasks;
 using Zooyard.Core;
+using Zooyard.Core.Logging;
 
 namespace Zooyard.Rpc.HttpImpl
 {
     public class HttpServer : AbstractServer
     {
-        private readonly ILogger _logger;
+        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(HttpServer));
         private readonly IWebHost _server;
-        public HttpServer(IWebHost server, IRegistryService registryService, ILoggerFactory loggerFactory)
-            : base(registryService, loggerFactory)
+        public HttpServer(IWebHost server, IRegistryService registryService)
+            : base(registryService)
         {
-            _logger = loggerFactory.CreateLogger<HttpServer>();
             _server = server;
         }
 
@@ -26,11 +24,11 @@ namespace Zooyard.Rpc.HttpImpl
             try
             {
                 await _server.RunAsync();
-                _logger.LogDebug("http server started");
+                Logger().Debug("http server started");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, ex.Message);
+                Logger().Error(ex, ex.Message);
             }
 
         }

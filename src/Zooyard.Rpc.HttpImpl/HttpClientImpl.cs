@@ -1,26 +1,24 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Zooyard.Core;
+using Zooyard.Core.Logging;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.Rpc.HttpImpl
 {
     public class HttpClientImpl : AbstractClient
     {
+        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(HttpClientImpl));
         public override URL Url { get; }
         private readonly HttpClient _transport;
         private readonly int _clientTimeout;
-        private readonly ILoggerFactory _loggerFactory;
-        private readonly ILogger _logger;
-        public HttpClientImpl(HttpClient transport,URL url,int clientTimeout, ILoggerFactory loggerFactory)
+        
+        public HttpClientImpl(HttpClient transport,URL url,int clientTimeout)
         {
             this.Url = url;
             _transport = transport;
             _clientTimeout = clientTimeout;
-            _loggerFactory= loggerFactory;
-            _logger = loggerFactory.CreateLogger<HttpClientImpl>();
         }
         
         
@@ -55,16 +53,14 @@ namespace Zooyard.Rpc.HttpImpl
 
             //grpc client service
 
-            return new HttpInvoker(_transport, Url, isOpen, _loggerFactory);
+            return new HttpInvoker(_transport, Url, isOpen);
         }
         public override async Task Open()
         {
-            
         }
 
         public override async Task Close()
         {
-            
         }
 
         /// <summary>

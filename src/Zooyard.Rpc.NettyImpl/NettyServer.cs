@@ -5,7 +5,6 @@ using DotNetty.Handlers.Tls;
 using DotNetty.Transport.Bootstrapping;
 using DotNetty.Transport.Channels;
 using DotNetty.Transport.Channels.Sockets;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -15,6 +14,7 @@ using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Zooyard.Core;
+using Zooyard.Core.Logging;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.Rpc.NettyImpl
@@ -22,7 +22,8 @@ namespace Zooyard.Rpc.NettyImpl
     public class NettyServer : AbstractServer
     {
         //UseLibuv
-        
+        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(NettyServer));
+
         private readonly object _service;
         private readonly bool _isSsl = false;
         private readonly string _pfx = "dotnetty.com";
@@ -32,19 +33,14 @@ namespace Zooyard.Rpc.NettyImpl
         protected internal volatile IChannel ServerChannel;
         internal readonly ConcurrentSet<IChannel> ConnectionGroup;
 
-        private readonly ILogger _logger;
-        private readonly ILoggerFactory _loggerFactory;
         public NettyServer(URL config,
             object service,
             bool isSsl,
             string pfx,
             string pwd,
-            IRegistryService registryService,
-            ILoggerFactory loggerFactory)
-            : base(registryService, loggerFactory)
+            IRegistryService registryService)
+            : base(registryService)
         {
-            _loggerFactory = loggerFactory;
-            _logger = loggerFactory.CreateLogger<NettyServer>();
             Settings = NettyTransportSettings.Create(config);
             ConnectionGroup = new ConcurrentSet<IChannel>();
 
@@ -91,10 +87,10 @@ namespace Zooyard.Rpc.NettyImpl
                     //pipeline.AddLast(new DotNetty.Handlers.Logging.LoggingHandler("SRV-CONN"));
                     //pipeline.AddLast(new LengthFieldPrepender(4));
                     //pipeline.AddLast(new LengthFieldBasedFrameDecoder(int.MaxValue, 0, 4, 0, 4));
-                    pipeline.AddLast(new NettyLoggingHandler(_loggerFactory));
+                    pipeline.AddLast(new NettyLoggingHandler());
                     SetInitialChannelPipeline(channel);
                     //pipeline.AddLast(_channelHandlers?.ToArray());
-                    pipeline.AddLast(new ServerHandler(this, _service, _loggerFactory));
+                    pipeline.AddLast(new ServerHandler(this, _service));
 
                 })));
 
@@ -112,7 +108,7 @@ namespace Zooyard.Rpc.NettyImpl
 
             if (Settings.LogTransport)
             {
-                pipeline.AddLast("Logger", new NettyLoggingHandler(_loggerFactory));
+                pipeline.AddLast("Logger", new NettyLoggingHandler());
             }
 
             pipeline.AddLast("FrameDecoder", new LengthFieldBasedFrameDecoder(Settings.ByteOrder, Settings.MaxFrameSize, 0, 4, 0, 4, true));
@@ -127,10 +123,8 @@ namespace Zooyard.Rpc.NettyImpl
         }
         public override async Task DoExport()
         {
-            if (_logger.IsEnabled(LogLevel.Debug))
-            {
-                _logger.LogDebug($"ready to start the server on port:{Settings.Port}.");
-            }
+            Logger().Debug($"ready to start the server on port:{Settings.Port}.");
+
             var newServerChannel = await ServerFactory().BindAsync(IPAddress.Any, Settings.Port);
 
             // Block reads until a handler actor is registered
@@ -141,7 +135,7 @@ namespace Zooyard.Rpc.NettyImpl
             ConnectionGroup.TryAdd(newServerChannel);
             ServerChannel = newServerChannel;
 
-            _logger.LogInformation($"Started the netty server ...");
+            Logger().Information($"Started the netty server ...");
             Console.WriteLine($"Started the netty server ...");
             
         }
@@ -182,13 +176,13 @@ namespace Zooyard.Rpc.NettyImpl
     }
     internal abstract class ServerCommonHandlers : ChannelHandlerAdapter
     {
+        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ServerCommonHandlers));
         protected readonly NettyServer Server;
-        private readonly ILogger _logger;
+        
 
-        protected ServerCommonHandlers(NettyServer server, ILoggerFactory loggerFactory)
+        protected ServerCommonHandlers(NettyServer server)
         {
             Server = server;
-            _logger = loggerFactory.CreateLogger<ServerCommonHandlers>();
         }
 
 
@@ -197,7 +191,7 @@ namespace Zooyard.Rpc.NettyImpl
             base.ChannelActive(context);
             if (!Server.ConnectionGroup.TryAdd(context.Channel))
             {
-                _logger.LogWarning($"Unable to ADD channel [{context.Channel.LocalAddress}->{context.Channel.RemoteAddress}](Id={context.Channel.Id}) to connection group. May not shut down cleanly.");
+                Logger().Warn($"Unable to ADD channel [{context.Channel.LocalAddress}->{context.Channel.RemoteAddress}](Id={context.Channel.Id}) to connection group. May not shut down cleanly.");
             }
         }
 
@@ -206,26 +200,25 @@ namespace Zooyard.Rpc.NettyImpl
             base.ChannelInactive(context);
             if (!Server.ConnectionGroup.TryRemove(context.Channel))
             {
-                _logger.LogWarning($"Unable to REMOVE channel [{context.Channel.LocalAddress}->{context.Channel.RemoteAddress}](Id={ context.Channel.Id}) from connection group. May not shut down cleanly.");
+                Logger().Warn($"Unable to REMOVE channel [{context.Channel.LocalAddress}->{context.Channel.RemoteAddress}](Id={ context.Channel.Id}) from connection group. May not shut down cleanly.");
             }
         }
 
         public override void ExceptionCaught(IChannelHandlerContext context, Exception exception)
         {
             base.ExceptionCaught(context, exception);
-            _logger.LogError(exception, $"Error caught channel [{context.Channel.LocalAddress}->{context.Channel.RemoteAddress}](Id={context.Channel.Id})");
+            Logger().Error(exception, $"Error caught channel [{context.Channel.LocalAddress}->{context.Channel.RemoteAddress}](Id={context.Channel.Id})");
         }
 
     }
     internal class ServerHandler : ServerCommonHandlers
     {
         private readonly object _service;
-        private readonly ILogger _logger;
+        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ServerHandler));
 
-        public ServerHandler(NettyServer server, object service, ILoggerFactory loggerFactory):base(server, loggerFactory)
+        public ServerHandler(NettyServer server, object service):base(server)
         {
             _service = service;
-            _logger = loggerFactory.CreateLogger<ServerHandler>() ;
         }
 
         #region Overrides of ChannelHandlerAdapter
@@ -273,7 +266,7 @@ namespace Zooyard.Rpc.NettyImpl
                 {
                     remoteInvoker.ExceptionMessage = ex.Message;
                     remoteInvoker.StatusCode = 500;
-                    _logger.LogError(ex, ex.Message);
+                    Logger().Error(ex, ex.Message);
                 }
                 var resultData = TransportMessage.CreateInvokeResultMessage(transportMessage.Id, remoteInvoker);
                 var sendByte = resultData.Serialize();
@@ -299,13 +292,11 @@ namespace Zooyard.Rpc.NettyImpl
 
             if (se?.SocketErrorCode == SocketError.OperationAborted)
             {
-                _logger.LogInformation("Socket read operation aborted. Connection is about to be closed. Channel [{0}->{1}](Id={2})",
-                    context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
+                Logger().Information($"Socket read operation aborted. Connection is about to be closed. Channel [{context.Channel.LocalAddress}->{context.Channel.RemoteAddress}](Id={context.Channel.Id})");
             }
             else if (se?.SocketErrorCode == SocketError.ConnectionReset)
             {
-                _logger.LogInformation("Connection was reset by the remote peer. Channel [{0}->{1}](Id={2})",
-                    context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
+                Logger().Information($"Connection was reset by the remote peer. Channel [{context.Channel.LocalAddress}->{context.Channel.RemoteAddress}](Id={context.Channel.Id})");
             }
             else
             {
@@ -313,7 +304,7 @@ namespace Zooyard.Rpc.NettyImpl
             }
 
             Console.WriteLine($"Exception: {exception.Message}");
-            _logger.LogError(exception, exception.Message);
+            Logger().Error(exception, exception.Message);
             context.CloseAsync();
         }
 

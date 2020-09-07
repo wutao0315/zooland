@@ -1,32 +1,29 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Zooyard.Core;
 using Zooyard.Core.Diagnositcs;
+using Zooyard.Core.Logging;
 using Zooyard.Rpc.Merger;
 
 namespace Zooyard.Rpc.Cluster
 {
     public class MergeableCluster : AbstractCluster
     {
+        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(MergeableCluster));
         public override string Name => NAME;
         public const string NAME = "mergeable";
         public const string MERGER_KEY = "merger";
 
         private readonly IDictionary<Type, IMerger> _defaultMergers;
         private readonly IDictionary<string, IMerger> _mySelfMergers;
-        private readonly ILogger _logger;
         public MergeableCluster(IDictionary<Type, IMerger> defaultMergers,
-            IDictionary<string, IMerger> mySelfMergers,
-            ILoggerFactory loggerFactory)
-            : base(loggerFactory)
+            IDictionary<string, IMerger> mySelfMergers)
         {
             _defaultMergers = defaultMergers;
             _mySelfMergers = mySelfMergers;
-            _logger = loggerFactory.CreateLogger<MergeableCluster>();
         }
 
         private string getGroupDescFromServiceKey(string key)
@@ -66,7 +63,7 @@ namespace Zooyard.Rpc.Cluster
                         catch (Exception ex)
                         {
                             _source.WriteConsumerError(invoker,invocation ,ex);
-                            pool.DestoryClient(client);
+                            await pool.DestoryClient(client).ConfigureAwait(false);
                             throw ex;
                         }
                     }
@@ -139,7 +136,7 @@ namespace Zooyard.Rpc.Cluster
                     var r = await entry.Value;
                     if (r.HasException)
                     {
-                        _logger.LogError(r.Exception, $"Invoke {entry.Key} {getGroupDescFromServiceKey(entry.Key)}  failed: {r.Exception.Message}");
+                        Logger().Error(r.Exception, $"Invoke {entry.Key} {getGroupDescFromServiceKey(entry.Key)}  failed: {r.Exception.Message}");
                     }
                     else
                     {

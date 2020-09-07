@@ -1,14 +1,9 @@
 ﻿using Grpc.Core;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Zooyard.Core;
-using Zooyard.Rpc.Cache;
-using Zooyard.Rpc.Cluster;
-using Zooyard.Rpc.LoadBalance;
 
 namespace Zooyard.Rpc.GrpcImpl.Extensions
 {
@@ -37,7 +32,6 @@ namespace Zooyard.Rpc.GrpcImpl.Extensions
             services.AddSingleton((serviceProvder) => 
             {
                 var option = serviceProvder.GetService<IOptionsMonitor<GrpcOption>>().CurrentValue;
-                var loggerFactory = serviceProvder.GetService<ILoggerFactory>();
 
                 var credentials = new Dictionary<string, ChannelCredentials>
                 {
@@ -64,8 +58,7 @@ namespace Zooyard.Rpc.GrpcImpl.Extensions
                 var pool = new GrpcClientPool(
                     credentials:credentials,
                     grpcClientTypes:grpcClientTypes, 
-                    interceptors: interceptors,
-                    loggerFactory: loggerFactory
+                    interceptors: interceptors
                 );
 
                 return pool;

@@ -1,16 +1,9 @@
-﻿using DotNetty.Transport.Channels;
-using DotNetty.Transport.Channels.Sockets;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Zooyard.Core;
-using Zooyard.Rpc.Cache;
-using Zooyard.Rpc.Cluster;
-using Zooyard.Rpc.LoadBalance;
 
 namespace Zooyard.Rpc.NettyImpl.Extensions
 {
@@ -57,10 +50,7 @@ namespace Zooyard.Rpc.NettyImpl.Extensions
                     nettyProtocols.Add(item.Key, value);
                 }
                 
-                var pool = new NettyClientPool(
-                    nettyProtocols: nettyProtocols,
-                    loggerFactory: loggerFactory
-                );
+                var pool = new NettyClientPool(nettyProtocols: nettyProtocols);
 
                 return pool;
             });
@@ -82,7 +72,7 @@ namespace Zooyard.Rpc.NettyImpl.Extensions
      
                 
                 
-                return new NettyServer(url, service,  option.IsSsl, option.Pfx, option.Pwd, registryService, loggerFactory);
+                return new NettyServer(url, service,  option.IsSsl, option.Pfx, option.Pwd, registryService);
             });
             
 
