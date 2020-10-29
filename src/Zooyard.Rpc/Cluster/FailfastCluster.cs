@@ -30,7 +30,7 @@ namespace Zooyard.Rpc.Cluster
 
             try
             {
-                var client = pool.GetClient(invoker);
+                var client =await pool.GetClient(invoker);
                 try
                 {
                     var refer = await client.Refer();

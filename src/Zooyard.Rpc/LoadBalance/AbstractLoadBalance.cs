@@ -26,20 +26,11 @@ namespace Zooyard.Rpc.LoadBalance
                 return urls[0];
             } 
 
-            return doSelect(urls, invocation);
+            return DoSelect(urls, invocation);
 
         }
 
-        protected abstract URL doSelect(IList<URL> urls, IInvocation invocation);
-
-
-        int calculateWarmupWeight(int uptime, int warmup, int weight)
-        {
-            int ww = (int)(uptime / (warmup / weight));
-            return ww < 1 ? 1 : (ww > weight ? weight : ww);
-        }
-
-        
+        protected abstract URL DoSelect(IList<URL> urls, IInvocation invocation);
 
         protected int GetWeight(URL url, IInvocation invocation)
         {
@@ -53,11 +44,16 @@ namespace Zooyard.Rpc.LoadBalance
                     int warmup = url.GetParameter(WARMUP_KEY, DEFAULT_WARMUP);
                     if (uptime > 0 && uptime < warmup)
                     {
-                        weight = calculateWarmupWeight(uptime, warmup, weight);
+                        weight = CalculateWarmupWeight(uptime, warmup, weight);
                     }
                 }
             }
             return weight;
+        }
+        int CalculateWarmupWeight(int uptime, int warmup, int weight)
+        {
+            int ww = (int)(uptime / (warmup / weight));
+            return ww < 1 ? 1 : (ww > weight ? weight : ww);
         }
     }
 }

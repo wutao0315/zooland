@@ -64,7 +64,7 @@ namespace Zooyard.Rpc.Cluster
             foreach (var entry in failed)
             {
                 IInvocation invocation = entry.Key;
-                var client = pool.GetClient(entry.Value);
+                var client = await pool.GetClient(entry.Value);
                 try
                 {
                     var refer = await client.Refer();
@@ -96,7 +96,7 @@ namespace Zooyard.Rpc.Cluster
             IResult result;
             try
             {
-                var client = pool.GetClient(invoker);
+                var client = await pool.GetClient(invoker);
                 try
                 {
                     var refer = await client.Refer();

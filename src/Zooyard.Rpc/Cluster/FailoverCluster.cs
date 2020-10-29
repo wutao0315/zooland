@@ -52,7 +52,7 @@ namespace Zooyard.Rpc.Cluster
                 RpcContext.GetContext().SetInvokers(invoked);
                 try
                 {
-                    var client = pool.GetClient(invoker);
+                    var client = await pool.GetClient(invoker);
                     try
                     {
                         var refer = await client.Refer();

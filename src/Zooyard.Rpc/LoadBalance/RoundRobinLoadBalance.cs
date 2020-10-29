@@ -10,9 +10,9 @@ namespace Zooyard.Rpc.LoadBalance
     {
         public override string Name => NAME;
         public const string NAME = "roundrobin";
-        private ConcurrentDictionary<string, AtomicPositiveInteger> sequences = new ConcurrentDictionary<string, AtomicPositiveInteger>();
+        private readonly ConcurrentDictionary<string, AtomicPositiveInteger> _sequences = new ConcurrentDictionary<string, AtomicPositiveInteger>();
 
-        protected override URL doSelect(IList<URL> urls, IInvocation invocation)
+        protected override URL DoSelect(IList<URL> urls, IInvocation invocation)
         {
             var key = urls[0].ServiceKey + "." + invocation.MethodInfo.Name;
             int length = urls.Count; // 总个数
@@ -32,11 +32,11 @@ namespace Zooyard.Rpc.LoadBalance
                 }
             }
 
-            if (!sequences.ContainsKey(key))
+            if (!_sequences.ContainsKey(key))
             {
-                sequences.GetOrAdd(key, new AtomicPositiveInteger());
+                _sequences.GetOrAdd(key, new AtomicPositiveInteger());
             }
-            var sequence = sequences[key];
+            var sequence = _sequences[key];
             
             int currentSequence = sequence.GetAndIncrement();
             if (maxWeight > 0 && minWeight < maxWeight)

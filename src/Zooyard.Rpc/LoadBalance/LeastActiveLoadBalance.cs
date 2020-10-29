@@ -9,7 +9,7 @@ namespace Zooyard.Rpc.LoadBalance
         public override string Name => NAME;
         public const string NAME = "leastactive";
         private readonly Random random = new Random();
-        protected override URL doSelect(IList<URL> urls, IInvocation invocation)
+        protected override URL DoSelect(IList<URL> urls, IInvocation invocation)
         {
             int length = urls.Count; // 总个数
             int leastActive = -1; // 最小的活跃数

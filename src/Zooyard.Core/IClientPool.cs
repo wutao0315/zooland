@@ -7,7 +7,7 @@ namespace Zooyard.Core
     {
         URL Address { get; set; }
 
-        IClient GetClient(URL url);
+        Task<IClient> GetClient(URL url);
 
         /// <summary>
         /// 归还一个连接至连接池
@@ -23,6 +23,6 @@ namespace Zooyard.Core
         /// 超时清除
         /// </summary>
         /// <param name="overTime"></param>
-        void TimeOver(DateTime overTime);
+        Task TimeOver(DateTime overTime);
     }
 }

@@ -15,7 +15,7 @@ namespace Zooyard.Rpc.Cache.Support
 
         private static readonly ReaderWriterLockSlim rwl = new ReaderWriterLockSlim();
 
-        private Timer cleanupTimer;
+        private readonly Timer _cleanupTimer;
 
         public LruCacheData(int itemExpiryTimeout, int maxCacheSize = 100, int memoryRefreshInterval = 1000)
         {
@@ -23,7 +23,7 @@ namespace Zooyard.Rpc.Cache.Support
             this.maxSize = maxCacheSize;
             var autoEvent = new AutoResetEvent(false);
             TimerCallback tcb = this.RemoveExpiredElements;
-            this.cleanupTimer = new Timer(tcb, autoEvent, 0, memoryRefreshInterval);
+            _cleanupTimer = new Timer(tcb, autoEvent, 0, memoryRefreshInterval);
         }
 
         public void AddObject(TKey key, TValue cacheObject)

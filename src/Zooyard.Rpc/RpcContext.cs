@@ -19,16 +19,8 @@ namespace Zooyard.Rpc
     {
         public const string ASYNC_KEY = "async";
         public const string RETURN_KEY = "return";
-        private static readonly ThreadLocal<RpcContext> LOCAL = new ThreadLocal<RpcContext>(()=> new RpcContext());
-        
-        /// <summary>
-        /// remove context.
-        /// </summary>
-        /// <seealso cref= com.alibaba.dubbo.rpc.filter.ContextFilter </seealso>
-        public static void RemoveContext()
-        {
-            LOCAL.Values.Remove(LOCAL.Value);
-        }
+        //private static readonly ThreadLocal<RpcContext> LOCAL = new ThreadLocal<RpcContext>(()=> new RpcContext());
+        private static readonly AsyncLocal<RpcContext> LOCAL = new AsyncLocal<RpcContext>();
         
         //private Task future;
 
@@ -48,6 +40,7 @@ namespace Zooyard.Rpc
 
         public static RpcContext GetContext()
         {
+            LOCAL.Value ??= new RpcContext();
             return LOCAL.Value;
         }
 
@@ -70,7 +63,7 @@ namespace Zooyard.Rpc
                     return false;
                 }
                 string host = address.Host;
-                return url.Port != address.Port || !NetUtils.filterLocalHost(url.Ip).Equals(NetUtils.filterLocalHost(host));
+                return url.Port != address.Port || !NetUtils.FilterLocalHost(url.Ip).Equals(NetUtils.FilterLocalHost(host));
             }
         }
 
@@ -93,7 +86,7 @@ namespace Zooyard.Rpc
                     return false;
                 }
                 string host = address.Host;
-                return url.Port == address.Port && NetUtils.filterLocalHost(url.Ip).Equals(NetUtils.filterLocalHost(host));
+                return url.Port == address.Port && NetUtils.FilterLocalHost(url.Ip).Equals(NetUtils.FilterLocalHost(host));
             }
         }
 
@@ -282,7 +275,7 @@ namespace Zooyard.Rpc
         {
             get
             {
-                string host = localAddress == null ? null : NetUtils.filterLocalHost(localAddress.Host);
+                string host = localAddress == null ? null : NetUtils.FilterLocalHost(localAddress.Host);
                 if (host == null || host.Length == 0)
                 {
                     return NetUtils.LocalHost;
@@ -311,7 +304,7 @@ namespace Zooyard.Rpc
         {
             get
             {
-                return remoteAddress == null ? null : NetUtils.filterLocalHost(remoteAddress.Host);
+                return remoteAddress == null ? null : NetUtils.FilterLocalHost(remoteAddress.Host);
             }
         }
 

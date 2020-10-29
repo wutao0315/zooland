@@ -45,33 +45,24 @@ namespace Zooyard.Core
         }
 
         public URL(string protocol, string host, int port)
-            : this(protocol, null, null, host, port, null, (IDictionary<string, string>)null)
-        {
-        }
+            : this(protocol, null, null, host, port, null, null) { }
 
         public URL(string protocol, string host, int port, IDictionary<string, string> parameters)
-            : this(protocol, null, null, host, port, null, parameters)
-        {
-        }
+            : this(protocol, null, null, host, port, null, parameters) { }
 
         public URL(string protocol, string host, int port, string path)
-            : this(protocol, null, null, host, port, path, null)
-        {
-        }
+            : this(protocol, null, null, host, port, path, null) { }
 
         public URL(string protocol, string host, int port, string path, IDictionary<string, string> parameters)
-            : this(protocol, null, null, host, port, path, parameters)
-        {
-        }
+            : this(protocol, null, null, host, port, path, parameters) { }
 
         public URL(string protocol, string username, string password, string host, int port, string path)
-            : this(protocol, username, password, host, port, path, null)
-        {
-        }
+            : this(protocol, username, password, host, port, path, null) { }
 
         public URL(string protocol, string username, string password, string host, int port, string path, IDictionary<string, string> parameters)
         {
-            if ((username == null || username.Length == 0) && password != null && password.Length > 0)
+            if (string.IsNullOrWhiteSpace(username)
+                && !string.IsNullOrWhiteSpace(password))
             {
                 throw new ArgumentException("Invalid url, password without username!");
             }
@@ -103,7 +94,7 @@ namespace Zooyard.Core
         /// <param name="url"> URL string </param>
         /// <returns> URL instance </returns>
         /// <seealso cref= URL </seealso>
-        public static URL valueOf(string url)
+        public static URL ValueOf(string url)
         {
             if (string.IsNullOrWhiteSpace(url))
             {
@@ -204,7 +195,8 @@ namespace Zooyard.Core
         {
             get
             {
-                if (string.IsNullOrWhiteSpace(Username) && string.IsNullOrWhiteSpace(Password))
+                if (string.IsNullOrWhiteSpace(Username) 
+                    && string.IsNullOrWhiteSpace(Password))
                 {
                     return null;
                 }
@@ -230,7 +222,7 @@ namespace Zooyard.Core
             {
                 if (ip == null)
                 {
-                    ip = NetUtils.getIpByHost(Host);
+                    ip = NetUtils.GetIpByHost(Host);
                 }
                 return ip;
             }
@@ -261,14 +253,14 @@ namespace Zooyard.Core
 
         public string GetBackupAddress(int defaultPort)
         {
-            var address = new StringBuilder(appendDefaultPort(Address, defaultPort));
+            var address = new StringBuilder(AppendDefaultPort(Address, defaultPort));
             var backups = GetParameter(BACKUP_KEY, new string[0]);
             if (backups != null && backups.Length > 0)
             {
                 foreach (var backup in backups)
                 {
                     address.Append(",");
-                    address.Append(appendDefaultPort(backup, defaultPort));
+                    address.Append(AppendDefaultPort(backup, defaultPort));
                 }
             }
             return address.ToString();
@@ -278,8 +270,10 @@ namespace Zooyard.Core
         {
             get
             {
-                var urls = new List<URL>();
-                urls.Add(this);
+                var urls = new List<URL>
+                {
+                    this
+                };
                 string[] backups = GetParameter(BACKUP_KEY, new string[0]);
                 if (backups?.Length > 0)
                 {
@@ -292,7 +286,7 @@ namespace Zooyard.Core
             }
         }
 
-        private string appendDefaultPort(string address, int defaultPort)
+        private string AppendDefaultPort(string address, int defaultPort)
         {
             if (!string.IsNullOrEmpty(address) && defaultPort > 0)
             {
@@ -451,12 +445,13 @@ namespace Zooyard.Core
             {
                 return null;
             }
-            var u = URL.valueOf(value);
+            var u = ValueOf(value);
             Urls.Add(key, u);
             return u;
         }
 
-        public T GetParameter<T>(string key, T defaultValue = default(T)) where T : IConvertible
+        public T GetParameter<T>(string key, T defaultValue = default)
+            where T : IConvertible
         {
             if (Numbers.ContainsKey(key))
             {
@@ -472,13 +467,14 @@ namespace Zooyard.Core
             return b;
         }
 
-        public T GetPositiveParameter<T>(string key, T defaultValue) where T:IComparable<int>,IConvertible
+        public T GetPositiveParameter<T>(string key, T defaultValue) 
+            where T:IComparable<int>,IConvertible
         {
             if (defaultValue.CompareTo(0)<=0)
             {
                 throw new ArgumentException("defaultValue <= 0");
             }
-            var value = GetParameter<T>(key, defaultValue);
+            var value = GetParameter(key, defaultValue);
             if (value.CompareTo(0) <= 0)
             {
                 return defaultValue;
@@ -515,12 +511,12 @@ namespace Zooyard.Core
 
         public string GetMethodParameterAndDecoded(string method, string key)
         {
-            return URL.Decode(GetMethodParameter(method, key));
+            return Decode(GetMethodParameter(method, key));
         }
 
         public string GetMethodParameterAndDecoded(string method, string key, string defaultValue)
         {
-            return URL.Decode(GetMethodParameter(method, key, defaultValue));
+            return Decode(GetMethodParameter(method, key, defaultValue));
         }
 
         public string GetInterfaceParameter(string interfaceName, string key)
@@ -574,7 +570,8 @@ namespace Zooyard.Core
             return value;
         }
 
-        public T GetMethodParameter<T>(string method, string key, T defaultValue=default(T)) where T:IConvertible
+        public T GetMethodParameter<T>(string method, string key, T defaultValue=default) 
+            where T:IConvertible
         {
             var methodKey = method + "." + key;
             if (Numbers.ContainsKey(methodKey))
@@ -591,7 +588,8 @@ namespace Zooyard.Core
             return d;
         }
 
-        public T GetMethodPositiveParameter<T>(string method, string key, T defaultValue) where T : IComparable<int>, IConvertible
+        public T GetMethodPositiveParameter<T>(string method, string key, T defaultValue) 
+            where T : IComparable<int>, IConvertible
         {
             if (defaultValue.CompareTo(0) <= 0)
             {
@@ -659,7 +657,7 @@ namespace Zooyard.Core
         {
             get
             {
-                return NetUtils.isLocalHost(Host) || GetParameter(LOCALHOST_KEY, false);
+                return NetUtils.IsLocalHost(Host) || GetParameter(LOCALHOST_KEY, false);
             }
         }
 
@@ -738,8 +736,10 @@ namespace Zooyard.Core
             {
                 return this;
             }
-            var map = new Dictionary<string, string>(Parameters);
-            map[key] = value;
+            var map = new Dictionary<string, string>(Parameters) 
+            {
+                [key] = value
+            };
             return new URL(Protocol, Username, Password, Host, Port, Path, map);
         }
 
@@ -758,7 +758,9 @@ namespace Zooyard.Core
             bool hasAndEqual = true;
             foreach (var entry in parameters)
             {
-                if (!Parameters.ContainsKey(entry.Key) && entry.Value != null || !Parameters[entry.Key].Equals(entry.Value))
+                if (!Parameters.ContainsKey(entry.Key) 
+                    && entry.Value != null 
+                    || !Parameters[entry.Key].Equals(entry.Value))
                 {
                     hasAndEqual = false;
                     break;
@@ -794,7 +796,7 @@ namespace Zooyard.Core
             }
             if (pairs.Length % 2 != 0)
             {
-                throw new System.ArgumentException("Map pairs can not be odd number.");
+                throw new ArgumentException("Map pairs can not be odd number.");
             }
             var map = new Dictionary<string, string>();
             int len = pairs.Length / 2;
@@ -920,12 +922,14 @@ namespace Zooyard.Core
             {
                 return @string;
             }
-            return @string = buildString(false, true); // no show username and password
+            // no show username and password
+            return @string = BuildString(false, true); 
         }
 
         public string ToString(params string[] parameters)
         {
-            return buildString(false, true, parameters); // no show username and password
+            // no show username and password
+            return BuildString(false, true, parameters);
         }
 
         public string ToIdentityString()
@@ -934,12 +938,14 @@ namespace Zooyard.Core
             {
                 return identity;
             }
-            return identity = buildString(true, false); // only return identity message, see the method "equals" and "hashCode"
+            // only return identity message, see the method "equals" and "hashCode"
+            return identity = BuildString(true, false);
         }
 
         public string ToIdentityString(params string[] parameters)
         {
-            return buildString(true, false, parameters); // only return identity message, see the method "equals" and "hashCode"
+            // only return identity message, see the method "equals" and "hashCode"
+            return BuildString(true, false, parameters);
         }
 
         public string ToFullString()
@@ -948,12 +954,12 @@ namespace Zooyard.Core
             {
                 return full;
             }
-            return full = buildString(true, true);
+            return full = BuildString(true, true);
         }
 
         public string ToFullString(params string[] parameters)
         {
-            return buildString(true, true, parameters);
+            return BuildString(true, true, parameters);
         }
 
         public string ToParameterString()
@@ -968,17 +974,17 @@ namespace Zooyard.Core
         public string ToParameterString(params string[] parameters)
         {
             var buf = new StringBuilder();
-            buildParameters(buf, false, parameters);
+            BuildParameters(buf, false, parameters);
             return buf.ToString();
         }
 
-        private void buildParameters(StringBuilder buf, bool concat, string[] parameters)
+        private void BuildParameters(StringBuilder buf, bool concat, string[] parameters)
         {
-            if (Parameters != null && Parameters.Count > 0)
+            if (Parameters?.Count > 0)
             {
                 IList<string> includes = (parameters == null || parameters.Length == 0 ? null : new List<string>(parameters));
                 bool first = true;
-                foreach (KeyValuePair<string, string> entry in (new SortedDictionary<string, string>(Parameters)))
+                foreach (var entry in Parameters)
                 {
                     if (entry.Key != null && entry.Key.Length > 0 && (includes == null || includes.Contains(entry.Key)))
                     {
@@ -1002,23 +1008,23 @@ namespace Zooyard.Core
             }
         }
 
-        private string buildString(bool appendUser, bool appendParameter, params string[] parameters)
+        private string BuildString(bool appendUser, bool appendParameter, params string[] parameters)
         {
-            return buildString(appendUser, appendParameter, false, false, parameters);
+            return BuildString(appendUser, appendParameter, false, false, parameters);
         }
 
-        private string buildString(bool appendUser, bool appendParameter, bool useIP, bool useService, params string[] parameters)
+        private string BuildString(bool appendUser, bool appendParameter, bool useIP, bool useService, params string[] parameters)
         {
             var buf = new StringBuilder();
-            if (Protocol != null && Protocol.Length > 0)
+            if (Protocol?.Length > 0)
             {
                 buf.Append(Protocol);
                 buf.Append("://");
             }
-            if (appendUser && Username != null && Username.Length > 0)
+            if (appendUser && Username?.Length > 0)
             {
                 buf.Append(Username);
-                if (Password != null && Password.Length > 0)
+                if (Password?.Length > 0)
                 {
                     buf.Append(":");
                     buf.Append(Password);
@@ -1034,7 +1040,7 @@ namespace Zooyard.Core
             {
                 host = Host;
             }
-            if (host != null && host.Length > 0)
+            if (host?.Length > 0)
             {
                 buf.Append(host);
                 if (Port > 0)
@@ -1052,14 +1058,14 @@ namespace Zooyard.Core
             {
                 path = Path;
             }
-            if (path != null && path.Length > 0)
+            if (path?.Length > 0)
             {
                 buf.Append("/");
                 buf.Append(path);
             }
             if (appendParameter)
             {
-                buildParameters(buf, true, parameters);
+                BuildParameters(buf, true, parameters);
             }
             return buf.ToString();
         }
@@ -1079,7 +1085,7 @@ namespace Zooyard.Core
                 }
                 var buf = new StringBuilder();
                 var group = GetParameter(GROUP_KEY);
-                if (group != null && group.Length > 0)
+                if (group?.Length > 0)
                 {
                     buf.Append(group).Append("/");
                 }
@@ -1095,7 +1101,7 @@ namespace Zooyard.Core
 
         public string ToServiceString()
         {
-            return buildString(true, false, true, true);
+            return BuildString(true, false, true, true);
         }
 
         public string ServiceInterface
@@ -1120,7 +1126,6 @@ namespace Zooyard.Core
             try
             {
                 return WebUtility.UrlEncode(value);
-                //return URLEncoder.encode(value, "UTF-8");
             }
             catch (Exception e)
             {
@@ -1137,7 +1142,6 @@ namespace Zooyard.Core
             try
             {
                 return WebUtility.UrlDecode(value);
-                //return URLDecoder.decode(value, "UTF-8");
             }
             catch (Exception e)
             {

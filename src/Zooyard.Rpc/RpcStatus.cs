@@ -8,18 +8,18 @@ namespace Zooyard.Rpc
 {
     public class RpcStatus
     {
-        private static ConcurrentDictionary<string, RpcStatus> SERVICE_STATISTICS = new ConcurrentDictionary<string, RpcStatus>();
-
-        private static ConcurrentDictionary<string, ConcurrentDictionary<string, RpcStatus>> METHOD_STATISTICS = new ConcurrentDictionary<string, ConcurrentDictionary<string, RpcStatus>>();
-        private ConcurrentDictionary<string, object> values = new ConcurrentDictionary<string, object>();
-        private AtomicInteger active = new AtomicInteger();
-        private AtomicLong total = new AtomicLong();
-        private AtomicInteger failed = new AtomicInteger();
-        private AtomicLong totalElapsed = new AtomicLong();
-        private AtomicLong failedElapsed = new AtomicLong();
-        private AtomicLong maxElapsed = new AtomicLong();
-        private AtomicLong failedMaxElapsed = new AtomicLong();
-        private AtomicLong succeededMaxElapsed = new AtomicLong();
+        private readonly static ConcurrentDictionary<string, RpcStatus> SERVICE_STATISTICS = new ConcurrentDictionary<string, RpcStatus>();
+        private readonly static ConcurrentDictionary<string, ConcurrentDictionary<string, RpcStatus>> METHOD_STATISTICS = new ConcurrentDictionary<string, ConcurrentDictionary<string, RpcStatus>>();
+        
+        private readonly ConcurrentDictionary<string, object> values = new ConcurrentDictionary<string, object>();
+        private readonly AtomicInteger active = new AtomicInteger();
+        private readonly AtomicLong total = new AtomicLong();
+        private readonly AtomicInteger failed = new AtomicInteger();
+        private readonly AtomicLong totalElapsed = new AtomicLong();
+        private readonly AtomicLong failedElapsed = new AtomicLong();
+        private readonly AtomicLong maxElapsed = new AtomicLong();
+        private readonly AtomicLong failedMaxElapsed = new AtomicLong();
+        private readonly AtomicLong succeededMaxElapsed = new AtomicLong();
 
         /// <summary>
         /// 用来实现executes属性的并发限制（即控制能使用的线程数）
@@ -53,8 +53,7 @@ namespace Zooyard.Rpc
         public static void RemoveStatus(URL url)
         {
             var uri = url.ToIdentityString();
-            RpcStatus rpcStatus = null;
-            SERVICE_STATISTICS.TryRemove(uri,out rpcStatus);
+            SERVICE_STATISTICS.TryRemove(uri,out RpcStatus _);
         }
 
         /// <summary>
@@ -70,7 +69,6 @@ namespace Zooyard.Rpc
             if (!METHOD_STATISTICS.ContainsKey(uri))
             {
                 METHOD_STATISTICS.GetOrAdd(uri, new ConcurrentDictionary<string, RpcStatus>());
-                //map = METHOD_STATISTICS[uri];
             }
             var map = METHOD_STATISTICS[uri];
             
@@ -78,7 +76,6 @@ namespace Zooyard.Rpc
             if (!map.ContainsKey(methodName))
             {
                 map.GetOrAdd(methodName, new RpcStatus());
-                //status = map[methodName];
             }
             var status = map[methodName];
             return status;
@@ -95,8 +92,7 @@ namespace Zooyard.Rpc
             if (!METHOD_STATISTICS.ContainsKey(uri))
             {
                 var map = METHOD_STATISTICS[uri];
-                RpcStatus rpcStatus = null;
-                map.TryRemove(methodName, out rpcStatus);
+                map.TryRemove(methodName, out RpcStatus _);
             }
         }
 
@@ -107,11 +103,11 @@ namespace Zooyard.Rpc
         /// <param name="methodName">method Name</param>
         public static void BeginCount(URL url, string methodName)
         {
-            beginCount(GetStatus(url));
-            beginCount(GetStatus(url, methodName));
+            BeginCount(GetStatus(url));
+            BeginCount(GetStatus(url, methodName));
         }
 
-        private static void beginCount(RpcStatus status)
+        private static void BeginCount(RpcStatus status)
         {
             status.active.IncrementAndGet();
         }
@@ -125,11 +121,11 @@ namespace Zooyard.Rpc
        /// <param name="succeeded"></param>
         public static void EndCount(URL url, string methodName, long elapsed, bool succeeded)
         {
-            endCount(GetStatus(url), elapsed, succeeded);
-            endCount(GetStatus(url, methodName), elapsed, succeeded);
+            EndCount(GetStatus(url), elapsed, succeeded);
+            EndCount(GetStatus(url, methodName), elapsed, succeeded);
         }
 
-        private static void endCount(RpcStatus status, long elapsed, bool succeeded)
+        private static void EndCount(RpcStatus status, long elapsed, bool succeeded)
         {
             status.active.DecrementAndGet();
             status.total.IncrementAndGet();

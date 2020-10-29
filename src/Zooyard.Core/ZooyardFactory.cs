@@ -15,11 +15,6 @@ namespace Zooyard.Core
 {
     public class ZooyardFactory<T>
     {
-        public ZooyardFactory(IZooyardPools pools, string app, string version) {
-            _pools = pools;
-            _app = app;
-            _version = version;
-        }
         /// <summary>
         /// remoting service pools
         /// </summary>
@@ -33,6 +28,13 @@ namespace Zooyard.Core
         /// </summary>
         private readonly string _version;
 
+        public ZooyardFactory(IZooyardPools pools, string app, string version) 
+        {
+            _pools = pools;
+            _app = app;
+            _version = version;
+        }
+        
         public T CreateYard()
         {
             var interceptor = new ServiceInterceptor<T>(_pools, _app, _version);
@@ -58,7 +60,9 @@ namespace Zooyard.Core
         // 2、当前链接失败，直接重试其他连接，重试所有链接n便之后，如果失败抛出异常
         // 3、当前链接失败，直接抛出异常
         /// </summary>
-        /// <param name="invocation"></param>
+        /// <param name="obj"></param>
+        /// <param name="methodName"></param>
+        /// <param name="args"></param>
         public object Intercept(object obj, string methodName, params object[] args)
         {
             var target = typeof(T);

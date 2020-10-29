@@ -10,7 +10,7 @@ namespace Zooyard.Rpc.LoadBalance
         public const string NAME = "random";
         private readonly Random random = new Random();
 
-        protected override URL doSelect(IList<URL> urls, IInvocation invocation)
+        protected override URL DoSelect(IList<URL> urls, IInvocation invocation)
         {
             int length = urls.Count; // 总个数
             int totalWeight = 0; // 总权重

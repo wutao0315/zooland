@@ -28,8 +28,7 @@ namespace Zooyard.Rpc.GrpcImpl
         private readonly IEnumerable<ClientInterceptor> _interceptors;
 
 
-        public GrpcClientPool(
-            IDictionary<string, ChannelCredentials> credentials,
+        public GrpcClientPool(IDictionary<string, ChannelCredentials> credentials,
             IDictionary<string, Type> grpcClientTypes,
             IEnumerable<ClientInterceptor> interceptors)
         {
@@ -43,7 +42,6 @@ namespace Zooyard.Rpc.GrpcImpl
             //实例化TheTransport
             //获得transport参数,用于反射实例化
             var timeout = url.GetParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
-
 
             var proxyKey = url.GetParameter(PROXY_KEY);
             if (string.IsNullOrEmpty(proxyKey) || !_grpcClientTypes.ContainsKey(proxyKey))

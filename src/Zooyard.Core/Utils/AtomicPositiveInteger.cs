@@ -5,7 +5,7 @@ namespace Zooyard.Core.Utils
 {
     public class AtomicPositiveInteger
     {
-        private AtomicInteger i;
+        private readonly AtomicInteger i;
 
         public AtomicPositiveInteger()
         {
@@ -15,7 +15,6 @@ namespace Zooyard.Core.Utils
         public AtomicPositiveInteger(int initialValue)
         {
             i = new AtomicInteger(initialValue);
-            //Interlocked.Exchange(ref i, initialValue);//  initialValue  new AtomicInteger();
         }
 
         public int GetAndIncrement()
@@ -74,12 +73,12 @@ namespace Zooyard.Core.Utils
             }
         }
 
-        public int get()
+        public int Get()
         {
             return i.Value;
         }
 
-        public void set(int newValue)
+        public void Set(int newValue)
         {
             if (newValue < 0)
             {
@@ -120,7 +119,7 @@ namespace Zooyard.Core.Utils
         {
             if (delta < 0)
             {
-                throw new System.ArgumentException("delta " + delta + " < 0");
+                throw new ArgumentException("delta " + delta + " < 0");
             }
             for (; ; )
             {
@@ -138,7 +137,7 @@ namespace Zooyard.Core.Utils
         {
             if (update < 0)
             {
-                throw new System.ArgumentException("update value " + update + " < 0");
+                throw new ArgumentException("update value " + update + " < 0");
             }
             return i.CompareAndSet(expect, update);
         }
@@ -195,7 +194,7 @@ namespace Zooyard.Core.Utils
             {
                 return false;
             }
-            AtomicPositiveInteger other = (AtomicPositiveInteger)obj;
+            var other = (AtomicPositiveInteger)obj;
             return i.Value == other.IntValue();
         }
     }

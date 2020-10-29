@@ -197,7 +197,7 @@ namespace Zooyard.Rpc.HttpImpl
                 {
                     Console.WriteLine(response.StatusCode);
                     Console.WriteLine(data);
-                    return default(V);
+                    return default;
                 }
                 return JsonConvert.DeserializeObject<V>(response.Content.ReadAsStringAsync().Result);
             }
@@ -347,7 +347,7 @@ namespace Zooyard.Rpc.HttpImpl
                 {
                     Console.WriteLine(response.StatusCode);
                     Console.WriteLine(data);
-                    return default(V);
+                    return default;
                 }
                 return JsonConvert.DeserializeObject<V>(data);
             }

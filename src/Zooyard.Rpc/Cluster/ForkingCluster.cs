@@ -56,7 +56,7 @@ namespace Zooyard.Rpc.Cluster
                 var task = Task.Run(async() => {
                     try
                     {
-                        var client = pool.GetClient(invoker);
+                        var client =await pool.GetClient(invoker);
                         try
                         {
                             var refer = await client.Refer();

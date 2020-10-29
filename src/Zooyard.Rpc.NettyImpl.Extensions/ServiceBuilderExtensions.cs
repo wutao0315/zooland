@@ -66,7 +66,7 @@ namespace Zooyard.Rpc.NettyImpl.Extensions
                 var option = serviceProvider.GetService<IOptionsMonitor<NettyServerOption>>().CurrentValue;
                 var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
                 var registryService = serviceProvider.GetService<IRegistryService>();
-                var url = URL.valueOf(option.Url);
+                var url = URL.ValueOf(option.Url);
 
                 var service = serviceProvider.GetService(Type.GetType(option.ServiceType));
      

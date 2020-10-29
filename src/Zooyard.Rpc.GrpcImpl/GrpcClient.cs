@@ -58,7 +58,6 @@ namespace Zooyard.Rpc.GrpcImpl
             }
         }
 
-
         public override async Task Close()
         {
             if (_channel != null)

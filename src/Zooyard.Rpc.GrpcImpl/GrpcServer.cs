@@ -39,7 +39,6 @@ namespace Zooyard.Rpc.GrpcImpl
 
         public override async Task DoExport()
         {
-            
             //开启服务
             _server.Start();
             await Task.CompletedTask;

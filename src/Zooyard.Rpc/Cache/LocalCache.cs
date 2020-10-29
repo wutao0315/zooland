@@ -7,30 +7,29 @@ namespace Zooyard.Rpc.Cache
     public class LocalCache : ICache
     {
         public const string NAME = "local";
-        private MemoryCache store;
+        private readonly MemoryCache _store = MemoryCache.Default;
         private int Timeout { get; set; }
 
         public LocalCache(URL url)
         {
             this.Timeout = url.GetParameter("cache.timeout", 60000);
-            this.store = MemoryCache.Default;
         }
 
         public object Get(object key)
         {
-            return store.Get(key.ToString());
+            return _store.Get(key.ToString());
         }
 
         public void Put(object key, object value)
         {
-            store.Add(key.ToString(), value, DateTimeOffset.Now.AddMilliseconds(Timeout));
+            _store.Add(key.ToString(), value, DateTimeOffset.Now.AddMilliseconds(Timeout));
         }
 
         public void Clear()
         {
-            foreach (var item in store.GetValues(null))
+            foreach (var item in _store.GetValues(null))
             {
-                store.Remove(item.Key);
+                _store.Remove(item.Key);
             }
         }
     }

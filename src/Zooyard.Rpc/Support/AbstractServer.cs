@@ -27,7 +27,7 @@ namespace Zooyard.Rpc.Support
             if (!string.IsNullOrWhiteSpace(Address))
             {
                 //registe this provoder
-                var url = URL.valueOf(Address);
+                var url = URL.ValueOf(Address);
                 await _registryService.RegisterService(url);
             }
         }
@@ -36,7 +36,7 @@ namespace Zooyard.Rpc.Support
         {
             if (!string.IsNullOrWhiteSpace(Address))
             {
-                var url = URL.valueOf(Address);
+                var url = URL.ValueOf(Address);
                 //first unregiste this provider
                 await _registryService.UnregisterService(url);
             }

@@ -49,7 +49,7 @@ namespace Zooyard.Rpc.Cluster
                 {
                     try
                     {
-                        var client = pool.GetClient(invoker);
+                        var client =await pool.GetClient(invoker);
                         try
                         {
                             var refer = await client.Refer();
@@ -95,7 +95,7 @@ namespace Zooyard.Rpc.Cluster
                 {
                     try
                     {
-                        var client = pool.GetClient(invoker);
+                        var client =await pool.GetClient(invoker);
                         try
                         {
                             var refer = await client.Refer();
@@ -108,7 +108,7 @@ namespace Zooyard.Rpc.Cluster
                         }
                         catch (Exception ex)
                         {
-                            pool.DestoryClient(client);
+                            await pool.DestoryClient(client);
                             _source.WriteConsumerError(invoker,invocation ,ex);
                             throw ex;
                         }

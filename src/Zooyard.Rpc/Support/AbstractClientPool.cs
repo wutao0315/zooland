@@ -108,7 +108,7 @@ namespace Zooyard.Rpc.Support
         /// 从连接池取出一个连接
         /// </summary>
         /// <returns>连接</returns>
-        public virtual IClient GetClient(URL url)
+        public virtual async Task<IClient> GetClient(URL url)
         {
             var urlKey = url.ToString();
             if (Monitor.TryEnter(locker, TimeSpan.FromMilliseconds(ClientTimeout)))
@@ -126,7 +126,7 @@ namespace Zooyard.Rpc.Support
                         validClient = ValidateClient(client, out innerErr);
                         if (!validClient)
                         {
-                            DestoryClient(client);
+                            await DestoryClient(client);
                         }
                         Logger().Information($"get client [{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}] from queue");
                     }
@@ -180,7 +180,7 @@ namespace Zooyard.Rpc.Support
                     && idleCount[urlKey] >= MaxIdle))//|| this.Version != client.Version
                 {
                     Logger().Information($"recovery to destory idle overflow:[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
-                    DestoryClient(client);
+                    DestoryClient(client).GetAwaiter().GetResult();
                     Console.WriteLine($"recovery to destory idle overflow:[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
                 }
                 else
@@ -248,7 +248,7 @@ namespace Zooyard.Rpc.Support
                             var client = DequeueClient(item);
                             var urlKey = client.Url.ToString();
                             Logger().Information($"Dispose :[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
-                            DestoryClient(client);
+                            DestoryClient(client).GetAwaiter().GetResult();
                         }
                     }
                 }
@@ -392,7 +392,7 @@ namespace Zooyard.Rpc.Support
         /// 超时清除
         /// </summary>
         /// <param name="overTime"></param>
-        public void TimeOver(DateTime overTime)
+        public async Task TimeOver(DateTime overTime)
         {
             foreach (var item in ClientsPool.Keys)
             {
@@ -409,7 +409,7 @@ namespace Zooyard.Rpc.Support
                     {
                         Console.WriteLine($"client time over:[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
                         Logger().Information($"client time over:[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
-                        DestoryClient(client);
+                        await DestoryClient(client);
                     }
                     else
                     {

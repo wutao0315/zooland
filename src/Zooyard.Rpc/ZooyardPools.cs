@@ -93,13 +93,13 @@ namespace Zooyard.Rpc
             this.Pools = new ConcurrentDictionary<string, IClientPool>(pools);
             this.LoadBalances = new ConcurrentDictionary<string, ILoadBalance>(loadbalances);
             this.Clusters = new ConcurrentDictionary<string, ICluster>(clusters);
-            this.Address = URL.valueOf(clients.CurrentValue.RegisterUrl);
+            this.Address = URL.ValueOf(clients.CurrentValue.RegisterUrl);
             this.Urls = new ConcurrentDictionary<string, IList<URL>>();
             this.BadUrls = new ConcurrentDictionary<string, IList<BadUrl>>();
             //参数
             foreach (var item in clients.CurrentValue.Clients.Values)
             {
-                var list = item.Urls.Select(w => URL.valueOf(w).AddParameterIfAbsent("interface", item.Service.FullName)).ToList();
+                var list = item.Urls.Select(w => URL.ValueOf(w).AddParameterIfAbsent("interface", item.Service.FullName)).ToList();
                 this.Urls.TryAdd(item.Service.FullName, list);
             }
 
@@ -122,11 +122,11 @@ namespace Zooyard.Rpc
             Logger().Information($"{name} has changed:{ value.ToString()}");
             Console.WriteLine($"{name} has changed:{ value.ToString()}");
 
-            this.Address = URL.valueOf(value.RegisterUrl);
+            this.Address = URL.ValueOf(value.RegisterUrl);
 
             foreach (var item in value.Clients)
             {
-                var list = item.Value.Urls.Select(w => URL.valueOf(w).AddParameterIfAbsent("interface", item.Value.Service.FullName)).ToList();
+                var list = item.Value.Urls.Select(w => URL.ValueOf(w).AddParameterIfAbsent("interface", item.Value.Service.FullName)).ToList();
                 //优先移除被隔离了的URL
                 if (this.BadUrls.ContainsKey(item.Key))
                 {

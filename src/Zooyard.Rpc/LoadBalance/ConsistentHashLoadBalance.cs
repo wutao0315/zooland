@@ -13,19 +13,19 @@ namespace Zooyard.Rpc.LoadBalance
     {
         public override string Name => NAME;
         public const string NAME = "hash";
-        private ConcurrentDictionary<string, ConsistentHashSelector> selectors = new ConcurrentDictionary<String, ConsistentHashSelector>();
+        private readonly ConcurrentDictionary<string, ConsistentHashSelector> _selectors = new ConcurrentDictionary<String, ConsistentHashSelector>();
 
-        protected override URL doSelect(IList<URL> urls, IInvocation invocation)
+        protected override URL DoSelect(IList<URL> urls, IInvocation invocation)
         {
             var key = urls[0].ServiceKey + "." + invocation.MethodInfo.Name;
             int identityHashCode = urls.GetHashCode();// System.identityHashCode(invokers);
-            var selector = selectors[key];
+            var selector = _selectors[key];
             if (selector == null || selector.GetHashCode() != identityHashCode)
             {
-                selectors.TryAdd(key, new ConsistentHashSelector(urls, invocation.MethodInfo.Name, identityHashCode));
-                selector = selectors[key];
+                _selectors.TryAdd(key, new ConsistentHashSelector(urls, invocation.MethodInfo.Name, identityHashCode));
+                selector = _selectors[key];
             }
-            return selector.select(invocation);
+            return selector.Select(invocation);
         }
         private sealed class ConsistentHashSelector
         {
@@ -33,7 +33,7 @@ namespace Zooyard.Rpc.LoadBalance
             private readonly IDictionary<long, URL> virtualInvokers;
             private readonly int replicaNumber;
 
-            private readonly int identityHashCode;
+            private readonly int _identityHashCode;
 
             private readonly int[] argumentIndex;
 
@@ -41,7 +41,7 @@ namespace Zooyard.Rpc.LoadBalance
             {
                
                 this.virtualInvokers = new Dictionary<long, URL>();
-                this.identityHashCode = identityHashCode;
+                _identityHashCode = identityHashCode;
                 URL url = invokers[0];
                 this.replicaNumber = url.GetMethodParameter(methodName, "hash.nodes", 160);
                 var index = COMMA_SPLIT_PATTERN.Split(url.GetMethodParameter<string>(methodName, "hash.arguments", "0"));
@@ -55,24 +55,24 @@ namespace Zooyard.Rpc.LoadBalance
                     var address = invoker.Address;
                     for (int i = 0; i < replicaNumber / 4; i++)
                     {
-                        byte[] digest = md5(address + i);
+                        byte[] digest = Md5(address + i);
                         for (int h = 0; h < 4; h++)
                         {
-                            long m = hash(digest, h);
+                            long m = Hash(digest, h);
                             virtualInvokers.Add(m, invoker);
                         }
                     }
                 }
             }
 
-            public URL select(IInvocation invocation)
+            public URL Select(IInvocation invocation)
             {
-                var key = toKey(invocation.Arguments);
-                byte[] digest = md5(key);
-                return selectForKey(hash(digest, 0));
+                var key = ToKey(invocation.Arguments);
+                byte[] digest = Md5(key);
+                return SelectForKey(Hash(digest, 0));
             }
 
-            private string toKey(object[] args)
+            private string ToKey(object[] args)
             {
                 var buf = new StringBuilder();
                 foreach (var i in argumentIndex)
@@ -85,7 +85,7 @@ namespace Zooyard.Rpc.LoadBalance
                 return buf.ToString();
             }
 
-            private URL selectForKey(long hash)
+            private URL SelectForKey(long hash)
             {
                 URL invoker;
                 long key = hash;
@@ -99,21 +99,12 @@ namespace Zooyard.Rpc.LoadBalance
                     else {
                         key = tailMap.First().Key;
                     }
-                    //SortedMap<Long, Invoker<T>> tailMap = virtualInvokers.tailMap(key);
-                    //if (tailMap.isEmpty())
-                    //{
-                    //    key = virtualInvokers.firstKey();
-                    //}
-                    //else
-                    //{
-                    //    key = tailMap.firstKey();
-                    //}
                 }
                 invoker = virtualInvokers[key];
                 return invoker;
             }
 
-            private long hash(byte[] digest, int number)
+            private long Hash(byte[] digest, int number)
             {
                 #pragma warning disable CS0675
                 return (((long)(digest[3 + number * 4] & 0xFF) << 24)
@@ -122,7 +113,7 @@ namespace Zooyard.Rpc.LoadBalance
                         | (digest[number * 4] & 0xFF))
                         & 0xFFFFFFFFL;
             }
-            private byte[] md5(string value)
+            private byte[] Md5(string value)
             {
                 MD5CryptoServiceProvider provider;
                 provider = new MD5CryptoServiceProvider();
@@ -130,31 +121,6 @@ namespace Zooyard.Rpc.LoadBalance
                 bytes = provider.ComputeHash(bytes);
                 return bytes;
             }
-            //private byte[] md5(string value)
-            //{
-            //    MessageDigest md5;
-            //    try
-            //    {
-            //        md5 = MessageDigest.getInstance("MD5");
-            //    }
-            //    catch (NoSuchAlgorithmException e)
-            //    {
-            //        throw new IllegalStateException(e.getMessage(), e);
-            //    }
-            //    md5.reset();
-            //    byte[] bytes;
-            //    try
-            //    {
-            //        bytes = value.getBytes("UTF-8");
-            //    }
-            //    catch (UnsupportedEncodingException e)
-            //    {
-            //        throw new IllegalStateException(e.getMessage(), e);
-            //    }
-            //    md5.update(bytes);
-            //    return md5.digest();
-            //}
-
         }
     }
 }

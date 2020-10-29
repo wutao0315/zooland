@@ -6,11 +6,13 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Net.Sockets;
 using System.Net;
+using Zooyard.Core.Logging;
 
 namespace Zooyard.Core.Utils
 {
     public class NetUtils
     {
+        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(NetUtils));
 
         public const string LOCALHOST = "127.0.0.1";
 
@@ -18,17 +20,17 @@ namespace Zooyard.Core.Utils
 
         private static readonly Regex LOCAL_IP_PATTERN = new Regex("127(\\.\\d{1,3}){3}$", RegexOptions.Compiled);
 
-        public static bool isLocalHost(string host)
+        public static bool IsLocalHost(string host)
         {
             return host != null && (LOCAL_IP_PATTERN.IsMatch(host) || host.Equals("localhost", StringComparison.CurrentCultureIgnoreCase));
         }
 
-        public static bool isAnyHost(string host)
+        public static bool IsAnyHost(string host)
         {
             return "0.0.0.0".Equals(host);
         }
 
-        public static bool isInvalidLocalHost(string host)
+        public static bool IsInvalidLocalHost(string host)
         {
             return host == null || host.Length == 0 || host.Equals("localhost", StringComparison.CurrentCultureIgnoreCase) || host.Equals("0.0.0.0") || (LOCAL_IP_PATTERN.IsMatch(host));
         }
@@ -38,7 +40,7 @@ namespace Zooyard.Core.Utils
 
         private static readonly Regex IP_PATTERN = new Regex("\\d{1,3}(\\.\\d{1,3}){3,5}$", RegexOptions.Compiled);
 
-        private static bool isValidAddress(IPAddress address)
+        private static bool IsValidAddress(IPAddress address)
         {
 
             if (address == null || IPAddress.IsLoopback(address))
@@ -59,7 +61,7 @@ namespace Zooyard.Core.Utils
             }
         }
 
-        public static string filterLocalHost(string host)
+        public static string FilterLocalHost(string host)
         {
             if (host == null || host.Length == 0)
             {
@@ -67,8 +69,8 @@ namespace Zooyard.Core.Utils
             }
             if (host.Contains("://"))
             {
-                var u = URL.valueOf(host);
-                if (isInvalidLocalHost(u.Host))
+                var u = URL.ValueOf(host);
+                if (IsInvalidLocalHost(u.Host))
                 {
                     return u.SetHost(LocalHost).ToFullString();
                 }
@@ -76,14 +78,14 @@ namespace Zooyard.Core.Utils
             else if (host.Contains(":"))
             {
                 int i = host.LastIndexOf(':');
-                if (isInvalidLocalHost(host.Substring(0, i)))
+                if (IsInvalidLocalHost(host.Substring(0, i)))
                 {
                     return LocalHost + host.Substring(i);
                 }
             }
             else
             {
-                if (isInvalidLocalHost(host))
+                if (IsInvalidLocalHost(host))
                 {
                     return LocalHost;
                 }
@@ -121,14 +123,14 @@ namespace Zooyard.Core.Utils
                 {
                     var localHost = Dns.GetHostAddresses(Dns.GetHostName());
                     localAddress = localHost[0].MapToIPv4();
-                    if (isValidAddress(localAddress))
+                    if (IsValidAddress(localAddress))
                     {
                         return localAddress;
                     }
                 }
                 catch (Exception e)
                 {
-                    //_logger.Warn("Failed to retriving ip address, " + e.Message, e);
+                    Logger().Warn(e, "Failed to retriving ip address, " + e.Message);
                 }
                 try
                 {
@@ -140,43 +142,43 @@ namespace Zooyard.Core.Utils
                         {
                             try
                             {
-                                if (isValidAddress(item))
+                                if (IsValidAddress(item))
                                 {
                                     return item;
                                 }
                             }
                             catch (Exception e)
                             {
-                                //_logger.Warn("Failed to retriving ip address, " + e.Message, e);
+                                Logger().Warn(e, "Failed to retriving ip address, " + e.Message);
                             }
                         }
                     }
                 }
                 catch (Exception e)
                 {
-                    //_logger.Warn("Failed to retriving ip address, " + e.Message, e);
+                    Logger().Warn(e, "Failed to retriving ip address, " + e.Message);
                 }
-                //logger.Error("Could not get local host ip address, will use 127.0.0.1 instead.");
+                Logger().Error("Could not get local host ip address, will use 127.0.0.1 instead.");
                 return localAddress;
             }
         }
 
         /// <param name="hostName"> </param>
         /// <returns> ip address or hostName if UnknownHostException  </returns>
-        public static string getIpByHost(string hostName)
+        public static string GetIpByHost(string hostName)
         {
             try
             {
                 var ips = Dns.GetHostAddresses(hostName);
                 foreach (var ip in ips)
                 {
-                    if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                    if (ip.AddressFamily == AddressFamily.InterNetwork)
                     {
                         return ip.ToString();
                     }
                     else
                     {
-                        if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+                        if (ip.AddressFamily == AddressFamily.InterNetworkV6)
                         {
                             return ip.ToString();
                         }
@@ -188,22 +190,6 @@ namespace Zooyard.Core.Utils
             {
                 return hostName;
             }
-            
-
-            //try
-            //{
-            //    var me = Dns.GetHostEntry(hostName);
-
-            //    return me.AddressList[0].MapToIPv4().ToString();
-            //}
-            //catch (Exception)
-            //{
-            //    return hostName;
-            //}
         }
-
-
-
-
     }
 }

@@ -40,27 +40,16 @@ namespace Zooyard.Rpc.HttpImpl
             result.EnsureSuccessStatusCode();
             isOpen[0] = true;
 
-            //if (task.Wait(_clientTimeout / 2))
-            //{
-                
-            //}
-            //else
-            //{
-            //    isOpen[0] = false;
-            //    throw new TimeoutException($"connection time out in {_clientTimeout} ms");
-            //}
-
-
-            //grpc client service
-
             return new HttpInvoker(_transport, Url, isOpen);
         }
         public override async Task Open()
         {
+            await Task.CompletedTask;
         }
 
         public override async Task Close()
         {
+            await Task.CompletedTask;
         }
 
         /// <summary>
