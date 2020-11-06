@@ -119,8 +119,8 @@ namespace Zooyard.Rpc
         }
         private void OnChanged(ZooyardOption value, string name)
         {
-            Logger().Information($"{name} has changed:{ value.ToString()}");
-            Console.WriteLine($"{name} has changed:{ value.ToString()}");
+            Logger().Information($"{name} has changed:{ value}");
+            Console.WriteLine($"{name} has changed:{ value}");
 
             this.Address = URL.ValueOf(value.RegisterUrl);
 
@@ -165,8 +165,16 @@ namespace Zooyard.Rpc
                     //发现新的提供者
                     foreach (var i in list)
                     {
-                        var exitsUrl = this.Urls[item.Key].FirstOrDefault(w => w.ToIdentityString() == i.ToIdentityString());
-                        var exitsBadUrl = this.BadUrls?[item.Key]?.FirstOrDefault(w=>w.Url.ToIdentityString() == i.ToIdentityString());
+                        URL exitsUrl = null;
+                        if (this.Urls.TryGetValue(item.Key, out IList<URL> urlList)) 
+                        {
+                            exitsUrl = urlList.FirstOrDefault(w => w.ToIdentityString() == i.ToIdentityString());
+                        }
+                        BadUrl exitsBadUrl = null;
+                        if (BadUrls.TryGetValue(item.Key, out IList<BadUrl> badUrlList)) 
+                        {
+                            badUrlList.FirstOrDefault(w => w.Url.ToIdentityString() == i.ToIdentityString());
+                        }
                         if (exitsUrl == null && exitsBadUrl == null)
                         {
                             this.Urls[item.Key].Add(i);
