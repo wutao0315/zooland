@@ -259,20 +259,20 @@ namespace RpcConsumerCore
         //    var showResultWcf = akkaServiceHttp.ShowHello(helloResult);
         //    Console.WriteLine(showResultWcf.Name);
         //}
-        private static void NettyHello(RpcContractNetty.IHelloService nettyServiceHttp, string helloword = "world")
+        private static void NettyHello(RpcContractNetty.IHelloService nettyService, string helloword = "world")
         {
-            var callNameVoid = nettyServiceHttp.CallNameVoid();
+            var callNameVoid = nettyService.CallNameVoid();
             Console.WriteLine(callNameVoid);
-            nettyServiceHttp.CallName(helloword);
+            nettyService.CallName(helloword);
             Console.WriteLine("CallName called");
-            nettyServiceHttp.CallVoid();
+            nettyService.CallVoid();
             Console.WriteLine("CallVoid called");
-            var hello = nettyServiceHttp.Hello(helloword);
+            var hello = nettyService.Hello(helloword);
             Console.WriteLine(hello);
-            var helloResult = nettyServiceHttp.SayHello($"{helloword} perfect world");
+            var helloResult = nettyService.SayHello($"{helloword} perfect world");
             Console.WriteLine($"{helloResult.Name},{helloResult.Gender},{helloResult.Head}");
             helloResult.Name = helloword + "show perfect world";
-            var showResultNetty = nettyServiceHttp.ShowHello(helloResult);
+            var showResultNetty = nettyService.ShowHello(helloResult);
             Console.WriteLine(showResultNetty);
 
         }

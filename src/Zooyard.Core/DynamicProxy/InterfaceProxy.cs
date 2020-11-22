@@ -32,7 +32,7 @@ namespace Zooyard.Core.DynamicProxy
             var value = New(typeof(T), hanlder);
             if (value == null)
             {
-                return default(T);
+                return default;
             }
             return (T)value;
         }
@@ -65,9 +65,6 @@ namespace Zooyard.Core.DynamicProxy
     {
         private const MethodAttributes METHOD_ATTRIBUTES = MethodAttributes.Public | MethodAttributes.NewSlot | MethodAttributes.Virtual | MethodAttributes.Final | MethodAttributes.HideBySig;
 
-        //private const FieldAttributes FIELD_ATTRIBUTES = FieldAttributes.Private;
-
-
         private const string ProxyAssemblyName = "Zooyard.Core.DynamicProxy.Generator";
         private static ModuleBuilder MODULE_BUILDER = null;
 
@@ -90,111 +87,6 @@ namespace Zooyard.Core.DynamicProxy
             }
             return null;
         }
-
-        //private static void CreateConstructor(TypeBuilder tb, FieldBuilder fb)
-        //{
-        //    var args = new Type[] { typeof(IInterceptor)};
-        //    var ctor = tb.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, args);
-        //    var il = ctor.GetILGenerator();
-        //    //
-        //    il.Emit(OpCodes.Ldarg_0);
-        //    il.Emit(OpCodes.Ldarg_1);
-        //    il.Emit(OpCodes.Stfld, fb);
-            
-
-        //    il.Emit(OpCodes.Ret);
-        //}
-
-        //private static FieldBuilder CreateField(TypeBuilder tb)
-        //{
-        //    return tb.DefineField("_handler", typeof(IInterceptor), FIELD_ATTRIBUTES);
-        //}
-        
-
-        //private static TypeInfo CreateType(Type clazz)
-        //{
-        //    var tb = MODULE_BUILDER.DefineType($"Zooyard.Proxy.{clazz.Namespace}_{clazz.Name}");
-        //    tb.AddInterfaceImplementation(clazz);
-        //    //
-        //    var fb = CreateField(tb);
-        //    //
-        //    CreateConstructor(tb, fb);
-        //    CreateMethods(clazz, tb, fb);
-        //    //
-        //    return tb.CreateTypeInfo();
-        //}
-
-
-
-
-        //private static void CreateMethods(Type clazz, TypeBuilder tb, FieldBuilder fb)
-        //{
-        //    var methods = clazz.GetMethods();
-        //    foreach (var met in clazz.GetMethods())
-        //    {
-        //        CreateMethod(met, tb, fb);
-        //    }
-        //}
-
-        //private static Type[] GetParameters(ParameterInfo[] pis)
-        //{
-        //    Type[] buffer = new Type[pis.Length];
-        //    for (int i = 0; i < pis.Length; i++)
-        //    {
-        //        buffer[i] = pis[i].ParameterType;
-        //    }
-        //    return buffer;
-        //}
-
-        //private static MethodBuilder CreateMethod(MethodInfo met, TypeBuilder tb, FieldBuilder fb)
-        //{
-        //    ParameterInfo[] args = met.GetParameters();
-        //    MethodBuilder mb = tb.DefineMethod(met.Name, METHOD_ATTRIBUTES, met.ReturnType, GetParameters(args));
-        //    ILGenerator il = mb.GetILGenerator();
-        //    il.DeclareLocal(typeof(object[]));
-
-        //    if (met.ReturnType != typeof(void))
-        //    {
-        //        il.DeclareLocal(met.ReturnType);
-        //    }
-
-        //    il.Emit(OpCodes.Nop);
-        //    il.Emit(OpCodes.Ldc_I4, args.Length);
-        //    il.Emit(OpCodes.Newarr, typeof(object));
-        //    il.Emit(OpCodes.Stloc_0);
-
-        //    for (int i = 0; i < args.Length; i++)
-        //    {
-        //        il.Emit(OpCodes.Ldloc_0);
-        //        il.Emit(OpCodes.Ldc_I4, i);
-        //        il.Emit(OpCodes.Ldarg, (1 + i));
-        //        il.Emit(OpCodes.Box, args[i].ParameterType);
-        //        il.Emit(OpCodes.Stelem_Ref);
-        //    }
-
-        //    il.Emit(OpCodes.Ldarg_0);
-        //    il.Emit(OpCodes.Ldfld, fb);
-        //    il.Emit(OpCodes.Ldarg_0);
-        //    il.Emit(OpCodes.Ldstr, met.Name);
-        //    il.Emit(OpCodes.Ldloc_0);
-        //    il.Emit(OpCodes.Call, typeof(IInterceptor).GetMethod("Intercept", BindingFlags.Instance | BindingFlags.Public));
-            
-        //    if (met.ReturnType == typeof(void))
-        //    {
-        //        il.Emit(OpCodes.Pop);
-        //    }
-        //    else
-        //    {
-        //        il.Emit(OpCodes.Unbox_Any, met.ReturnType);
-        //        il.Emit(OpCodes.Stloc_1);
-        //        il.Emit(OpCodes.Ldloc_1);
-        //    }
-        //    il.Emit(OpCodes.Ret);
-        //    //
-        //    return mb;
-        //}
-
-
 
         private static TypeInfo CreateImplType(Type interfaceType) 
         {
@@ -235,7 +127,7 @@ namespace Zooyard.Core.DynamicProxy
         private static void DefineMethods(Type clazz, TypeDesc typeDesc)
         {
             var methods = clazz.GetMethods();
-            foreach (var met in clazz.GetMethods())
+            foreach (var met in methods)
             {
                 DefineMethod(met, typeDesc);
             }
@@ -277,7 +169,6 @@ namespace Zooyard.Core.DynamicProxy
             il.EmitString(met.Name);
             il.Emit(OpCodes.Ldloc, argsLocal);
             il.Emit(OpCodes.Callvirt, MethodUtils.InterceptInvoke);
-            il.Emit(OpCodes.Stloc, returnLocal);
 
             if (met.ReturnType == typeof(void))
             {
@@ -285,92 +176,13 @@ namespace Zooyard.Core.DynamicProxy
             }
             else
             {
+                il.Emit(OpCodes.Stloc, returnLocal);
                 il.Emit(OpCodes.Ldloc, returnLocal);
                 il.EmitConvertFromObject(met.ReturnType);
             }
             il.Emit(OpCodes.Ret);
 
             return mb;
-        }
-        private class ParameterBuilderUtils
-        {
-            public static void DefineParameters(MethodInfo targetMethod, MethodBuilder methodBuilder)
-            {
-                var parameters = targetMethod.GetParameters();
-                if (parameters.Length > 0)
-                {
-                    var paramOffset = 1;   // 1
-                    for (var i = 0; i < parameters.Length; i++)
-                    {
-                        var parameter = parameters[i];
-                        var parameterBuilder = methodBuilder.DefineParameter(i + paramOffset, parameter.Attributes, parameter.Name);
-                        if (parameter.HasDefaultValue)
-                        {
-                            if (!(parameter.ParameterType.GetTypeInfo().IsValueType && parameter.DefaultValue == null))
-                                parameterBuilder.SetConstant(parameter.DefaultValue);
-                        }
-                        foreach (var attribute in parameter.CustomAttributes)
-                        {
-                            parameterBuilder.SetCustomAttribute(CustomAttributeBuildeUtils.DefineCustomAttribute(attribute));
-                        }
-                    }
-                }
-
-                var returnParamter = targetMethod.ReturnParameter;
-                var returnParameterBuilder = methodBuilder.DefineParameter(0, returnParamter.Attributes, returnParamter.Name);
-                foreach (var attribute in returnParamter.CustomAttributes)
-                {
-                    returnParameterBuilder.SetCustomAttribute(CustomAttributeBuildeUtils.DefineCustomAttribute(attribute));
-                }
-            }
-        }
-        private class CustomAttributeBuildeUtils
-        {
-            public static CustomAttributeBuilder DefineCustomAttribute(CustomAttributeData customAttributeData)
-            {
-                if (customAttributeData.NamedArguments != null)
-                {
-                    var attributeTypeInfo = customAttributeData.AttributeType.GetTypeInfo();
-                    var constructor = customAttributeData.Constructor;
-                    //var constructorArgs = customAttributeData.ConstructorArguments.Select(c => c.Value).ToArray();
-                    var constructorArgs = new object[customAttributeData.ConstructorArguments.Count];
-                    for (var i = 0; i < constructorArgs.Length; i++)
-                    {
-                        if (customAttributeData.ConstructorArguments[i].ArgumentType.IsArray)
-                        {
-                            constructorArgs[i] = ((IEnumerable<CustomAttributeTypedArgument>)customAttributeData.ConstructorArguments[i].Value).
-                        Select(x => x.Value).ToArray();
-                        }
-                        else
-                        {
-                            constructorArgs[i] = customAttributeData.ConstructorArguments[i].Value;
-                        }
-
-                    }
-                    var namedProperties = customAttributeData.NamedArguments
-                            .Where(n => !n.IsField)
-                            .Select(n => attributeTypeInfo.GetProperty(n.MemberName))
-                            .ToArray();
-                    var propertyValues = customAttributeData.NamedArguments
-                             .Where(n => !n.IsField)
-                             .Select(n => n.TypedValue.Value)
-                             .ToArray();
-                    var namedFields = customAttributeData.NamedArguments.Where(n => n.IsField)
-                             .Select(n => attributeTypeInfo.GetField(n.MemberName))
-                             .ToArray();
-                    var fieldValues = customAttributeData.NamedArguments.Where(n => n.IsField)
-                             .Select(n => n.TypedValue.Value)
-                             .ToArray();
-                    return new CustomAttributeBuilder(customAttributeData.Constructor, constructorArgs
-                       , namedProperties
-                       , propertyValues, namedFields, fieldValues);
-                }
-                else
-                {
-                    return new CustomAttributeBuilder(customAttributeData.Constructor,
-                        customAttributeData.ConstructorArguments.Select(c => c.Value).ToArray());
-                }
-            }
         }
         private class FieldBuilderUtils
         {
@@ -481,20 +293,6 @@ namespace Zooyard.Core.DynamicProxy
     {
         internal static readonly ConstructorInfo ObjectCtor = typeof(object).GetTypeInfo().DeclaredConstructors.Single();
         internal static readonly MethodInfo InterceptInvoke = GetMethod<IInterceptor>(nameof(IInterceptor.Intercept));
-
-        private static MethodInfo GetMethod<T>(Expression<T> expression)
-        {
-            if (expression == null)
-            {
-                throw new ArgumentNullException(nameof(expression));
-            }
-            var methodCallExpression = expression.Body as MethodCallExpression;
-            if (methodCallExpression == null)
-            {
-                throw new InvalidCastException("Cannot be converted to MethodCallExpression");
-            }
-            return methodCallExpression.Method;
-        }
 
         private static MethodInfo GetMethod<T>(string name)
         {
@@ -897,19 +695,19 @@ namespace Zooyard.Core.DynamicProxy
 
         public static void EmitDecimal(this ILGenerator ilGenerator, decimal value)
         {
-            if (Decimal.Truncate(value) == value)
+            if (decimal.Truncate(value) == value)
             {
-                if (Int32.MinValue <= value && value <= Int32.MaxValue)
+                if (int.MinValue <= value && value <= int.MaxValue)
                 {
-                    int intValue = Decimal.ToInt32(value);
+                    int intValue = decimal.ToInt32(value);
                     ilGenerator.EmitInt(intValue);
-                    ilGenerator.EmitNew(typeof(Decimal).GetTypeInfo().GetConstructor(new Type[] { typeof(int) }));
+                    ilGenerator.EmitNew(typeof(decimal).GetTypeInfo().GetConstructor(new Type[] { typeof(int) }));
                 }
-                else if (Int64.MinValue <= value && value <= Int64.MaxValue)
+                else if (long.MinValue <= value && value <= long.MaxValue)
                 {
-                    long longValue = Decimal.ToInt64(value);
+                    long longValue = decimal.ToInt64(value);
                     ilGenerator.EmitLong(longValue);
-                    ilGenerator.EmitNew(typeof(Decimal).GetTypeInfo().GetConstructor(new Type[] { typeof(long) }));
+                    ilGenerator.EmitNew(typeof(decimal).GetTypeInfo().GetConstructor(new Type[] { typeof(long) }));
                 }
                 else
                 {
@@ -1187,15 +985,15 @@ namespace Zooyard.Core.DynamicProxy
             {
                 ilGenerator.Emit(OpCodes.Ldind_I1);
             }
-            else if (type == typeof(Int16))
+            else if (type == typeof(short))
             {
                 ilGenerator.Emit(OpCodes.Ldind_I2);
             }
-            else if (type == typeof(Int32))
+            else if (type == typeof(int))
             {
                 ilGenerator.Emit(OpCodes.Ldind_I4);
             }
-            else if (type == typeof(Int64))
+            else if (type == typeof(long))
             {
                 ilGenerator.Emit(OpCodes.Ldind_I8);
             }
@@ -1211,11 +1009,11 @@ namespace Zooyard.Core.DynamicProxy
             {
                 ilGenerator.Emit(OpCodes.Ldind_U1);
             }
-            else if (type == typeof(UInt16))
+            else if (type == typeof(ushort))
             {
                 ilGenerator.Emit(OpCodes.Ldind_U2);
             }
-            else if (type == typeof(UInt32))
+            else if (type == typeof(uint))
             {
                 ilGenerator.Emit(OpCodes.Ldind_U4);
             }
@@ -1243,15 +1041,15 @@ namespace Zooyard.Core.DynamicProxy
             {
                 ilGenerator.Emit(OpCodes.Stind_I1);
             }
-            else if (type == typeof(Int16))
+            else if (type == typeof(short))
             {
                 ilGenerator.Emit(OpCodes.Stind_I2);
             }
-            else if (type == typeof(Int32))
+            else if (type == typeof(int))
             {
                 ilGenerator.Emit(OpCodes.Stind_I4);
             }
-            else if (type == typeof(Int64))
+            else if (type == typeof(long))
             {
                 ilGenerator.Emit(OpCodes.Stind_I8);
             }
@@ -1288,17 +1086,13 @@ namespace Zooyard.Core.DynamicProxy
 
         private static void EmitNullableToNullableConversion(this ILGenerator ilGenerator, TypeInfo typeFrom, TypeInfo typeTo, bool isChecked)
         {
-            Label labIfNull = default(Label);
-            Label labEnd = default(Label);
-            LocalBuilder locFrom = null;
-            LocalBuilder locTo = null;
-            locFrom = ilGenerator.DeclareLocal(typeFrom.AsType());
+            LocalBuilder locFrom = ilGenerator.DeclareLocal(typeFrom.AsType());
             ilGenerator.Emit(OpCodes.Stloc, locFrom);
-            locTo = ilGenerator.DeclareLocal(typeTo.AsType());
+            LocalBuilder locTo = ilGenerator.DeclareLocal(typeTo.AsType());
             // test for null
             ilGenerator.Emit(OpCodes.Ldloca, locFrom);
             ilGenerator.EmitHasValue(typeFrom.AsType());
-            labIfNull = ilGenerator.DefineLabel();
+            Label labIfNull = ilGenerator.DefineLabel();
             ilGenerator.Emit(OpCodes.Brfalse_S, labIfNull);
             ilGenerator.Emit(OpCodes.Ldloca, locFrom);
             ilGenerator.EmitGetValueOrDefault(typeFrom.AsType());
@@ -1309,7 +1103,7 @@ namespace Zooyard.Core.DynamicProxy
             ConstructorInfo ci = typeTo.GetConstructor(new Type[] { nnTypeTo });
             ilGenerator.Emit(OpCodes.Newobj, ci);
             ilGenerator.Emit(OpCodes.Stloc, locTo);
-            labEnd = ilGenerator.DefineLabel();
+            Label labEnd = ilGenerator.DefineLabel();
             ilGenerator.Emit(OpCodes.Br_S, labEnd);
             // if null then create a default one
             ilGenerator.MarkLabel(labIfNull);
@@ -1329,8 +1123,7 @@ namespace Zooyard.Core.DynamicProxy
 
         private static void EmitNullableToNonNullableStructConversion(this ILGenerator ilGenerator, TypeInfo typeFrom, TypeInfo typeTo, bool isChecked)
         {
-            LocalBuilder locFrom = null;
-            locFrom = ilGenerator.DeclareLocal(typeFrom.AsType());
+            LocalBuilder locFrom = ilGenerator.DeclareLocal(typeFrom.AsType());
             ilGenerator.Emit(OpCodes.Stloc, locFrom);
             ilGenerator.Emit(OpCodes.Ldloca, locFrom);
             ilGenerator.EmitGetValue(typeFrom.AsType());
@@ -1347,8 +1140,7 @@ namespace Zooyard.Core.DynamicProxy
 
         private static void EmitNonNullableToNullableConversion(this ILGenerator ilGenerator, TypeInfo typeFrom, TypeInfo typeTo, bool isChecked)
         {
-            LocalBuilder locTo = null;
-            locTo = ilGenerator.DeclareLocal(typeTo.AsType());
+            LocalBuilder locTo = ilGenerator.DeclareLocal(typeTo.AsType());
             Type nnTypeTo = TypeInfoUtils.GetNonNullableType(typeTo);
             ilGenerator.EmitConvertToType(typeFrom.AsType(), nnTypeTo, isChecked);
             ConstructorInfo ci = typeTo.GetConstructor(new Type[] { nnTypeTo });
@@ -1496,10 +1288,6 @@ namespace Zooyard.Core.DynamicProxy
             }
         }
 
-        private static bool ShouldLdtoken(Type t)
-        {
-            return t.IsGenericParameter || t.GetTypeInfo().IsVisible;
-        }
 
         private static bool TryEmitILConstant(this ILGenerator ilGenerator, object value, Type type)
         {
@@ -1554,36 +1342,13 @@ namespace Zooyard.Core.DynamicProxy
 
         private static void EmitDecimalBits(this ILGenerator ilGenerator, decimal value)
         {
-            int[] bits = Decimal.GetBits(value);
+            int[] bits = decimal.GetBits(value);
             ilGenerator.EmitInt(bits[0]);
             ilGenerator.EmitInt(bits[1]);
             ilGenerator.EmitInt(bits[2]);
             ilGenerator.EmitBoolean((bits[3] & 0x80000000) != 0);
             ilGenerator.EmitByte((byte)(bits[3] >> 16));
             ilGenerator.EmitNew(typeof(decimal).GetTypeInfo().GetConstructor(new Type[] { typeof(int), typeof(int), typeof(int), typeof(bool), typeof(byte) }));
-        }
-
-        private static bool CanEmitILConstant(Type type)
-        {
-            switch (Type.GetTypeCode(type))
-            {
-                case TypeCode.Boolean:
-                case TypeCode.SByte:
-                case TypeCode.Int16:
-                case TypeCode.Int32:
-                case TypeCode.Int64:
-                case TypeCode.Single:
-                case TypeCode.Double:
-                case TypeCode.Char:
-                case TypeCode.Byte:
-                case TypeCode.UInt16:
-                case TypeCode.UInt32:
-                case TypeCode.UInt64:
-                case TypeCode.Decimal:
-                case TypeCode.String:
-                    return true;
-            }
-            return false;
         }
         #endregion
     }

@@ -106,10 +106,16 @@ namespace Zooyard.Rpc
             this.Caches = new ConcurrentDictionary<string, ICache>();
             foreach (var cache in caches)
             {
-                var value = cache.Value.GetConstructor(new Type[] { typeof(URL) })
-                    .Invoke(new object[] { this.Address }) as ICache;
-
-                this.Caches.TryAdd(cache.Key, value);
+                try
+                {
+                    var value = cache.Value.GetConstructor(new Type[] { typeof(URL) }).Invoke(new object[] { this.Address }) as ICache;
+                    this.Caches.TryAdd(cache.Key, value);
+                }
+                catch
+                {
+                    var value = cache.Value.GetConstructor(new Type[] { }).Invoke(new object[] { }) as ICache;
+                    this.Caches.TryAdd(cache.Key, value);
+                }
             }
 
             Init();

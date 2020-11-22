@@ -8,6 +8,9 @@ namespace Zooyard.Rpc.Cache
     {
         public const string NAME = "threadlocal";
         private readonly ThreadLocal<IDictionary<object, object>> _store = new ThreadLocal<IDictionary<object, object>>(() => new Dictionary<object, object>());
+        public ThreadLocalCache(URL url)
+        {
+        }
         public void Put(object key, object value)
         {
             _store.Value.Add(key, value);

@@ -34,14 +34,10 @@ namespace Zooyard.Rpc.NettyImpl.Extensions
             services.AddSingleton((serviceProvider) => 
             {
                 var option = serviceProvider.GetService<IOptionsMonitor<NettyOption>>().CurrentValue;
-                var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
-                
 
                 var nettyProtocols = new Dictionary<string, NettyProtocol>();
                 foreach (var item in option.Protocols)
                 {
-                    
-
                     var value = new NettyProtocol
                     {
                         EventLoopGroupType = Type.GetType(item.Value.EventLoopGroupType),
@@ -54,28 +50,20 @@ namespace Zooyard.Rpc.NettyImpl.Extensions
 
                 return pool;
             });
-
         }
 
         public static void AddNettyServer(this IServiceCollection services)
         {
-            
-            
             services.AddSingleton<IServer>((serviceProvider)=> 
             {
                 var option = serviceProvider.GetService<IOptionsMonitor<NettyServerOption>>().CurrentValue;
-                var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
                 var registryService = serviceProvider.GetService<IRegistryService>();
                 var url = URL.ValueOf(option.Url);
 
                 var service = serviceProvider.GetService(Type.GetType(option.ServiceType));
-     
-                
                 
                 return new NettyServer(url, service,  option.IsSsl, option.Pfx, option.Pwd, registryService);
             });
-            
-
         }
     }
 }
