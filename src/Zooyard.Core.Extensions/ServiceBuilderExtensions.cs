@@ -129,6 +129,11 @@ namespace Zooyard.Core.Extensions
             foreach (var item in optionData.Clients)
             {
                 var serviceType = Type.GetType(item.Value.ServiceType);
+                if (serviceType == null) 
+                {
+                    throw new Exception($"{zooyard} not find type {item.Value.ServiceType}");
+                }
+
                 var genericType = typeof(ZooyardFactory<>);
                 var factoryType = genericType.MakeGenericType(new []{ serviceType });
                 services.AddSingleton(factoryType, (serviceProvder) =>
