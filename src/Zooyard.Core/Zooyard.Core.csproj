@@ -8,7 +8,7 @@
     <PackageReleaseNotes />
     <Description>Zooyard RPC Framework microservice</Description>
     <Authors>wutao0315</Authors>
-    <Version>1.1.2</Version>
+    <Version>1.1.4</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
@@ -37,6 +37,9 @@
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
       <_Parameter1>Zooyard.Rpc</_Parameter1>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>Zooyard.Core.Extensions</_Parameter1>
     </AssemblyAttribute>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
       <_Parameter1>Zooyard.Rpc.GrpcImpl</_Parameter1>

@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
+using Zooyard.Core.Logging;
 using Zooyard.Rpc;
 using Zooyard.Rpc.Cache;
 using Zooyard.Rpc.Cluster;
@@ -11,10 +12,9 @@ using Zooyard.Rpc.Merger;
 
 namespace Zooyard.Core.Extensions
 {
-
-
     public static class ServiceBuilderExtensions
     {
+        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ServiceBuilderExtensions));
         public static void AddZoolandClient(this IServiceCollection services, IConfiguration config, string zooyard= "zooyard")
         {
             
@@ -131,7 +131,10 @@ namespace Zooyard.Core.Extensions
                 var serviceType = Type.GetType(item.Value.ServiceType);
                 if (serviceType == null) 
                 {
-                    throw new Exception($"{zooyard} not find type {item.Value.ServiceType}");
+                    var msg = $"waring {zooyard} not find type {item.Value.ServiceType}";
+                    Logger().Warn(msg);
+                    Console.WriteLine(msg);
+                    continue;
                 }
 
                 var genericType = typeof(ZooyardFactory<>);
