@@ -132,7 +132,7 @@ namespace Zooyard.Core.Extensions
                 if (serviceType == null) 
                 {
                     var msg = $"waring {zooyard} not find type {item.Value.ServiceType}";
-                    Logger().Warn(msg);
+                    Logger().LogWarning(msg);
                     Console.WriteLine(msg);
                     continue;
                 }

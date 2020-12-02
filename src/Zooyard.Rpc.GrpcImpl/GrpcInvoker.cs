@@ -40,7 +40,7 @@ namespace Zooyard.Rpc.GrpcImpl
             var method = _instance.GetType().GetMethod(invocation.MethodInfo.Name, paraTypes);
             var value = method.Invoke(_instance, parasPlus);
             await Task.CompletedTask;
-            Logger().Information($"Invoke:{invocation.MethodInfo.Name}");
+            Logger().LogInformation($"Invoke:{invocation.MethodInfo.Name}");
             var result = new RpcResult(value);
             return result;
         }

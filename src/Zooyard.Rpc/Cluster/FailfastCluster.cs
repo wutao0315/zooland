@@ -67,7 +67,7 @@ namespace Zooyard.Rpc.Cluster
                     + " use service version " + invocation.Version
                     + ", but no luck to perform the invocation. Last error is: " + e.Message, e.InnerException != null ? e.InnerException : e);
                 }
-                Logger().Error(exception, exception.Message);
+                Logger().LogError(exception, exception.Message);
                 badUrls.Add(new BadUrl { Url = invoker, BadTime = DateTime.Now, CurrentException = exception });
             }
 

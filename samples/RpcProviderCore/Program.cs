@@ -28,6 +28,7 @@ using Zooyard.Rpc.GrpcImpl;
 using Grpc.Core.Interceptors;
 using Grpc.Core;
 using System.Threading.Tasks;
+using Zooyard.Extensions;
 
 namespace RpcProviderCore
 {
@@ -54,17 +55,20 @@ namespace RpcProviderCore
             {
                 var env = hostingContext.HostingEnvironment;
 
+                var basePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "config");
                 var builder = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory() + @"\App_Data\Config")
-            //.AddJsonFile("service.akka.json", false, true)
-            .AddJsonFile("service.grpc.json", false, true)
-            .AddJsonFile("service.netty.json", false, true)
-            //.AddJsonFile("service.thrift.json", false, true)
-            .AddJsonFile("service.http.json", false, true)
-            .AddJsonFile("service.json", false, true)
-            .AddJsonFile("nlog.json", false, true);
+                    .SetBasePath(basePath)
+                    //.AddJsonFile("service.akka.json", false, true)
+                    .AddJsonFile("service.grpc.json", false, true)
+                    .AddJsonFile("service.netty.json", false, true)
+                    //.AddJsonFile("service.thrift.json", false, true)
+                    .AddJsonFile("service.http.json", false, true)
+                    .AddJsonFile("service.json", false, true)
+                    .AddJsonFile("nlog.json", false, true);
 
                 var config = builder.Build();
+
+                ZooyardLogManager.UseConsoleLogging(Zooyard.Core.Logging.LogLevel.Debug);
 
                 //services.Configure<AkkaServerOption>(config.GetSection("akka"));
                 services.Configure<GrpcServerOption>(config.GetSection("grpc"));
@@ -75,7 +79,7 @@ namespace RpcProviderCore
 
                 //实现注册接口代码
                 services.AddSingleton<IRegistryService>((provider)=> {
-                    return default(IRegistryService);
+                    return default;
                 });
 
                 services.AddTransient((serviceProvider) => "A");

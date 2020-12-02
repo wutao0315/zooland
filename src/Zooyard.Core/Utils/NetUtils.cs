@@ -130,7 +130,7 @@ namespace Zooyard.Core.Utils
                 }
                 catch (Exception e)
                 {
-                    Logger().Warn(e, "Failed to retriving ip address, " + e.Message);
+                    Logger().LogWarning(e, "Failed to retriving ip address, " + e.Message);
                 }
                 try
                 {
@@ -149,16 +149,16 @@ namespace Zooyard.Core.Utils
                             }
                             catch (Exception e)
                             {
-                                Logger().Warn(e, "Failed to retriving ip address, " + e.Message);
+                                Logger().LogWarning(e, "Failed to retriving ip address, " + e.Message);
                             }
                         }
                     }
                 }
                 catch (Exception e)
                 {
-                    Logger().Warn(e, "Failed to retriving ip address, " + e.Message);
+                    Logger().LogWarning(e, "Failed to retriving ip address, " + e.Message);
                 }
-                Logger().Error("Could not get local host ip address, will use 127.0.0.1 instead.");
+                Logger().LogError("Could not get local host ip address, will use 127.0.0.1 instead.");
                 return localAddress;
             }
         }

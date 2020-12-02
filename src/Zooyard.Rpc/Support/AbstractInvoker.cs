@@ -12,7 +12,7 @@ namespace Zooyard.Rpc.Support
         public abstract object Instance { get; }
         public virtual async Task<IResult> Invoke(IInvocation invocation)
         {
-            Logger().Information($"{invocation.App}:{invocation.Version}:{invocation.TargetType.FullName}:{invocation.MethodInfo.Name}");
+            Logger().LogInformation($"{invocation.App}:{invocation.Version}:{invocation.TargetType.FullName}:{invocation.MethodInfo.Name}");
             var result = await HandleInvoke(invocation);
             return result;
         }

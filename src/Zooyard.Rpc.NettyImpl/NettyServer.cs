@@ -123,7 +123,7 @@ namespace Zooyard.Rpc.NettyImpl
         }
         public override async Task DoExport()
         {
-            Logger().Debug($"ready to start the server on port:{Settings.Port}.");
+            Logger().LogDebug($"ready to start the server on port:{Settings.Port}.");
 
             var newServerChannel = await ServerFactory().BindAsync(IPAddress.Any, Settings.Port);
 
@@ -135,7 +135,7 @@ namespace Zooyard.Rpc.NettyImpl
             ConnectionGroup.TryAdd(newServerChannel);
             ServerChannel = newServerChannel;
 
-            Logger().Information($"Started the netty server ...");
+            Logger().LogInformation($"Started the netty server ...");
             Console.WriteLine($"Started the netty server ...");
             
         }
@@ -191,7 +191,7 @@ namespace Zooyard.Rpc.NettyImpl
             base.ChannelActive(context);
             if (!Server.ConnectionGroup.TryAdd(context.Channel))
             {
-                Logger().Warn($"Unable to ADD channel [{context.Channel.LocalAddress}->{context.Channel.RemoteAddress}](Id={context.Channel.Id}) to connection group. May not shut down cleanly.");
+                Logger().LogWarning($"Unable to ADD channel [{context.Channel.LocalAddress}->{context.Channel.RemoteAddress}](Id={context.Channel.Id}) to connection group. May not shut down cleanly.");
             }
         }
 
@@ -200,14 +200,14 @@ namespace Zooyard.Rpc.NettyImpl
             base.ChannelInactive(context);
             if (!Server.ConnectionGroup.TryRemove(context.Channel))
             {
-                Logger().Warn($"Unable to REMOVE channel [{context.Channel.LocalAddress}->{context.Channel.RemoteAddress}](Id={ context.Channel.Id}) from connection group. May not shut down cleanly.");
+                Logger().LogWarning($"Unable to REMOVE channel [{context.Channel.LocalAddress}->{context.Channel.RemoteAddress}](Id={ context.Channel.Id}) from connection group. May not shut down cleanly.");
             }
         }
 
         public override void ExceptionCaught(IChannelHandlerContext context, Exception exception)
         {
             base.ExceptionCaught(context, exception);
-            Logger().Error(exception, $"Error caught channel [{context.Channel.LocalAddress}->{context.Channel.RemoteAddress}](Id={context.Channel.Id})");
+            Logger().LogError(exception, $"Error caught channel [{context.Channel.LocalAddress}->{context.Channel.RemoteAddress}](Id={context.Channel.Id})");
         }
 
     }
@@ -266,7 +266,7 @@ namespace Zooyard.Rpc.NettyImpl
                 {
                     remoteInvoker.ExceptionMessage = ex.Message;
                     remoteInvoker.StatusCode = 500;
-                    Logger().Error(ex, ex.Message);
+                    Logger().LogError(ex, ex.Message);
                 }
                 var resultData = TransportMessage.CreateInvokeResultMessage(transportMessage.Id, remoteInvoker);
                 var sendByte = resultData.Serialize();
@@ -292,11 +292,11 @@ namespace Zooyard.Rpc.NettyImpl
 
             if (se?.SocketErrorCode == SocketError.OperationAborted)
             {
-                Logger().Information($"Socket read operation aborted. Connection is about to be closed. Channel [{context.Channel.LocalAddress}->{context.Channel.RemoteAddress}](Id={context.Channel.Id})");
+                Logger().LogInformation($"Socket read operation aborted. Connection is about to be closed. Channel [{context.Channel.LocalAddress}->{context.Channel.RemoteAddress}](Id={context.Channel.Id})");
             }
             else if (se?.SocketErrorCode == SocketError.ConnectionReset)
             {
-                Logger().Information($"Connection was reset by the remote peer. Channel [{context.Channel.LocalAddress}->{context.Channel.RemoteAddress}](Id={context.Channel.Id})");
+                Logger().LogInformation($"Connection was reset by the remote peer. Channel [{context.Channel.LocalAddress}->{context.Channel.RemoteAddress}](Id={context.Channel.Id})");
             }
             else
             {
@@ -304,7 +304,7 @@ namespace Zooyard.Rpc.NettyImpl
             }
 
             Console.WriteLine($"Exception: {exception.Message}");
-            Logger().Error(exception, exception.Message);
+            Logger().LogError(exception, exception.Message);
             context.CloseAsync();
         }
 

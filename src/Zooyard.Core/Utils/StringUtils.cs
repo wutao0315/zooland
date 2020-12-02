@@ -159,7 +159,7 @@ namespace Zooyard.Core.Utils
                     }
                     catch (Exception e)
                     {
-                        Logger().Warn(e, e.Message);
+                        Logger().LogWarning(e, e.Message);
                         buf.Append(arg);
                     }
                 }

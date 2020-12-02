@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Zooyard.Core;
 using Zooyard.Core.Extensions;
+using Zooyard.Extensions;
 //using Zooyard.Rpc.AkkaImpl.Extensions;
 using Zooyard.Rpc.GrpcImpl.Extensions;
 using Zooyard.Rpc.HttpImpl.Extensions;
@@ -23,8 +24,10 @@ namespace RpcConsumerCore
     {
         static void Main(string[] args)
         {
+            var basePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config");
+
             var builder = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory() + "/Config")
+                .SetBasePath(basePath)
                 //.AddJsonFile("zooyard.akka.json", false, true)
                 .AddJsonFile("zooyard.grpc.json", false, true)
                 .AddJsonFile("zooyard.netty.json", false, true)
@@ -34,6 +37,7 @@ namespace RpcConsumerCore
                 .AddJsonFile("nlog.json", false, true);
 
             var config = builder.Build();
+            ZooyardLogManager.UseConsoleLogging(Zooyard.Core.Logging.LogLevel.Debug);
 
             IServiceCollection services = new ServiceCollection();
             //services.Configure<AkkaOption>(config.GetSection("akka"));

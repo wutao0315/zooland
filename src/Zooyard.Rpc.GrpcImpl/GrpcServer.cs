@@ -43,7 +43,7 @@ namespace Zooyard.Rpc.GrpcImpl
             _server.Start();
             await Task.CompletedTask;
             var ports = _server.Ports.Select(w=>w.Port);
-            Logger().Information($"Started the grpc server on{string.Join(",",ports)} ...");
+            Logger().LogInformation($"Started the grpc server on{string.Join(",",ports)} ...");
         }
 
         public override async Task DoDispose()
@@ -58,7 +58,7 @@ namespace Zooyard.Rpc.GrpcImpl
                 }
                 catch (Exception ex)
                 {
-                    Logger().Information(ex, ex.ToString());
+                    Logger().LogInformation(ex, ex.ToString());
                 }
             }
         }

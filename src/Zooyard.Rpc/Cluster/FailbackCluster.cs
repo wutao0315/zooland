@@ -41,7 +41,7 @@ namespace Zooyard.Rpc.Cluster
                             }
                             catch (Exception t)
                             { // 防御性容错
-                                Logger().Error(t, $"Unexpected error occur at collect statistic {t.Message}");
+                                Logger().LogError(t, $"Unexpected error occur at collect statistic {t.Message}");
                             }
                         });
                         retryTimer.AutoReset = true;
@@ -79,7 +79,7 @@ namespace Zooyard.Rpc.Cluster
                 {
                     _source.WriteConsumerError(entry.Value, invocation, e);
                     await pool.DestoryClient(client).ConfigureAwait(false);
-                    Logger().Error(e, $"Failed retry to invoke method {invocation.MethodInfo.Name}, waiting again.");
+                    Logger().LogError(e, $"Failed retry to invoke method {invocation.MethodInfo.Name}, waiting again.");
                 }
             }
         }
@@ -115,7 +115,7 @@ namespace Zooyard.Rpc.Cluster
             }
             catch (Exception e)
             {
-                Logger().Error(e, $"Failback to invoke method {invocation.MethodInfo.Name}, wait for retry in background. Ignored exception:{e.Message}");
+                Logger().LogError(e, $"Failback to invoke method {invocation.MethodInfo.Name}, wait for retry in background. Ignored exception:{e.Message}");
                 addFailed(pool, invocation, invoker);
                 result = new RpcResult(); // ignore
                 exception = e;

@@ -106,13 +106,13 @@ namespace Zooyard.Rpc.Cluster
                         }
                         catch (Exception e)
                         {
-                            Logger().Warn(e, e.Message + " may because invokers list dynamic change, ignore.");
+                            Logger().LogWarning(e, e.Message + " may because invokers list dynamic change, ignore.");
                         }
                     }
                 }
                 catch (Exception t)
                 {
-                    Logger().Error(t,$"clustor relselect fail reason is :{t.Message} if can not slove ,you can set cluster.availablecheck=false in url");
+                    Logger().LogError(t,$"clustor relselect fail reason is :{t.Message} if can not slove ,you can set cluster.availablecheck=false in url");
                 }
             }
             return invoker;

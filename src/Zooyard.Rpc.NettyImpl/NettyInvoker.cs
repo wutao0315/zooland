@@ -48,11 +48,11 @@ namespace Zooyard.Rpc.NettyImpl
                 }
                 catch (Exception e)
                 {
-                    Logger().Error(e, e.Message);
+                    Logger().LogError(e, e.Message);
                     throw new Exception("connecting server error.", e);
                 }
 
-                Logger().Information($"Invoke:{invocation.MethodInfo.Name}");
+                Logger().LogInformation($"Invoke:{invocation.MethodInfo.Name}");
                 if (callbackTask.Wait(_clientTimeout / 2))
                 {
                     var value = await callbackTask;
@@ -65,7 +65,7 @@ namespace Zooyard.Rpc.NettyImpl
             }
             catch (Exception e)
             {
-                Logger().Error(e,e.Message);
+                Logger().LogError(e,e.Message);
                 throw e;
             }
         }
@@ -78,7 +78,7 @@ namespace Zooyard.Rpc.NettyImpl
         /// <returns>远程调用结果消息模型。</returns>
         private async Task<RemoteInvokeResultMessage> RegisterResultCallbackAsync(string id)
         {
-            Logger().Debug($"ready to recive message Id：{id} response content。");
+            Logger().LogDebug($"ready to recive message Id：{id} response content。");
 
             var task = new TaskCompletionSource<TransportMessage>();
             _resultDictionary.TryAdd(id, task);
@@ -89,7 +89,7 @@ namespace Zooyard.Rpc.NettyImpl
             }
             catch (Exception e)
             {
-                Logger().Error(e, e.Message);
+                Logger().LogError(e, e.Message);
                 return null;
             }
             finally
@@ -102,7 +102,7 @@ namespace Zooyard.Rpc.NettyImpl
 
         private async Task MessageListener_Received(TransportMessage message)
         {
-            Logger().Information($"serivce customer recive the message:{message.Id} ");
+            Logger().LogInformation($"serivce customer recive the message:{message.Id} ");
 
 
             TaskCompletionSource<TransportMessage> task;

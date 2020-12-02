@@ -23,7 +23,7 @@ namespace Zooyard.Rpc.Support
         {
             //first start the service provider
             await DoExport();
-            Logger().Information("Export");
+            Logger().LogInformation("Export");
             if (!string.IsNullOrWhiteSpace(Address))
             {
                 //registe this provoder
@@ -42,7 +42,7 @@ namespace Zooyard.Rpc.Support
             }
             //them stop the provider
             await DoDispose();
-            Logger().Information("Dispose");
+            Logger().LogInformation("Dispose");
         }
 
         public abstract Task DoDispose();

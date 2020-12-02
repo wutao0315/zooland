@@ -167,13 +167,13 @@ namespace Zooyard.Rpc.NettyImpl
 
             if (se?.SocketErrorCode == SocketError.OperationAborted)
             {
-                Logger().Information($"Socket read operation aborted. Connection is about to be closed. Channel [{context.Channel.LocalAddress}->{context.Channel.RemoteAddress}](Id={context.Channel.Id})");
+                Logger().LogInformation($"Socket read operation aborted. Connection is about to be closed. Channel [{context.Channel.LocalAddress}->{context.Channel.RemoteAddress}](Id={context.Channel.Id})");
 
                 //NotifyListener(new Disassociated(DisassociateInfo.Shutdown));
             }
             else if (se?.SocketErrorCode == SocketError.ConnectionReset)
             {
-                Logger().Information($"Connection was reset by the remote peer. Channel [{context.Channel.LocalAddress}->{context.Channel.RemoteAddress}](Id={context.Channel.Id})");
+                Logger().LogInformation($"Connection was reset by the remote peer. Channel [{context.Channel.LocalAddress}->{context.Channel.RemoteAddress}](Id={context.Channel.Id})");
 
                 //NotifyListener(new Disassociated(DisassociateInfo.Shutdown));
             }
@@ -184,7 +184,7 @@ namespace Zooyard.Rpc.NettyImpl
             }
 
             Console.WriteLine($"Exception: {exception.Message}");
-            Logger().Error(exception, exception.Message);
+            Logger().LogError(exception, exception.Message);
             context.CloseAsync();
         }
     }

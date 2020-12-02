@@ -51,7 +51,7 @@ namespace Zooyard.Rpc.HttpImpl
             {
                 return new RpcResult(value);
             }
-            Logger().Information($"Invoke:{invocation.MethodInfo.Name}");
+            Logger().LogInformation($"Invoke:{invocation.MethodInfo.Name}");
             var result = new RpcResult(JsonConvert.DeserializeObject(value, invocation.MethodInfo.ReturnType));
             return result;
         }

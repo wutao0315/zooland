@@ -125,7 +125,7 @@ namespace Zooyard.Rpc
         }
         private void OnChanged(ZooyardOption value, string name)
         {
-            Logger().Information($"{name} has changed:{ value}");
+            Logger().LogInformation($"{name} has changed:{ value}");
             Console.WriteLine($"{name} has changed:{ value}");
 
             this.Address = URL.ValueOf(value.RegisterUrl);
@@ -211,7 +211,7 @@ namespace Zooyard.Rpc
                 }
                 catch (Exception t)
                 {   // 防御性容错
-                    Logger().Error(t, "Unexpected error occur at collect statistic");
+                    Logger().LogError(t, "Unexpected error occur at collect statistic");
                 }
             });
             cycleTimer.AutoReset = true;
@@ -230,7 +230,7 @@ namespace Zooyard.Rpc
                 }
                 catch (Exception t)
                 {   // 防御性容错
-                    Logger().Error(t, "Unexpected error occur at collect statistic");
+                    Logger().LogError(t, "Unexpected error occur at collect statistic");
                 }
             });
             recoveryTimer.AutoReset = true;
@@ -269,7 +269,7 @@ namespace Zooyard.Rpc
                             this.Urls[badUrls.Key].Add(badUrl.Url);
                             list.Add(badUrl);
                             Console.WriteLine($"auto timer recovery url {badUrl.Url.ToString()}");
-                            Logger().Information($"recovery:{badUrl.Url.ToString()}");
+                            Logger().LogInformation($"recovery:{badUrl.Url.ToString()}");
                         }
                     }
                     foreach (var item in list)
@@ -420,7 +420,7 @@ namespace Zooyard.Rpc
                 var result = filterUrls(invocation, Urls[invocation.TargetType.FullName]);
                 if (result?.Count > 0)
                 {
-                    Logger().Information("from good urls");
+                    Logger().LogInformation("from good urls");
                     return result;
                 }
             }
@@ -431,7 +431,7 @@ namespace Zooyard.Rpc
                 var result = filterUrls(invocation, BadUrls[invocation.TargetType.FullName].Select(w => w.Url).ToList());
                 if (result?.Count > 0)
                 {
-                    Logger().Information("from bad urls");
+                    Logger().LogInformation("from bad urls");
                     return result;
                 }
             }
@@ -516,8 +516,8 @@ namespace Zooyard.Rpc
                 var value = cache.Get(key);
                 if (value != null)
                 {
-                    Logger().Information($"call from cache:{key}");
-                    Logger().Information($"cache type:{cache.GetType().FullName}");
+                    Logger().LogInformation($"call from cache:{key}");
+                    Logger().LogInformation($"cache type:{cache.GetType().FullName}");
                     return new RpcResult(value);
                 }
 
@@ -606,7 +606,7 @@ namespace Zooyard.Rpc
                             badUrls.Remove(badUrl);
                         }
 
-                        Logger().Information(item.CurrentException,$"isolation url {item.ToString()}");
+                        Logger().LogInformation(item.CurrentException,$"isolation url {item.ToString()}");
                         badUrls.Add(item);
                     }
                 }
@@ -623,7 +623,7 @@ namespace Zooyard.Rpc
                         if (!goodUrls.Contains(badUrl.Url))
                         {
                             goodUrls.Add(badUrl.Url);
-                            Logger().Information($"recovery url {badUrl.ToString()}");
+                            Logger().LogInformation($"recovery url {badUrl.ToString()}");
                         }
 
                     }

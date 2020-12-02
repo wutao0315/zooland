@@ -24,11 +24,11 @@ namespace Zooyard.Rpc.HttpImpl
             try
             {
                 await _server.RunAsync();
-                Logger().Debug("http server started");
+                Logger().LogDebug("http server started");
             }
             catch (Exception ex)
             {
-                Logger().Error(ex, ex.Message);
+                Logger().LogError(ex, ex.Message);
             }
 
         }

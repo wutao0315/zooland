@@ -62,7 +62,7 @@ namespace Zooyard.Rpc.Cluster
                         pool.Recovery(client);
                         if (le != null)
                         {
-                            Logger().Warn(le, "Although retry the method " + invocation.MethodInfo.Name
+                            Logger().LogWarning(le, "Although retry the method " + invocation.MethodInfo.Name
                                     + " in the service " + invocation.TargetType.FullName
                                     + " was successful by the provider " + invoker.Address
                                     + ", but there have been failed providers " + string.Join(",", providers)
