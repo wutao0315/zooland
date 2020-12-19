@@ -93,7 +93,7 @@ namespace Zooyard.Rpc
             this.Pools = new ConcurrentDictionary<string, IClientPool>(pools);
             this.LoadBalances = new ConcurrentDictionary<string, ILoadBalance>(loadbalances);
             this.Clusters = new ConcurrentDictionary<string, ICluster>(clusters);
-            this.Address = URL.ValueOf(clients.CurrentValue.RegisterUrl);
+            this.Address = URL.ValueOf(string.IsNullOrWhiteSpace(clients.CurrentValue.RegisterUrl)? "zooyard://127.0.0.1" : clients.CurrentValue.RegisterUrl);
             this.Urls = new ConcurrentDictionary<string, IList<URL>>();
             this.BadUrls = new ConcurrentDictionary<string, IList<BadUrl>>();
             //参数
