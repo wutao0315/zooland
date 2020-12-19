@@ -24,7 +24,7 @@ namespace Zooyard.Rpc.Support
             //first start the service provider
             await DoExport();
             Logger().LogInformation("Export");
-            if (!string.IsNullOrWhiteSpace(Address))
+            if (_registryService != null && !string.IsNullOrWhiteSpace(Address))
             {
                 //registe this provoder
                 var url = URL.ValueOf(Address);
