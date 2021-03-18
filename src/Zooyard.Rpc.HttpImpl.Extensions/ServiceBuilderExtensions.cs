@@ -24,7 +24,7 @@ namespace Zooyard.Rpc.HttpImpl.Extensions
         public static void AddHttpServer<Startup>(this IServiceCollection services, string[] args)
             where Startup : class
         {
-            services.AddSingleton((serviceProvider) =>
+            services.AddTransient((serviceProvider) =>
             {
                 var option = serviceProvider.GetService<IOptionsMonitor<HttpServerOption>>().CurrentValue;
                 var host = new WebHostBuilder()
@@ -38,7 +38,7 @@ namespace Zooyard.Rpc.HttpImpl.Extensions
                 return host;
             });
 
-            services.AddSingleton<IServer, HttpServer>();
+            services.AddTransient<IServer, HttpServer>();
         }
     }
 }

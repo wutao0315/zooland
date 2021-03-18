@@ -10,7 +10,13 @@ namespace RpcProviderCore
 {
     public class HelloServiceGrpcImpl : HelloService.HelloServiceBase
     {
-        public string ServiceName { get; set; }
+        private readonly IHelloRepository _helloRepository;
+        public string ServiceName { get; set; } = "A";
+        public HelloServiceGrpcImpl(IHelloRepository helloRepository) 
+        {
+            _helloRepository = helloRepository;
+        }
+        
         
         public override Task<RpcContractGrpc.Void> CallName(NameResult request, ServerCallContext context)
         {
@@ -47,16 +53,18 @@ namespace RpcProviderCore
             
             Console.WriteLine($"from grpc {request.Name} call Hello! [{ServiceName}]");
 
-            request.Name = $"from grpc hello {request.Name} [{ServiceName}]";
+            var hello = _helloRepository.SayHello();
+            request.Name = $"from grpc hello {request.Name} [{ServiceName}] {hello}";
             
             return Task.FromResult<NameResult>(request);
         }
         public override Task<RpcContractGrpc.HelloResult> SayHello(NameResult request, ServerCallContext context)
         {
             Console.WriteLine($"from grpc {request.Name} call SayHello! [{ServiceName}]");
+            var hello = _helloRepository.SayHello();
             var result = new RpcContractGrpc.HelloResult
             {
-                Name = $"from grpc {request.Name} [{ServiceName}]",
+                Name = $"from grpc {request.Name} [{ServiceName}]{hello}",
                 Gender = "male",
                 Head = "head.png"
             };
@@ -66,9 +74,10 @@ namespace RpcProviderCore
         public override Task<NameResult> ShowHello(RpcContractGrpc.HelloResult request, ServerCallContext context)
         {
             Console.WriteLine($"from grpc {request.Name} call SayHello! [{ServiceName}]");
+            var hello = _helloRepository.SayHello();
             var result = new NameResult
             {
-                Name = $"from grpc name:{request.Name}；gender:{request.Gender}；avatar:{request.Head} [{ServiceName}]"
+                Name = $"from grpc name:{request.Name}；gender:{request.Gender}；avatar:{request.Head} [{ServiceName}]{hello}"
             };
 
             return Task.FromResult<NameResult>(result);

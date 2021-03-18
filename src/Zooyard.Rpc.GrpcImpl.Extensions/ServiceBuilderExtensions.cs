@@ -68,7 +68,7 @@ namespace Zooyard.Rpc.GrpcImpl.Extensions
 
         public static void AddGrpcServer(this IServiceCollection services)
         {
-            services.AddSingleton<IEnumerable<ServerServiceDefinition>>((serviceProvder) => 
+            services.AddTransient<IEnumerable<ServerServiceDefinition>>((serviceProvder) => 
             {
                 var option = serviceProvder.GetService<IOptionsMonitor<GrpcServerOption>>().CurrentValue;
                 var result = new List<ServerServiceDefinition>();
@@ -86,7 +86,7 @@ namespace Zooyard.Rpc.GrpcImpl.Extensions
                 return result;
             });
 
-            services.AddSingleton<IEnumerable<ServerPort>>((serviceProvder) => 
+            services.AddTransient<IEnumerable<ServerPort>>((serviceProvder) => 
             {
                 var option = serviceProvder.GetService<IOptionsMonitor<GrpcServerOption>>().CurrentValue;
                 var result = new List<ServerPort>();
@@ -105,7 +105,7 @@ namespace Zooyard.Rpc.GrpcImpl.Extensions
                 }
                 return result;
             });
-            services.AddSingleton<IServer, GrpcServer>();
+            services.AddTransient<IServer, GrpcServer>();
         }
     }
 }

@@ -88,10 +88,11 @@ namespace RpcProviderCore
                 //services.AddSingleton<ClientInterceptor, ClientGrpcInterceptor>();
                 services.AddSingleton<ServerInterceptor, ServerGrpcInterceptor>();
 
-                services.AddTransient<RpcContractGrpc.HelloService.HelloServiceBase>((serviceProvider) => new HelloServiceGrpcImpl { ServiceName = "A" });
-                services.AddGrpcServer();
 
-             
+
+                services.AddTransient<RpcContractGrpc.HelloService.HelloServiceBase, HelloServiceGrpcImpl>();
+                services.AddGrpcServer();
+               
 
 
                 services.AddSingleton<IEventLoopGroup>((serviceProvider) =>
@@ -118,12 +119,13 @@ namespace RpcProviderCore
 
                 //services.AddThriftServer();
 
-                services.AddHttpServer<Startup>(args);
+                //services.AddHttpServer<Startup>(args);
 
                 //services.AddTransient<IHelloServiceWcf, HelloServiceWcfImpl>();
 
-                services.AddHostedService<ZoolandHostedService>();
+
                 //services.AddZoolandServer();
+                services.AddHostedService<ZoolandHostedService>();
 
             })
             .ConfigureWebHostDefaults(webBuilder =>

@@ -54,7 +54,7 @@ namespace Zooyard.Rpc.NettyImpl.Extensions
 
         public static void AddNettyServer(this IServiceCollection services)
         {
-            services.AddSingleton<IServer>((serviceProvider)=> 
+            services.AddTransient<IServer>((serviceProvider)=> 
             {
                 var option = serviceProvider.GetService<IOptionsMonitor<NettyServerOption>>().CurrentValue;
                 var registryService = serviceProvider.GetService<IRegistryService>();

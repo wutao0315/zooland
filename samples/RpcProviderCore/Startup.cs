@@ -11,6 +11,8 @@ using System;
 using System.Net.Http.Headers;
 using System.ServiceModel;
 using System.Text;
+using Zooyard.Rpc.Extensions;
+using Zooyard.Rpc.GrpcImpl.Extensions;
 
 namespace RpcProviderCore
 {
@@ -47,6 +49,9 @@ namespace RpcProviderCore
 
             services.AddLogging();
 
+            services.AddScoped<IHelloRepository, HelloRepository>();
+
+            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
