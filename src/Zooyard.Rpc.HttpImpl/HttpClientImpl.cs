@@ -40,7 +40,7 @@ namespace Zooyard.Rpc.HttpImpl
             result.EnsureSuccessStatusCode();
             isOpen[0] = true;
 
-            return new HttpInvoker(_transport, Url, isOpen);
+            return new HttpInvoker(_transport, _clientTimeout, Url, isOpen);
         }
         public override async Task Open()
         {

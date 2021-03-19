@@ -59,7 +59,7 @@ namespace Zooyard.Rpc.Cluster
                         _source.WriteConsumerBefore(refer.Instance, invoker, invocation);
                         var result = await refer.Invoke(invocation);
                         _source.WriteConsumerAfter(invoker, invocation, result);
-                        pool.Recovery(client);
+                        await pool.Recovery(client);
                         if (le != null)
                         {
                             Logger().LogWarning(le, "Although retry the method " + invocation.MethodInfo.Name

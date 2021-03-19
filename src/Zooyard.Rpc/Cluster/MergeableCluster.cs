@@ -56,7 +56,7 @@ namespace Zooyard.Rpc.Cluster
                             _source.WriteConsumerBefore(refer.Instance, invoker, invocation);
                             var invokeResult = await refer.Invoke(invocation);
                             _source.WriteConsumerAfter(invoker, invocation, invokeResult);
-                            pool.Recovery(client);
+                            await pool.Recovery(client);
                             goodUrls.Add(invoker);
                             return new ClusterResult(invokeResult, goodUrls, badUrls, null, false);
                         }
@@ -102,7 +102,7 @@ namespace Zooyard.Rpc.Cluster
                             _source.WriteConsumerBefore(refer.Instance, invoker, invocation);
                             var invokeResult = await refer.Invoke(invocation);
                             _source.WriteConsumerAfter(invoker, invocation, invokeResult);
-                            pool.Recovery(client);
+                            await pool.Recovery(client);
                             goodUrls.Add(invoker);
                             return invokeResult;
                         }

@@ -16,14 +16,17 @@ namespace Zooyard.Rpc.NettyImpl
         private readonly IChannel _channel;
         private readonly ConcurrentDictionary<string, TaskCompletionSource<TransportMessage>> _resultDictionary =
             new ConcurrentDictionary<string, TaskCompletionSource<TransportMessage>>();
-        private readonly int _clientTimeout = 5000;
+        private readonly int _clientTimeout;
 
-        public NettyInvoker(IChannel channel,IMessageListener _messageListener)
+        public NettyInvoker(IChannel channel,IMessageListener _messageListener, int clientTimeout)
         {
             _channel = channel;
+            _clientTimeout = clientTimeout;
             _messageListener.Received += MessageListener_Received;
         }
-        public override object Instance { get { return _channel; } }
+        public override object Instance => _channel;
+        public override int ClientTimeout => _clientTimeout;
+
         protected override async Task<IResult> HandleInvoke(IInvocation invocation)
         {
             try
@@ -53,14 +56,14 @@ namespace Zooyard.Rpc.NettyImpl
                 }
 
                 Logger().LogInformation($"Invoke:{invocation.MethodInfo.Name}");
-                if (callbackTask.Wait(_clientTimeout / 2))
+                if (callbackTask.Wait(ClientTimeout / 2))
                 {
                     var value = await callbackTask;
                     return new RpcResult(value.Result);
                 }
                 else
                 {
-                    throw new TimeoutException($"connection time out in {_clientTimeout} ms");
+                    throw new TimeoutException($"connection time out in {ClientTimeout} ms");
                 }
             }
             catch (Exception e)
@@ -95,8 +98,7 @@ namespace Zooyard.Rpc.NettyImpl
             finally
             {
                 //删除回调任务
-                TaskCompletionSource<TransportMessage> value;
-                _resultDictionary.TryRemove(id, out value);
+                _resultDictionary.TryRemove(id, out TaskCompletionSource<TransportMessage> value);
             }
         }
 
@@ -104,9 +106,7 @@ namespace Zooyard.Rpc.NettyImpl
         {
             Logger().LogInformation($"serivce customer recive the message:{message.Id} ");
 
-
-            TaskCompletionSource<TransportMessage> task;
-            if (!_resultDictionary.TryGetValue(message.Id, out task))
+            if (!_resultDictionary.TryGetValue(message.Id, out TaskCompletionSource<TransportMessage> task))
                 return;
 
             if (message.IsInvokeResultMessage())

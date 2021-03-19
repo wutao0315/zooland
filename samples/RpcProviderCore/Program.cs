@@ -119,7 +119,7 @@ namespace RpcProviderCore
 
                 //services.AddThriftServer();
 
-                //services.AddHttpServer<Startup>(args);
+                services.AddHttpServer<Startup>(args);
 
                 //services.AddTransient<IHelloServiceWcf, HelloServiceWcfImpl>();
 
@@ -191,9 +191,9 @@ namespace RpcProviderCore
                 var response = await continuation(request, context);
                 return response;
             }
-            catch (Exception ex)
+            catch
             {
-                throw ex;
+                throw;
             }
         }
         // 客户端流式调用拦截
@@ -204,9 +204,9 @@ namespace RpcProviderCore
                 var response = await continuation(requestStream, context);
                 return response;
             }
-            catch (Exception ex)
+            catch
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -217,9 +217,9 @@ namespace RpcProviderCore
             {
                 await continuation(request, responseStream, context);
             }
-            catch (Exception ex)
+            catch
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -230,9 +230,9 @@ namespace RpcProviderCore
             {
                 await continuation(requestStream, responseStream, context);
             }
-            catch (Exception ex)
+            catch
             {
-                throw ex;
+                throw;
             }
         }
     }

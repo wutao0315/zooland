@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.ObjectPool;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
@@ -9,97 +10,21 @@ using Zooyard.Core.Logging;
 
 namespace Zooyard.Rpc.Support
 {
-    public abstract class AbstractClientPool : IClientPool
+    public abstract class AbstractClientPool : IClientPool,IAsyncDisposable
     {
         private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(AbstractClientPool));
-        #region 构造方法
-        public AbstractClientPool()
-        {
-            //init
-            CreateResetEvent();
-            CreatePool();
-        }
-
-        #endregion
 
         #region 内部成员
         /// <summary>
         /// client pools
         /// </summary>
-        protected ConcurrentDictionary<string, ConcurrentQueue<IClient>> ClientsPool;
-        /// <summary>
-        /// 同步连接
-        /// </summary>
-        protected AutoResetEvent resetEvent;
-
-        /// <summary>
-        /// 空闲连接数
-        /// </summary>
-        protected volatile ConcurrentDictionary<string, int> idleCount = new ConcurrentDictionary<string, int>();
-
-        //protected volatile int idleCount = 0;
-
-        /// <summary>
-        /// 活动连接数
-        /// </summary>
-        protected volatile ConcurrentDictionary<string, int> activeCount = new ConcurrentDictionary<string, int>();
-
-        /// <summary>
-        /// 同步连接锁
-        /// </summary>		
-        protected object locker = new object();
-
-        /// <summary>
-        /// 释放标志
-        /// </summary>
-        protected bool disposed;
-        /// <summary>
-        /// 随机数生成器
-        /// </summary>
-        protected Random rand = new Random();
+        protected readonly ConcurrentDictionary<URL, ConcurrentBag<IClient>> ClientsPool = new ConcurrentDictionary<URL, ConcurrentBag<IClient>> ();
+       
         #endregion
 
         #region 属性
         public URL Address { get; set; }
-
-        /// <summary>
-        /// 连接池最大活动连接数
-        /// </summary>
-        public int MaxActive { protected set; get; }
-        /// <summary>
-        /// 连接池最小空闲连接数
-        /// </summary>
-        public int MinIdle { protected set; get; }
-        /// <summary>
-        /// 连接池最大空闲连接数
-        /// </summary>
-        public int MaxIdle { protected set; get; }
-        /// <summary>
-        /// 通信超时时间，单位毫秒
-        /// </summary>
-        public int ClientTimeout { protected set; get; }
-
-        /// <summary>
-        /// 空闲连接数
-        /// </summary>
-        public IDictionary<string, int> IdleCount
-        {
-            get
-            {
-                return idleCount;
-            }
-        }
-
-        /// <summary>
-        /// 活动连接数
-        /// </summary>
-        public IDictionary<string, int> ActiveCount
-        {
-            get
-            {
-                return activeCount;
-            }
-        }
+        public int MaxIdle { protected set; get; } = Environment.ProcessorCount * 2;
         #endregion
 
         #region 公有操作方法
@@ -110,91 +35,46 @@ namespace Zooyard.Rpc.Support
         /// <returns>连接</returns>
         public virtual async Task<IClient> GetClient(URL url)
         {
-            var urlKey = url.ToString();
-            if (Monitor.TryEnter(locker, TimeSpan.FromMilliseconds(ClientTimeout)))
+            //连接池无空闲连接	
+            var client = DequeueClient(url);
+            var validClient = ValidateClient(client);
+            //连接池无空闲连接	
+            if (!validClient)
             {
-                try
+                //先尝试关闭
+                await DestoryClient(client);
+                //然后重新初始化
+                client = InitializeClient(url);
+                if (client == null)
                 {
-                    IClient client = null;
-                    Exception innerErr = null;
-                    var validClient = false;
-                    //连接池无空闲连接	
-                    
-                    if (idleCount.ContainsKey(urlKey) && idleCount[urlKey] > 0 && !validClient)
-                    {
-                        client = DequeueClient(urlKey);
-                        validClient = ValidateClient(client, out innerErr);
-                        if (!validClient)
-                        {
-                            await DestoryClient(client);
-                        }
-                        Logger().LogInformation($"get client [{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}] from queue");
-                    }
-
-                    //连接池无空闲连接	
-                    if (!validClient)
-                    {
-                        //连接池已已创建连接数达上限				
-                        if (idleCount.ContainsKey(urlKey) && activeCount[urlKey] > MaxActive)
-                        {
-                            if (!resetEvent.WaitOne(ClientTimeout))
-                            {
-                                throw new TimeoutException("the pool is busy,no available connections.");
-                            }
-                        }
-                        else
-                        {
-                            client = InitializeClient(url, out innerErr);
-                            if (client == null)
-                            {
-                                throw new InvalidOperationException("connection access failed. please confirm call service status.", innerErr);
-                            }
-                            Logger().LogInformation($"create new client [{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
-                        }
-                    }
-
-                    return client;
+                    throw new InvalidOperationException("connection access failed. please confirm call service status.");
                 }
-                finally
-                {
-                    Monitor.Exit(locker);
-                }
+                Logger().LogInformation($"create new client [{client.Version}:{url}]");
             }
-            else
-            {
-                throw new TimeoutException($"gets the connection wait more than {ClientTimeout} milliseconds.");
-            }
+
+            return client;
         }
 
         /// <summary>
         /// 归还一个连接至连接池
         /// </summary>
         /// <param name="client">连接</param>
-        public virtual void Recovery(IClient client)
+        public virtual async Task Recovery(IClient client)
         {
-            lock (locker)
+            if (!ClientsPool.TryGetValue(client.Url, out ConcurrentBag<IClient> clientBag) || clientBag.Count <= MaxIdle)
             {
-                var urlKey = client.Url.ToString();
-                //空闲连接数达到上限或者连接版本过期，不再返回线程池,直接销毁			
-                if ((idleCount.ContainsKey(urlKey)
-                    && idleCount[urlKey] >= MaxIdle))//|| this.Version != client.Version
-                {
-                    Logger().LogInformation($"recovery to destory idle overflow:[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
-                    DestoryClient(client).GetAwaiter().GetResult();
-                    Console.WriteLine($"recovery to destory idle overflow:[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
-                }
-                else
-                {
-                    //更新最近触发时间
-                    client.ActiveTime = DateTime.Now;
-                    //连接回归连接池
-                    EnqueueClient(urlKey, client);
-                    //发通知信号，连接池有连接变动
-                    resetEvent.Set();
-                    Logger().LogInformation($"recovery to update:[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
-                    Console.WriteLine($"recovery to update:[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
-                }
+                //更新最近触发时间
+                client.ActiveTime = DateTime.Now;
+                //连接回归连接池
+                clientBag ??= new ConcurrentBag<IClient>();
+                clientBag.Add(client);
+                ClientsPool[client.Url] = clientBag;
+                Logger().LogInformation($"recovery to update:[{clientBag.Count}][{client.Version}:{client.Url}]");
+                return;
             }
+            //空闲连接数达到上限或者连接版本过期，不再返回线程池,直接销毁	
+            await DestoryClient(client);
+            Logger().LogInformation($"recovery to destory idle full:[{clientBag.Count}][{client.Version}:{client.Url}]");
         }
         /// <summary>
         /// 销毁连接
@@ -202,125 +82,38 @@ namespace Zooyard.Rpc.Support
         /// <param name="client">连接</param>
         public async Task DestoryClient(IClient client)
         {
-            if (client != null)
-            {
-                var urlKey = client.Url.ToString();
-                await client.Close();
-                await client.DisposeAsync();
-                activeCount[urlKey]--;
-                Logger().LogInformation($"DestoryClient :[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
-            }
-        }
-        /// <summary>
-        /// 重置连接池
-        /// </summary>
-        public virtual void ResetPool()
-        {
-            CreatePool();
-        }
-
-        /// <summary>
-        /// 释放连接池
-        /// </summary>
-        public virtual void Dispose()
-        {
-            Dispose(true);
-        }
-
-        #endregion
-
-        #region 私有方法
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposed)
+            if (client == null)
             {
                 return;
             }
-            if (disposing)
-            {
-                lock (locker)
-                {
-                    foreach (var item in ClientsPool.Keys)
-                    {
-                        while (idleCount[item] > 0)
-                        {
-                            var client = DequeueClient(item);
-                            var urlKey = client.Url.ToString();
-                            Logger().LogInformation($"Dispose :[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
-                            DestoryClient(client).GetAwaiter().GetResult();
-                        }
-                    }
-                }
-            }
-            disposed = true;
+            await client.Close();
+            await client.DisposeAsync();
+            Logger().LogInformation($"DestoryClient :[{client.Version}:{client.Url}]");
         }
 
-
-        /// <summary>
-        /// 创建线程同步对象
-        /// </summary>
-        protected virtual void CreateResetEvent()
+        public virtual async ValueTask DisposeAsync()
         {
-            lock (locker)
+            foreach (var item in ClientsPool)
             {
-                if (resetEvent == null)
+                while (item.Value.TryTake(out IClient client)) 
                 {
-                    resetEvent = new AutoResetEvent(false);
+                    await DestoryClient(client);
+                    Logger().LogInformation($"Dispose :[{ClientsPool[item.Key].Count}][{client.Version}:{item.Key}]");
                 }
             }
-        }
-
-        /// <summary>
-        /// 创建连接池
-        /// </summary>
-
-        protected virtual void CreatePool()
-        {
-            lock (locker)
-            {
-                //读取配置
-                MaxActive = 100;
-                MinIdle = 2;
-                MaxIdle = 10;
-                ClientTimeout = 5000;
-
-                if (ClientsPool == null)
-                {
-                    ClientsPool = new ConcurrentDictionary<string,ConcurrentQueue<IClient>>();
-                }
-            }
-        }
-
-
-        /// <summary>
-        /// 连接进入连接池
-        /// </summary>
-        /// <param name="client">连接</param>
-        protected void EnqueueClient(string url,IClient client)
-        {
-            if (!ClientsPool.ContainsKey(url))
-            {
-                ClientsPool.TryAdd(url, new ConcurrentQueue<IClient>());
-            }
-            ClientsPool[url].Enqueue(client);
-            idleCount[url]++;
-            activeCount[url]--;
         }
 
         /// <summary>
         /// 连接取出连接池
         /// </summary>
         /// <returns>连接</returns>
-        protected IClient DequeueClient(string url)
+        protected IClient DequeueClient(URL url)
         {
-            IClient client;
-            if (ClientsPool[url].TryDequeue(out client))
+            if (ClientsPool.TryGetValue(url, out ConcurrentBag<IClient> clients) && clients.TryTake(out IClient result)) 
             {
-                idleCount[url]--;
-                activeCount[url]++;
+                return result;
             }
-            return client;
+            return null;
         }
 
         /// <summary>
@@ -333,36 +126,21 @@ namespace Zooyard.Rpc.Support
         /// 初始化连接，隐藏创建细节
         /// </summary>
         /// <returns>连接</returns>
-        protected IClient InitializeClient(URL url,out Exception err)
+        protected IClient InitializeClient(URL url)
         {
-            err = null;
-
             try
             {
                 var client = CreateClient(url);
-                if (ValidateClient(client, out err))
+                if (ValidateClient(client))
                 {
-                    var urlKey = url.ToString();
-                    if (!activeCount.ContainsKey(urlKey))
-                    {
-                        activeCount.TryAdd(urlKey, 0);
-                    }
-                    if (!idleCount.ContainsKey(urlKey))
-                    {
-                        idleCount.TryAdd(urlKey, 0);
-                    }
-                    activeCount[urlKey]++;
                     client.Reset();
-
                     return client;
                 }
             }
             catch (Exception e)
             {
-                Logger().LogError(e,e.Message);
-                err = e;
+                Logger().LogError(e, e.Message);
             }
-            
             return null;
         }
 
@@ -370,45 +148,39 @@ namespace Zooyard.Rpc.Support
         /// 校验连接，确保连接开启
         /// </summary>
         /// <param name="client">连接</param>
-
-        protected bool ValidateClient(IClient client, out Exception err)
+        protected bool ValidateClient(IClient client)
         {
+            if (client == null) 
+            {
+                return false;
+            }
             try
             {
                 client.Open();
-                err = null;
                 return true;
             }
             catch (Exception e)
             {
-                err = e;
                 Logger().LogError(e, e.Message);
                 return false;
             }
         }
 
-        
+
         /// <summary>
         /// 超时清除
         /// </summary>
         /// <param name="overTime"></param>
         public async Task TimeOver(DateTime overTime)
         {
-            foreach (var item in ClientsPool.Keys)
+            foreach (var item in ClientsPool)
             {
                 var list = new List<IClient>();
-                while (idleCount[item]>0)
+                while (item.Value.TryTake(out IClient client)) 
                 {
-                    var client = DequeueClient(item);
-                    if (client==null)
+                    if (client.ActiveTime <= DateTime.MinValue || client.ActiveTime < overTime)
                     {
-                        continue;
-                    }
-                    var urlKey = client.Url.ToString();
-                    if (client.ActiveTime<=DateTime.MinValue || client.ActiveTime < overTime)
-                    {
-                        Console.WriteLine($"client time over:[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
-                        Logger().LogInformation($"client time over:[{idleCount[urlKey]}][{activeCount[urlKey]}][{client.Version}:{urlKey}]");
+                        Logger().LogInformation($"client time over:[{item.Value.Count}][{client.Version}:{item.Key}]");
                         await DestoryClient(client);
                     }
                     else
@@ -418,27 +190,27 @@ namespace Zooyard.Rpc.Support
                 }
                 foreach (var client in list)
                 {
-                    EnqueueClient(item, client);
+                    item.Value.Add(client);
                 }
             }
-
+#if DEBUG
             PrintConsole();
+            void PrintConsole()
+            {
+
+                Console.WriteLine($"client pool information:{DateTime.Now:yyyy-MM-dd HH:mm:sss.fff}");
+                Console.WriteLine("-----------------------------------------");
+                Console.WriteLine("url|idle");
+                foreach (var pool in ClientsPool)
+                {
+                    Console.WriteLine($"{pool.Key}|{pool.Value?.Count ?? 0}");
+                }
+                Console.WriteLine("-----------------------------------------");
+
+            }
+#endif
         }
 
         #endregion
-
-        private void PrintConsole()
-        {
-            //Console.WriteLine($"client pool information:{DateTime.Now.ToString("yyyy-MM-dd HH:mm:sss.fff")}");
-            //Console.WriteLine("-----------------------------------------");
-            //Console.WriteLine("idle|active|pool|url");
-            //foreach (var pool in ClientsPool)
-            //{
-            //    var idle = idleCount.ContainsKey(pool.Key) ? idleCount[pool.Key] :-1;
-            //    var active = activeCount.ContainsKey(pool.Key) ? activeCount[pool.Key] : -1;
-            //    Console.WriteLine($"{idle}|{active}|{pool.Value?.Count ?? 0}|{pool.Key}");
-            //}
-            //Console.WriteLine("-----------------------------------------");
-        }
     }
 }

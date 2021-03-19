@@ -13,7 +13,7 @@ namespace Zooyard.Core
         /// 归还一个连接至连接池
         /// </summary>
         /// <param name="client">连接</param>
-        void Recovery(IClient client);
+        Task Recovery(IClient client);
         /// <summary>
         /// 销毁连接
         /// </summary>

@@ -22,6 +22,9 @@ namespace Zooyard.Rpc.NettyImpl
     {
         private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(NettyClientPool));
 
+        public const string TIMEOUT_KEY = "http_timeout";
+        public const int DEFAULT_TIMEOUT = 5000;
+
         public const string SSL_KEY = "ssl";
         public const bool DEFAULT_SSL = false;
         public const string PWD_KEY = "pwd";
@@ -105,8 +108,9 @@ namespace Zooyard.Rpc.NettyImpl
             var messageListener = new MessageListener();
             client.GetAttribute(messageListenerKey).Set(messageListener);
 
+            var timeout = url.GetParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
 
-            return new NettyClient(group, client, messageListener, url);
+            return new NettyClient(group, client, messageListener, timeout, url);
         }
 
         private static readonly AttributeKey<IMessageListener> messageListenerKey = AttributeKey<IMessageListener>.ValueOf(typeof(NettyClientPool), nameof(IMessageListener));

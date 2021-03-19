@@ -32,12 +32,12 @@ namespace Zooyard.Rpc.Cluster
                         _source.WriteConsumerBefore(refer.Instance, invoker, invocation);
                         result = await refer.Invoke(invocation);
                         _source.WriteConsumerAfter(invoker, invocation, result);
-                        pool.Recovery(client);
+                        await pool.Recovery(client);
                         goodUrls.Add(invoker);
                     }
                     catch (Exception ex)
                     {
-                        await pool.DestoryClient(client).ConfigureAwait(false);
+                        await pool.DestoryClient(client);
                         _source.WriteConsumerError(invoker,invocation ,ex);
                         throw ex;
                     }

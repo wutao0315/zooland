@@ -18,18 +18,21 @@ namespace Zooyard.Rpc.HttpImpl
         public const string DEFAULT_METHODTYPE = "post";
         private readonly URL _url;
         private readonly HttpClient _instance;
+        private readonly int _clientTimeout;
         /// <summary>
         /// 开启标志
         /// </summary>
         protected bool[] isOpen = new bool[] { false };
 
-        public HttpInvoker(HttpClient instance,URL url, bool[] isOpen)
+        public HttpInvoker(HttpClient instance, int clientTimeout, URL url, bool[] isOpen)
         {
             _instance = instance;
+            _clientTimeout = clientTimeout;
             _url = url;
             this.isOpen = isOpen;
         }
-        public override object Instance { get { return _instance; } }
+        public override object Instance =>_instance;
+        public override int ClientTimeout => _clientTimeout;
         protected override async Task<IResult> HandleInvoke(IInvocation invocation)
         {
             var parameterType = _url.GetMethodParameterAndDecoded(invocation.MethodInfo.Name, PARAMETERTYPE_KEY, DEFAULT_PARAMETERTYPE).ToLower();

@@ -71,14 +71,13 @@ namespace Zooyard.Rpc.Cluster
                     _source.WriteConsumerBefore(refer.Instance, entry.Value, invocation);
                     var result = await refer.Invoke(invocation);
                     _source.WriteConsumerAfter(entry.Value, invocation, result);
-                    pool.Recovery(client);
-                    URL cluster;
-                    failed.TryRemove(invocation ,out cluster);
+                    await pool.Recovery(client);
+                    failed.TryRemove(invocation ,out URL cluster);
                 }
                 catch (Exception e)
                 {
                     _source.WriteConsumerError(entry.Value, invocation, e);
-                    await pool.DestoryClient(client).ConfigureAwait(false);
+                    await pool.DestoryClient(client);
                     Logger().LogError(e, $"Failed retry to invoke method {invocation.MethodInfo.Name}, waiting again.");
                 }
             }
@@ -103,7 +102,7 @@ namespace Zooyard.Rpc.Cluster
                     _source.WriteConsumerBefore(refer.Instance, invoker, invocation);
                     result = await refer.Invoke(invocation);
                     _source.WriteConsumerAfter(invoker, invocation, result);
-                    pool.Recovery(client);
+                    await pool.Recovery(client);
                     goodUrls.Add(invoker);
                 }
                 catch (Exception ex)

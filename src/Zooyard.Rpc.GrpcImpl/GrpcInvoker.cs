@@ -13,12 +13,13 @@ namespace Zooyard.Rpc.GrpcImpl
         private readonly object _instance;
         private readonly int _clientTimeout;
        
-        public GrpcInvoker(object instance,int clientTimeout)
+        public GrpcInvoker(object instance, int clientTimeout)
         {
             _instance = instance;
             _clientTimeout = clientTimeout;
         }
-        public override object Instance { get { return _instance; } }
+        public override object Instance => _instance;
+        public override int ClientTimeout => _clientTimeout;
         protected override async Task<IResult> HandleInvoke(IInvocation invocation)
         {
             var paraTypes = new Type[invocation.Arguments.Length + 1];

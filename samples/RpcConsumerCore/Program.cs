@@ -111,9 +111,9 @@ namespace RpcConsumerCore
                                     {
                                         GrpcHello(helloServiceGrpc);
                                     }
-                                    catch (Exception ex)
+                                    catch
                                     {
-                                        throw ex;
+                                        throw;
                                     }
 
                                 });
@@ -135,10 +135,10 @@ namespace RpcConsumerCore
                                     {
                                         HttpHello(helloServiceHttp);
                                     }
-                                    catch (Exception ex)
+                                    catch
                                     {
 
-                                        throw ex;
+                                        throw;
                                     }
 
                                 });
@@ -162,10 +162,10 @@ namespace RpcConsumerCore
                                     {
                                         NettyHello(helloServiceNetty);
                                     }
-                                    catch (Exception ex)
+                                    catch
                                     {
 
-                                        throw ex;
+                                        throw;
                                     }
                                 });
                             }

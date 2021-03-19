@@ -37,12 +37,12 @@ namespace Zooyard.Rpc.Cluster
                     _source.WriteConsumerBefore(refer.Instance, invoker, invocation);
                     result = await refer.Invoke(invocation);
                     _source.WriteConsumerAfter(invoker, invocation, result);
-                    pool.Recovery(client);
+                    await pool.Recovery(client);
                     goodUrls.Add(invoker);
                 }
                 catch (Exception ex)
                 {
-                    await pool.DestoryClient(client).ConfigureAwait(false);
+                    await pool.DestoryClient(client);
                     _source.WriteConsumerError(invoker,invocation ,ex);
                     throw ex;
                 }
@@ -51,21 +51,22 @@ namespace Zooyard.Rpc.Cluster
             {
                 isThrow = true;
 
-                if (e is RpcException && ((RpcException)e).Biz)
-                { // biz exception.
+                if (e is RpcException eBiz && eBiz.Biz)
+                { 
+                    // biz exception.
                     exception = e;
                     //throw (RpcException)e;
                 }
                 else {
 
-                    exception = new RpcException(e is RpcException ? ((RpcException)e).Code : 0, "Failfast invoke providers "
+                    exception = new RpcException(e is RpcException eRpc ? eRpc.Code : 0, "Failfast invoke providers "
                     + invoker + " " + loadbalance.GetType().Name
                     + " select from all providers " + string.Join(",", urls)
                     + " for service " + invocation.TargetType.FullName
                     + " method " + invocation.MethodInfo.Name
                     + " on consumer " + Local.HostName
                     + " use service version " + invocation.Version
-                    + ", but no luck to perform the invocation. Last error is: " + e.Message, e.InnerException != null ? e.InnerException : e);
+                    + ", but no luck to perform the invocation. Last error is: " + e.Message, e.InnerException ?? e);
                 }
                 Logger().LogError(exception, exception.Message);
                 badUrls.Add(new BadUrl { Url = invoker, BadTime = DateTime.Now, CurrentException = exception });

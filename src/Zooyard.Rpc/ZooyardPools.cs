@@ -606,7 +606,7 @@ namespace Zooyard.Rpc
                             badUrls.Remove(badUrl);
                         }
 
-                        Logger().LogInformation(item.CurrentException,$"isolation url {item.ToString()}");
+                        Logger().LogInformation(item.CurrentException,$"isolation url {item}");
                         badUrls.Add(item);
                     }
                 }
@@ -623,7 +623,7 @@ namespace Zooyard.Rpc
                         if (!goodUrls.Contains(badUrl.Url))
                         {
                             goodUrls.Add(badUrl.Url);
-                            Logger().LogInformation($"recovery url {badUrl.ToString()}");
+                            Logger().LogInformation($"recovery url {badUrl}");
                         }
 
                     }

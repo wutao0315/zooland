@@ -14,23 +14,25 @@ namespace Zooyard.Rpc.NettyImpl
 
         public const string QUIETPERIOD_KEY = "quietPeriod";
         public const int DEFAULT_QUIETPERIOD = 100;
-        public const string TIMEOUT_KEY = "timeout";
-        public const int DEFAULT_TIMEOUT = 1;
+        //public const string TIMEOUT_KEY = "timeout";
+        //public const int DEFAULT_TIMEOUT = 5000;
 
         public override URL Url { get; }
 
         private readonly IEventLoopGroup _eventLoopGroup;
         private readonly IChannel _channel;
         private readonly IMessageListener _messageListener;
+        private readonly int _clientTimeout;
 
         // private static readonly AttributeKey<EndPoint> origEndPointKey = AttributeKey<EndPoint>.ValueOf(typeof(NettyClientPool), nameof(EndPoint));
 
-        public NettyClient(IEventLoopGroup eventLoopGroup, IChannel channel,IMessageListener messageListener ,URL url)
+        public NettyClient(IEventLoopGroup eventLoopGroup, IChannel channel,IMessageListener messageListener, int clientTimeout, URL url)
         {
-            this.Url = url;
             _eventLoopGroup = eventLoopGroup;
             _channel = channel;
             _messageListener = messageListener;
+            _clientTimeout = clientTimeout;
+            this.Url = url;
         }
 
 
@@ -38,7 +40,7 @@ namespace Zooyard.Rpc.NettyImpl
         {
             await this.Open();
 
-            return new NettyInvoker(_channel, _messageListener);
+            return new NettyInvoker(_channel, _messageListener, _clientTimeout);
         }
 
         public override async Task Open()
@@ -65,8 +67,8 @@ namespace Zooyard.Rpc.NettyImpl
             if (!_eventLoopGroup.IsShutdown || !_eventLoopGroup.IsTerminated)
             {
                 var quietPeriod = Url.GetParameter(QUIETPERIOD_KEY, DEFAULT_QUIETPERIOD);
-                var timeout = Url.GetParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
-                await _eventLoopGroup.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(quietPeriod), TimeSpan.FromSeconds(timeout));
+                //var timeout = Url.GetParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
+                await _eventLoopGroup.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(quietPeriod), TimeSpan.FromMilliseconds(_clientTimeout));
             }
         }
     }

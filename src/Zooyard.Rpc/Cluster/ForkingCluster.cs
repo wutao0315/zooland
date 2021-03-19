@@ -63,7 +63,7 @@ namespace Zooyard.Rpc.Cluster
                             _source.WriteConsumerBefore(refer.Instance, invoker, invocation);
                             var resultInner = await refer.Invoke(invocation);
                             _source.WriteConsumerAfter(invoker, invocation, resultInner);
-                            pool.Recovery(client);
+                            await pool.Recovery(client);
                             goodUrls.Add(invoker);
                             return resultInner;
                         }
