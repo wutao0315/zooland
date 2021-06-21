@@ -60,7 +60,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcProviderCore", "samples\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.Rpc.Extensions", "src\Zooyard.Rpc.Extensions\Zooyard.Rpc.Extensions.csproj", "{ED9DFFC9-6E8E-4C24-8377-7103360ABAA4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zooyard.Extensions", "src\Zooyard.Extensions\Zooyard.Extensions.csproj", "{BDF88C8D-1B87-4DA6-8BBF-EC3C64781E90}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.Extensions", "src\Zooyard.Extensions\Zooyard.Extensions.csproj", "{BDF88C8D-1B87-4DA6-8BBF-EC3C64781E90}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.Rpc.ThriftImpl", "src\Zooyard.Rpc.ThriftImpl\Zooyard.Rpc.ThriftImpl.csproj", "{4CBC00FE-6951-4AD7-8056-4AE4585452B0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.Rpc.ThriftImpl.Extensions", "src\Zooyard.Rpc.ThriftImpl.Extensions\Zooyard.Rpc.ThriftImpl.Extensions.csproj", "{8C17703F-72B9-4D5A-B14B-8721B22A4E03}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -136,6 +140,14 @@ Global
 		{BDF88C8D-1B87-4DA6-8BBF-EC3C64781E90}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BDF88C8D-1B87-4DA6-8BBF-EC3C64781E90}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BDF88C8D-1B87-4DA6-8BBF-EC3C64781E90}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4CBC00FE-6951-4AD7-8056-4AE4585452B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4CBC00FE-6951-4AD7-8056-4AE4585452B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4CBC00FE-6951-4AD7-8056-4AE4585452B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4CBC00FE-6951-4AD7-8056-4AE4585452B0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8C17703F-72B9-4D5A-B14B-8721B22A4E03}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C17703F-72B9-4D5A-B14B-8721B22A4E03}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C17703F-72B9-4D5A-B14B-8721B22A4E03}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C17703F-72B9-4D5A-B14B-8721B22A4E03}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -158,6 +170,8 @@ Global
 		{F81E992A-FF4C-4973-BEDE-2091E0C5DBB5} = {1E4B38C1-0CF2-4E5C-AC4A-30B48CB3F7BA}
 		{ED9DFFC9-6E8E-4C24-8377-7103360ABAA4} = {50C4867C-8931-45F0-B773-463C7B953969}
 		{BDF88C8D-1B87-4DA6-8BBF-EC3C64781E90} = {50C4867C-8931-45F0-B773-463C7B953969}
+		{4CBC00FE-6951-4AD7-8056-4AE4585452B0} = {50C4867C-8931-45F0-B773-463C7B953969}
+		{8C17703F-72B9-4D5A-B14B-8721B22A4E03} = {50C4867C-8931-45F0-B773-463C7B953969}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4FBB3247-7E5E-40FB-85B2-67B3E3D57FCB}

@@ -20,10 +20,10 @@
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
-    <PackageReference Include="NLog" Version="4.7.8" />
-    <PackageReference Include="NLog.Extensions.Hosting" Version="1.7.1" />
-    <PackageReference Include="NLog.Extensions.Logging" Version="1.7.1" />
-    <PackageReference Include="SoapCore" Version="1.1.0.7" />
+    <PackageReference Include="NLog" Version="4.7.10" />
+    <PackageReference Include="NLog.Extensions.Hosting" Version="1.7.3" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="1.7.3" />
+    <PackageReference Include="SoapCore" Version="1.1.0.9" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="5.0.0" />
   </ItemGroup>
 
