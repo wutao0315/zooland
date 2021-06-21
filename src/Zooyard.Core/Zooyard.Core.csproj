@@ -8,7 +8,7 @@
     <PackageReleaseNotes />
     <Description>Zooyard RPC Framework microservice</Description>
     <Authors>wutao0315</Authors>
-    <Version>1.1.8</Version>
+    <Version>1.1.9</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
@@ -52,6 +52,9 @@
     </AssemblyAttribute>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
       <_Parameter1>Zooyard.Rpc.NettyImpl</_Parameter1>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>Zooyard.Rpc.ThriftImpl</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
 

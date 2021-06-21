@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Zooyard.Core
 {
-    public interface IClient : IAsyncDisposable
+    public interface IClient : IDisposable,IAsyncDisposable
     {
         URL Url { get; }
         Task<IInvoker> Refer();

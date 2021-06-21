@@ -1,31 +1,40 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Zooyard.Core;
+using Zooyard.Core.Logging;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.Rpc.ThriftImpl
 {
     public class ThriftInvoker : AbstractInvoker
     {
+        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ThriftInvoker));
         private readonly IDisposable _instance;
-        private readonly ILogger _logger;
-        public ThriftInvoker(IDisposable instance,ILoggerFactory loggerFactory) : base(loggerFactory)
+        private readonly int _clientTimeout;
+
+        public ThriftInvoker(IDisposable instance, int clientTimeout)
         {
             _instance = instance;
-            _logger = loggerFactory.CreateLogger<ThriftInvoker>();
+            _clientTimeout = clientTimeout;
         }
 
-        public override object Instance { get { return _instance; } }
+        public override object Instance => _instance;
+
+        public override int ClientTimeout => _clientTimeout;
+
         protected override async Task<IResult> HandleInvoke(IInvocation invocation)
         {
             var methodName = $"{invocation.MethodInfo.Name}Async";
-            var argumentTypes = new List<Type>(invocation.ArgumentTypes);
-            argumentTypes.Add(typeof(CancellationToken));
-            var arguments = new List<object>(invocation.Arguments);
-            arguments.Add(CancellationToken.None);
+            var argumentTypes = new List<Type>(invocation.ArgumentTypes) 
+            {
+                typeof(CancellationToken)
+            };
+            var arguments = new List<object>(invocation.Arguments)
+            {
+                CancellationToken.None
+            };
 
             var method = Instance.GetType().GetMethod(methodName, argumentTypes.ToArray());
 

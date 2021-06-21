@@ -13,6 +13,10 @@ namespace Zooyard.Rpc.Support
         public abstract Task Open();
         public abstract Task Close();
         public abstract ValueTask DisposeAsync();
+        public virtual void Dispose()
+        {
+            DisposeAsync().GetAwaiter().GetResult();
+        }
         public virtual void Reset() { }
     }
 }

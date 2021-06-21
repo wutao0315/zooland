@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using Thrift.Protocols;
 using Thrift.Server;
-using Thrift.Transports;
 using Thrift.Transports.Client;
 using Zooyard.Core;
 
@@ -49,8 +48,7 @@ namespace Zooyard.Rpc.ThriftImpl.Extensions
                             { "TJSONProtocol",typeof(TJsonProtocol)},
                             { "TMultiplexedProtocol",typeof(TMultiplexedProtocol)},
                         },
-                    clientTypes: thriftClientTypes,
-                    loggerFactory: loggerFactory
+                    clientTypes: thriftClientTypes
                 );
 
                 return pool;

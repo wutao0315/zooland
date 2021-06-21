@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 using Thrift.Protocols;
 using Thrift.Transports;
 using Thrift.Transports.Client;
 using Zooyard.Core;
+using Zooyard.Core.Logging;
 using Zooyard.Rpc.Support;
-using Microsoft.Extensions.Logging;
 
 namespace Zooyard.Rpc.ThriftImpl
 {
@@ -25,17 +22,11 @@ namespace Zooyard.Rpc.ThriftImpl
         private readonly IDictionary<string, Type> _transportTypes;
         private readonly IDictionary<string, Type> _protocolTypes;
         private readonly IDictionary<string, Type> _clientTypes;
-        private readonly ILogger _logger;
-        private readonly ILoggerFactory _loggerFactory;
-        public ThriftClientPool(ILoggerFactory loggerFactory):base(loggerFactory)
-        {
-            _loggerFactory = loggerFactory;
-            _logger = loggerFactory.CreateLogger<ThriftClientPool>();
-        }
+        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ThriftClientPool));
+       
         public ThriftClientPool(IDictionary<string, Type> transportTypes,
             IDictionary<string, Type> protocolTypes,
-            IDictionary<string, Type> clientTypes,
-            ILoggerFactory loggerFactory) :this(loggerFactory)
+            IDictionary<string, Type> clientTypes)
         {
             _transportTypes = transportTypes;
             _protocolTypes = protocolTypes;
@@ -75,7 +66,7 @@ namespace Zooyard.Rpc.ThriftImpl
             //instance ThriftClient
             var client = (IDisposable)Activator.CreateInstance(_clientTypes[proxyKey], protocol);
 
-            return new ThriftClient(transport, client, url, _loggerFactory);
+            return new ThriftClient(transport, client, timeout, url);
         }
     }
 }

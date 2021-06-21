@@ -66,6 +66,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.Rpc.ThriftImpl", "s
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.Rpc.ThriftImpl.Extensions", "src\Zooyard.Rpc.ThriftImpl.Extensions\Zooyard.Rpc.ThriftImpl.Extensions.csproj", "{8C17703F-72B9-4D5A-B14B-8721B22A4E03}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcContractThrift", "samples\RpcContractThrift\RpcContractThrift.csproj", "{D06193DB-1327-41BB-8563-8DCCFD2E2792}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -148,6 +150,10 @@ Global
 		{8C17703F-72B9-4D5A-B14B-8721B22A4E03}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8C17703F-72B9-4D5A-B14B-8721B22A4E03}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8C17703F-72B9-4D5A-B14B-8721B22A4E03}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D06193DB-1327-41BB-8563-8DCCFD2E2792}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D06193DB-1327-41BB-8563-8DCCFD2E2792}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D06193DB-1327-41BB-8563-8DCCFD2E2792}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D06193DB-1327-41BB-8563-8DCCFD2E2792}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -172,6 +178,7 @@ Global
 		{BDF88C8D-1B87-4DA6-8BBF-EC3C64781E90} = {50C4867C-8931-45F0-B773-463C7B953969}
 		{4CBC00FE-6951-4AD7-8056-4AE4585452B0} = {50C4867C-8931-45F0-B773-463C7B953969}
 		{8C17703F-72B9-4D5A-B14B-8721B22A4E03} = {50C4867C-8931-45F0-B773-463C7B953969}
+		{D06193DB-1327-41BB-8563-8DCCFD2E2792} = {1E4B38C1-0CF2-4E5C-AC4A-30B48CB3F7BA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4FBB3247-7E5E-40FB-85B2-67B3E3D57FCB}

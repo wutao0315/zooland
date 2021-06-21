@@ -1,34 +1,28 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System;
 using System.Threading.Tasks;
-using Thrift;
-using Thrift.Server;
 using Thrift.Transports;
 using Zooyard.Core;
+using Zooyard.Core.Logging;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.Rpc.ThriftImpl
 {
     public class ThriftClient : AbstractClient
     {
+        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ThriftClient));
         public override URL Url { get; }
         /// <summary>
         /// 传输层
         /// </summary>
         private readonly TClientTransport _transport;
         private readonly IDisposable _thriftclient;
-        private readonly ILoggerFactory _loggerFactory;
-        private readonly ILogger _logger;
+        private readonly int _clientTimeout;
 
-        public ThriftClient(TClientTransport transport, IDisposable thriftclient, URL url, ILoggerFactory loggerFactory)
+        public ThriftClient(TClientTransport transport, IDisposable thriftclient, int clientTimeout, URL url)
         {
             _transport = transport;
             _thriftclient = thriftclient;
-            _loggerFactory = loggerFactory;
-            _logger = loggerFactory.CreateLogger<ThriftClient>();
+            _clientTimeout = clientTimeout;
             this.Url = url;
         }
 
@@ -37,7 +31,7 @@ namespace Zooyard.Rpc.ThriftImpl
         {
             await this.Open();
             //thrift client service
-            return new ThriftInvoker(_thriftclient, _loggerFactory);
+            return new ThriftInvoker(_thriftclient, _clientTimeout);
         }
 
         public override async Task Open()
@@ -46,7 +40,7 @@ namespace Zooyard.Rpc.ThriftImpl
             {
                 await _transport.OpenAsync();
             }
-            _logger.LogInformation("open");
+            Logger().LogInformation("open");
         }
 
 
@@ -57,11 +51,12 @@ namespace Zooyard.Rpc.ThriftImpl
                 _transport.Close();
                 await Task.CompletedTask;
             }
-            _logger.LogInformation("close");
+            Logger().LogInformation("close");
         }
 
+        
 
-        public override async Task DisposeAsync()
+        public override async ValueTask DisposeAsync()
         {
             if (_transport != null)
             {
@@ -72,10 +67,7 @@ namespace Zooyard.Rpc.ThriftImpl
             {
                 _thriftclient.Dispose();
             }
-            _logger.LogInformation("Dispose");
+            Logger().LogInformation("Dispose");
         }
-        
-
-        
     }
 }

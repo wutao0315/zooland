@@ -1,27 +1,21 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Thrift;
 using Thrift.Server;
 using Zooyard.Core;
+using Zooyard.Core.Logging;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.Rpc.ThriftImpl
 {
     public class ThriftServer : AbstractServer
     {
-        private readonly ILogger _logger;
+        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ThriftServer));
         private readonly TBaseServer _server;
-        public ThriftServer(TBaseServer server ,
-            IRegistryService registryService,
-            ILoggerFactory loggerFactory)
-            :base(registryService, loggerFactory)
+        public ThriftServer(TBaseServer server,
+            IRegistryService registryService)
+            :base(registryService)
         {
-            _logger = loggerFactory.CreateLogger<ThriftServer>();
             _server = server;
         }
         
@@ -34,7 +28,7 @@ namespace Zooyard.Rpc.ThriftImpl
                 await _server.ServeAsync(CancellationToken.None);
             });
 
-            _logger.LogInformation($"Started the thrift server ...");
+            Logger().LogInformation($"Started the thrift server ...");
             Console.WriteLine($"Started the thrift server ...");
         }
 
@@ -43,7 +37,7 @@ namespace Zooyard.Rpc.ThriftImpl
             //unregiste from register center
             await Task.CompletedTask;
             _server.Stop();
-            _logger.LogInformation("stoped the thrift server ...");
+            Logger().LogInformation("stoped the thrift server ...");
         }
     }
 }

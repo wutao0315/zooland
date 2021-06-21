@@ -7,7 +7,6 @@
 
   <ItemGroup>
     <None Remove="Config\zooyard.akka.json" />
-    <None Remove="Config\zooyard.thrift.json" />
     <None Remove="Config\zooyard.wcf.json" />
   </ItemGroup>
 
@@ -28,10 +27,13 @@
     <ProjectReference Include="..\..\src\Zooyard.Rpc.HttpImpl\Zooyard.Rpc.HttpImpl.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.Rpc.NettyImpl.Extensions\Zooyard.Rpc.NettyImpl.Extensions.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.Rpc.NettyImpl\Zooyard.Rpc.NettyImpl.csproj" />
+    <ProjectReference Include="..\..\src\Zooyard.Rpc.ThriftImpl.Extensions\Zooyard.Rpc.ThriftImpl.Extensions.csproj" />
+    <ProjectReference Include="..\..\src\Zooyard.Rpc.ThriftImpl\Zooyard.Rpc.ThriftImpl.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.Rpc\Zooyard.Rpc.csproj" />
     <ProjectReference Include="..\RpcContractGrpc\RpcContractGrpc.csproj" />
     <ProjectReference Include="..\RpcContractHttp\RpcContractHttp.csproj" />
     <ProjectReference Include="..\RpcContractNetty\RpcContractNetty.csproj" />
+    <ProjectReference Include="..\RpcContractThrift\RpcContractThrift.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -46,6 +48,9 @@
     </None>
     <None Update="Config\zooyard.netty.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Config\zooyard.thrift.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 
