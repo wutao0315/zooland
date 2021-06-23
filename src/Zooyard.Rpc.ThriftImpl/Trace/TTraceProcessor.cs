@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Thrift.Protocols;
 
-namespace Zooyard.Rpc.ThriftImpl
+namespace Zooyard.Rpc.ThriftImpl.Trace
 {
     public class TTraceProcessor: TProcessor
     {

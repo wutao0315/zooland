@@ -8,7 +8,7 @@ using Thrift.Protocols;
 using Thrift.Protocols.Entities;
 using Thrift.Transports;
 
-namespace Zooyard.Rpc.ThriftImpl
+namespace Zooyard.Rpc.ThriftImpl.Trace
 {
     public class TTraceClientBinaryProtocol : TBinaryProtocol
     {
@@ -24,27 +24,29 @@ namespace Zooyard.Rpc.ThriftImpl
         {
 
             //trace start
-            TraceUtils.startLocalTracer("rpc.thrift start");
+            //TraceUtils.startLocalTracer("rpc.thrift start");
             
             string methodName = message.Name;
-            TraceUtils.submitAdditionalAnnotation(Constants.TRACE_THRIFT_METHOD, methodName);
+            //TraceUtils.submitAdditionalAnnotation(Constants.TRACE_THRIFT_METHOD, methodName);
             TClientTransport transport = this.Transport;
-            string hostAddress = ((TSocket)transport).getSocket().getRemoteSocketAddress().toString();
-            TraceUtils.submitAdditionalAnnotation(Constants.TRACE_THRIFT_SERVER, hostAddress);
-            
+
+
+            //string hostAddress = ((TSocket)transport).getSocket().getRemoteSocketAddress().toString();
+            //TraceUtils.submitAdditionalAnnotation(Constants.TRACE_THRIFT_SERVER, hostAddress);
+
             await base.WriteMessageBeginAsync(message);
             //write trace header to field0
-            await writeFieldZero();
+            await WriteFieldZero();
         }
 
 
 
-        public async Task writeFieldZero()
+        public async Task WriteFieldZero()
         {
             TField TRACE_HEAD = new TField("traceHeader", TType.Map, (short)0);
             await this.WriteFieldBeginAsync(TRACE_HEAD);
             {
-                IDictionary<string, string> traceInfo = genTraceInfo();
+                IDictionary<string, string> traceInfo = GenTraceInfo();
                 await this.WriteMapBeginAsync(new TMap(TType.String, TType.String, traceInfo.Count));
                 foreach (var entry in traceInfo) {
                     await this.WriteStringAsync(entry.Key);
@@ -55,10 +57,9 @@ namespace Zooyard.Rpc.ThriftImpl
             await this.WriteFieldEndAsync();
         }
 
-        private IDictionary<string, string> genTraceInfo()
+        private IDictionary<string, string> GenTraceInfo()
         {
             //gen trace info
-
             return HEAD_INFO;
         }
 
@@ -68,12 +69,12 @@ namespace Zooyard.Rpc.ThriftImpl
             if (tMessage.Type == TMessageType.Exception)
             {
                 TApplicationException x = await TApplicationException.ReadAsync(this, cancellationToken);
-                TraceUtils.submitAdditionalAnnotation(Constants.TRACE_THRIFT_EXCEPTION, StringUtil.trimNewlineSymbolAndRemoveExtraSpace(x.getMessage()));
-                TraceUtils.endAndSendLocalTracer();
+                //TraceUtils.submitAdditionalAnnotation(Constants.TRACE_THRIFT_EXCEPTION, StringUtil.trimNewlineSymbolAndRemoveExtraSpace(x.getMessage()));
+                //TraceUtils.endAndSendLocalTracer();
             }
             else if (tMessage.Type == TMessageType.Reply)
             {
-                TraceUtils.endAndSendLocalTracer();
+                //TraceUtils.endAndSendLocalTracer();
             }
             return tMessage;
         }
