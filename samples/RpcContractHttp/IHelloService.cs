@@ -9,11 +9,11 @@ namespace RpcContractHttp
 {
     public interface IHelloService
     {
-        string CallNameVoid();
-        void CallName(string name);
-        void CallVoid();
-        string Hello(string name);
-        HelloResult SayHello(string name);
-        string ShowHello(HelloResult name);
+        Task<string> CallNameVoid();
+        Task CallName(string name);
+        Task CallVoid();
+        Task<string> Hello(string name);
+        Task<HelloResult> SayHello(string name);
+        Task<string> ShowHello(HelloResult name);
     }
 }

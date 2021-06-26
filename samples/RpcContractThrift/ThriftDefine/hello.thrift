@@ -1,5 +1,7 @@
-﻿namespace netcore RpcContractThrift
-namespace * thrift.test
+﻿namespace netstd RpcContractThrift
+/**
+ *namespace * thrift.test
+ */
 
 /**
  * HelloResult实体

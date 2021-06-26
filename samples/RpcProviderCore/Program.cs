@@ -1,34 +1,35 @@
-﻿using DotNetty.Codecs;
-using DotNetty.Handlers.Logging;
-using DotNetty.Transport.Channels;
+﻿using DotNetty.Transport.Channels;
+using Grpc.Core;
+using Grpc.Core.Interceptors;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
-using System.Collections.Generic;
-using System.IO;
-using Thrift;
-using Zooyard.Core.Extensions;
-//using Zooyard.Rpc.AkkaImpl.Extensions;
-using Zooyard.Rpc.GrpcImpl.Extensions;
-using Zooyard.Rpc.NettyImpl.Extensions;
-using Zooyard.Rpc.ThriftImpl.Extensions;
-using Zooyard.Rpc.HttpImpl.Extensions;
 using Microsoft.Extensions.Hosting;
-using Zooyard.Core;
 using Microsoft.Extensions.Logging;
-using Thrift.Transports;
+using Microsoft.Extensions.Options;
+using NLog;
+using NLog.Extensions.Hosting;
+using NLog.Extensions.Logging;
 using System;
+using System.IO;
+using System.Threading.Tasks;
+using Thrift;
+using Thrift.Processor;
+using Thrift.Protocol;
+using Thrift.Server;
+using Thrift.Transport;
+using Thrift.Transport.Server;
+using Zooyard.Core;
+using Zooyard.Extensions;
 //using RpcContractWcf.HelloService;
 using Zooyard.Rpc.Extensions;
-using NLog;
-using NLog.Extensions.Logging;
-using NLog.Extensions.Hosting;
-using Microsoft.AspNetCore.Hosting;
 using Zooyard.Rpc.GrpcImpl;
-using Grpc.Core.Interceptors;
-using Grpc.Core;
-using System.Threading.Tasks;
-using Zooyard.Extensions;
+//using Zooyard.Rpc.AkkaImpl.Extensions;
+using Zooyard.Rpc.GrpcImpl.Extensions;
+using Zooyard.Rpc.HttpImpl.Extensions;
+using Zooyard.Rpc.NettyImpl.Extensions;
+using Zooyard.Rpc.ThriftImpl;
+using Zooyard.Rpc.ThriftImpl.Extensions;
 
 namespace RpcProviderCore
 {
@@ -110,12 +111,55 @@ namespace RpcProviderCore
 
                 services.AddTransient<RpcContractThrift.HelloService.IAsync>((serviceProvider) => new HelloServiceThriftImpl { ServiceName = "A" });
                 services.AddTransient<ITAsyncProcessor, RpcContractThrift.HelloService.AsyncProcessor>();
-                services.AddSingleton<TServerTransport>((serviceProvider) =>
-                {
-                    var option = serviceProvider.GetService<IOptionsMonitor<ThriftServerOption>>().CurrentValue;
-                    return new Thrift.Transports.Server.TServerSocketTransport(option.Port, option.ClientTimeOut, option.UseBufferedSockets);
-                });
-                services.AddSingleton<Thrift.Protocols.ITProtocolFactory>(new Thrift.Protocols.TCompactProtocol.Factory());
+                //services.AddSingleton<TServerTransport>((serviceProvider) =>
+                //{
+                //    var option = serviceProvider.GetService<IOptionsMonitor<ThriftServerOption>>().CurrentValue;
+
+                //    return new TServerSocketTransport(option.Port, option.Configuration, option.ClientTimeOut);
+                //});
+                //services.AddSingleton<TProtocolFactory>(new TBinaryProtocol.Factory());
+
+                //services.AddSingleton<TTransportFactory>(new TFramedTransport.Factory());
+                //services.AddSingleton<TTransportFactory>(new TBufferedTransport.Factory());
+
+
+                //services.AddSingleton<TServer>(serviceProvider =>
+                //{
+                //    var processor = serviceProvider.GetService<ITAsyncProcessor>();
+                //    var serverTransport = serviceProvider.GetService<TServerTransport>();
+                //    var transportFactory = serviceProvider.GetService<TTransportFactory>();
+                //    var protocolFactory = serviceProvider.GetService<TProtocolFactory>();
+                //    var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+
+                //    var threadConfig = new TThreadPoolAsyncServer.Configuration();
+                //    var server = new TThreadPoolAsyncServer(
+                //         processorFactory: new TSingletonProcessorFactory(processor),
+                //         serverTransport: serverTransport,
+                //         inputTransportFactory: transportFactory,
+                //         outputTransportFactory: transportFactory,
+                //         inputProtocolFactory: protocolFactory,
+                //         outputProtocolFactory: protocolFactory,
+                //         threadConfig: threadConfig,
+                //         logger: loggerFactory.CreateLogger<TThreadPoolAsyncServer>());
+                //    return server;
+                //});
+
+                //services.AddSingleton<TServer>(serviceProvider =>
+                //{
+                //    var processor = serviceProvider.GetService<ITAsyncProcessor>();
+                //    var serverTransport = serviceProvider.GetService<TServerTransport>();
+                //    var transportFactory = serviceProvider.GetService<TTransportFactory>();
+                //    var protocolFactory = serviceProvider.GetService<TProtocolFactory>();
+                //    var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+                //    return new TSimpleAsyncServer(
+                //        itProcessorFactory: new TSingletonProcessorFactory(processor),
+                //        serverTransport: serverTransport,
+                //        inputTransportFactory: transportFactory,
+                //        outputTransportFactory: transportFactory,
+                //        inputProtocolFactory: protocolFactory,
+                //        outputProtocolFactory: protocolFactory,
+                //        logger: loggerFactory.CreateLogger<TSimpleAsyncServer>());
+                //});
 
                 services.AddThriftServer();
 
@@ -236,10 +280,10 @@ namespace RpcProviderCore
             }
         }
     }
-    public class ThriftServerOption
-    {
-        public int Port { get; set; }
-        public int ClientTimeOut { get; set; }
-        public bool UseBufferedSockets { get; set; }
-    }
+    //public class ThriftServerOption
+    //{
+    //    public int Port { get; set; }
+    //    public TConfiguration Configuration { get; set; } = new TConfiguration();
+    //    public int ClientTimeOut { get; set; }
+    //}
 }

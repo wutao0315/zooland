@@ -31,7 +31,7 @@ namespace RpcProviderCore
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-
+            services.AddHealthChecks();
             // iis
             services.Configure<IISOptions>(iis =>
             {
@@ -74,6 +74,7 @@ namespace RpcProviderCore
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHealthChecks("/health");
             });
         }
     }

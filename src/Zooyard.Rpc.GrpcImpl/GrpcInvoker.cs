@@ -1,4 +1,7 @@
-﻿using System;
+﻿using Grpc.Core;
+using System;
+using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Zooyard.Core;
 using Zooyard.Core.Logging;
@@ -12,7 +15,7 @@ namespace Zooyard.Rpc.GrpcImpl
 
         private readonly object _instance;
         private readonly int _clientTimeout;
-       
+
         public GrpcInvoker(object instance, int clientTimeout)
         {
             _instance = instance;
@@ -29,21 +32,47 @@ namespace Zooyard.Rpc.GrpcImpl
                 paraTypes[i] = invocation.Arguments[i].GetType();
                 parasPlus[i] = invocation.Arguments[i];
             }
-            paraTypes[invocation.Arguments.Length] = typeof(Grpc.Core.CallOptions);
+            paraTypes[invocation.Arguments.Length] = typeof(CallOptions);
 
-            var callOption = new Grpc.Core.CallOptions();
-            if (_clientTimeout>0) 
+            var callOption = new CallOptions();
+            if (_clientTimeout > 0)
             {
-                callOption.WithDeadline(DateTime.UtcNow.AddMilliseconds(_clientTimeout));
+                callOption.WithDeadline(DateTime.Now.AddMilliseconds(_clientTimeout));
             }
             parasPlus[invocation.Arguments.Length] = callOption;
-                
+
             var method = _instance.GetType().GetMethod(invocation.MethodInfo.Name, paraTypes);
-            var value = method.Invoke(_instance, parasPlus);
-            await Task.CompletedTask;
             Logger().LogInformation($"Invoke:{invocation.MethodInfo.Name}");
-            var result = new RpcResult(value);
-            return result;
+
+            var taskResult = method.Invoke(_instance, parasPlus);
+
+            
+            if (taskResult.GetType().GetTypeInfo().IsGenericType &&
+                          taskResult.GetType().GetGenericTypeDefinition() == typeof(AsyncUnaryCall<>))
+            {
+                var resultData = await (dynamic)taskResult;
+                //var awaiter = taskResult.GetType().GetMethod("GetAwaiter").Invoke(taskResult, new object[] { });
+                //var resultData = awaiter.GetType().GetMethod("GetResult").Invoke(awaiter, new object[] { });
+                var resultValue = Task.FromResult(resultData);
+                var result = new RpcResult(resultValue);
+                return result;
+            }
+            else 
+            {
+                var result = new RpcResult(taskResult);
+                return result;
+            }
+
+            //dynamic taskInvoke = method.Invoke(_instance, parasPlus);
+            //dynamic result = await taskInvoke;
+            //return new RpcResult(result);
+
+            //var awaiter = taskInvoke.GetType().GetMethod("GetAwaiter").Invoke(taskInvoke, new object[] { });
+            //var value = awaiter.GetType().GetMethod("GetResult").Invoke(awaiter, new object[] { });
+            //var result = Task.FromResult(value);
+
+            //var result = new RpcResult(value);
+            //return result;
         }
     }
 }

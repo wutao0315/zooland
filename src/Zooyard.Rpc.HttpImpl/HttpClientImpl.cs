@@ -9,7 +9,7 @@ namespace Zooyard.Rpc.HttpImpl
 {
     public class HttpClientImpl : AbstractClient
     {
-        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(HttpClientImpl));
+        //private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(HttpClientImpl));
         public override URL Url { get; }
         private readonly HttpClient _transport;
         private readonly int _clientTimeout;
@@ -34,7 +34,7 @@ namespace Zooyard.Rpc.HttpImpl
             var result = await _transport.SendAsync(new HttpRequestMessage
             {
                 Method = new HttpMethod("GET"),
-                RequestUri = new Uri($"{this.Url.Protocol}://{this.Url.Host}:{this.Url.Port}/{this.Url.Path}/head")
+                RequestUri = new Uri($"{this.Url.Protocol}://{this.Url.Host}:{this.Url.Port}/health")
             });
 
             result.EnsureSuccessStatusCode();

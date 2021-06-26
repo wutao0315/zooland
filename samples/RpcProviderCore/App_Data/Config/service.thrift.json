@@ -1,7 +1,6 @@
 ﻿{
   "thrift": {
-    "Port": 10009,
-    "ClientTimeOut": 2000,
-    "UseBufferedSockets": true
+    "Port": 9090,
+    "ClientTimeOut": 2000
   }
 }

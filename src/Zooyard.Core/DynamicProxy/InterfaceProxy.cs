@@ -66,6 +66,7 @@ namespace Zooyard.Core.DynamicProxy
         private const MethodAttributes METHOD_ATTRIBUTES = MethodAttributes.Public | MethodAttributes.NewSlot | MethodAttributes.Virtual | MethodAttributes.Final | MethodAttributes.HideBySig;
 
         private const string ProxyAssemblyName = "Zooyard.Core.DynamicProxy.Generator";
+
         private static ModuleBuilder MODULE_BUILDER = null;
 
         static InterfaceProxy()
@@ -210,29 +211,29 @@ namespace Zooyard.Core.DynamicProxy
                 _ilGen = _constructorBuilder.GetILGenerator();
             }
 
-            public void AddMethod(string name, MethodInfo method)
-            {
-                if (!_fields.ContainsKey(name))
-                {
-                    var field = _nestedTypeBuilder.DefineField(name, typeof(MethodInfo), FieldAttributes.Static | FieldAttributes.InitOnly | FieldAttributes.Assembly);
-                    _fields.Add(name, field);
-                    if (method != null)
-                    {
-                        _ilGen.EmitMethod(method);
-                        _ilGen.Emit(OpCodes.Stsfld, field);
-                    }
-                }
-            }
+            //public void AddMethod(string name, MethodInfo method)
+            //{
+            //    if (!_fields.ContainsKey(name))
+            //    {
+            //        var field = _nestedTypeBuilder.DefineField(name, typeof(MethodInfo), FieldAttributes.Static | FieldAttributes.InitOnly | FieldAttributes.Assembly);
+            //        _fields.Add(name, field);
+            //        if (method != null)
+            //        {
+            //            _ilGen.EmitMethod(method);
+            //            _ilGen.Emit(OpCodes.Stsfld, field);
+            //        }
+            //    }
+            //}
 
-            public void LoadMethod(ILGenerator ilGen, string name)
-            {
-                if (_fields.TryGetValue(name, out FieldBuilder field))
-                {
-                    ilGen.Emit(OpCodes.Ldsfld, field);
-                    return;
-                }
-                throw new InvalidOperationException($"Failed to find the method associated with the specified key {name}.");
-            }
+            //public void LoadMethod(ILGenerator ilGen, string name)
+            //{
+            //    if (_fields.TryGetValue(name, out FieldBuilder field))
+            //    {
+            //        ilGen.Emit(OpCodes.Ldsfld, field);
+            //        return;
+            //    }
+            //    throw new InvalidOperationException($"Failed to find the method associated with the specified key {name}.");
+            //}
 
             public void Compile()
             {
@@ -283,10 +284,10 @@ namespace Zooyard.Core.DynamicProxy
                 return Builder.CreateTypeInfo();
             }
 
-            public T GetProperty<T>()
-            {
-                return (T)Properties[typeof(T).Name];
-            }
+            //public T GetProperty<T>()
+            //{
+            //    return (T)Properties[typeof(T).Name];
+            //}
         }
     }
     internal static class MethodUtils
@@ -354,16 +355,16 @@ namespace Zooyard.Core.DynamicProxy
             }
         }
 
-        public static void EmitLoadArgA(this ILGenerator ilGenerator, int index)
-        {
-            if (ilGenerator == null)
-            {
-                throw new ArgumentNullException(nameof(ilGenerator));
-            }
+        //public static void EmitLoadArgA(this ILGenerator ilGenerator, int index)
+        //{
+        //    if (ilGenerator == null)
+        //    {
+        //        throw new ArgumentNullException(nameof(ilGenerator));
+        //    }
 
-            if (index <= byte.MaxValue) ilGenerator.Emit(OpCodes.Ldarga_S, (byte)index);
-            else ilGenerator.Emit(OpCodes.Ldarga, index);
-        }
+        //    if (index <= byte.MaxValue) ilGenerator.Emit(OpCodes.Ldarga_S, (byte)index);
+        //    else ilGenerator.Emit(OpCodes.Ldarga, index);
+        //}
 
         public static void EmitConvertToObject(this ILGenerator ilGenerator, Type typeFrom)
         {
@@ -725,10 +726,10 @@ namespace Zooyard.Core.DynamicProxy
             ilGenerator.Emit(OpCodes.Newobj, ci);
         }
 
-        public static void EmitNull(this ILGenerator ilGenerator)
-        {
-            ilGenerator.Emit(OpCodes.Ldnull);
-        }
+        //public static void EmitNull(this ILGenerator ilGenerator)
+        //{
+        //    ilGenerator.Emit(OpCodes.Ldnull);
+        //}
 
         public static void EmitString(this ILGenerator ilGenerator, string value)
         {
@@ -920,56 +921,56 @@ namespace Zooyard.Core.DynamicProxy
             }
         }
 
-        public static void EmitLoadElement(this ILGenerator ilGenerator, Type type)
-        {
-            if (!type.GetTypeInfo().IsValueType)
-            {
-                ilGenerator.Emit(OpCodes.Ldelem_Ref);
-            }
-            else if (type.GetTypeInfo().IsEnum)
-            {
-                ilGenerator.Emit(OpCodes.Ldelem, type);
-            }
-            else
-            {
-                switch (Type.GetTypeCode(type))
-                {
-                    case TypeCode.Boolean:
-                    case TypeCode.SByte:
-                        ilGenerator.Emit(OpCodes.Ldelem_I1);
-                        break;
-                    case TypeCode.Byte:
-                        ilGenerator.Emit(OpCodes.Ldelem_U1);
-                        break;
-                    case TypeCode.Int16:
-                        ilGenerator.Emit(OpCodes.Ldelem_I2);
-                        break;
-                    case TypeCode.Char:
-                    case TypeCode.UInt16:
-                        ilGenerator.Emit(OpCodes.Ldelem_U2);
-                        break;
-                    case TypeCode.Int32:
-                        ilGenerator.Emit(OpCodes.Ldelem_I4);
-                        break;
-                    case TypeCode.UInt32:
-                        ilGenerator.Emit(OpCodes.Ldelem_U4);
-                        break;
-                    case TypeCode.Int64:
-                    case TypeCode.UInt64:
-                        ilGenerator.Emit(OpCodes.Ldelem_I8);
-                        break;
-                    case TypeCode.Single:
-                        ilGenerator.Emit(OpCodes.Ldelem_R4);
-                        break;
-                    case TypeCode.Double:
-                        ilGenerator.Emit(OpCodes.Ldelem_R8);
-                        break;
-                    default:
-                        ilGenerator.Emit(OpCodes.Ldelem, type);
-                        break;
-                }
-            }
-        }
+        //public static void EmitLoadElement(this ILGenerator ilGenerator, Type type)
+        //{
+        //    if (!type.GetTypeInfo().IsValueType)
+        //    {
+        //        ilGenerator.Emit(OpCodes.Ldelem_Ref);
+        //    }
+        //    else if (type.GetTypeInfo().IsEnum)
+        //    {
+        //        ilGenerator.Emit(OpCodes.Ldelem, type);
+        //    }
+        //    else
+        //    {
+        //        switch (Type.GetTypeCode(type))
+        //        {
+        //            case TypeCode.Boolean:
+        //            case TypeCode.SByte:
+        //                ilGenerator.Emit(OpCodes.Ldelem_I1);
+        //                break;
+        //            case TypeCode.Byte:
+        //                ilGenerator.Emit(OpCodes.Ldelem_U1);
+        //                break;
+        //            case TypeCode.Int16:
+        //                ilGenerator.Emit(OpCodes.Ldelem_I2);
+        //                break;
+        //            case TypeCode.Char:
+        //            case TypeCode.UInt16:
+        //                ilGenerator.Emit(OpCodes.Ldelem_U2);
+        //                break;
+        //            case TypeCode.Int32:
+        //                ilGenerator.Emit(OpCodes.Ldelem_I4);
+        //                break;
+        //            case TypeCode.UInt32:
+        //                ilGenerator.Emit(OpCodes.Ldelem_U4);
+        //                break;
+        //            case TypeCode.Int64:
+        //            case TypeCode.UInt64:
+        //                ilGenerator.Emit(OpCodes.Ldelem_I8);
+        //                break;
+        //            case TypeCode.Single:
+        //                ilGenerator.Emit(OpCodes.Ldelem_R4);
+        //                break;
+        //            case TypeCode.Double:
+        //                ilGenerator.Emit(OpCodes.Ldelem_R8);
+        //                break;
+        //            default:
+        //                ilGenerator.Emit(OpCodes.Ldelem, type);
+        //                break;
+        //        }
+        //    }
+        //}
 
         public static void EmitLdRef(this ILGenerator ilGenerator, Type type)
         {
@@ -1027,49 +1028,49 @@ namespace Zooyard.Core.DynamicProxy
             }
         }
 
-        public static void EmitStRef(this ILGenerator ilGenerator, Type type)
-        {
-            if (ilGenerator == null)
-            {
-                throw new ArgumentNullException(nameof(ilGenerator));
-            }
-            if (type == null)
-            {
-                throw new ArgumentNullException(nameof(type));
-            }
-            if (type == typeof(short))
-            {
-                ilGenerator.Emit(OpCodes.Stind_I1);
-            }
-            else if (type == typeof(short))
-            {
-                ilGenerator.Emit(OpCodes.Stind_I2);
-            }
-            else if (type == typeof(int))
-            {
-                ilGenerator.Emit(OpCodes.Stind_I4);
-            }
-            else if (type == typeof(long))
-            {
-                ilGenerator.Emit(OpCodes.Stind_I8);
-            }
-            else if (type == typeof(float))
-            {
-                ilGenerator.Emit(OpCodes.Stind_R4);
-            }
-            else if (type == typeof(double))
-            {
-                ilGenerator.Emit(OpCodes.Stind_R8);
-            }
-            else if (type.GetTypeInfo().IsValueType)
-            {
-                ilGenerator.Emit(OpCodes.Stobj);
-            }
-            else
-            {
-                ilGenerator.Emit(OpCodes.Stind_Ref);
-            }
-        }
+        //public static void EmitStRef(this ILGenerator ilGenerator, Type type)
+        //{
+        //    if (ilGenerator == null)
+        //    {
+        //        throw new ArgumentNullException(nameof(ilGenerator));
+        //    }
+        //    if (type == null)
+        //    {
+        //        throw new ArgumentNullException(nameof(type));
+        //    }
+        //    if (type == typeof(short))
+        //    {
+        //        ilGenerator.Emit(OpCodes.Stind_I1);
+        //    }
+        //    else if (type == typeof(short))
+        //    {
+        //        ilGenerator.Emit(OpCodes.Stind_I2);
+        //    }
+        //    else if (type == typeof(int))
+        //    {
+        //        ilGenerator.Emit(OpCodes.Stind_I4);
+        //    }
+        //    else if (type == typeof(long))
+        //    {
+        //        ilGenerator.Emit(OpCodes.Stind_I8);
+        //    }
+        //    else if (type == typeof(float))
+        //    {
+        //        ilGenerator.Emit(OpCodes.Stind_R4);
+        //    }
+        //    else if (type == typeof(double))
+        //    {
+        //        ilGenerator.Emit(OpCodes.Stind_R8);
+        //    }
+        //    else if (type.GetTypeInfo().IsValueType)
+        //    {
+        //        ilGenerator.Emit(OpCodes.Stobj);
+        //    }
+        //    else
+        //    {
+        //        ilGenerator.Emit(OpCodes.Stind_Ref);
+        //    }
+        //}
 
         #region private
         private static void EmitNullableConversion(this ILGenerator ilGenerator, TypeInfo typeFrom, TypeInfo typeTo, bool isChecked)
@@ -1287,7 +1288,6 @@ namespace Zooyard.Core.DynamicProxy
                 }
             }
         }
-
 
         private static bool TryEmitILConstant(this ILGenerator ilGenerator, object value, Type type)
         {

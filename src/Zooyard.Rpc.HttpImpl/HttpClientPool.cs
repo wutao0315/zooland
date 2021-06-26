@@ -11,7 +11,7 @@ namespace Zooyard.Rpc.HttpImpl
         public const string TIMEOUT_KEY = "http_timeout";
         public const int DEFAULT_TIMEOUT = 5000;
 
-        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(HttpClientPool));
+        //private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(HttpClientPool));
        
         protected override IClient CreateClient(URL url)
         {

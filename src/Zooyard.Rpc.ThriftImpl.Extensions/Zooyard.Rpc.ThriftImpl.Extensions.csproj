@@ -23,10 +23,4 @@
     <ProjectReference Include="..\Zooyard.Rpc\Zooyard.Rpc.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="Thrift">
-      <HintPath>..\lib\Thrift\netcore\Thrift.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
 </Project>

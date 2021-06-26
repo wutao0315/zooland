@@ -12,6 +12,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 using System.Threading.Tasks;
 using Zooyard.Core;
 using Zooyard.Core.Logging;
@@ -121,7 +122,7 @@ namespace Zooyard.Rpc.NettyImpl
                 pipeline.AddLast("FrameEncoder", new LengthFieldPrepender(Settings.ByteOrder, 4, 0, false));
             }
         }
-        public override async Task DoExport()
+        public override async Task DoExport(CancellationToken cancellationToken)
         {
             Logger().LogDebug($"ready to start the server on port:{Settings.Port}.");
 
@@ -260,7 +261,21 @@ namespace Zooyard.Rpc.NettyImpl
                 {
                     var method = _service.GetType().GetMethod(methodName, types);
                     var result = method.Invoke(_service, arguments);
-                    remoteInvoker.Result = result;
+
+                    if (method.ReturnType == typeof(Task))
+                    {
+                        remoteInvoker.Result = null;
+                    }
+                    else if(method.ReturnType.IsGenericType&& method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
+                    {
+                        var awaiter = result.GetType().GetMethod("GetAwaiter").Invoke(result, new object[] { });
+                        var value = awaiter.GetType().GetMethod("GetResult").Invoke(awaiter, new object[] { });
+                        remoteInvoker.Result = value;
+                    }
+                    else 
+                    {
+                        remoteInvoker.Result = result;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -467,13 +482,10 @@ namespace Zooyard.Rpc.NettyImpl
     /// </summary>
     public class MessageListener : IMessageListener
     {
-        #region Implementation of IMessageListener
-
         /// <summary>
         /// 接收到消息的事件。
         /// </summary>
         public event ReceivedDelegate Received;
-
         /// <summary>
         /// 触发接收到消息事件。
         /// </summary>
@@ -486,7 +498,5 @@ namespace Zooyard.Rpc.NettyImpl
                 return;
             await Received(message);
         }
-
-        #endregion Implementation of IMessageListener
     }
 }

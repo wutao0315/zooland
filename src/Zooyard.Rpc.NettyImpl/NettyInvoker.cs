@@ -59,6 +59,17 @@ namespace Zooyard.Rpc.NettyImpl
                 if (callbackTask.Wait(ClientTimeout / 2))
                 {
                     var value = await callbackTask;
+
+                    if (invocation.MethodInfo.ReturnType == typeof(Task)) 
+                    {
+                        return new RpcResult(Task.CompletedTask);
+                    }
+                    else if(invocation.MethodInfo.ReturnType.IsGenericType && invocation.MethodInfo.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
+                    {
+                        var resultData = Task.FromResult((dynamic)value.Result);
+                        return new RpcResult(resultData);
+                    }
+                    
                     return new RpcResult(value.Result);
                 }
                 else

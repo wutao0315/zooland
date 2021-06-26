@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
-using Thrift.Protocols;
-using Thrift.Protocols.Entities;
-using Thrift.Transports;
+using Thrift.Protocol;
+using Thrift.Protocol.Entities;
+using Thrift.Transport;
 
 namespace Zooyard.Rpc.ThriftImpl.Trace
 {
@@ -13,73 +14,73 @@ namespace Zooyard.Rpc.ThriftImpl.Trace
 
         private IDictionary<string, string> HEAD_INFO;
 
-        public TTraceServerBinaryProtocol(TClientTransport transport) : base(transport)
+        public TTraceServerBinaryProtocol(TTransport transport) : base(transport)
         {
             HEAD_INFO = new Dictionary<string, string>();
         }
 
-
-        public async Task<bool> ReadFieldZero()
+        public async Task<bool> ReadFieldZero(CancellationToken cancellationToken)
         {
-            TField schemeField = await this.ReadFieldBeginAsync();
+            TField schemeField = await this.ReadFieldBeginAsync(cancellationToken);
 
             if (schemeField.ID == 0 && schemeField.Type == TType.Map)
             {
-                TMap _map = await this.ReadMapBeginAsync();
+                TMap _map = await this.ReadMapBeginAsync(cancellationToken);
                 HEAD_INFO = new Dictionary<string, string>(2 * _map.Count);
                 for (int i = 0; i < _map.Count; ++i)
                 {
-                    string key = await this.ReadStringAsync();
-                    string value = await this.ReadStringAsync();
+                    string key = await this.ReadStringAsync(cancellationToken);
+                    string value = await this.ReadStringAsync(cancellationToken);
                     HEAD_INFO.Add(key, value);
                 }
-                await this.ReadMapEndAsync();
+                await this.ReadMapEndAsync(cancellationToken);
             }
-            await this.ReadFieldEndAsync();
+            await this.ReadFieldEndAsync(cancellationToken);
             return HEAD_INFO.Count > 0;
         }
 
         public IDictionary<string, string> Head => HEAD_INFO;
 
-        //public void markTFramedTransport(TProtocol @in)
-        //{
-        //    try
-        //    {
-        //        TField tioInputStream = TIOStreamTransportFieldsCache.getInstance().getTIOInputStream();
-        //        if (tioInputStream == null)
-        //        {
-        //            return;
-        //        }
-        //        BufferedInputStream inputStream = (BufferedInputStream)tioInputStream.get(in.getTransport());
-        //        inputStream.mark(0);
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        //e.printStackTrace();
-        //    }
-        //}
+        public void MarkTFramedTransport(TProtocol protocol)
+        {
+            //try
+            //{
+            //    TField tioInputStream = TIOStreamTransportFieldsCache.getInstance().getTIOInputStream();
+            //    if (tioInputStream == null)
+            //    {
+            //        return;
+            //    }
+            //    BufferedInputStream inputStream = (BufferedInputStream)tioInputStream.get(protocol.Transport);
+            //    inputStream.mark(0);
+            //}
+            //catch (Exception e)
+            //{
+            //    //e.printStackTrace();
+            //}
+        }
 
 
-        ///*
-        // * 重置TFramedTransport流，不影响Thrift原有流程
-        // */
-        //public void resetTFramedTransport(TProtocol @in)
-        //{
-        //    try
-        //    {
-        //        TField tioInputStream = TIOStreamTransportFieldsCache.getInstance().getTIOInputStream();
-        //        if (tioInputStream == null)
-        //        {
-        //            return;
-        //        }
-        //        BufferedInputStream inputStream = (BufferedInputStream)tioInputStream.get(in.getTransport());
-        //        inputStream.reset();
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        //e.printStackTrace();
-        //    }
-        //}
+        /// <summary>
+        /// 重置TFramedTransport流，不影响Thrift原有流程
+        /// </summary>
+        /// <param name="protocol"></param>
+        public void ResetTFramedTransport(TProtocol protocol)
+        {
+            try
+            {
+                //TField tioInputStream = TIOStreamTransportFieldsCache.getInstance().getTIOInputStream();
+                //if (tioInputStream == null)
+                //{
+                //    return;
+                //}
+                //BufferedInputStream inputStream = (BufferedInputStream)tioInputStream.get(protocol.getTransport());
+                //inputStream.reset();
+            }
+            catch (Exception e)
+            {
+                //e.printStackTrace();
+            }
+        }
 
         private class TIOStreamTransportFieldsCache
         {
@@ -112,9 +113,9 @@ namespace Zooyard.Rpc.ThriftImpl.Trace
         }
 
 
-        public class Factory : ITProtocolFactory
+        public class Factory : TProtocolFactory
         {
-            public TProtocol GetProtocol(TClientTransport trans)
+            public override TProtocol GetProtocol(TTransport trans)
             {
                 return new TTraceServerBinaryProtocol(trans);
             }

@@ -23,6 +23,7 @@
     <PackageReference Include="NLog.Extensions.Logging" Version="1.7.3" />
     <PackageReference Include="SoapCore" Version="1.1.0.9" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="5.0.0" />
+    <PackageReference Include="ApacheThrift" Version="0.14.2" />
   </ItemGroup>
 
   <ItemGroup>
@@ -46,12 +47,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="Thrift">
-      <HintPath>..\..\src\lib\Thrift\netcore\Thrift.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
     <None Update="App_Data\Config\nlog.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -68,6 +63,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="App_Data\Config\service.thrift.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="ThriftTest.pfx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

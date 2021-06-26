@@ -12,12 +12,6 @@ namespace RpcProviderCore.Controllers
     [ApiController]
     public class HelloController : ControllerBase
     {
-        [HttpGet][Route("head")]
-        public string Head()
-        {
-            return "rpc is ok";
-        }
-
         public string ServiceName { get; set; } = "A";
 
         [HttpGet]

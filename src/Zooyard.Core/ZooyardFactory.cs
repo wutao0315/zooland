@@ -10,6 +10,7 @@ using Zooyard.Core.Utils;
 using Zooyard.Core.DynamicProxy;
 using System.Diagnostics;
 using Zooyard.Core.Diagnositcs;
+using System.Reflection.Emit;
 
 namespace Zooyard.Core
 {
@@ -68,12 +69,39 @@ namespace Zooyard.Core
             var target = typeof(T);
             var argTypes = (from arg in args select arg.GetType())?.ToArray()??new Type[] { };
             var methodInfo = target.GetMethod(methodName, argTypes);
+
+            //if (methodInfo.ReturnType == typeof(Task) ||
+            //    (methodInfo.ReturnType.IsGenericType &&
+            //     methodInfo.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))) 
+            //{
+            //    Console.WriteLine("Asynchronous method found...");
+            //}
+
             //调用上下文
             var icn = new RpcInvocation(_app, _version, target, methodInfo, args);
-            
+
+            //return InterceptAsync(icn);
             var result = _clientPools.Invoke(icn).GetAwaiter().GetResult();
+
+            //if (methodInfo.ReturnType == typeof(Task) ||
+            //    (methodInfo.ReturnType.IsGenericType &&
+            //     methodInfo.ReturnType.GetGenericTypeDefinition() == typeof(Task<>)))
+            //{
+            //    Console.WriteLine("Asynchronous method found...");
+            //    return Task.FromResult(result.Value);
+            //}
+
             return result.Value;
+            //var result = await _clientPools.Invoke(icn);
+            //return Task.FromResult(result.Value);
         }
+
+        //private async void InterceptAsync(IInvocation invocation)
+        //{
+        //    //invocation.MethodInfo.ReturnType
+        //    var result = await _clientPools.Invoke(invocation);
+        //    return Task.FromResult(result.Value.ChangeType(invocation.MethodInfo.ReturnType));
+        //}
     }
 
 }

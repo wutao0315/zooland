@@ -3,6 +3,7 @@ using Grpc.Core.Interceptors;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Zooyard.Core;
 using Zooyard.Core.Logging;
@@ -37,7 +38,7 @@ namespace Zooyard.Rpc.GrpcImpl
         }
 
 
-        public override async Task DoExport()
+        public override async Task DoExport(CancellationToken cancellationToken)
         {
             //开启服务
             _server.Start();

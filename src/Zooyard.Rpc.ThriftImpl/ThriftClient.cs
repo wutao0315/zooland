@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Thrift.Transports;
+using Thrift;
+using Thrift.Transport;
 using Zooyard.Core;
 using Zooyard.Core.Logging;
 using Zooyard.Rpc.Support;
@@ -11,16 +12,11 @@ namespace Zooyard.Rpc.ThriftImpl
     {
         private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ThriftClient));
         public override URL Url { get; }
-        /// <summary>
-        /// 传输层
-        /// </summary>
-        private readonly TClientTransport _transport;
-        private readonly IDisposable _thriftclient;
+        private readonly TBaseClient _thriftclient;
         private readonly int _clientTimeout;
 
-        public ThriftClient(TClientTransport transport, IDisposable thriftclient, int clientTimeout, URL url)
+        public ThriftClient(TBaseClient thriftclient, int clientTimeout, URL url)
         {
-            _transport = transport;
             _thriftclient = thriftclient;
             _clientTimeout = clientTimeout;
             this.Url = url;
@@ -36,9 +32,10 @@ namespace Zooyard.Rpc.ThriftImpl
 
         public override async Task Open()
         {
-            if (_transport != null && !_transport.IsOpen)
+            if (!_thriftclient.OutputProtocol.Transport.IsOpen || !_thriftclient.InputProtocol.Transport.IsOpen)
             {
-                await _transport.OpenAsync();
+                //await _transport.OpenAsync();
+                await _thriftclient.OpenTransportAsync();
             }
             Logger().LogInformation("open");
         }
@@ -46,11 +43,7 @@ namespace Zooyard.Rpc.ThriftImpl
 
         public override async Task Close()
         {
-            if (_transport != null && _transport.IsOpen)
-            {
-                _transport.Close();
-                await Task.CompletedTask;
-            }
+            _thriftclient.Dispose();
             Logger().LogInformation("close");
         }
 
@@ -58,15 +51,7 @@ namespace Zooyard.Rpc.ThriftImpl
 
         public override async ValueTask DisposeAsync()
         {
-            if (_transport != null)
-            {
-                await Close();
-                _transport.Dispose();
-            }
-            if (_thriftclient != null)
-            {
-                _thriftclient.Dispose();
-            }
+            await Close();
             Logger().LogInformation("Dispose");
         }
     }

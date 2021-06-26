@@ -1,7 +1,7 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Text.Json;
 using Zooyard.Core;
 using Zooyard.Core.Logging;
 using Zooyard.Rpc.Support;
@@ -40,23 +40,55 @@ namespace Zooyard.Rpc.HttpImpl
             var parameters = invocation.MethodInfo.GetParameters();
             var stub = new HttpStub(_instance, isOpen);
             var value = await stub.Request($"/{_url.Path}/{invocation.MethodInfo.Name.ToLower()}", parameterType, method, parameters, invocation.Arguments);
-            
-            if (invocation.MethodInfo.ReturnType.IsValueType)
+            Logger().LogInformation($"Invoke:{invocation.MethodInfo.Name}");
+
+            if (invocation.MethodInfo.ReturnType == typeof(Task) ||
+              (invocation.MethodInfo.ReturnType.IsGenericType &&
+               invocation.MethodInfo.ReturnType.GetGenericTypeDefinition() == typeof(Task<>)))
+            {
+                if (invocation.MethodInfo.ReturnType == typeof(Task)) 
+                {
+                    return new RpcResult(Task.CompletedTask);
+                }
+
+                var tastGenericType = invocation.MethodInfo.ReturnType.GenericTypeArguments[0];
+
+                if (tastGenericType.IsValueType)
+                {
+                    var resultData = Task.FromResult((dynamic)value.ChangeType(tastGenericType));
+                    return new RpcResult(resultData);
+                }
+
+                if (tastGenericType == typeof(string))
+                {
+                    return new RpcResult(Task.FromResult(value));
+                }
+
+                var genericData = (dynamic)value.DeserializeJson(tastGenericType);
+                var resultDataTask = Task.FromResult(genericData);
+                var result = new RpcResult(resultDataTask);
+                return result;
+            }
+            else 
             {
                 if (invocation.MethodInfo.ReturnType == typeof(void))
                 {
                     return new RpcResult();
                 }
-                return new RpcResult(value.ChangeType(invocation.MethodInfo.ReturnType));
-            }
 
-            if (invocation.MethodInfo.ReturnType == typeof(string))
-            {
-                return new RpcResult(value);
+                if (invocation.MethodInfo.ReturnType.IsValueType)
+                {
+                    return new RpcResult(value.ChangeType(invocation.MethodInfo.ReturnType));
+                }
+
+                if (invocation.MethodInfo.ReturnType == typeof(string))
+                {
+                    return new RpcResult(value);
+                }
+
+                var result = new RpcResult(value.DeserializeJson(invocation.MethodInfo.ReturnType));
+                return result;
             }
-            Logger().LogInformation($"Invoke:{invocation.MethodInfo.Name}");
-            var result = new RpcResult(JsonConvert.DeserializeObject(value, invocation.MethodInfo.ReturnType));
-            return result;
         }
     }
 }

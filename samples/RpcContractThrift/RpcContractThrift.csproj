@@ -5,9 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="Thrift">
-      <HintPath>..\..\src\lib\Thrift\netcore\Thrift.dll</HintPath>
-    </Reference>
+    <PackageReference Include="ApacheThrift" Version="0.14.2" />
   </ItemGroup>
 
 </Project>

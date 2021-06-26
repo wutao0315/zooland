@@ -23,7 +23,7 @@ namespace Zooyard.Rpc.Extensions
             {
                 foreach (var server in _servers)
                 {
-                    await server.Export().ConfigureAwait(false);
+                    await server.Export(cancellationToken).ConfigureAwait(false);
                 }
             }
             catch (Exception ex)

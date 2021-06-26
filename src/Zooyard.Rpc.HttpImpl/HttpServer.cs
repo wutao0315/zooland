@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Hosting;
 using System.Threading.Tasks;
 using Zooyard.Core;
 using Zooyard.Core.Logging;
+using System.Threading;
 
 namespace Zooyard.Rpc.HttpImpl
 {
@@ -19,11 +20,11 @@ namespace Zooyard.Rpc.HttpImpl
         }
 
 
-        public override async Task DoExport()
+        public override async Task DoExport(CancellationToken cancellationToken)
         {
             try
             {
-                await _server.RunAsync();
+                await _server.RunAsync(cancellationToken);
                 Logger().LogDebug("http server started");
             }
             catch (Exception ex)

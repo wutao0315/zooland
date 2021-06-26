@@ -3,9 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
-using Thrift.Protocols;
-using Thrift.Server;
-using Thrift.Transports.Client;
+using Thrift.Protocol;
 using Zooyard.Core;
 
 namespace Zooyard.Rpc.ThriftImpl.Extensions
@@ -29,36 +27,15 @@ namespace Zooyard.Rpc.ThriftImpl.Extensions
                     thriftClientTypes.Add(item.Key, Type.GetType(item.Value));
                 }
 
-                var pool = new ThriftClientPool(
-                    transportTypes : new Dictionary<string, Type>
-                        {
-                            {"TSocket", typeof(TSocketClientTransport)},
-                            {"TBuffered", typeof(TBufferedClientTransport)},
-                            {"TFramed", typeof(TFramedClientTransport)},
-                            {"THttp", typeof(THttpClientTransport)},
-                            {"TMemoryBuffer", typeof(TMemoryBufferClientTransport)},
-                            {"TNamedPipe", typeof(TNamedPipeClientTransport)},
-                            {"TTLSSocket", typeof(TTlsSocketClientTransport)},
-                            {"TStream", typeof(TStreamClientTransport)},
-                        },
-                    protocolTypes: new Dictionary<string, Type>
-                        {
-                            { "TBinaryProtocol",typeof(TBinaryProtocol)},
-                            { "TCompactProtocol",typeof(TCompactProtocol)},
-                            { "TJSONProtocol",typeof(TJsonProtocol)},
-                            { "TMultiplexedProtocol",typeof(TMultiplexedProtocol)},
-                        },
-                    clientTypes: thriftClientTypes
+                var pool = new ThriftClientPool(clientTypes: thriftClientTypes
                 );
 
                 return pool;
             });
-
         }
 
         public static void AddThriftServer(this IServiceCollection services)
         {
-            services.AddSingleton<TBaseServer, AsyncBaseServer>();
             services.AddSingleton<IServer, ThriftServer>();
         }
     }

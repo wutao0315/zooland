@@ -40,7 +40,7 @@ namespace Zooyard.Rpc.LoadBalance
                 long timestamp = url.GetParameter(REMOTE_TIMESTAMP_KEY, 0L);
                 if (timestamp > 0L)
                 {
-                    int uptime = (int)(DateTime.Now.CurrentTimeMillis() - timestamp);
+                    int uptime = (int)(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - timestamp);
                     int warmup = url.GetParameter(WARMUP_KEY, DEFAULT_WARMUP);
                     if (uptime > 0 && uptime < warmup)
                     {

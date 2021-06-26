@@ -1,13 +1,14 @@
 ﻿{
   "zooyard": {
-    "RegisterUrl": "zooyard://localhost?interface=MemberThrift.ISessionService&MemberThrift.ISessionService.cluster=failfast",
+    "RegisterUrl": "zooyard://localhost",
     "Clients": {
       "thrift_helloservice": {
         "Version": "1.0",
         "ServiceType": "RpcContractThrift.IHelloService, RpcContractThrift",
         "PoolType": "Zooyard.Rpc.ThriftImpl.ThriftClientPool, Zooyard.Rpc.ThriftImpl",
         "Urls": [
-          "TCompactProtocol://127.0.0.1:10009?proxy=HelloService"
+          //&bf=Framed
+          "Binary://127.0.0.1:9090?proxy=HelloService"
         ]
       },
       //"wcf_helloservice": {

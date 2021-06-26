@@ -12,28 +12,28 @@ namespace RpcProviderCore
 
         public string ServiceName { get; set; } = "A";
 
-        public string CallNameVoid()
+        public async Task<string> CallNameVoidAsync()
         {
             Console.WriteLine($"call CallNameVoid![{ServiceName}]");
             return $"CallNameVoid;From[{ServiceName}]";
         }
-        public void CallName(string name)
+        public async Task CallNameAsync(string name)
         {
             Console.WriteLine($"{name} call CallName![{ServiceName}]");
         }
 
-        public void CallVoid()
+        public async Task CallVoidAsync()
         {
             Console.WriteLine($"call CallVoid![{ServiceName}]");
         }
 
-        public string Hello(string name)
+        public async Task<string> HelloAsync(string name)
         {
             Console.WriteLine($"{name} call Hello![{ServiceName}]");
             return $"hello {name};From[{ServiceName}]";
         }
 
-        public RpcContractNetty.HelloResult SayHello(string name)
+        public async Task<RpcContractNetty.HelloResult> SayHelloAsync(string name)
         {
             Console.WriteLine($"{name} call SayHello![{ServiceName}]");
             var result = new RpcContractNetty.HelloResult
@@ -45,7 +45,7 @@ namespace RpcProviderCore
             return result;
         }
 
-        public string ShowHello(RpcContractNetty.HelloResult hello)
+        public async Task<string> ShowHelloAsync(RpcContractNetty.HelloResult hello)
         {
             Console.WriteLine($"{hello.Name} call SayHello![{ServiceName}]");
             var result = $"name:{hello.Name}；gender:{hello.Gender}；avatar:{hello.Head};From[{ServiceName}]";
