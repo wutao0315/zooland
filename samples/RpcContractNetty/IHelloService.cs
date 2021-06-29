@@ -14,5 +14,12 @@ namespace RpcContractNetty
         Task<string> HelloAsync(string name);
         Task<HelloResult> SayHelloAsync(string name);
         Task<string> ShowHelloAsync(HelloResult name);
+
+        string CallNameVoid();
+        void CallName(string name);
+        void CallVoid();
+        string Hello(string name);
+        HelloResult SayHello(string name);
+        string ShowHello(HelloResult name);
     }
 }

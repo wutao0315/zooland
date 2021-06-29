@@ -13,6 +13,7 @@ using Zooyard.Core;
 using Zooyard.Core.Logging;
 using Zooyard.Core.Utils;
 using Zooyard.Rpc.Support;
+using Zooyard.Rpc.ThriftImpl.Header;
 
 namespace Zooyard.Rpc.ThriftImpl
 {
@@ -221,6 +222,9 @@ namespace Zooyard.Rpc.ThriftImpl
                 Protocol.Binary => new TBinaryProtocol(transport),
                 Protocol.Compact => new TCompactProtocol(transport),
                 Protocol.Json => new TJsonProtocol(transport),
+                Protocol.BinaryHeader => new TBinaryHeaderProtocol(transport),
+                Protocol.CompactHeader => new TCompactHeaderProtocol(transport),
+                Protocol.JsonHeader => new TJsonHeaderProtocol(transport),
                 _ => throw new Exception("unhandled protocol"),
             };
         }
@@ -246,6 +250,9 @@ namespace Zooyard.Rpc.ThriftImpl
             Binary,
             Compact,
             Json,
+            BinaryHeader,
+            CompactHeader,
+            JsonHeader,
         }
     }
    

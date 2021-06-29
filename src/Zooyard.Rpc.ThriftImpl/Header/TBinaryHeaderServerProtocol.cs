@@ -1,20 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Thrift.Protocol;
 using Thrift.Protocol.Entities;
 using Thrift.Transport;
+using Thrift.Transport.Client;
 
-namespace Zooyard.Rpc.ThriftImpl.Trace
+namespace Zooyard.Rpc.ThriftImpl.Header
 {
-    public class TTraceServerBinaryProtocol : TBinaryProtocol
+    public class TBinaryHeaderServerProtocol : TBinaryProtocol
     {
 
         private IDictionary<string, string> HEAD_INFO;
 
-        public TTraceServerBinaryProtocol(TTransport transport) : base(transport)
+        public TBinaryHeaderServerProtocol(TTransport transport) : base(transport)
         {
             HEAD_INFO = new Dictionary<string, string>();
         }
@@ -43,6 +46,25 @@ namespace Zooyard.Rpc.ThriftImpl.Trace
 
         public void MarkTFramedTransport(TProtocol protocol)
         {
+            try
+            {
+                if (protocol.Transport is TStreamTransport stream) 
+                {
+                    var tioInputStream = TStreamTransportFieldsCache.getInstance().GetInputStream();
+                    if (tioInputStream == null)
+                    {
+                        return;
+                    }
+                    var inputStream = (Stream)tioInputStream.GetValue(stream);
+                    inputStream.Position = 0;
+                }
+            }
+            catch (Exception e)
+            {
+
+                throw e;
+            }
+
             //try
             //{
             //    TField tioInputStream = TIOStreamTransportFieldsCache.getInstance().getTIOInputStream();
@@ -68,6 +90,18 @@ namespace Zooyard.Rpc.ThriftImpl.Trace
         {
             try
             {
+                if (protocol.Transport is TStreamTransport stream)
+                {
+                    var tioInputStream = TStreamTransportFieldsCache.getInstance().GetInputStream();
+                    if (tioInputStream == null)
+                    {
+                        return;
+                    }
+                    var inputStream = (Stream)tioInputStream.GetValue(stream);
+
+                    inputStream.Seek(inputStream.Position, SeekOrigin.Begin);
+                }
+
                 //TField tioInputStream = TIOStreamTransportFieldsCache.getInstance().getTIOInputStream();
                 //if (tioInputStream == null)
                 //{
@@ -78,46 +112,48 @@ namespace Zooyard.Rpc.ThriftImpl.Trace
             }
             catch (Exception e)
             {
+                throw e;
                 //e.printStackTrace();
             }
         }
 
-        private class TIOStreamTransportFieldsCache
+        private class TStreamTransportFieldsCache
         {
-            private static TIOStreamTransportFieldsCache instance;
-            private TField inputStream_;
-            private string TIOStreamTransport_inputStream_ = "inputStream_";
+            private static TStreamTransportFieldsCache instance;
+            private FieldInfo inputStream_;
+            private string TStreamTransport_inputStream_ = "_inputStream";
 
-            private TIOStreamTransportFieldsCache()
+            private TStreamTransportFieldsCache()
             {
+
+                inputStream_ = typeof(TStreamTransport).GetField(TStreamTransport_inputStream_);
                 //inputStream_ = TIOStreamTransport.class.getDeclaredField(TIOStreamTransport_inputStream_);
                 //inputStream_.SetAccessible(true);
             }
 
-            public static TIOStreamTransportFieldsCache getInstance()
+            public static TStreamTransportFieldsCache getInstance()
             {
                 if (instance == null)
                 {
                     if (instance == null)
                     {
-                        instance = new TIOStreamTransportFieldsCache();
+                        instance = new TStreamTransportFieldsCache();
                     }
                 }
                 return instance;
             }
 
-            public TField getTIOInputStream()
+            public FieldInfo GetInputStream()
             {
                 return inputStream_;
             }
         }
 
-
-        public class Factory : TProtocolFactory
+        public new class Factory : TProtocolFactory
         {
             public override TProtocol GetProtocol(TTransport trans)
             {
-                return new TTraceServerBinaryProtocol(trans);
+                return new TBinaryHeaderServerProtocol(trans);
             }
         }
     }

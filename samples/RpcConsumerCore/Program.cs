@@ -182,6 +182,7 @@ namespace RpcConsumerCore
         }
         private static async Task ThriftHello(RpcContractThrift.IHelloService helloServiceThrift, string helloword = "world")
         {
+            Console.WriteLine("ThriftHello---------------------------------------------------------------------------");
             var callNameVoid = await helloServiceThrift.CallNameVoidAsync();
             Console.WriteLine(callNameVoid);
             await helloServiceThrift.CallNameAsync(helloword);
@@ -195,9 +196,31 @@ namespace RpcConsumerCore
             helloResult.Name = helloword + "show perfect world";
             var showResult = await helloServiceThrift.ShowHelloAsync(helloResult);
             Console.WriteLine(showResult);
+
+            ThriftHelloCall(helloServiceThrift, helloword);
         }
+
+        private static void ThriftHelloCall(RpcContractThrift.IHelloService helloServiceThrift, string helloword = "world")
+        {
+            Console.WriteLine("ThriftHello---------------------------------------------------------------------------");
+            var callNameVoid = helloServiceThrift.CallNameVoid();
+            Console.WriteLine(callNameVoid);
+            helloServiceThrift.CallName(helloword);
+            Console.WriteLine("CallName called");
+            helloServiceThrift.CallVoid();
+            Console.WriteLine("CallVoid called");
+            var hello = helloServiceThrift.Hello(helloword);
+            Console.WriteLine(hello);
+            var helloResult = helloServiceThrift.SayHello(helloword + "perfect world");
+            Console.WriteLine($"{helloResult.Name},{helloResult.Gender},{helloResult.Head}");
+            helloResult.Name = helloword + "show perfect world";
+            var showResult = helloServiceThrift.ShowHello(helloResult);
+            Console.WriteLine(showResult);
+        }
+
         private static async Task GrpcHello(RpcContractGrpc.IHelloService helloServiceGrpc, string helloword = "world")
         {
+            Console.WriteLine("GrpcHello---------------------------------------------------------------------------");
             var callNameVoid = await helloServiceGrpc.CallNameVoidAsync(new RpcContractGrpc.Void());
             Console.WriteLine(callNameVoid);
             await helloServiceGrpc.CallNameAsync(new RpcContractGrpc.NameResult { Name = helloword });
@@ -210,6 +233,25 @@ namespace RpcConsumerCore
             Console.WriteLine($"{helloResult.Name},{helloResult.Gender},{helloResult.Head}");
             helloResult.Name = helloword + " show perfect world";
             var showResult = await helloServiceGrpc.ShowHelloAsync(helloResult);
+            Console.WriteLine(showResult.Name);
+
+            GrpcHelloCall(helloServiceGrpc, helloword);
+        }
+        private static void GrpcHelloCall(RpcContractGrpc.IHelloService helloServiceGrpc, string helloword = "world")
+        {
+            Console.WriteLine("GrpcHelloCall---------------------------------------------------------------------------");
+            var callNameVoid = helloServiceGrpc.CallNameVoid(new RpcContractGrpc.Void());
+            Console.WriteLine(callNameVoid);
+            helloServiceGrpc.CallName(new RpcContractGrpc.NameResult { Name = helloword });
+            Console.WriteLine("CallName called");
+            helloServiceGrpc.CallVoid(new RpcContractGrpc.Void());
+            Console.WriteLine("CallVoid called");
+            var hello = helloServiceGrpc.Hello(new RpcContractGrpc.NameResult { Name = helloword });
+            Console.WriteLine(hello.Name);
+            var helloResult = helloServiceGrpc.SayHello(new RpcContractGrpc.NameResult { Name = $"{helloword} perfect world" });
+            Console.WriteLine($"{helloResult.Name},{helloResult.Gender},{helloResult.Head}");
+            helloResult.Name = helloword + " show perfect world";
+            var showResult = helloServiceGrpc.ShowHello(helloResult);
             Console.WriteLine(showResult.Name);
         }
         //private static void WcfHello(RpcContractWcf.IHelloService helloServiceWcf, string helloword = "world")
@@ -230,18 +272,38 @@ namespace RpcConsumerCore
         //}
         private static async Task HttpHello(RpcContractHttp.IHelloService helloServiceHttp, string helloword = "world")
         {
-            var callNameVoid = await helloServiceHttp.CallNameVoid();
+            Console.WriteLine("HttpHello---------------------------------------------------------------------------");
+            var callNameVoid = await helloServiceHttp.CallNameVoidAsync();
             Console.WriteLine(callNameVoid);
-            await helloServiceHttp.CallName(helloword);
+            await helloServiceHttp.CallNameAsync(helloword);
             Console.WriteLine("CallName called");
-            await helloServiceHttp.CallVoid();
+            await helloServiceHttp.CallVoidAsync();
             Console.WriteLine("CallVoid called");
-            var helloWcf = await helloServiceHttp.Hello(helloword);
+            var helloWcf = await helloServiceHttp.HelloAsync(helloword);
             Console.WriteLine(helloWcf);
-            var helloResultWcf = await helloServiceHttp.SayHello($"{helloword} perfect world");
+            var helloResultWcf = await helloServiceHttp.SayHelloAsync($"{helloword} perfect world");
             Console.WriteLine($"{helloResultWcf.Name},{helloResultWcf.Gender},{helloResultWcf.Head}");
             helloResultWcf.Name = helloword + "show perfect world";
-            var showResultWcf = await helloServiceHttp.ShowHello(helloResultWcf);
+            var showResultWcf = await helloServiceHttp.ShowHelloAsync(helloResultWcf);
+            Console.WriteLine(showResultWcf);
+
+            HttpHelloCall(helloServiceHttp, helloword);
+        }
+        private static void HttpHelloCall(RpcContractHttp.IHelloService helloServiceHttp, string helloword = "world")
+        {
+            Console.WriteLine("HttpHelloCall---------------------------------------------------------------------------");
+            var callNameVoid = helloServiceHttp.CallNameVoid();
+            Console.WriteLine(callNameVoid);
+            helloServiceHttp.CallName(helloword);
+            Console.WriteLine("CallName called");
+            helloServiceHttp.CallVoid();
+            Console.WriteLine("CallVoid called");
+            var helloWcf = helloServiceHttp.Hello(helloword);
+            Console.WriteLine(helloWcf);
+            var helloResultWcf = helloServiceHttp.SayHello($"{helloword} perfect world");
+            Console.WriteLine($"{helloResultWcf.Name},{helloResultWcf.Gender},{helloResultWcf.Head}");
+            helloResultWcf.Name = helloword + "show perfect world";
+            var showResultWcf = helloServiceHttp.ShowHello(helloResultWcf);
             Console.WriteLine(showResultWcf);
         }
         //private static void AkkaHello(RpcContractAkka.IHelloService akkaServiceHttp, string helloword = "world")
@@ -262,6 +324,7 @@ namespace RpcConsumerCore
         //}
         private static async Task NettyHello(RpcContractNetty.IHelloService nettyService, string helloword = "world")
         {
+            Console.WriteLine("NettyHello---------------------------------------------------------------------------");
             var callNameVoid = await nettyService.CallNameVoidAsync();
             Console.WriteLine(callNameVoid);
             await nettyService.CallNameAsync(helloword);
@@ -274,6 +337,26 @@ namespace RpcConsumerCore
             Console.WriteLine($"{helloResult.Name},{helloResult.Gender},{helloResult.Head}");
             helloResult.Name = helloword + "show perfect world";
             var showResultNetty = await nettyService.ShowHelloAsync(helloResult);
+            Console.WriteLine(showResultNetty);
+
+            NettyHelloCall(nettyService, helloword);
+        }
+
+        private static void NettyHelloCall(RpcContractNetty.IHelloService nettyService, string helloword = "world")
+        {
+            Console.WriteLine("NettyHello---------------------------------------------------------------------------");
+            var callNameVoid = nettyService.CallNameVoid();
+            Console.WriteLine(callNameVoid);
+            nettyService.CallName(helloword);
+            Console.WriteLine("CallName called");
+            nettyService.CallVoid();
+            Console.WriteLine("CallVoid called");
+            var hello = nettyService.Hello(helloword);
+            Console.WriteLine(hello);
+            var helloResult = nettyService.SayHello($"{helloword} perfect world");
+            Console.WriteLine($"{helloResult.Name},{helloResult.Gender},{helloResult.Head}");
+            helloResult.Name = helloword + "show perfect world";
+            var showResultNetty = nettyService.ShowHello(helloResult);
             Console.WriteLine(showResultNetty);
 
         }

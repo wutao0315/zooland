@@ -8,14 +8,14 @@ using Thrift.Protocol;
 using Thrift.Protocol.Entities;
 using Thrift.Transport;
 
-namespace Zooyard.Rpc.ThriftImpl.Trace
+namespace Zooyard.Rpc.ThriftImpl.Header
 {
-    public class TTraceClientBinaryProtocol : TBinaryProtocol
+    public class TBinaryHeaderProtocol : TBinaryProtocol
     {
 
         private IDictionary<string, string> HEAD_INFO;
 
-        public TTraceClientBinaryProtocol(TTransport transport) : base(transport)
+        public TBinaryHeaderProtocol(TTransport transport) : base(transport)
         {
             HEAD_INFO = new Dictionary<string, string>();
         }

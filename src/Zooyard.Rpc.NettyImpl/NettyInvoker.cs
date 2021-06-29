@@ -62,12 +62,13 @@ namespace Zooyard.Rpc.NettyImpl
 
                     if (invocation.MethodInfo.ReturnType == typeof(Task)) 
                     {
-                        return new RpcResult(Task.CompletedTask);
+                        return new RpcResult();
+                        //return new RpcResult(Task.CompletedTask);
                     }
                     else if(invocation.MethodInfo.ReturnType.IsGenericType && invocation.MethodInfo.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
                     {
-                        var resultData = Task.FromResult((dynamic)value.Result);
-                        return new RpcResult(resultData);
+                        //var resultData = Task.FromResult((dynamic)value.Result);
+                        return new RpcResult(value.Result);
                     }
                     
                     return new RpcResult(value.Result);

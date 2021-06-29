@@ -13,6 +13,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="DynamicProxy\IInterceptor.cs" />
+    <Compile Remove="DynamicProxy\InterfaceProxy.cs" />
     <Compile Remove="IRegistryHealthChecks.cs" />
     <Compile Remove="IRegistryHost.cs" />
     <Compile Remove="IRegistryKeyValues.cs" />

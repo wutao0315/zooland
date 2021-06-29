@@ -21,6 +21,7 @@ using Thrift.Transport.Server;
 using Zooyard.Core;
 using Zooyard.Core.Logging;
 using Zooyard.Rpc.Support;
+using Zooyard.Rpc.ThriftImpl.Header;
 
 namespace Zooyard.Rpc.ThriftImpl
 {
@@ -173,6 +174,9 @@ namespace Zooyard.Rpc.ThriftImpl
                 Protocol.Binary => new TBinaryProtocol.Factory(),
                 Protocol.Compact => new TCompactProtocol.Factory(),
                 Protocol.Json => new TJsonProtocol.Factory(),
+                Protocol.BinaryHeader => new TBinaryHeaderServerProtocol.Factory(),
+                Protocol.CompactHeader => new TCompactHeaderServerProtocol.Factory(),
+                Protocol.JsonHeader => new TJsonHeaderServerProtocol.Factory(),
                 _ => throw new ArgumentException("unsupported value $protocol", nameof(protocol)),
             };
 
@@ -289,6 +293,9 @@ namespace Zooyard.Rpc.ThriftImpl
             Binary,
             Compact,
             Json,
+            BinaryHeader,
+            CompactHeader,
+            JsonHeader,
         }
 
         public class HttpServerSample

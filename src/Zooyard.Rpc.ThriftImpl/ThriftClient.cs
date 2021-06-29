@@ -32,10 +32,13 @@ namespace Zooyard.Rpc.ThriftImpl
 
         public override async Task Open()
         {
-            if (!_thriftclient.OutputProtocol.Transport.IsOpen || !_thriftclient.InputProtocol.Transport.IsOpen)
+            if (!_thriftclient.OutputProtocol.Transport.IsOpen)
             {
-                //await _transport.OpenAsync();
-                await _thriftclient.OpenTransportAsync();
+                await _thriftclient.OutputProtocol.Transport.OpenAsync();
+            }
+            if (!_thriftclient.InputProtocol.Transport.IsOpen)
+            {
+                await _thriftclient.InputProtocol.Transport.OpenAsync();
             }
             Logger().LogInformation("open");
         }
@@ -43,15 +46,22 @@ namespace Zooyard.Rpc.ThriftImpl
 
         public override async Task Close()
         {
-            _thriftclient.Dispose();
+            if (_thriftclient.OutputProtocol.Transport.IsOpen) 
+            {
+                _thriftclient.OutputProtocol.Transport.Close();
+            }
+            if (_thriftclient.InputProtocol.Transport.IsOpen)
+            {
+                _thriftclient.InputProtocol.Transport.Close();
+            }
+            await Task.CompletedTask;
             Logger().LogInformation("close");
         }
-
-        
 
         public override async ValueTask DisposeAsync()
         {
             await Close();
+            _thriftclient.Dispose();
             Logger().LogInformation("Dispose");
         }
     }

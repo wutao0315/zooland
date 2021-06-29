@@ -25,15 +25,13 @@ namespace Zooyard.Rpc.NettyImpl
             var publicHost = config.GetParameter<string>("public-hostname", null);
             var publicPort = config.GetParameter<int>("public-port", 0);
 
-            var order = ByteOrder.LittleEndian;
             var byteOrderString = config.GetParameter("byte-order", "little-endian").ToLowerInvariant();
-            switch (byteOrderString)
+            var order = byteOrderString switch
             {
-                case "little-endian": order = ByteOrder.LittleEndian; break;
-                case "big-endian": order = ByteOrder.BigEndian; break;
-                default: throw new ArgumentException($"Unknown byte-order option [{byteOrderString}]. Supported options are: big-endian, little-endian.");
-            }
-
+                "little-endian" => ByteOrder.LittleEndian,
+                "big-endian" => ByteOrder.BigEndian,
+                _ => throw new ArgumentException($"Unknown byte-order option [{byteOrderString}]. Supported options are: big-endian, little-endian."),
+            };
             return new NettyTransportSettings(
                 enableSsl: config.GetParameter("enable-ssl", false),
                 connectTimeout: TimeSpan.FromSeconds(config.GetParameter("connection-timeout", 15)),
@@ -265,16 +263,16 @@ namespace Zooyard.Rpc.NettyImpl
 
         private static X509KeyStorageFlags ParseKeyStorageFlag(string str)
         {
-            switch (str)
+            return str switch
             {
-                case "default-key-set": return X509KeyStorageFlags.DefaultKeySet;
-                case "exportable": return X509KeyStorageFlags.Exportable;
-                case "machine-key-set": return X509KeyStorageFlags.MachineKeySet;
-                case "persist-key-set": return X509KeyStorageFlags.PersistKeySet;
-                case "user-key-set": return X509KeyStorageFlags.UserKeySet;
-                case "user-protected": return X509KeyStorageFlags.UserProtected;
-                default: throw new ArgumentException($"Unrecognized flag in X509 certificate config [{str}]. Available flags: default-key-set | exportable | machine-key-set | persist-key-set | user-key-set | user-protected");
-            }
+                "default-key-set" => X509KeyStorageFlags.DefaultKeySet,
+                "exportable" => X509KeyStorageFlags.Exportable,
+                "machine-key-set" => X509KeyStorageFlags.MachineKeySet,
+                "persist-key-set" => X509KeyStorageFlags.PersistKeySet,
+                "user-key-set" => X509KeyStorageFlags.UserKeySet,
+                "user-protected" => X509KeyStorageFlags.UserProtected,
+                _ => throw new ArgumentException($"Unrecognized flag in X509 certificate config [{str}]. Available flags: default-key-set | exportable | machine-key-set | persist-key-set | user-key-set | user-protected"),
+            };
         }
 
         /// <summary>

@@ -51,10 +51,7 @@ namespace Zooyard.Rpc.GrpcImpl
                           taskResult.GetType().GetGenericTypeDefinition() == typeof(AsyncUnaryCall<>))
             {
                 var resultData = await (dynamic)taskResult;
-                //var awaiter = taskResult.GetType().GetMethod("GetAwaiter").Invoke(taskResult, new object[] { });
-                //var resultData = awaiter.GetType().GetMethod("GetResult").Invoke(awaiter, new object[] { });
-                var resultValue = Task.FromResult(resultData);
-                var result = new RpcResult(resultValue);
+                var result = new RpcResult(resultData);
                 return result;
             }
             else 
@@ -62,17 +59,6 @@ namespace Zooyard.Rpc.GrpcImpl
                 var result = new RpcResult(taskResult);
                 return result;
             }
-
-            //dynamic taskInvoke = method.Invoke(_instance, parasPlus);
-            //dynamic result = await taskInvoke;
-            //return new RpcResult(result);
-
-            //var awaiter = taskInvoke.GetType().GetMethod("GetAwaiter").Invoke(taskInvoke, new object[] { });
-            //var value = awaiter.GetType().GetMethod("GetResult").Invoke(awaiter, new object[] { });
-            //var result = Task.FromResult(value);
-
-            //var result = new RpcResult(value);
-            //return result;
         }
     }
 }

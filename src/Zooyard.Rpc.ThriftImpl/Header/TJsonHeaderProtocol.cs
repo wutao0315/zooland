@@ -8,14 +8,14 @@ using Thrift.Protocol;
 using Thrift.Protocol.Entities;
 using Thrift.Transport;
 
-namespace Zooyard.Rpc.ThriftImpl.Trace
+namespace Zooyard.Rpc.ThriftImpl.Header
 {
-    public class TTraceClientCompactProtocol : TCompactProtocol
+    public class TJsonHeaderProtocol : TJsonProtocol
     {
 
         private IDictionary<string, string> HEAD_INFO;
 
-        public TTraceClientCompactProtocol(TTransport transport) : base(transport)
+        public TJsonHeaderProtocol(TTransport transport) : base(transport)
         {
             HEAD_INFO = new Dictionary<string, string>();
         }
@@ -37,6 +37,10 @@ namespace Zooyard.Rpc.ThriftImpl.Trace
             //write trace header to field0
             await WriteFieldZero(cancellationToken);
         }
+
+
+
+
 
         public async Task WriteFieldZero(CancellationToken cancellationToken)
         {
