@@ -32,7 +32,7 @@
         "ServiceType": "RpcContractHttp.IHelloService, RpcContractHttp",
         "PoolType": "Zooyard.Rpc.HttpImpl.HttpClientPool, Zooyard.Rpc.HttpImpl",
         "Urls": [
-          "http://localhost:10010/hello?proxy=HelloService&CallNameVoid.parametertype=url&CallNameVoid.methodtype=get&CallName.parametertype=url&CallName.methodtype=get&CallVoid.parametertype=url&CallVoid.methodtype=get&Hello.parametertype=url&Hello.methodtype=get&SayHello.parametertype=url&SayHello.methodtype=get&ShowHello.methodtype=post"
+          "http://localhost:10010?proxy=HelloService"
         ]
       },
       //"akka_helloservice": {
