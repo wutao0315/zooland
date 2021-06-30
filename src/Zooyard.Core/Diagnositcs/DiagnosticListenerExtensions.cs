@@ -31,7 +31,7 @@ namespace Zooyard.Core.Diagnositcs
             }
             _this.Write(Constant.ConsumerBefore, new { instance, url, invocation  });
         }
-        public static void WriteConsumerAfter(this DiagnosticSource _this, URL url, IInvocation invocation, IResult result)
+        public static void WriteConsumerAfter<T>(this DiagnosticSource _this, URL url, IInvocation invocation, IResult<T> result)
         {
             if (!_this.IsEnabled(Constant.ConsumerAfter))
             {

@@ -16,9 +16,10 @@ namespace Zooyard.Rpc.Cache
             _store = new LruCacheData<object,object>(itemExpiryTimeout, max, memoryRefreshInterval);
         }
 
-        public object Get(object key)
+        public T Get<T>(object key)
         {
-            return _store.GetObject(key);
+            var result = _store.GetObject(key);
+            return (T)result;
         }
 
         public void Put(object key, object value)

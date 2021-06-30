@@ -12,7 +12,7 @@ namespace Zooyard.Rpc.Cluster
         private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(BroadcastCluster));
         public override string Name => NAME;
         public const string NAME = "broadcast";
-        public override async Task<IClusterResult> DoInvoke(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
+        public override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
         {
             checkInvokers(urls, invocation, address);
             RpcContext.GetContext().SetInvokers(urls);
@@ -20,7 +20,7 @@ namespace Zooyard.Rpc.Cluster
             var goodUrls = new List<URL>();
             var badUrls = new List<BadUrl>();
             var isThrow = false;
-            IResult result = null;
+            IResult<T> result = null;
             foreach (var invoker in urls)
             {
                 try
@@ -30,7 +30,7 @@ namespace Zooyard.Rpc.Cluster
                     {
                         var refer = await client.Refer();
                         _source.WriteConsumerBefore(refer.Instance, invoker, invocation);
-                        result = await refer.Invoke(invocation);
+                        result = await refer.Invoke<T>(invocation);
                         _source.WriteConsumerAfter(invoker, invocation, result);
                         await pool.Recovery(client);
                         goodUrls.Add(invoker);
@@ -53,7 +53,7 @@ namespace Zooyard.Rpc.Cluster
             {
                 isThrow = true;
             }
-            var clusterResult = new ClusterResult(result, goodUrls, badUrls, exception, isThrow);
+            var clusterResult = new ClusterResult<T>(result, goodUrls, badUrls, exception, isThrow);
             return clusterResult;
         }
     }

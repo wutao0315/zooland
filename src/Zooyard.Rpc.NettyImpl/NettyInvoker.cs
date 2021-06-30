@@ -27,7 +27,7 @@ namespace Zooyard.Rpc.NettyImpl
         public override object Instance => _channel;
         public override int ClientTimeout => _clientTimeout;
 
-        protected override async Task<IResult> HandleInvoke(IInvocation invocation)
+        protected override async Task<IResult<T>> HandleInvoke<T>(IInvocation invocation)
         {
             try
             {
@@ -62,16 +62,16 @@ namespace Zooyard.Rpc.NettyImpl
 
                     if (invocation.MethodInfo.ReturnType == typeof(Task)) 
                     {
-                        return new RpcResult();
+                        return new RpcResult<T>();
                         //return new RpcResult(Task.CompletedTask);
                     }
                     else if(invocation.MethodInfo.ReturnType.IsGenericType && invocation.MethodInfo.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
                     {
                         //var resultData = Task.FromResult((dynamic)value.Result);
-                        return new RpcResult(value.Result);
+                        return new RpcResult<T>((T)value.Result.ChangeType(typeof(T)));
                     }
                     
-                    return new RpcResult(value.Result);
+                    return new RpcResult<T>((T)value.Result.ChangeType(typeof(T)));
                 }
                 else
                 {

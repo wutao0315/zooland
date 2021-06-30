@@ -17,7 +17,7 @@ namespace Zooyard.Rpc.Cluster
         public const string FORKS_KEY = "forks";
         public const int DEFAULT_FORKS = 2;
 
-        public override async Task<IClusterResult> DoInvoke(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
+        public override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
         {
             //IResult result = null;
             var goodUrls = new List<URL>();
@@ -49,11 +49,11 @@ namespace Zooyard.Rpc.Cluster
             RpcContext.GetContext().SetInvokers(selected);
             var count = new AtomicInteger();
 
-            var taskList = new Task<IResult>[selected.Count];
+            var taskList = new Task<IResult<T>>[selected.Count];
             var index = 0;
             foreach (var invoker in selected)
             {
-                var task = Task.Run(async() => {
+                var task = Task.Run<IResult<T>>(async() => {
                     try
                     {
                         var client =await pool.GetClient(invoker);
@@ -61,7 +61,7 @@ namespace Zooyard.Rpc.Cluster
                         {
                             var refer = await client.Refer();
                             _source.WriteConsumerBefore(refer.Instance, invoker, invocation);
-                            var resultInner = await refer.Invoke(invocation);
+                            var resultInner = await refer.Invoke<T>(invocation);
                             _source.WriteConsumerAfter(invoker, invocation, resultInner);
                             await pool.Recovery(client);
                             goodUrls.Add(invoker);
@@ -80,7 +80,7 @@ namespace Zooyard.Rpc.Cluster
                         int value = count.IncrementAndGet();
                         if (value >= selected.Count)
                         {
-                            return new RpcResult(e);
+                            return new RpcResult<T>(e);
                         }
                     }
                     return null;
@@ -96,12 +96,12 @@ namespace Zooyard.Rpc.Cluster
                     Exception e = ret.Exception;
                     throw new RpcException(e is RpcException exception ? exception.Code : 0, "Failed to forking invoke provider " + selected + ", but no luck to perform the invocation. Last error is: " + e.Message, e.InnerException != null ? e.InnerException : e);
                 }
-                return new ClusterResult(ret, goodUrls, badUrls, null,false);
+                return new ClusterResult<T>(ret, goodUrls, badUrls, null,false);
             }
             catch (Exception e)
             {
                 var exception = new RpcException("Failed to forking invoke provider " + selected + ", but no luck to perform the invocation. Last error is: " + e.Message, e);
-                return new ClusterResult(new RpcResult(exception), goodUrls, badUrls, exception, true);
+                return new ClusterResult<T>(new RpcResult<T>(exception), goodUrls, badUrls, exception, true);
             }
         }
     }

@@ -17,7 +17,7 @@ namespace Zooyard.Rpc.Cluster
         public const string RETRIES_KEY = "retries";
         public const int DEFAULT_RETRIES = 2;
 
-        public override async Task<IClusterResult> DoInvoke(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
+        public override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
         {
             var goodUrls = new List<URL>();
             var badUrls = new List<BadUrl>();
@@ -57,7 +57,7 @@ namespace Zooyard.Rpc.Cluster
                     {
                         var refer = await client.Refer();
                         _source.WriteConsumerBefore(refer.Instance, invoker, invocation);
-                        var result = await refer.Invoke(invocation);
+                        var result = await refer.Invoke<T>(invocation);
                         _source.WriteConsumerAfter(invoker, invocation, result);
                         await pool.Recovery(client);
                         if (le != null)
@@ -73,7 +73,7 @@ namespace Zooyard.Rpc.Cluster
                                     + ". Last error is: " + le.Message);
                         }
                         goodUrls.Add(invoker);
-                        return new ClusterResult(result,goodUrls,badUrls,le,false);
+                        return new ClusterResult<T>(result,goodUrls,badUrls,le,false);
                     }
                     catch (Exception ex)
                     {
@@ -118,7 +118,7 @@ namespace Zooyard.Rpc.Cluster
                    + ". Last error is: "
                    + (le != null ? le.Message : ""), le != null && le.InnerException != null ? le.InnerException : le);
 
-            return new ClusterResult(new RpcResult(re), goodUrls, badUrls, re, true);
+            return new ClusterResult<T>(new RpcResult<T>(re), goodUrls, badUrls, re, true);
            
         }
     }

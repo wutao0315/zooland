@@ -22,7 +22,7 @@ namespace Zooyard.Rpc.Cluster
         private System.Timers.Timer retryTimer;
 
 
-        private void addFailed(IClientPool pool,IInvocation invocation, URL router)
+        private void addFailed<T>(IClientPool pool,IInvocation invocation, URL router)
         {
            
             if (retryTimer == null)
@@ -37,7 +37,7 @@ namespace Zooyard.Rpc.Cluster
                             // 收集统计信息
                             try
                             {
-                                await retryFailed(pool).ConfigureAwait(false);
+                                await retryFailed<T>(pool).ConfigureAwait(false);
                             }
                             catch (Exception t)
                             { // 防御性容错
@@ -55,7 +55,7 @@ namespace Zooyard.Rpc.Cluster
 
 
 
-        async Task retryFailed(IClientPool pool)
+        async Task retryFailed<T>(IClientPool pool)
         {
             if (failed.Count == 0)
             {
@@ -69,7 +69,7 @@ namespace Zooyard.Rpc.Cluster
                 {
                     var refer = await client.Refer();
                     _source.WriteConsumerBefore(refer.Instance, entry.Value, invocation);
-                    var result = await refer.Invoke(invocation);
+                    var result = await refer.Invoke<T>(invocation);
                     _source.WriteConsumerAfter(entry.Value, invocation, result);
                     await pool.Recovery(client);
                     failed.TryRemove(invocation ,out URL cluster);
@@ -83,7 +83,7 @@ namespace Zooyard.Rpc.Cluster
             }
         }
 
-        public override async Task<IClusterResult> DoInvoke(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
+        public override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
         {
             var goodUrls = new List<URL>();
             var badUrls = new List<BadUrl>();
@@ -92,7 +92,7 @@ namespace Zooyard.Rpc.Cluster
             checkInvokers(urls, invocation, address);
             var invoker = base.select(loadbalance, invocation, urls, null);
 
-            IResult result;
+            IResult<T> result;
             try
             {
                 var client = await pool.GetClient(invoker);
@@ -100,7 +100,7 @@ namespace Zooyard.Rpc.Cluster
                 {
                     var refer = await client.Refer();
                     _source.WriteConsumerBefore(refer.Instance, invoker, invocation);
-                    result = await refer.Invoke(invocation);
+                    result = await refer.Invoke<T>(invocation);
                     _source.WriteConsumerAfter(invoker, invocation, result);
                     await pool.Recovery(client);
                     goodUrls.Add(invoker);
@@ -115,13 +115,13 @@ namespace Zooyard.Rpc.Cluster
             catch (Exception e)
             {
                 Logger().LogError(e, $"Failback to invoke method {invocation.MethodInfo.Name}, wait for retry in background. Ignored exception:{e.Message}");
-                addFailed(pool, invocation, invoker);
-                result = new RpcResult(); // ignore
+                addFailed<T>(pool, invocation, invoker);
+                result = new RpcResult<T>(); // ignore
                 exception = e;
                 badUrls.Add(new BadUrl { Url = invoker, BadTime = DateTime.Now, CurrentException = exception });
             }
 
-            return new ClusterResult(result, goodUrls, badUrls, exception, false);
+            return new ClusterResult<T>(result, goodUrls, badUrls, exception, false);
         }
     }
 }

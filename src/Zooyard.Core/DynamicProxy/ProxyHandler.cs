@@ -17,6 +17,11 @@ namespace Zooyard.Core.DynamicProxy
             return _generator.Invoke(args);
         }
 
+        public T InvokeHandleT<T>(object[] args)
+        {
+            return _generator.Invoke<T>(args);
+        }
+
         public Task InvokeAsyncHandle(object[] args)
         {
             return _generator.InvokeAsync(args);

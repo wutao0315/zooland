@@ -24,6 +24,6 @@ namespace Zooyard.Core
         /// <param name="invocation"></param>
         /// <returns></returns>
 
-        Task<IResult> Invoke(IInvocation invocation);
+        Task<IResult<T>> Invoke<T>(IInvocation invocation);
     }
 }

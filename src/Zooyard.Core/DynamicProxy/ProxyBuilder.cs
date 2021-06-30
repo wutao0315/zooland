@@ -13,6 +13,7 @@ namespace Zooyard.Core.DynamicProxy
         private const int InvokeActionFieldAndCtorParameterIndex = 0;
 
         private static readonly MethodInfo SDelegateInvoke = typeof(ProxyHandler).GetMethod("InvokeHandle");
+        private static readonly MethodInfo SDelegateInvokeT = typeof(ProxyHandler).GetMethod("InvokeHandleT");
         private static readonly MethodInfo SDelegateInvokeAsync = typeof(ProxyHandler).GetMethod("InvokeAsyncHandle");
         private static readonly MethodInfo SDelegateinvokeAsyncT = typeof(ProxyHandler).GetMethod("InvokeAsyncHandleT");
 
@@ -46,6 +47,8 @@ namespace Zooyard.Core.DynamicProxy
             }
             return false;
         }
+
+
 
         private void Complete()
         {
@@ -265,14 +268,19 @@ namespace Zooyard.Core.DynamicProxy
             }
 
             var invokeMethod = SDelegateInvoke;
-            if (mi.ReturnType == typeof(Task))
-            {
-                invokeMethod = SDelegateInvokeAsync;
-            }
             if (IsGenericTask(mi.ReturnType))
             {
                 var returnTypes = mi.ReturnType.GetGenericArguments();
                 invokeMethod = SDelegateinvokeAsyncT.MakeGenericMethod(returnTypes);
+            }
+            else if (mi.ReturnType == typeof(Task))
+            {
+                invokeMethod = SDelegateInvokeAsync;
+            }
+            else if (mi.ReturnType != typeof(void))
+            {
+                var returnType = mi.ReturnType;
+                invokeMethod = SDelegateInvokeT.MakeGenericMethod(returnType);
             }
 
             // Call AsyncDispatchProxyGenerator.Invoke(object[]), InvokeAsync or InvokeAsyncT

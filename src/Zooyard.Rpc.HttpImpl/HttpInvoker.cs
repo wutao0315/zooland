@@ -33,7 +33,7 @@ namespace Zooyard.Rpc.HttpImpl
         }
         public override object Instance =>_instance;
         public override int ClientTimeout => _clientTimeout;
-        protected override async Task<IResult> HandleInvoke(IInvocation invocation)
+        protected override async Task<IResult<T>> HandleInvoke<T>(IInvocation invocation)
         {
             var methodName = invocation.MethodInfo.Name;
             var endStr = "Async";
@@ -51,12 +51,12 @@ namespace Zooyard.Rpc.HttpImpl
 
             if (invocation.MethodInfo.ReturnType == typeof(void) || invocation.MethodInfo.ReturnType == typeof(Task)) 
             {
-                return new RpcResult();
+                return new RpcResult<T>();
             }
 
             if (invocation.MethodInfo.ReturnType.IsValueType || invocation.MethodInfo.ReturnType == typeof(string))
             {
-                return new RpcResult(value);
+                return new RpcResult<T>((T)value.ChangeType(typeof(T)));
             }
 
             if (invocation.MethodInfo.ReturnType.IsGenericType &&
@@ -66,14 +66,14 @@ namespace Zooyard.Rpc.HttpImpl
 
                 if (tastGenericType.IsValueType || tastGenericType == typeof(string))
                 {
-                    return new RpcResult(value);
+                    return new RpcResult<T>((T)value.ChangeType(typeof(T)));
                 }
 
-                var genericData = value.DeserializeJson(tastGenericType);
-                return new RpcResult(genericData);
+                var genericData = value.DeserializeJson<T>();
+                return new RpcResult<T>(genericData);
             }
 
-            var result = new RpcResult(value.DeserializeJson(invocation.MethodInfo.ReturnType));
+            var result = new RpcResult<T>(value.DeserializeJson<T>());
             return result;
 
         }

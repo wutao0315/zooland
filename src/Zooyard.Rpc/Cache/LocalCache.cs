@@ -15,9 +15,10 @@ namespace Zooyard.Rpc.Cache
             this.Timeout = url.GetParameter("cache.timeout", 60000);
         }
 
-        public object Get(object key)
+        public T Get<T>(object key)
         {
-            return _store.Get(key.ToString());
+            var result = _store.Get(key.ToString());
+            return (T)result;
         }
 
         public void Put(object key, object value)

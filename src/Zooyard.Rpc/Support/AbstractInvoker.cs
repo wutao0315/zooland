@@ -11,11 +11,11 @@ namespace Zooyard.Rpc.Support
         private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(AbstractClientPool));
         public abstract int ClientTimeout { get; }
         public abstract object Instance { get; }
-        public virtual async Task<IResult> Invoke(IInvocation invocation)
+        public virtual async Task<IResult<T>> Invoke<T>(IInvocation invocation)
         {
             var message = $"{invocation.App}:{invocation.Version}:{invocation.TargetType.FullName}:{invocation.MethodInfo.Name}";
 #if DEBUG
-            var result = await HandleInvoke(invocation);
+            var result = await HandleInvoke<T>(invocation);
 #else
             using var cts = new CancellationTokenSource(ClientTimeout);
             var result = await Timeout(HandleInvoke(invocation), ClientTimeout, cts, message);
@@ -33,7 +33,7 @@ namespace Zooyard.Rpc.Support
             Logger().LogInformation(message);
             return result;
         }
-        protected abstract Task<IResult> HandleInvoke(IInvocation invocation);
+        protected abstract Task<IResult<T>> HandleInvoke<T>(IInvocation invocation);
 
         
     }

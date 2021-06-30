@@ -25,7 +25,7 @@ namespace Zooyard.Rpc.ThriftImpl
 
         public override int ClientTimeout => _clientTimeout;
 
-        protected override async Task<IResult> HandleInvoke(IInvocation invocation)
+        protected override async Task<IResult<T>> HandleInvoke<T>(IInvocation invocation)
         {
             var argumentTypes = new List<Type>(invocation.ArgumentTypes) 
             {
@@ -47,11 +47,11 @@ namespace Zooyard.Rpc.ThriftImpl
 
             if (invocation.MethodInfo.ReturnType == typeof(void) || invocation.MethodInfo.ReturnType == typeof(Task))
             {
-                await (dynamic)taskInvoke;
-                return new RpcResult();
+                await (Task)taskInvoke;
+                return new RpcResult<T>();
             }
-            var valueOut = await (dynamic)taskInvoke;
-            return new RpcResult(valueOut);
+            var valueOut = await (Task<T>)taskInvoke;
+            return new RpcResult<T>(valueOut);
 
         }
     }

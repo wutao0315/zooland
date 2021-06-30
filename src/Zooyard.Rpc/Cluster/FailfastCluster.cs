@@ -17,11 +17,11 @@ namespace Zooyard.Rpc.Cluster
         public const string NAME = "failfast";
 
 
-        public override async Task<IClusterResult> DoInvoke(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
+        public override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
         {
             var goodUrls = new List<URL>();
             var badUrls = new List<BadUrl>();
-            IResult result = null;
+            IResult<T> result = null;
             Exception exception = null;
             var isThrow = false;
 
@@ -35,7 +35,7 @@ namespace Zooyard.Rpc.Cluster
                 {
                     var refer = await client.Refer();
                     _source.WriteConsumerBefore(refer.Instance, invoker, invocation);
-                    result = await refer.Invoke(invocation);
+                    result = await refer.Invoke<T>(invocation);
                     _source.WriteConsumerAfter(invoker, invocation, result);
                     await pool.Recovery(client);
                     goodUrls.Add(invoker);
@@ -72,7 +72,7 @@ namespace Zooyard.Rpc.Cluster
                 badUrls.Add(new BadUrl { Url = invoker, BadTime = DateTime.Now, CurrentException = exception });
             }
 
-            return new ClusterResult(result, goodUrls, badUrls, exception, isThrow);
+            return new ClusterResult<T>(result, goodUrls, badUrls, exception, isThrow);
 
         }
     }

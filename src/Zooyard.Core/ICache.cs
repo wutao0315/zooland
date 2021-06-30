@@ -2,7 +2,7 @@
 {
     public interface ICache
     {
-        object Get(object key);
+        T Get<T>(object key);
         void Put(object key,object value);
         void Clear();
     }

@@ -130,7 +130,30 @@ namespace Zooyard.Core.DynamicProxy
                 //returnValue = _dispatchProxyInvokeMethod.Invoke(context.Packed.DispatchProxy,
                 //    new object[] { context.Method, context.Packed.Args });
                 var icn = new RpcInvocation(_app, _version, context.Packed.DeclaringType, context.Method, context.Packed.Args);
-                var result = _zooyardPools.Invoke(icn).GetAwaiter().GetResult();
+                var result = _zooyardPools.Invoke<object>(icn).GetAwaiter().GetResult();
+                returnValue = result.Value;
+                context.Packed.ReturnValue = returnValue;
+            }
+            catch (TargetInvocationException tie)
+            {
+                ExceptionDispatchInfo.Capture(tie.InnerException).Throw();
+            }
+
+            return returnValue;
+        }
+        public T Invoke<T>(object[] args)
+        {
+            var context = Resolve(args);
+
+            // Call (protected method) DispatchProxyAsync.Invoke()
+            T returnValue = default;
+            try
+            {
+                //Debug.Assert(_dispatchProxyInvokeMethod != null);
+                //returnValue = _dispatchProxyInvokeMethod.Invoke(context.Packed.DispatchProxy,
+                //    new object[] { context.Method, context.Packed.Args });
+                var icn = new RpcInvocation(_app, _version, context.Packed.DeclaringType, context.Method, context.Packed.Args);
+                var result = _zooyardPools.Invoke<T>(icn).GetAwaiter().GetResult();
                 returnValue = result.Value;
                 context.Packed.ReturnValue = returnValue;
             }
@@ -153,7 +176,7 @@ namespace Zooyard.Core.DynamicProxy
                 //await (Task)_dispatchProxyInvokeAsyncMethod.Invoke(context.Packed.DispatchProxy,
                 //                                                       new object[] { context.Method, context.Packed.Args });
                 var icn = new RpcInvocation(_app, _version, context.Packed.DeclaringType, context.Method, context.Packed.Args);
-                await _zooyardPools.Invoke(icn);
+                await _zooyardPools.Invoke<object>(icn);
             }
             catch (TargetInvocationException tie)
             {
@@ -173,8 +196,8 @@ namespace Zooyard.Core.DynamicProxy
                 //returnValue = await (Task<T>)genericmethod.Invoke(context.Packed.DispatchProxy,
                 //                                                       new object[] { context.Method, context.Packed.Args });
                 var icn = new RpcInvocation(_app, _version, context.Packed.DeclaringType, context.Method, context.Packed.Args);
-                var result = await _zooyardPools.Invoke(icn);
-                returnValue = (T)result.Value.ChangeType(typeof(T));
+                var result = await _zooyardPools.Invoke<T>(icn);
+                returnValue = result.Value;
                 context.Packed.ReturnValue = returnValue;
             }
             catch (TargetInvocationException tie)

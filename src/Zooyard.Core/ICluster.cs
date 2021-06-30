@@ -6,6 +6,6 @@ namespace Zooyard.Core
     public interface ICluster
     {
         string Name { get; }
-        Task<IClusterResult> DoInvoke(IClientPool pool,ILoadBalance loadbalance, URL address,IList<URL> urls, IInvocation invocation);
+        Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool,ILoadBalance loadbalance, URL address,IList<URL> urls, IInvocation invocation);
     }
 }

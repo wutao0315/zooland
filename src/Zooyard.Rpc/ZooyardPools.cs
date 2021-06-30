@@ -504,7 +504,7 @@ namespace Zooyard.Rpc
         /// </summary>
         /// <param name="invocation"></param>
         /// <returns></returns>
-        public async Task<IResult> Invoke(IInvocation invocation)
+        public async Task<IResult<T>> Invoke<T>(IInvocation invocation)
         {
             //cache
             var cache = this.GetCache(invocation);
@@ -513,15 +513,15 @@ namespace Zooyard.Rpc
             var key =$"{invocation.AppPoint()}{invocation.TargetType.FullName}.{invocation.MethodInfo.Name}@{StringUtils.Md5(StringUtils.ToArgumentString(parameters, invocation.Arguments))}{invocation.PointVersion()}";
             if (cache != null)
             {
-                var value = cache.Get(key);
+                var value = cache.Get<T>(key);
                 if (value != null)
                 {
                     Logger().LogInformation($"call from cache:{key}");
                     Logger().LogInformation($"cache type:{cache.GetType().FullName}");
-                    return new RpcResult(value);
+                    return new RpcResult<T>(value);
                 }
 
-                var resultInner = await this.InvokeInner(invocation);
+                var resultInner = await this.InvokeInner<T>(invocation);
                 if (!resultInner.HasException)
                 {
                     cache.Put(key, resultInner.Value);
@@ -529,7 +529,7 @@ namespace Zooyard.Rpc
                 return resultInner;
             }
 
-            var result = await this.InvokeInner(invocation);
+            var result = await this.InvokeInner<T>(invocation);
             return result;
         }
 
@@ -555,7 +555,7 @@ namespace Zooyard.Rpc
         /// </summary>
         /// <param name="invocation"></param>
         /// <returns></returns>
-        private async Task<IResult> InvokeInner(IInvocation invocation)
+        private async Task<IResult<T>> InvokeInner<T>(IInvocation invocation)
         {
             var urls = this.GetUrls(invocation);
 
@@ -572,7 +572,7 @@ namespace Zooyard.Rpc
 
             var pool = this.GetClientPool(invocation);
 
-            var result = await cluster.DoInvoke(pool, loadbalance, this.Address, urls, invocation);
+            var result = await cluster.DoInvoke<T>(pool, loadbalance, this.Address, urls, invocation);
 
             lock (locker)
             {

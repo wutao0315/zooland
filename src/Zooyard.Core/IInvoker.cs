@@ -6,6 +6,6 @@ namespace Zooyard.Core
     {
         object Instance { get; }
         int ClientTimeout { get; }
-        Task<IResult> Invoke(IInvocation invocation);
+        Task<IResult<T>> Invoke<T>(IInvocation invocation);
     }
 }

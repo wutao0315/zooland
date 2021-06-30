@@ -16,9 +16,10 @@ namespace Zooyard.Rpc.Cache
             _store.Value.Add(key, value);
         }
 
-        public object Get(object key)
+        public T Get<T>(object key)
         {
-            return _store.Value[key];
+            var result = _store.Value[key];
+            return (T)result;
         }
 
         public void Clear()

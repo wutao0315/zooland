@@ -23,7 +23,7 @@ namespace Zooyard.Rpc.GrpcImpl
         }
         public override object Instance => _instance;
         public override int ClientTimeout => _clientTimeout;
-        protected override async Task<IResult> HandleInvoke(IInvocation invocation)
+        protected override async Task<IResult<T>> HandleInvoke<T>(IInvocation invocation)
         {
             var paraTypes = new Type[invocation.Arguments.Length + 1];
             var parasPlus = new object[invocation.Arguments.Length + 1];
@@ -50,13 +50,13 @@ namespace Zooyard.Rpc.GrpcImpl
             if (taskResult.GetType().GetTypeInfo().IsGenericType &&
                           taskResult.GetType().GetGenericTypeDefinition() == typeof(AsyncUnaryCall<>))
             {
-                var resultData = await (dynamic)taskResult;
-                var result = new RpcResult(resultData);
+                var resultData = await (AsyncUnaryCall<T>)taskResult;
+                var result = new RpcResult<T>(resultData);
                 return result;
             }
             else 
             {
-                var result = new RpcResult(taskResult);
+                var result = new RpcResult<T>((T)taskResult.ChangeType(typeof(T)));
                 return result;
             }
         }

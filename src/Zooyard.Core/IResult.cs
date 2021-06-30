@@ -3,16 +3,16 @@ using System.Collections.Generic;
 
 namespace Zooyard.Core
 {
-    public interface IResult
+    public interface IResult<T>
     {
-        object Value { get; }
+        T Value { get; }
         bool HasException { get; }
         Exception Exception { get; }
     }
 
-    public class RpcResult : IResult
+    public class RpcResult<T> : IResult<T>
     {
-        public object Value { get; private set; }
+        public T Value { get; private set; }
 
         public Exception Exception { get; private set; }
 
@@ -20,7 +20,7 @@ namespace Zooyard.Core
         {
         }
 
-        public RpcResult(object result)
+        public RpcResult(T result)
         {
             this.Value = result;
         }
@@ -33,18 +33,18 @@ namespace Zooyard.Core
         public bool HasException => Exception != null;
     }
 
-    public interface IClusterResult
+    public interface IClusterResult<T>
     {
-        IResult Result { get; }
+        IResult<T> Result { get; }
         IList<URL> Urls { get; }
         IList<BadUrl> BadUrls { get; }
         Exception ClusterException { get; }
         bool IsThrow { get; }
     }
 
-    public class ClusterResult : IClusterResult
+    public class ClusterResult<T> : IClusterResult<T>
     {
-        public IResult Result { get; private set; }
+        public IResult<T> Result { get; private set; }
 
         public IList<URL> Urls { get; private set; }
 
@@ -55,7 +55,7 @@ namespace Zooyard.Core
 
 
 
-        public ClusterResult(IResult result, IList<URL> urls, IList<BadUrl> badUrls, Exception clusterException, bool isThrow)
+        public ClusterResult(IResult<T> result, IList<URL> urls, IList<BadUrl> badUrls, Exception clusterException, bool isThrow)
         {
             this.Result = result;
             this.Urls = urls;
