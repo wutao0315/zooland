@@ -2,6 +2,7 @@
 using DotNetty.Transport.Channels;
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Zooyard.Core;
 using Zooyard.Core.Logging;
@@ -18,7 +19,7 @@ namespace Zooyard.Rpc.NettyImpl
             new ConcurrentDictionary<string, TaskCompletionSource<TransportMessage>>();
         private readonly int _clientTimeout;
 
-        public NettyInvoker(IChannel channel,IMessageListener _messageListener, int clientTimeout)
+        public NettyInvoker(IChannel channel, IMessageListener _messageListener, int clientTimeout)
         {
             _channel = channel;
             _clientTimeout = clientTimeout;
@@ -29,59 +30,57 @@ namespace Zooyard.Rpc.NettyImpl
 
         protected override async Task<IResult<T>> HandleInvoke<T>(IInvocation invocation)
         {
+            var message = new RemoteInvokeMessage
+            {
+                Method = invocation.MethodInfo.Name,
+                Arguments = invocation.Arguments
+            };
+
+            var transportMessage = TransportMessage.CreateInvokeMessage(message);
+
+            //注册结果回调
+            var callbackTask = RegisterResultCallbackAsync(transportMessage.Id);
+
+            var watch = Stopwatch.StartNew();
             try
             {
-                var message = new RemoteInvokeMessage
-                {
-                    Method = invocation.MethodInfo.Name,
-                    Arguments = invocation.Arguments
-                };
+                var bytes = transportMessage.Serialize();
+                var byteBuffers = Unpooled.WrappedBuffer(bytes);
+                await _channel.WriteAndFlushAsync(byteBuffers);
 
-                var transportMessage = TransportMessage.CreateInvokeMessage(message);
-                
-                //注册结果回调
-                var callbackTask = RegisterResultCallbackAsync(transportMessage.Id);
-
-                try
-                {
-                    var bytes = transportMessage.Serialize();
-                    var byteBuffers = Unpooled.WrappedBuffer(bytes);
-
-                    await _channel.WriteAndFlushAsync(byteBuffers);
-                }
-                catch (Exception e)
-                {
-                    Logger().LogError(e, e.Message);
-                    throw new Exception("connecting server error.", e);
-                }
-
-                Logger().LogInformation($"Invoke:{invocation.MethodInfo.Name}");
                 if (callbackTask.Wait(ClientTimeout / 2))
                 {
                     var value = await callbackTask;
 
-                    if (invocation.MethodInfo.ReturnType == typeof(Task)) 
+                    watch.Stop();
+                    if (invocation.MethodInfo.ReturnType == typeof(Task))
                     {
-                        return new RpcResult<T>();
+                        return new RpcResult<T>(watch.ElapsedMilliseconds);
                         //return new RpcResult(Task.CompletedTask);
                     }
-                    else if(invocation.MethodInfo.ReturnType.IsGenericType && invocation.MethodInfo.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
+                    else if (invocation.MethodInfo.ReturnType.IsGenericType && invocation.MethodInfo.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
                     {
                         //var resultData = Task.FromResult((dynamic)value.Result);
-                        return new RpcResult<T>((T)value.Result.ChangeType(typeof(T)));
+                        return new RpcResult<T>((T)value.Result.ChangeType(typeof(T)), watch.ElapsedMilliseconds);
                     }
-                    
-                    return new RpcResult<T>((T)value.Result.ChangeType(typeof(T)));
+
+                    return new RpcResult<T>((T)value.Result.ChangeType(typeof(T)), watch.ElapsedMilliseconds);
                 }
                 else
                 {
                     throw new TimeoutException($"connection time out in {ClientTimeout} ms");
                 }
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Logger().LogError(e,e.Message);
-                throw e;
+                Debug.Print(ex.StackTrace);
+                throw ex;
+            }
+            finally
+            {
+                if (watch.IsRunning)
+                    watch.Stop();
+                Logger().LogInformation($"Thrift Invoke {watch.ElapsedMilliseconds} ms");
             }
         }
 
@@ -128,7 +127,7 @@ namespace Zooyard.Rpc.NettyImpl
                 message.Content = content;
                 if (!string.IsNullOrEmpty(content.ExceptionMessage))
                 {
-                    task.TrySetException(new Exception($"{content.ExceptionMessage};statusCode :{content.StatusCode}" ));
+                    task.TrySetException(new Exception($"{content.ExceptionMessage};statusCode :{content.StatusCode}"));
                 }
                 else
                 {

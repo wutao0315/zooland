@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Zooyard.Core;
@@ -518,7 +519,7 @@ namespace Zooyard.Rpc
                 {
                     Logger().LogInformation($"call from cache:{key}");
                     Logger().LogInformation($"cache type:{cache.GetType().FullName}");
-                    return new RpcResult<T>(value);
+                    return new RpcResult<T>(value,0);
                 }
 
                 var resultInner = await this.InvokeInner<T>(invocation);

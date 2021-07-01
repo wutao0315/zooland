@@ -6,6 +6,7 @@ namespace Zooyard.Core
     public interface IResult<T>
     {
         T Value { get; }
+        long ElapsedMilliseconds{get;}
         bool HasException { get; }
         Exception Exception { get; }
     }
@@ -13,21 +14,23 @@ namespace Zooyard.Core
     public class RpcResult<T> : IResult<T>
     {
         public T Value { get; private set; }
-
+        public long ElapsedMilliseconds { get; private set; }
         public Exception Exception { get; private set; }
 
-        public RpcResult()
+        public RpcResult(long elapsedMilliseconds)
         {
+            ElapsedMilliseconds = elapsedMilliseconds;
         }
 
-        public RpcResult(T result)
+        public RpcResult(T result, long elapsedMilliseconds)
         {
-            this.Value = result;
+            Value = result;
+            ElapsedMilliseconds = elapsedMilliseconds;
         }
 
         public RpcResult(Exception exception)
         {
-            this.Exception = exception;
+            Exception = exception;
         }
 
         public bool HasException => Exception != null;
@@ -57,12 +60,11 @@ namespace Zooyard.Core
 
         public ClusterResult(IResult<T> result, IList<URL> urls, IList<BadUrl> badUrls, Exception clusterException, bool isThrow)
         {
-            this.Result = result;
-            this.Urls = urls;
-            this.BadUrls = badUrls;
-            this.ClusterException = clusterException;
-            this.IsThrow = isThrow;
+            Result = result;
+            Urls = urls;
+            BadUrls = badUrls;
+            ClusterException = clusterException;
+            IsThrow = isThrow;
         }
     }
-
 }

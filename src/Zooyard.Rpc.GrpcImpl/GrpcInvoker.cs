@@ -1,5 +1,6 @@
 ﻿using Grpc.Core;
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -42,23 +43,38 @@ namespace Zooyard.Rpc.GrpcImpl
             parasPlus[invocation.Arguments.Length] = callOption;
 
             var method = _instance.GetType().GetMethod(invocation.MethodInfo.Name, paraTypes);
-            Logger().LogInformation($"Invoke:{invocation.MethodInfo.Name}");
 
-            var taskResult = method.Invoke(_instance, parasPlus);
-
-            
-            if (taskResult.GetType().GetTypeInfo().IsGenericType &&
+            var watch = Stopwatch.StartNew();
+            try
+            {
+                var taskResult = method.Invoke(_instance, parasPlus);
+                if (taskResult.GetType().GetTypeInfo().IsGenericType &&
                           taskResult.GetType().GetGenericTypeDefinition() == typeof(AsyncUnaryCall<>))
-            {
-                var resultData = await (AsyncUnaryCall<T>)taskResult;
-                var result = new RpcResult<T>(resultData);
-                return result;
+                {
+                    var resultData = await (AsyncUnaryCall<T>)taskResult;
+                    watch.Stop();
+                    var result = new RpcResult<T>(resultData, watch.ElapsedMilliseconds);
+                    return result;
+                }
+                else
+                {
+                    watch.Stop();
+                    var result = new RpcResult<T>((T)taskResult.ChangeType(typeof(T)), watch.ElapsedMilliseconds);
+                    return result;
+                }
             }
-            else 
+            catch (Exception ex)
             {
-                var result = new RpcResult<T>((T)taskResult.ChangeType(typeof(T)));
-                return result;
+                Debug.Print(ex.StackTrace);
+                throw ex;
             }
+            finally
+            {
+                if (watch.IsRunning)
+                    watch.Stop();
+                Logger().LogInformation($"Grpc Invoke {watch.ElapsedMilliseconds} ms");
+            }
+            
         }
     }
 }

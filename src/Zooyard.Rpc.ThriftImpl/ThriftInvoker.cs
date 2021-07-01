@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Thrift;
@@ -43,16 +44,32 @@ namespace Zooyard.Rpc.ThriftImpl
             }
 
             var method = _instance.GetType().GetMethod(methodName, argumentTypes.ToArray());
-            var taskInvoke = method.Invoke(_instance, arguments.ToArray());
 
-            if (invocation.MethodInfo.ReturnType == typeof(void) || invocation.MethodInfo.ReturnType == typeof(Task))
+            var watch = Stopwatch.StartNew();
+            try
             {
-                await (Task)taskInvoke;
-                return new RpcResult<T>();
+                var taskInvoke = method.Invoke(_instance, arguments.ToArray());
+                if (invocation.MethodInfo.ReturnType == typeof(void) || invocation.MethodInfo.ReturnType == typeof(Task))
+                {
+                    await (Task)taskInvoke;
+                    watch.Stop();
+                    return new RpcResult<T>(watch.ElapsedMilliseconds);
+                }
+                var valueOut = await (Task<T>)taskInvoke;
+                watch.Stop();
+                return new RpcResult<T>(valueOut, watch.ElapsedMilliseconds);
             }
-            var valueOut = await (Task<T>)taskInvoke;
-            return new RpcResult<T>(valueOut);
-
+            catch (Exception ex)
+            {
+                Debug.Print(ex.StackTrace);
+                throw ex;
+            }
+            finally
+            {
+                if (watch.IsRunning)
+                    watch.Stop();
+                Logger().LogInformation($"Thrift Invoke {watch.ElapsedMilliseconds} ms");
+            }
         }
     }
 }

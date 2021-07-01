@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Zooyard.Core;
 using Zooyard.Core.Diagnositcs;
@@ -22,7 +23,7 @@ namespace Zooyard.Rpc.Cluster
         private System.Timers.Timer retryTimer;
 
 
-        private void addFailed<T>(IClientPool pool,IInvocation invocation, URL router)
+        private void AddFailed<T>(IClientPool pool,IInvocation invocation, URL router)
         {
            
             if (retryTimer == null)
@@ -37,7 +38,7 @@ namespace Zooyard.Rpc.Cluster
                             // 收集统计信息
                             try
                             {
-                                await retryFailed<T>(pool).ConfigureAwait(false);
+                                await RetryFailed<T>(pool).ConfigureAwait(false);
                             }
                             catch (Exception t)
                             { // 防御性容错
@@ -55,7 +56,7 @@ namespace Zooyard.Rpc.Cluster
 
 
 
-        async Task retryFailed<T>(IClientPool pool)
+        async Task RetryFailed<T>(IClientPool pool)
         {
             if (failed.Count == 0)
             {
@@ -93,6 +94,7 @@ namespace Zooyard.Rpc.Cluster
             var invoker = base.select(loadbalance, invocation, urls, null);
 
             IResult<T> result;
+            var watch = Stopwatch.StartNew();
             try
             {
                 var client = await pool.GetClient(invoker);
@@ -115,10 +117,16 @@ namespace Zooyard.Rpc.Cluster
             catch (Exception e)
             {
                 Logger().LogError(e, $"Failback to invoke method {invocation.MethodInfo.Name}, wait for retry in background. Ignored exception:{e.Message}");
-                addFailed<T>(pool, invocation, invoker);
-                result = new RpcResult<T>(); // ignore
+                AddFailed<T>(pool, invocation, invoker);
+                watch.Stop();
+                result = new RpcResult<T>(watch.ElapsedMilliseconds); // ignore
                 exception = e;
                 badUrls.Add(new BadUrl { Url = invoker, BadTime = DateTime.Now, CurrentException = exception });
+            }
+            finally 
+            {
+                if(watch.IsRunning)
+                    watch.Stop();
             }
 
             return new ClusterResult<T>(result, goodUrls, badUrls, exception, false);

@@ -9,6 +9,7 @@ using System.Reflection;
 using System.ComponentModel;
 using System.Text;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Zooyard.Rpc.HttpImpl
 {
@@ -97,17 +98,31 @@ namespace Zooyard.Rpc.HttpImpl
 
             var parameters = invocation.MethodInfo.GetParameters();
             var stub = new HttpStub(_instance, isOpen);
-            var value = await stub.Request($"/{string.Join('/',pathUrl)}", parameterType, method, parameters, invocation.Arguments);
-            Logger().LogInformation($"Invoke:{invocation.MethodInfo.Name}");
+            var watch = Stopwatch.StartNew();
+            string value = null;
+            try
+            {
+                value = await stub.Request($"/{string.Join('/', pathUrl)}", parameterType, method, parameters, invocation.Arguments);
+            }
+            catch (Exception ex)
+            {
+                Debug.Print(ex.StackTrace);
+                throw ex;
+            }
+            finally
+            {
+                watch.Stop();
+                Logger().LogInformation($"Http Invoke {watch.ElapsedMilliseconds} ms");
+            }
 
             if (invocation.MethodInfo.ReturnType == typeof(void) || invocation.MethodInfo.ReturnType == typeof(Task)) 
             {
-                return new RpcResult<T>();
+                return new RpcResult<T>(watch.ElapsedMilliseconds);
             }
 
             if (invocation.MethodInfo.ReturnType.IsValueType || invocation.MethodInfo.ReturnType == typeof(string))
             {
-                return new RpcResult<T>((T)value.ChangeType(typeof(T)));
+                return new RpcResult<T>((T)value.ChangeType(typeof(T)), watch.ElapsedMilliseconds);
             }
 
             if (invocation.MethodInfo.ReturnType.IsGenericType &&
@@ -117,14 +132,14 @@ namespace Zooyard.Rpc.HttpImpl
 
                 if (tastGenericType.IsValueType || tastGenericType == typeof(string))
                 {
-                    return new RpcResult<T>((T)value.ChangeType(typeof(T)));
+                    return new RpcResult<T>((T)value.ChangeType(typeof(T)), watch.ElapsedMilliseconds);
                 }
 
                 var genericData = value.DeserializeJson<T>();
-                return new RpcResult<T>(genericData);
+                return new RpcResult<T>(genericData, watch.ElapsedMilliseconds);
             }
 
-            var result = new RpcResult<T>(value.DeserializeJson<T>());
+            var result = new RpcResult<T>(value.DeserializeJson<T>(), watch.ElapsedMilliseconds);
             return result;
 
         }

@@ -47,32 +47,5 @@ namespace Zooyard.Core.Diagnositcs
             }
             _this.Write(Constant.ConsumerAfter, new { url, invocation, exception });
         }
-
-        public static void WriteProviderBefore(this DiagnosticSource _this)
-        {
-            if (!_this.IsEnabled(Constant.ProviderBefore))
-            {
-                return;
-            }
-            _this.Write(Constant.ProviderBefore, new { });
-        }
-        public static void WriteProviderAfter(this DiagnosticSource _this)
-        {
-            if (!_this.IsEnabled(Constant.ProviderAfter))
-            {
-                return;
-            }
-            _this.Write(Constant.ProviderAfter
-                , new { });
-        }
-        public static void WriteProviderError(this DiagnosticSource _this)
-        {
-            if (!_this.IsEnabled(Constant.ProviderError))
-            {
-                return;
-            }
-            _this.Write(Constant.ProviderError
-                , new { });
-        }
     }
 }

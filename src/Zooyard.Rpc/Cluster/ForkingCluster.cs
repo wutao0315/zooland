@@ -53,7 +53,7 @@ namespace Zooyard.Rpc.Cluster
             var index = 0;
             foreach (var invoker in selected)
             {
-                var task = Task.Run<IResult<T>>(async() => {
+                var task = Task.Run(async() => {
                     try
                     {
                         var client =await pool.GetClient(invoker);

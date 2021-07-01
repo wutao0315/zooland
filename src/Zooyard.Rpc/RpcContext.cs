@@ -19,7 +19,6 @@ namespace Zooyard.Rpc
     {
         public const string ASYNC_KEY = "async";
         public const string RETURN_KEY = "return";
-        //private static readonly ThreadLocal<RpcContext> LOCAL = new ThreadLocal<RpcContext>(()=> new RpcContext());
         private static readonly AsyncLocal<RpcContext> LOCAL = new AsyncLocal<RpcContext>();
         
         //private Task future;

@@ -123,7 +123,7 @@ namespace Zooyard.Rpc.HttpImpl
             try
             {
                 var request = new HttpRequestMessage(new HttpMethod(method), relatedUrl) { Content = content };
-                request.Headers.Add("","");
+                //request.Headers.Add("","");
 
                 var response = await client.SendAsync(request).ConfigureAwait(false);
                 var data = await response.Content.ReadAsStringAsync();
