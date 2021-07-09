@@ -1,7 +1,7 @@
 ﻿using System;
 using Zooyard.Core.Atomic;
 
-namespace Zooyard.Core.Utils
+namespace Zooyard.Core.Atomic
 {
     public class AtomicPositiveInteger
     {

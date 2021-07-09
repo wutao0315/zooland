@@ -2,7 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Zooyard.Core;
-using Zooyard.Core.Utils;
+using Zooyard.Core.Atomic;
 
 namespace Zooyard.Rpc.LoadBalance
 {

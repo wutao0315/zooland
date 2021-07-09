@@ -11,33 +11,33 @@ namespace RpcContractHttp
     [Description("/hello")]
     public interface IHelloService
     {
-        [Description("CallNameVoid|get&url")]
+        [Description("CallNameVoid|get&_")]
         Task<string> CallNameVoidAsync();
-        [Description("CallName|get&url")]
+        [Description("CallName|get&_")]
         Task CallNameAsync(string name);
 
-        [Description("CallVoid|get&url")]
+        [Description("CallVoid|get&_")]
         Task CallVoidAsync();
-        [Description("Hello|get&url")]
+        [Description("Hello|get&_")]
         Task<string> HelloAsync(string name);
-        [Description("SayHello|get&url")]
+        [Description("SayHello|get&_")]
         Task<HelloResult> SayHelloAsync(string name);
-        [Description("ShowHello|post&json")]
+        [Description("ShowHello|post&application/json")]
         Task<string> ShowHelloAsync(HelloResult name);
 
 
 
-        [Description("CallNameVoid|get&url")]
+        [Description("CallNameVoid|get&_")]
         string CallNameVoid();
-        [Description("CallName|get&url")]
+        [Description("CallName|get&_")]
         void CallName(string name);
-        [Description("CallVoid|get&url")]
+        [Description("CallVoid|get&_")]
         void CallVoid();
-        [Description("Hello|get&url")]
+        [Description("Hello|get&_")]
         string Hello(string name);
-        [Description("SayHello|get&url")]
+        [Description("SayHello|get&_")]
         HelloResult SayHello(string name);
-        [Description("ShowHello|post&json")]
+        [Description("ShowHello|post&application/json")]
         string ShowHello(HelloResult name);
     }
 }

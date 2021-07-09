@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Net.Http;
 using Zooyard.Core;
 using Zooyard.Core.Logging;
@@ -18,9 +19,13 @@ namespace Zooyard.Rpc.HttpImpl
             //实例化TheTransport
             //获得transport参数,用于反射实例化
             var timeout = url.GetParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
-            
-            //实例化TheThriftClient
-            var client = new HttpClient
+
+            //实例化TheHttpClient
+            var httpClientHandler = new HttpClientHandler
+            {
+                AutomaticDecompression = DecompressionMethods.None | DecompressionMethods.GZip | DecompressionMethods.Deflate
+            };
+            var client = new HttpClient(httpClientHandler)
             {
                 Timeout =TimeSpan.FromMilliseconds(timeout)
             };

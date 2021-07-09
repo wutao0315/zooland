@@ -10,6 +10,7 @@ using System.ComponentModel;
 using System.Text;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 
 namespace Zooyard.Rpc.HttpImpl
 {
@@ -93,16 +94,30 @@ namespace Zooyard.Rpc.HttpImpl
                 pathUrl.Add(methodName);
             }
 
-            //var parameterType = _url.GetMethodParameterAndDecoded(methodName, PARAMETERTYPE_KEY, DEFAULT_PARAMETERTYPE).ToLower();
-            //var method = _url.GetMethodParameterAndDecoded(methodName, METHODTYPE_KEY, DEFAULT_METHODTYPE).ToLower();
-
             var parameters = invocation.MethodInfo.GetParameters();
             var stub = new HttpStub(_instance, isOpen);
             var watch = Stopwatch.StartNew();
             string value = null;
             try
             {
-                value = await stub.Request($"/{string.Join('/', pathUrl)}", parameterType, method, parameters, invocation.Arguments);
+                using var stream = await stub.Request($"/{string.Join('/', pathUrl)}", parameterType, method, parameters, invocation.Arguments);
+                var genType = typeof(T);
+                //文件流处理
+                if (genType == typeof(byte[]))
+                {
+                    byte[] bytes = new byte[stream.Length];
+                    stream.Read(bytes, 0, bytes.Length);
+                    // 设置当前流的位置为流的开始
+                    stream.Seek(0, SeekOrigin.Begin);
+                    watch.Stop();
+                    return new RpcResult<T>((T)bytes.ChangeType(genType), watch.ElapsedMilliseconds);
+                }
+                else 
+                {
+                    using var sr = new StreamReader(stream);
+                    value = sr.ReadToEnd();
+                }
+                
             }
             catch (Exception ex)
             {
@@ -111,7 +126,9 @@ namespace Zooyard.Rpc.HttpImpl
             }
             finally
             {
-                watch.Stop();
+                if(watch.IsRunning)
+                   watch.Stop();
+
                 Logger().LogInformation($"Http Invoke {watch.ElapsedMilliseconds} ms");
             }
 
