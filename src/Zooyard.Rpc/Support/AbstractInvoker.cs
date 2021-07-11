@@ -18,7 +18,7 @@ namespace Zooyard.Rpc.Support
             var result = await HandleInvoke<T>(invocation);
 #else
             using var cts = new CancellationTokenSource(ClientTimeout);
-            var result = await Timeout(HandleInvoke(invocation), ClientTimeout, cts, message);
+            var result = await Timeout(HandleInvoke<T>(invocation), ClientTimeout, cts, message);
 
             static async Task<T> Timeout<T>(Task<T> task, int millisecondsDelay, CancellationTokenSource cts, string message)
             {
