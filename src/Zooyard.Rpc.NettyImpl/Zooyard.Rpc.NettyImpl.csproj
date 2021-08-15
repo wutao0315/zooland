@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1</TargetFrameworks>
+    <TargetFrameworks>net5.0</TargetFrameworks>
     <PackageLicenseUrl>https://github.com/wutao0315/zooland/blob/master/LICENSE</PackageLicenseUrl>
     <Copyright>MIT</Copyright>
     <PackageProjectUrl>https://github.com/wutao0315/zooland</PackageProjectUrl>
@@ -13,12 +13,20 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DotNetty.Handlers" Version="0.6.0" />
-    <PackageReference Include="DotNetty.Transport" Version="0.6.0" />
+    <Compile Remove="Constant\ClientTableColumnsName.cs" />
+    <Compile Remove="Constant\DBType.cs" />
+    <Compile Remove="Constant\RedisKeyConstants.cs" />
+    <Compile Remove="Constant\ServerTableColumnsName.cs" />
+    <Compile Remove="Support\RmNettyRemotingClient.cs" />
+    <Compile Remove="Support\TmNettyRemotingClient.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Zooyard.Core\Zooyard.Core.csproj" />
+    <PackageReference Include="DotNetty.Native" Version="0.6.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Zooyard\Zooyard.csproj" />
     <ProjectReference Include="..\Zooyard.Rpc\Zooyard.Rpc.csproj" />
   </ItemGroup>
 

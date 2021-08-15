@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Zooyard.Core;
-using Zooyard.Core.Logging;
+using Zooyard;
+using Zooyard.Logging;
 
 namespace Zooyard.Rpc.Support
 {

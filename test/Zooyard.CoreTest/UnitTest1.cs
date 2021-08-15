@@ -1,21 +1,14 @@
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-//using Zooyard.Rpc.ThriftImpl.Extensions;
-using Zooyard.Core.Extensions;
-using Microsoft.Extensions.Configuration;
 using System.IO;
-//using Zooyard.Rpc.WcfImpl.Extensions;
-//using Zooyard.Rpc.AkkaImpl.Extensions;
+using Zooyard.Extensions;
+using Zooyard;
 using Zooyard.Rpc.GrpcImpl.Extensions;
-using Zooyard.Rpc.NettyImpl.Extensions;
 using Zooyard.Rpc.HttpImpl.Extensions;
-using DotNetty.Transport.Channels;
-using System.Collections.Generic;
-using DotNetty.Handlers.Logging;
-using DotNetty.Codecs;
-using Zooyard.Core;
+using Zooyard.Rpc.NettyImpl.Extensions;
 
-namespace Zooyard.CoreTest
+namespace ZooyardTest
 {
     [TestClass]
     public class UnitTest1
@@ -53,8 +46,7 @@ namespace Zooyard.CoreTest
             //services.AddWcfClient();
             services.AddZoolandClient(config);
 
-            using (var bsp = services.BuildServiceProvider())
-            {
+            using var bsp = services.BuildServiceProvider();
                 //var akkaHelloService = bsp.GetService<RpcContractAkka.IHelloService>();
                 //Assert.IsNotNull(akkaHelloService);
                 var tgrpcHelloService = bsp.GetService<RpcContractGrpc.IHelloService>();
@@ -68,7 +60,6 @@ namespace Zooyard.CoreTest
                 //var wcfHelloService = bsp.GetService<RpcContractWcf.IHelloService>();
                 //Assert.IsNotNull(wcfHelloService);
 
-            }
         }
     }
 }

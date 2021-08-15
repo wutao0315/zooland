@@ -1,4 +1,4 @@
-﻿using Zooyard.Core;
+﻿using Zooyard;
 using Zooyard.Rpc.Cache.Support;
 
 namespace Zooyard.Rpc.Cache

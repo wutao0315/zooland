@@ -1,15 +1,9 @@
-﻿using DotNetty.Codecs;
-using DotNetty.Handlers.Logging;
-using DotNetty.Transport.Channels;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
-using Zooyard.Core;
-using Zooyard.Core.Extensions;
+using Zooyard;
 using Zooyard.Extensions;
 //using Zooyard.Rpc.AkkaImpl.Extensions;
 using Zooyard.Rpc.GrpcImpl.Extensions;
@@ -37,7 +31,7 @@ namespace RpcConsumerCore
                 .AddJsonFile("nlog.json", false, true);
 
             var config = builder.Build();
-            ZooyardLogManager.UseConsoleLogging(Zooyard.Core.Logging.LogLevel.Debug);
+            ZooyardLogManager.UseConsoleLogging(Zooyard.Logging.LogLevel.Debug);
 
             IServiceCollection services = new ServiceCollection();
             //services.Configure<AkkaOption>(config.GetSection("akka"));

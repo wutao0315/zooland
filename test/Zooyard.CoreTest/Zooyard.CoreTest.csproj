@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
@@ -24,8 +24,8 @@
     <ProjectReference Include="..\..\samples\RpcContractGrpc\RpcContractGrpc.csproj" />
     <ProjectReference Include="..\..\samples\RpcContractHttp\RpcContractHttp.csproj" />
     <ProjectReference Include="..\..\samples\RpcContractNetty\RpcContractNetty.csproj" />
-    <ProjectReference Include="..\..\src\Zooyard.Core.Extensions\Zooyard.Core.Extensions.csproj" />
-    <ProjectReference Include="..\..\src\Zooyard.Core\Zooyard.Core.csproj" />
+    <ProjectReference Include="..\..\src\Zooyard\Zooyard.csproj" />
+    <ProjectReference Include="..\..\src\Zooyard.Extensions\Zooyard.Extensions.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.Rpc.GrpcImpl.Extensions\Zooyard.Rpc.GrpcImpl.Extensions.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.Rpc.GrpcImpl\Zooyard.Rpc.GrpcImpl.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.Rpc.HttpImpl.Extensions\Zooyard.Rpc.HttpImpl.Extensions.csproj" />

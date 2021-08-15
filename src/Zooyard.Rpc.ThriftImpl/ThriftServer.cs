@@ -18,8 +18,8 @@ using Thrift.Protocol;
 using Thrift.Server;
 using Thrift.Transport;
 using Thrift.Transport.Server;
-using Zooyard.Core;
-using Zooyard.Core.Logging;
+using Zooyard;
+using Zooyard.Logging;
 using Zooyard.Rpc.Support;
 using Zooyard.Rpc.ThriftImpl.Header;
 

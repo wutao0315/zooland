@@ -4,7 +4,7 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using Thrift.Protocol;
-using Zooyard.Core;
+using Zooyard;
 
 namespace Zooyard.Rpc.ThriftImpl.Extensions
 {

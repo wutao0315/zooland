@@ -5,7 +5,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using Zooyard.Core;
+using Zooyard;
 
 namespace Zooyard.Rpc.LoadBalance
 {

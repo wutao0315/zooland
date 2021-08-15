@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Runtime.Caching;
-using Zooyard.Core;
+using Zooyard;
 
 namespace Zooyard.Rpc.Cache
 {

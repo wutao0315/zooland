@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading;
-using Zooyard.Core;
-using Zooyard.Core.Atomic;
+using Zooyard;
+using Zooyard.Atomic;
 
 namespace Zooyard.Rpc
 {
     public class RpcStatus
     {
+        private static readonly ConcurrentDictionary<string, RpcStatus> SERVICE_STATUS_MAP = new();
         private readonly static ConcurrentDictionary<string, RpcStatus> SERVICE_STATISTICS = new ConcurrentDictionary<string, RpcStatus>();
         private readonly static ConcurrentDictionary<string, ConcurrentDictionary<string, RpcStatus>> METHOD_STATISTICS = new ConcurrentDictionary<string, ConcurrentDictionary<string, RpcStatus>>();
         
@@ -150,6 +151,45 @@ namespace Zooyard.Rpc
                     status.failedMaxElapsed.Value=elapsed;
                 }
             }
+        }
+
+        /// <summary>
+		/// get the RpcStatus of this service
+		/// </summary>
+		/// <param name="service"> the service </param>
+		/// <returns> RpcStatus </returns>
+		public static RpcStatus GetStatus(string service)
+        {
+            return SERVICE_STATUS_MAP.GetOrAdd(service, key => new RpcStatus());
+        }
+
+        /// <summary>
+        /// remove the RpcStatus of this service
+        /// </summary>
+        /// <param name="service"> the service </param>
+        public static void RemoveStatus(string service)
+        {
+            SERVICE_STATUS_MAP.TryRemove(service, out _);
+        }
+
+        /// <summary>
+        /// begin count
+        /// </summary>
+        /// <param name="service"> the service </param>
+        public static void BeginCount(string service)
+        {
+            GetStatus(service).active.IncrementAndGet();
+        }
+
+        /// <summary>
+        /// end count
+        /// </summary>
+        /// <param name="service"> the service </param>
+        public static void EndCount(string service)
+        {
+            RpcStatus rpcStatus = GetStatus(service);
+            rpcStatus.active.DecrementAndGet();
+            rpcStatus.total.IncrementAndGet();
         }
 
         /// <summary>

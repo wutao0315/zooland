@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Zooyard.Core;
+using Zooyard;
 
 namespace Zooyard.Rpc.Support
 {

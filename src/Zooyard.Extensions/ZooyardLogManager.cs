@@ -1,4 +1,4 @@
-﻿using Zooyard.Core.Logging;
+﻿using Zooyard.Logging;
 
 namespace Zooyard.Extensions
 {

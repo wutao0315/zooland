@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using Zooyard.Core;
-using Zooyard.Core.Diagnositcs;
-using Zooyard.Core.Logging;
-using Zooyard.Core.Utils;
+using Zooyard;
+using Zooyard.Diagnositcs;
+using Zooyard.Logging;
+using Zooyard.Utils;
 
 namespace Zooyard.Rpc.Cluster
 {

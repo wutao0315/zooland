@@ -27,8 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Zooyard.Core.Extensions\Zooyard.Core.Extensions.csproj" />
-    <ProjectReference Include="..\..\src\Zooyard.Core\Zooyard.Core.csproj" />
+    <ProjectReference Include="..\..\src\Zooyard\Zooyard.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.Extensions\Zooyard.Extensions.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.Rpc.Extensions\Zooyard.Rpc.Extensions.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.Rpc.GrpcImpl.Extensions\Zooyard.Rpc.GrpcImpl.Extensions.csproj" />

@@ -11,7 +11,7 @@ using System.Net.Http;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using Zooyard.Core.Logging;
+using Zooyard.Logging;
 
 namespace Zooyard.Rpc.HttpImpl
 {

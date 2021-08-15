@@ -19,7 +19,7 @@ using Thrift.Protocol;
 using Thrift.Server;
 using Thrift.Transport;
 using Thrift.Transport.Server;
-using Zooyard.Core;
+using Zooyard;
 using Zooyard.Extensions;
 //using RpcContractWcf.HelloService;
 using Zooyard.Rpc.Extensions;
@@ -69,7 +69,7 @@ namespace RpcProviderCore
 
                 var config = builder.Build();
 
-                ZooyardLogManager.UseConsoleLogging(Zooyard.Core.Logging.LogLevel.Debug);
+                ZooyardLogManager.UseConsoleLogging(Zooyard.Logging.LogLevel.Debug);
 
                 //services.Configure<AkkaServerOption>(config.GetSection("akka"));
                 services.Configure<GrpcServerOption>(config.GetSection("grpc"));

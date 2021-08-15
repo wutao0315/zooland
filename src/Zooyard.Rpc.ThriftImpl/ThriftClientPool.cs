@@ -9,9 +9,9 @@ using Thrift;
 using Thrift.Protocol;
 using Thrift.Transport;
 using Thrift.Transport.Client;
-using Zooyard.Core;
-using Zooyard.Core.Logging;
-using Zooyard.Core.Utils;
+using Zooyard;
+using Zooyard.Logging;
+using Zooyard.Utils;
 using Zooyard.Rpc.Support;
 using Zooyard.Rpc.ThriftImpl.Header;
 
@@ -122,7 +122,7 @@ namespace Zooyard.Rpc.ThriftImpl
         private TTransport MakeTransport(URL url, TConfiguration configuration)
         {
             var ipaddress = IPAddress.Loopback;
-            if (!NetUtils.IsAnyHost(url.Host) && !NetUtils.IsLocalHost(url.Host))
+            if (!NetUtil.IsAnyHost(url.Host) && !NetUtil.IsLocalHost(url.Host))
             {
                 ipaddress = IPAddress.Parse(url.Host);
             }

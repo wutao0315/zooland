@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using Zooyard.Core;
-using Zooyard.Core.Atomic;
+using Zooyard;
+using Zooyard.Atomic;
 
 namespace Zooyard.Rpc.LoadBalance
 {

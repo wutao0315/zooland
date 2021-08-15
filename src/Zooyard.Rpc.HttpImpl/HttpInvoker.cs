@@ -2,8 +2,8 @@
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Text.Json;
-using Zooyard.Core;
-using Zooyard.Core.Logging;
+using Zooyard;
+using Zooyard.Logging;
 using Zooyard.Rpc.Support;
 using System.Reflection;
 using System.ComponentModel;

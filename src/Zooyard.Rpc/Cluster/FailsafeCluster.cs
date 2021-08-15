@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Zooyard.Core;
-using Zooyard.Core.Diagnositcs;
-using Zooyard.Core.Logging;
+using Zooyard;
+using Zooyard.Diagnositcs;
+using Zooyard.Logging;
 
 namespace Zooyard.Rpc.Cluster
 {

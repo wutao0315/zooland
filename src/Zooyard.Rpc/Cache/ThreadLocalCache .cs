@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
-using Zooyard.Core;
+using Zooyard;
 
 namespace Zooyard.Rpc.Cache
 {

@@ -4,7 +4,7 @@ using Microsoft.Extensions.Options;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Zooyard.Core;
+using Zooyard;
 
 namespace Zooyard.Rpc.HttpImpl.Extensions
 {

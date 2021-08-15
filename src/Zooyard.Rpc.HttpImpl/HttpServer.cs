@@ -3,8 +3,8 @@ using Zooyard.Rpc.Support;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using System.Threading.Tasks;
-using Zooyard.Core;
-using Zooyard.Core.Logging;
+using Zooyard;
+using Zooyard.Logging;
 using System.Threading;
 
 namespace Zooyard.Rpc.HttpImpl

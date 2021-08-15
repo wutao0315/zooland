@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
-using Zooyard.Core;
+using Zooyard;
 
 namespace Zooyard.Rpc.GrpcImpl.Extensions
 {

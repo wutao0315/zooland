@@ -1,8 +1,8 @@
 ﻿using Grpc.Core;
 using System;
 using System.Threading.Tasks;
-using Zooyard.Core;
-using Zooyard.Core.Logging;
+using Zooyard;
+using Zooyard.Logging;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.Rpc.GrpcImpl

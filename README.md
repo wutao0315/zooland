@@ -8,7 +8,7 @@
 
 ### 如何安装
 
-nuget:Install-Package Zooyard.Core.Extensions -Version  版本号
+nuget:Install-Package Zooyard.Extensions -Version  版本号
 
 nuget:Install-Package Zooyard.Rpc.Extensions -Version  版本号
 

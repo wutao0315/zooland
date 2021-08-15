@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1</TargetFrameworks>
+    <TargetFrameworks>net5.0</TargetFrameworks>
     <PackageLicenseUrl>https://github.com/wutao0315/zooland/blob/master/LICENSE</PackageLicenseUrl>
     <Copyright>MIT</Copyright>
     <PackageProjectUrl>https://github.com/wutao0315/zooland</PackageProjectUrl>
@@ -15,13 +15,12 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.2.7" />
-    <!--<PackageReference Include="System.IO.Compression" Version="4.3.0" />-->
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
     <PackageReference Include="System.Text.Json" Version="5.0.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Zooyard.Core\Zooyard.Core.csproj" />
+    <ProjectReference Include="..\Zooyard\Zooyard.csproj" />
     <ProjectReference Include="..\Zooyard.Rpc\Zooyard.Rpc.csproj" />
   </ItemGroup>
 

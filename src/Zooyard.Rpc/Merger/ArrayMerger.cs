@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-using Zooyard.Core;
+using Zooyard;
 
 namespace Zooyard.Rpc.Merger
 {

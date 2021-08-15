@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1</TargetFrameworks>
+    <TargetFrameworks>net5.0</TargetFrameworks>
     <PackageLicenseUrl>https://github.com/wutao0315/zooland/blob/master/LICENSE</PackageLicenseUrl>
     <Copyright>MIT</Copyright>
     <PackageProjectUrl>https://github.com/wutao0315/zooland</PackageProjectUrl>
@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Zooyard.Core\Zooyard.Core.csproj" />
+    <ProjectReference Include="..\Zooyard\Zooyard.csproj" />
     <ProjectReference Include="..\Zooyard.Rpc.HttpImpl\Zooyard.Rpc.HttpImpl.csproj" />
     <ProjectReference Include="..\Zooyard.Rpc\Zooyard.Rpc.csproj" />
   </ItemGroup>

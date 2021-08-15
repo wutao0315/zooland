@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Net;
 using System.Net.Http;
-using Zooyard.Core;
-using Zooyard.Core.Logging;
+using Zooyard;
+using Zooyard.Logging;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.Rpc.HttpImpl

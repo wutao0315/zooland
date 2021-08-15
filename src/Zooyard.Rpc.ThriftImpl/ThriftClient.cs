@@ -2,8 +2,8 @@
 using System.Threading.Tasks;
 using Thrift;
 using Thrift.Transport;
-using Zooyard.Core;
-using Zooyard.Core.Logging;
+using Zooyard;
+using Zooyard.Logging;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.Rpc.ThriftImpl

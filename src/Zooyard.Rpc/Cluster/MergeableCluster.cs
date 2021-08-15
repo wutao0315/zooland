@@ -4,9 +4,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Zooyard.Core;
-using Zooyard.Core.Diagnositcs;
-using Zooyard.Core.Logging;
+using Zooyard;
+using Zooyard.Diagnositcs;
+using Zooyard.Logging;
 using Zooyard.Rpc.Merger;
 
 namespace Zooyard.Rpc.Cluster

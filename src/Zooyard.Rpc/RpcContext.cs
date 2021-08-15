@@ -4,8 +4,8 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Zooyard.Core;
-using Zooyard.Core.Utils;
+using Zooyard;
+using Zooyard.Utils;
 
 namespace Zooyard.Rpc
 {
@@ -62,7 +62,7 @@ namespace Zooyard.Rpc
                     return false;
                 }
                 string host = address.Host;
-                return url.Port != address.Port || !NetUtils.FilterLocalHost(url.Ip).Equals(NetUtils.FilterLocalHost(host));
+                return url.Port != address.Port || !NetUtil.FilterLocalHost(url.Ip).Equals(NetUtil.FilterLocalHost(host));
             }
         }
 
@@ -85,7 +85,7 @@ namespace Zooyard.Rpc
                     return false;
                 }
                 string host = address.Host;
-                return url.Port == address.Port && NetUtils.FilterLocalHost(url.Ip).Equals(NetUtils.FilterLocalHost(host));
+                return url.Port == address.Port && NetUtil.FilterLocalHost(url.Ip).Equals(NetUtil.FilterLocalHost(host));
             }
         }
 
@@ -274,10 +274,10 @@ namespace Zooyard.Rpc
         {
             get
             {
-                string host = localAddress == null ? null : NetUtils.FilterLocalHost(localAddress.Host);
+                string host = localAddress == null ? null : NetUtil.FilterLocalHost(localAddress.Host);
                 if (host == null || host.Length == 0)
                 {
-                    return NetUtils.LocalHost;
+                    return NetUtil.LocalHost;
                 }
                 return host;
             }
@@ -303,7 +303,7 @@ namespace Zooyard.Rpc
         {
             get
             {
-                return remoteAddress == null ? null : NetUtils.FilterLocalHost(remoteAddress.Host);
+                return remoteAddress == null ? null : NetUtil.FilterLocalHost(remoteAddress.Host);
             }
         }
 

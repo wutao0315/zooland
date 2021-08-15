@@ -1,0 +1,67 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net5.0</TargetFrameworks>
+    <PackageLicenseUrl>https://github.com/wutao0315/zooland/blob/master/LICENSE</PackageLicenseUrl>
+    <Copyright>MIT</Copyright>
+    <PackageProjectUrl>https://github.com/wutao0315/zooland</PackageProjectUrl>
+    <PackageReleaseNotes />
+    <Description>Zooyard RPC Framework microservice</Description>
+    <Authors>wutao0315</Authors>
+    <Version>1.2.0</Version>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Config\ConfigurationKeys.cs" />
+    <Compile Remove="Config\IConfigChangeListener.cs" />
+    <Compile Remove="DynamicProxy\IInterceptor.cs" />
+    <Compile Remove="DynamicProxy\InterfaceProxy.cs" />
+    <Compile Remove="IRegistryHealthChecks.cs" />
+    <Compile Remove="IRegistryHost.cs" />
+    <Compile Remove="IRegistryKeyValues.cs" />
+    <Compile Remove="IRegistryService.cs" />
+    <Compile Remove="IRegistryServiceFind.cs" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="5.0.1" />
+    <PackageReference Include="System.Reflection.Emit" Version="4.7.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="5.0.0" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>$(AssemblyName).Tests</_Parameter1>
+      <!-- We use the value of AssemblyName to declare the value of the attribute -->
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>Zooyard.Rpc</_Parameter1>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>Zooyard.Extensions</_Parameter1>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>Zooyard.Extensions</_Parameter1>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>Zooyard.Rpc.GrpcImpl</_Parameter1>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>Zooyard.Rpc.HttpImpl</_Parameter1>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>Zooyard.Rpc.NettyImpl</_Parameter1>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>Zooyard.Rpc.ThriftImpl</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+</Project>
