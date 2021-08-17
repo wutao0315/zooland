@@ -37,7 +37,7 @@ namespace Zooyard.Rpc.GrpcImpl
             _interceptors = interceptors;
         }
 
-        protected override IClient CreateClient(URL url)
+        protected override async Task<IClient> CreateClient(URL url)
         {
             //实例化TheTransport
             //获得transport参数,用于反射实例化
@@ -68,6 +68,8 @@ namespace Zooyard.Rpc.GrpcImpl
             }
 
             var channel = new Channel(url.Host, url.Port, credentials, options);
+
+            await Task.CompletedTask;
 
             if (_interceptors?.Count() > 0)
             {

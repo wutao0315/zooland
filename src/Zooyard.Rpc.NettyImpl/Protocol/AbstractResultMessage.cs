@@ -3,11 +3,8 @@
 
 namespace Zooyard.Rpc.NettyImpl.Protocol
 {
-
-
     /// <summary>
     /// The type Abstract result message.
-    /// 
     /// </summary>
     [Serializable]
 	public abstract class AbstractResultMessage : AbstractMessage, IMergedMessage

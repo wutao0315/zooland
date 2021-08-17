@@ -88,17 +88,7 @@ namespace Zooyard.Rpc.NettyImpl.Support
             //var channel = await DoConnect(serverAddress);
             //return channel;
             var lockObj = channelLocks.GetOrAdd(serverAddress, (key) => new object());
-            //bool lockTaken = false;
-            //try
-            //{
-            //    lockObj.TryEnter(CHANNEL_LOCKS_MILS, ref lockTaken);
-            //    var ch = await DoConnect(serverAddress);
-            //    return ch;
-            //}
-            //finally
-            //{
-            //    if (lockTaken) lockObj.Exit(false);
-            //}
+
             lock (lockObj)
             {
                 return DoConnect(serverAddress).GetAwaiter().GetResult();
@@ -248,11 +238,6 @@ namespace Zooyard.Rpc.NettyImpl.Support
                 NettyPoolKey currentPoolKey = poolKeyFunction(serverAddress);
                 NettyPoolKey previousPoolKey = poolKeyMap.GetValueOrDefault(serverAddress, null);
                 poolKeyMap.GetOrAdd(serverAddress, (key)=>currentPoolKey);
-                if (previousPoolKey != null && previousPoolKey.Message is RegisterRMRequest previousRMRequest)
-                {
-                    RegisterRMRequest registerRMRequest = (RegisterRMRequest)currentPoolKey.Message;
-                    previousRMRequest.ResourceIds = registerRMRequest.ResourceIds;
-                }
                 channelFromPool = await nettyClientKeyPool.BorrowObject(poolKeyMap[serverAddress]);
                 channels[serverAddress] = channelFromPool;
             }

@@ -1,12 +1,12 @@
 ﻿using DotNetty.Transport.Channels;
 using System;
 using System.Text;
+using Zooyard.Rpc.NettyImpl.Constant;
 
 namespace Zooyard.Rpc.NettyImpl.Protocol
 {
     /// <summary>
     /// The type Abstract message.
-    /// 
     /// </summary>
     [Serializable]
 	public abstract class AbstractMessage : IMessageTypeAware

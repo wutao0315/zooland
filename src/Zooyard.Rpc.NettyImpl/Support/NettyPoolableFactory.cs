@@ -5,6 +5,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Zooyard.Exceptions;
 using Zooyard.Logging;
+using Zooyard.Rpc.NettyImpl.Protocol;
 using Zooyard.Utils;
 
 namespace Zooyard.Rpc.NettyImpl.Support
@@ -45,12 +46,12 @@ namespace Zooyard.Rpc.NettyImpl.Support
             IChannel channelToServer = null;
             if (key.Message == null)
             {
-                throw new FrameworkException($"register msg is null, role:{key.GetTransactionRole()}");
+                throw new FrameworkException($"register msg is null.");
             }
             try
             {
                 response = await rpcRemotingClient.SendSyncRequest(tmpChannel, key.Message);
-                if (!IsResponseSuccess(response, key.GetTransactionRole()))
+                if (!IsResponseSuccess(response))
                 {
                     await rpcRemotingClient.OnRegisterMsgFail(key.Address, tmpChannel, response, key.Message);
                 }
@@ -66,50 +67,27 @@ namespace Zooyard.Rpc.NettyImpl.Support
                 {
                     await tmpChannel.CloseAsync();
                 }
-                throw new FrameworkException($"register error,role:{key.GetTransactionRole()},err:{exx.Message}");
+                throw new FrameworkException($"register error,err:{exx.Message}");
             }
             if (Logger().IsEnabled(LogLevel.Information))
             {
-                Logger().LogInformation($"register success, cost {(DateTimeOffset.Now.ToUnixTimeMilliseconds() - start)}ms, version:{GetVersion(response, key.GetTransactionRole())},role:{key.GetTransactionRole()},channel:{channelToServer}");
+                Logger().LogInformation($"register success, cost {(DateTimeOffset.Now.ToUnixTimeMilliseconds() - start)}ms, version:{GetVersion(response)},channel:{channelToServer}");
             }
             return channelToServer;
         }
 
-        private bool IsResponseSuccess(object response, NettyPoolKey.TransactionRole transactionRole)
+        private bool IsResponseSuccess(object response)
         {
             if (response == null)
             {
                 return false;
             }
-            if (transactionRole.Equals(NettyPoolKey.TransactionRole.TMROLE))
-            {
-                if (response is not RegisterTMResponse tmResponse)
-                {
-                    return false;
-                }
-                return tmResponse.Identified;
-            }
-            else if (transactionRole.Equals(NettyPoolKey.TransactionRole.RMROLE))
-            {
-                if (response is not RegisterRMResponse rmResponse)
-                {
-                    return false;
-                }
-                return rmResponse.Identified;
-            }
             return false;
         }
 
-        private string GetVersion(object response, NettyPoolKey.TransactionRole transactionRole)
+        private string GetVersion(object response)
         {
-            if (transactionRole.Equals(NettyPoolKey.TransactionRole.TMROLE))
-            {
-                return ((RegisterTMResponse)response).Version;
-            }
-            else
-            {
-                return ((RegisterRMResponse)response).Version;
-            }
+            return ((AbstractIdentifyResponse)response).Version;
         }
 
         public async Task DestroyObject(NettyPoolKey key, IChannel channel)

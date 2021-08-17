@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using Zooyard.Exceptions;
 using Zooyard.Utils;
 
 namespace Zooyard.Rpc.NettyImpl.Protocol

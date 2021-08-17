@@ -1,6 +1,7 @@
 ﻿using DotNetty.Transport.Channels;
 using System;
 using Zooyard.Logging;
+using Zooyard.Rpc.NettyImpl.Constant;
 using Zooyard.Utils;
 
 namespace Zooyard.Rpc.NettyImpl.Support

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Http;
+using System.Threading.Tasks;
 using Zooyard;
 using Zooyard.Logging;
 using Zooyard.Rpc.Support;
@@ -14,7 +15,7 @@ namespace Zooyard.Rpc.HttpImpl
 
         //private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(HttpClientPool));
        
-        protected override IClient CreateClient(URL url)
+        protected override async Task<IClient> CreateClient(URL url)
         {
             //实例化TheTransport
             //获得transport参数,用于反射实例化

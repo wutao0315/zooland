@@ -14,6 +14,7 @@ using Zooyard.Logging;
 using Zooyard.Utils;
 using Zooyard.Rpc.Support;
 using Zooyard.Rpc.ThriftImpl.Header;
+using System.Threading.Tasks;
 
 namespace Zooyard.Rpc.ThriftImpl
 {
@@ -38,7 +39,7 @@ namespace Zooyard.Rpc.ThriftImpl
             _clientTypes = clientTypes;
         }
 
-        protected override IClient CreateClient(URL url)
+        protected override async Task<IClient> CreateClient(URL url)
         {
             //实例化TheTransport
             //获得transport参数,用于反射实例化
@@ -69,6 +70,7 @@ namespace Zooyard.Rpc.ThriftImpl
             //instance ThriftClient
             var client = (TBaseClient)Activator.CreateInstance(_clientTypes[proxyKey], protocol);
 
+            await Task.CompletedTask;
             return new ThriftClient(client, timeout, url);
         }
 

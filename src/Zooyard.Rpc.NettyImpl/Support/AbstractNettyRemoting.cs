@@ -13,6 +13,8 @@ using Zooyard.Logging;
 using Zooyard.Rpc.NettyImpl.Protocol;
 using Zooyard.Rpc.NettyImpl.Processor;
 using Zooyard.Loader;
+using Zooyard.Rpc.NettyImpl.Hook;
+using Zooyard.Rpc.NettyImpl.Constant;
 
 namespace Zooyard.Rpc.NettyImpl.Support
 {
@@ -407,7 +409,6 @@ namespace Zooyard.Rpc.NettyImpl.Support
                 await _timerExecutor.DisposeAsync();
             }
             await messageExecutor.ShutdownGracefullyAsync();
-            //await messageExecutor.DisposeAsync();
         }
     }
 }

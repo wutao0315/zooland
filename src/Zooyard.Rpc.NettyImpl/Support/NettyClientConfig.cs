@@ -457,30 +457,6 @@ namespace Zooyard.Rpc.NettyImpl.Support
 			}
 		}
 
-		/// <summary>
-		/// Gets tm dispatch thread prefix.
-		/// </summary>
-		/// <returns> the tm dispatch thread prefix </returns>
-		public virtual string TmDispatchThreadPrefix
-		{
-			get
-			{
-				return RPC_DISPATCH_THREAD_PREFIX + "_" + NettyPoolKey.TransactionRole.TMROLE;
-			}
-		}
-
-		/// <summary>
-		/// Gets rm dispatch thread prefix.
-		/// </summary>
-		/// <returns> the rm dispatch thread prefix </returns>
-		public virtual string RmDispatchThreadPrefix
-		{
-			get
-			{
-				return RPC_DISPATCH_THREAD_PREFIX + "_" + NettyPoolKey.TransactionRole.RMROLE;
-			}
-		}
-
 		public static bool EnableClientBatchSendRequest
 		{
 			get

@@ -2,8 +2,12 @@
 using DotNetty.Codecs;
 using DotNetty.Transport.Channels;
 using System;
+using Zooyard.Loader;
 using Zooyard.Logging;
+using Zooyard.Rpc.NettyImpl.Compressor;
+using Zooyard.Rpc.NettyImpl.Exceptions;
 using Zooyard.Rpc.NettyImpl.Protocol;
+using Zooyard.Rpc.NettyImpl.Serializer;
 
 namespace Zooyard.Rpc.NettyImpl.Support.V1
 {

@@ -17,7 +17,11 @@
     <Compile Remove="Constant\DBType.cs" />
     <Compile Remove="Constant\RedisKeyConstants.cs" />
     <Compile Remove="Constant\ServerTableColumnsName.cs" />
-    <Compile Remove="Support\RmNettyRemotingClient.cs" />
+    <Compile Remove="Processor\Client\RmBranchCommitProcessor.cs" />
+    <Compile Remove="Processor\Client\RmBranchRollbackProcessor.cs" />
+    <Compile Remove="Processor\Client\RmUndoLogProcessor.cs" />
+    <Compile Remove="Processor\Server\RegRmProcessor.cs" />
+    <Compile Remove="Processor\Server\RegTmProcessor.cs" />
     <Compile Remove="Support\TmNettyRemotingClient.cs" />
   </ItemGroup>
 

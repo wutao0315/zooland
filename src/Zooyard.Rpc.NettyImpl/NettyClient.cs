@@ -2,7 +2,6 @@
 using System;
 using System.Net;
 using System.Threading.Tasks;
-using Zooyard;
 using Zooyard.Logging;
 using Zooyard.Rpc.Support;
 

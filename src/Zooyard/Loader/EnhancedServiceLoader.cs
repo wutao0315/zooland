@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Text;
 using Zooyard.Logging;
 
 namespace Zooyard.Loader
@@ -250,7 +251,7 @@ namespace Zooyard.Loader
                 if (File.Exists(fileName)) 
                 {
                     using var s = File.OpenRead(fileName);
-                    using var reader = new StreamReader(s, Constants.DEFAULT_CHARSET);
+                    using var reader = new StreamReader(s, Encoding.GetEncoding("UTF-8"));
                     string line = null;
                     while (!string.IsNullOrEmpty(line = reader.ReadLine()))
                     {

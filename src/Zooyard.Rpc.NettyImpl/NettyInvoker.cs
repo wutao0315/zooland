@@ -74,7 +74,7 @@ namespace Zooyard.Rpc.NettyImpl
             catch (Exception ex)
             {
                 Debug.Print(ex.StackTrace);
-                throw ex;
+                throw;
             }
             finally
             {

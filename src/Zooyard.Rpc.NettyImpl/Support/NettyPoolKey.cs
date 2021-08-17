@@ -12,7 +12,6 @@ namespace Zooyard.Rpc.NettyImpl.Support
 	public class NettyPoolKey
 	{
 
-		private TransactionRole transactionRole;
 		private string address;
 
 		/// <summary>
@@ -20,44 +19,22 @@ namespace Zooyard.Rpc.NettyImpl.Support
 		/// </summary>
 		/// <param name="transactionRole"> the client role </param>
 		/// <param name="address">         the address </param>
-		public NettyPoolKey(TransactionRole transactionRole, string address)
+		public NettyPoolKey(string address)
 		{
-			this.transactionRole = transactionRole;
 			this.address = address;
 		}
 
 		/// <summary>
 		/// Instantiates a new Netty pool key.
 		/// </summary>
-		/// <param name="transactionRole"> the client role </param>
 		/// <param name="address">         the address </param>
 		/// <param name="message">         the message </param>
-		public NettyPoolKey(TransactionRole transactionRole, string address, AbstractMessage message)
+		public NettyPoolKey(string address, AbstractMessage message)
 		{
-			this.transactionRole = transactionRole;
 			this.address = address;
 			this.Message = message;
 		}
 
-		/// <summary>
-		/// Gets get client role.
-		/// </summary>
-		/// <returns> the get client role </returns>
-		public virtual TransactionRole GetTransactionRole()
-		{
-			return transactionRole;
-		}
-
-		/// <summary>
-		/// Sets set client role.
-		/// </summary>
-		/// <param name="transactionRole"> the client role </param>
-		/// <returns> the client role </returns>
-		public virtual NettyPoolKey SetTransactionRole(TransactionRole transactionRole)
-		{
-			this.transactionRole = transactionRole;
-			return this;
-		}
 
 		/// <summary>
 		/// Gets get address.
@@ -92,9 +69,6 @@ namespace Zooyard.Rpc.NettyImpl.Support
 		public override string ToString()
 		{
 			var sb = new StringBuilder();
-			sb.Append("transactionRole:");
-			sb.Append(transactionRole);
-			sb.Append(',');
 			sb.Append("address:");
 			sb.Append(address);
 			sb.Append(',');
@@ -103,12 +77,5 @@ namespace Zooyard.Rpc.NettyImpl.Support
 			sb.Append(" >");
 			return sb.ToString();
 		}
-
-        public enum TransactionRole 
-        {
-            TMROLE=1,
-            RMROLE=2,
-            SERVERROLE=3
-        }
 	}
 }

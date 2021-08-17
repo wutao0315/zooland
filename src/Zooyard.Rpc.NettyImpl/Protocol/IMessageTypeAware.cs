@@ -8,7 +8,6 @@
 
         /// <summary>
         /// return the message type
-        /// @return
         /// </summary>
         short TypeCode { get; }
     }

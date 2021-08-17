@@ -7,12 +7,11 @@ using DotNetty.Transport.Channels;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
-using Zooyard;
+using System.Threading.Tasks;
 using Zooyard.Logging;
 using Zooyard.Rpc.Support;
 
@@ -41,7 +40,7 @@ namespace Zooyard.Rpc.NettyImpl
 
         internal NettyTransportSettings Settings { get; private set; }
 
-        protected override IClient CreateClient(URL url)
+        protected override async Task<IClient> CreateClient(URL url)
         {
             Settings = NettyTransportSettings.Create(url);
 
@@ -109,6 +108,8 @@ namespace Zooyard.Rpc.NettyImpl
             client.GetAttribute(messageListenerKey).Set(messageListener);
 
             var timeout = url.GetParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
+
+            await Task.CompletedTask;
 
             return new NettyClient(group, client, messageListener, timeout, url);
         }

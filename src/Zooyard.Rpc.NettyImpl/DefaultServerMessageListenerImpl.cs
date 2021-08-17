@@ -1,23 +1,21 @@
-﻿using System;
+﻿using DotNetty.Transport.Channels;
+using System;
 using System.Collections.Concurrent;
-using System.Text;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Zooyard.Utils;
-using Zooyard.Rpc.NettyImpl.Protocol;
-using DotNetty.Transport.Channels;
-using System.Collections.Generic;
 using Zooyard.Logging;
-using Version = Zooyard.Rpc.NettyImpl.Protocol.Version;
+using Zooyard.Rpc.NettyImpl.Protocol;
 using Zooyard.Rpc.NettyImpl.Support;
+using Zooyard.Utils;
 
 namespace Zooyard.Rpc.NettyImpl
 {
-	/// <summary>
-	/// The type Default server message listener.
-	/// 
-	/// </summary>
-	public class DefaultServerMessageListenerImpl//: IServerMessageListener
+    /// <summary>
+    /// The type Default server message listener.
+    /// 
+    /// </summary>
+    public class DefaultServerMessageListenerImpl//: IServerMessageListener
 	{
 		private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(DefaultServerMessageListenerImpl));
 
@@ -86,82 +84,7 @@ namespace Zooyard.Rpc.NettyImpl
 				await ServerMessageSender.SendAsyncResponse(request, ctx.Channel, result);
 			}
 		}
-
-		public virtual async Task OnRegRmMessage(RpcMessage request, IChannelHandlerContext ctx, IRegisterCheckAuthHandler checkAuthHandler)
-		{
-            var message = (RegisterRMRequest)request.Body;
-			string ipAndPort = NetUtil.ToStringAddress(ctx.Channel.RemoteAddress);
-			bool isSuccess = false;
-			string errorInfo = string.Empty;
-			try
-			{
-				if (checkAuthHandler == null || await checkAuthHandler.RegResourceManagerCheckAuth(message))
-				{
-					ChannelManager.RegisterRMChannel(message, ctx.Channel);
-					Version.PutChannelVersion(ctx.Channel, message.Version);
-					isSuccess = true;
-					if (Logger().IsEnabled(LogLevel.Debug))
-					{
-						Logger().LogDebug($"checkAuth for client:{ipAndPort},vgroup:{message.TransactionServiceGroup},applicationId:{message.ApplicationId} is OK");
-					}
-				}
-			}
-			catch (Exception exx)
-			{
-				isSuccess = false;
-				errorInfo = exx.Message;
-				Logger().LogError(exx, $"RM register fail, error message:{exx.Message}");
-			}
-			var response = new RegisterRMResponse(isSuccess);
-			if (!string.IsNullOrWhiteSpace(errorInfo)) 
-			{
-				response.Msg = errorInfo;
-			}
-			await ServerMessageSender.SendAsyncResponse(request, ctx.Channel, response);
-			if (Logger().IsEnabled(LogLevel.Information)) 
-			{
-				Logger().LogInformation($"RM register success,message:{message},channel:{ctx.Channel},client version:{message.Version}");
-			}
-        }
-
-		public virtual async Task OnRegTmMessage(RpcMessage request, IChannelHandlerContext ctx, IRegisterCheckAuthHandler checkAuthHandler)
-		{
-            var message = (RegisterTMRequest)request.Body;
-            string ipAndPort = NetUtil.ToStringAddress(ctx.Channel.RemoteAddress);
-			Version.PutChannelVersion(ctx.Channel, message.Version);
-			bool isSuccess = false;
-			string errorInfo = string.Empty;
-			try
-			{
-				if (checkAuthHandler == null || await checkAuthHandler.RegTransactionManagerCheckAuth(message))
-				{
-					ChannelManager.RegisterTMChannel(message, ctx.Channel);
-					Version.PutChannelVersion(ctx.Channel, message.Version);
-					isSuccess = true;
-					if (Logger().IsEnabled(LogLevel.Information)) 
-					{
-						Logger().LogInformation($"checkAuth for client:{ipAndPort},vgroup:{message.TransactionServiceGroup},applicationId:{message.ApplicationId} is OK");
-					}
-				}
-			}
-			catch (Exception exx)
-			{
-				isSuccess = false;
-				errorInfo = exx.Message;
-				Logger().LogError(exx, $"TM register fail, error message:{errorInfo}");
-			}
-			var response = new RegisterTMResponse(isSuccess);
-			if (!string.IsNullOrWhiteSpace(errorInfo))
-			{
-				response.Msg = errorInfo;
-			}
-			await ServerMessageSender.SendAsyncResponse(request, ctx.Channel, response);
-			if (Logger().IsEnabled(LogLevel.Information))
-			{
-				Logger().LogInformation($"TM register success,message:{message},channel:{ctx.Channel},client version:{message.Version}");
-			}
-		}
-
+	
 		public virtual async Task OnCheckMessage(RpcMessage request, IChannelHandlerContext ctx)
 		{
 			try

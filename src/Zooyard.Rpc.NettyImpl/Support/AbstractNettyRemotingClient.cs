@@ -1,20 +1,16 @@
 ﻿using DotNetty.Common.Concurrency;
-using DotNetty.Common.Utilities;
 using DotNetty.Handlers.Timeout;
 using DotNetty.Transport.Channels;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Zooyard.Rpc.NettyImpl.Protocol;
-using Zooyard.Rpc.NettyImpl.Protocol.Transaction;
-using Zooyard.Rpc.Processor;
 using Zooyard.Exceptions;
-using Zooyard.Loadbalance;
 using Zooyard.Logging;
+using Zooyard.Rpc.NettyImpl.Processor;
+using Zooyard.Rpc.NettyImpl.Protocol;
 
 namespace Zooyard.Rpc.NettyImpl.Support
 {
@@ -61,7 +57,6 @@ namespace Zooyard.Rpc.NettyImpl.Support
 
         private readonly NettyClientBootstrap clientBootstrap;
         private NettyClientChannelManager clientChannelManager;
-        private readonly NettyPoolKey.TransactionRole transactionRole;
         //private ThreadPoolExecutor mergeSendExecutorService;
         private MultithreadEventLoopGroup mergeSendExecutorService;
         private ITransactionMessageHandler transactionMessageHandler;
@@ -95,15 +90,13 @@ namespace Zooyard.Rpc.NettyImpl.Support
             NettyClientConfig nettyClientConfig,
             IEventExecutorGroup eventExecutorGroup,
             //ThreadPoolExecutor messageExecutor,
-            MultithreadEventLoopGroup messageExecutor,
-            NettyPoolKey.TransactionRole transactionRole
+            MultithreadEventLoopGroup messageExecutor
             )
             : base(messageExecutor)
         {
-            this.transactionRole = transactionRole;
             //this.TransactionServiceGroup = zooTaOption.CurrentValue.TransactionServiceGroup;
 
-            clientBootstrap = new NettyClientBootstrap(nettyClientConfig, eventExecutorGroup, transactionRole);//, nettyTransportClientConfigOptoin);
+            clientBootstrap = new NettyClientBootstrap(nettyClientConfig, eventExecutorGroup);//, nettyTransportClientConfigOptoin);
             clientBootstrap.SetChannelHandlers(new ClientHandler(this));
             clientChannelManager = new NettyClientChannelManager(new NettyPoolableFactory(this, clientBootstrap), PoolKeyFunction, nettyClientConfig);
         }
@@ -260,56 +253,55 @@ namespace Zooyard.Rpc.NettyImpl.Support
             return Utils.NetUtil.ToStringAddress(address);
         }
 
-        protected internal virtual IPEndPoint DoSelect(IList<IPEndPoint> list, object msg)
-        {
-            if (list?.Count > 0)
-            {
-                if (list.Count > 1)
-                {
-                    return LoadBalanceFactory.Instance.Select(list, GetXid(msg));
-                }
-                else
-                {
-                    return list[0];
-                }
-            }
-            return null;
-        }
+        //protected internal virtual IPEndPoint DoSelect(IList<IPEndPoint> list, object msg)
+        //{
+        //    if (list?.Count > 0)
+        //    {
+        //        if (list.Count > 1)
+        //        {
+        //            return LoadBalanceFactory.Instance.Select(list, GetXid(msg));
+        //        }
+        //        else
+        //        {
+        //            return list[0];
+        //        }
+        //    }
+        //    return null;
+        //}
 
-        protected internal virtual string GetXid(object msg)
-        {
-            string xid = "";
-            if (msg is AbstractGlobalEndRequest abstractGlobalEndRequest)
-            {
-                xid = abstractGlobalEndRequest.Xid;
-            }
-            else if (msg is GlobalBeginRequest globalBeginRequest)
-            {
-                xid = globalBeginRequest.TransactionName;
-            }
-            else if (msg is BranchRegisterRequest branchRegisterRequest)
-            {
-                xid = branchRegisterRequest.Xid;
-            }
-            else if (msg is BranchReportRequest branchReportRequest)
-            {
-                xid = branchReportRequest.Xid;
-            }
-            else
-            {
-                try
-                {
-                    var field = msg.GetType().GetField("xid");
-                    xid = field.GetValue(msg).ToString();
-                }
-                catch (Exception)
-                {
-                }
-            }
-            return string.IsNullOrWhiteSpace(xid) ? new Random().NextLong().ToString() : xid;
-        }
+        //protected internal virtual string GetXid(object msg)
+        //{
+        //    string xid = "";
+        //    if (msg is AbstractGlobalEndRequest abstractGlobalEndRequest)
+        //    {
+        //        xid = abstractGlobalEndRequest.Xid;
+        //    }
+        //    else if (msg is GlobalBeginRequest globalBeginRequest)
+        //    {
+        //        xid = globalBeginRequest.TransactionName;
+        //    }
+        //    else if (msg is BranchRegisterRequest branchRegisterRequest)
+        //    {
+        //        xid = branchRegisterRequest.Xid;
+        //    }
+        //    else if (msg is BranchReportRequest branchReportRequest)
+        //    {
+        //        xid = branchReportRequest.Xid;
+        //    }
+        //    else
+        //    {
+        //        try
+        //        {
+        //            var field = msg.GetType().GetField("xid");
+        //            xid = field.GetValue(msg).ToString();
+        //        }
+        //        catch (Exception)
+        //        {
+        //        }
+        //    }
+        //    return string.IsNullOrWhiteSpace(xid) ? new Random().NextLong().ToString() : xid;
+        //}
 
-        //private string ThreadPrefix => MERGE_THREAD_PREFIX + THREAD_PREFIX_SPLIT_CHAR + transactionRole.ToString();
 
         /// <summary>
         /// Get pool key function.

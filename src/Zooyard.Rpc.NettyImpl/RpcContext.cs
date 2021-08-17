@@ -9,26 +9,14 @@ namespace Zooyard.Rpc.NettyImpl
 {
     /// <summary>
     /// The type rpc context.
-    /// 
+	/// 
     /// </summary>
     public class RpcContext
 	{
-		//private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(RpcContext));
-
 		/// <summary>
 		/// id
 		/// </summary>
 		private ConcurrentDictionary<IChannel, RpcContext> clientIDHolderMap;
-
-		/// <summary>
-		/// tm
-		/// </summary>
-		private ConcurrentDictionary<int?, RpcContext> clientTMHolderMap;
-
-		/// <summary>
-		/// dbkeyRm
-		/// </summary>
-		private ConcurrentDictionary<string, ConcurrentDictionary<int?, RpcContext>> clientRMHolderMap;
 
 		/// <summary>
 		/// Release.
@@ -40,39 +28,14 @@ namespace Zooyard.Rpc.NettyImpl
 			{
 				clientIDHolderMap = null;
 			}
-			if (ClientRole == NettyPoolKey.TransactionRole.TMROLE && clientTMHolderMap != null)
-			{
-                _ = clientTMHolderMap.TryRemove(clientPort, out _);
-				clientTMHolderMap = null;
-			}
-			if (ClientRole == NettyPoolKey.TransactionRole.RMROLE && clientRMHolderMap != null)
-			{
-				foreach (IDictionary<int?, RpcContext> portMap in clientRMHolderMap.Values)
-				{
-					portMap.Remove(clientPort);
-				}
-				clientRMHolderMap = null;
-			}
+
 			if (ResourceSets != null)
 			{
                 ResourceSets.Clear();
 			}
 		}
 
-		/// <summary>
-		/// Hold in client channels.
-		/// </summary>
-		/// <param name="clientTMHolderMap"> the client tm holder map </param>
-		public virtual void HoldInClientChannels(ConcurrentDictionary<int?, RpcContext> clientTMHolderMap)
-		{
-			if (this.clientTMHolderMap != null)
-			{
-				throw new InvalidOperationException();
-			}
-			this.clientTMHolderMap = clientTMHolderMap;
-			int? clientPort = ChannelUtil.GetClientPortFromChannel(Channel);
-			this.clientTMHolderMap.TryAdd(clientPort, this);
-		}
+
 
 		/// <summary>
 		/// Hold in identified channels.
@@ -87,58 +50,7 @@ namespace Zooyard.Rpc.NettyImpl
 			this.clientIDHolderMap = clientIDHolderMap;
 			this.clientIDHolderMap.TryAdd(Channel, this);
 		}
-
-		/// <summary>
-		/// Hold in resource manager channels.
-		/// </summary>
-		/// <param name="resourceId"> the resource id </param>
-		/// <param name="portMap">    the client rm holder map </param>
-		public virtual void HoldInResourceManagerChannels(string resourceId, ConcurrentDictionary<int?, RpcContext> portMap)
-		{
-			if (this.clientRMHolderMap == null)
-			{
-				this.clientRMHolderMap = new ConcurrentDictionary<string, ConcurrentDictionary<int?, RpcContext>>();
-			}
-			int? clientPort = ChannelUtil.GetClientPortFromChannel(Channel);
-			portMap.TryAdd(clientPort, this);
-			this.clientRMHolderMap.TryAdd(resourceId, portMap);
-		}
-
-		/// <summary>
-		/// Hold in resource manager channels.
-		/// </summary>
-		/// <param name="resourceId"> the resource id </param>
-		/// <param name="clientPort"> the client port </param>
-		public virtual void HoldInResourceManagerChannels(string resourceId, int? clientPort)
-		{
-			if (this.clientRMHolderMap == null)
-			{
-				this.clientRMHolderMap = new ConcurrentDictionary<string, ConcurrentDictionary<int?, RpcContext>>();
-			}
-			var portMap = clientRMHolderMap.GetOrAdd(resourceId, (key)=>new ConcurrentDictionary<int?, RpcContext>());
-			portMap.TryAdd(clientPort, this);
-		}
-
-		/// <summary>
-		/// Gets get client rm holder map.
-		/// </summary>
-		/// <returns> the get client rm holder map </returns>
-		public virtual ConcurrentDictionary<string, ConcurrentDictionary<int?, RpcContext>> ClientRMHolderMap => clientRMHolderMap;
-
-		/// <summary>
-		/// Gets port map.
-		/// </summary>
-		/// <param name="resourceId"> the resource id </param>
-		/// <returns> the port map </returns>
-		public virtual IDictionary<int?, RpcContext> GetPortMap(string resourceId)
-		{
-			if (clientRMHolderMap.TryGetValue(resourceId, out ConcurrentDictionary<int?, RpcContext> result)) 
-			{
-				return result;
-			}
-			return null;
-		}
-
+		
 		/// <summary>
 		/// Gets get client id.
 		/// </summary>
@@ -164,14 +76,6 @@ namespace Zooyard.Rpc.NettyImpl
 		/// </summary>
 		/// <returns> the get transaction service group </returns>
 		public virtual string TransactionServiceGroup { get; set; }
-
-
-		/// <summary>
-		/// Gets get client role.
-		/// </summary>
-		/// <returns> the get client role </returns>
-		public virtual NettyPoolKey.TransactionRole? ClientRole { get; set; }
-
 
 		/// <summary>
 		/// Gets get version.

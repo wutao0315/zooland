@@ -3,6 +3,7 @@ using System;
 using System.Threading.Tasks;
 using Zooyard.Atomic;
 using Zooyard.Logging;
+using Zooyard.Rpc.NettyImpl.Processor.Server;
 using Zooyard.Rpc.NettyImpl.Protocol;
 
 namespace Zooyard.Rpc.NettyImpl.Support
@@ -82,13 +83,7 @@ namespace Zooyard.Rpc.NettyImpl.Support
 			var onResponseProcessor = new ServerOnResponseProcessor(Handler, Futures);
 			await base.RegisterProcessor(MessageType.TYPE_BRANCH_COMMIT_RESULT, onResponseProcessor, messageExecutor);
 			await base.RegisterProcessor(MessageType.TYPE_BRANCH_ROLLBACK_RESULT, onResponseProcessor, messageExecutor);
-			// 3. registry rm message processor
-			var regRmProcessor = new RegRmProcessor(this);
-			await base.RegisterProcessor(MessageType.TYPE_REG_RM, regRmProcessor, messageExecutor);
-			// 4. registry tm message processor
-			var regTmProcessor = new RegTmProcessor(this);
-			await base.RegisterProcessor(MessageType.TYPE_REG_CLT, regTmProcessor, null);
-			// 5. registry heartbeat message processor
+			// 3. registry heartbeat message processor
 			var heartbeatMessageProcessor = new ServerHeartbeatProcessor(this);
 			await base.RegisterProcessor(MessageType.TYPE_HEARTBEAT_MSG, heartbeatMessageProcessor, null);
 		}

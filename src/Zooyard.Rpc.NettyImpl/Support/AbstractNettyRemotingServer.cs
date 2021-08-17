@@ -5,9 +5,9 @@ using DotNetty.Transport.Channels;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Zooyard.Rpc.NettyImpl.Protocol;
-using Zooyard.Rpc.Processor;
 using Zooyard.Logging;
+using Zooyard.Rpc.NettyImpl.Processor;
+using Zooyard.Rpc.NettyImpl.Protocol;
 using Zooyard.Utils;
 
 namespace Zooyard.Rpc.NettyImpl.Support
@@ -36,7 +36,6 @@ namespace Zooyard.Rpc.NettyImpl.Support
 		/// <param name="messageExecutor">   the message executor </param>
 		/// <param name="nettyServerConfig"> the netty server config </param>
 		public AbstractNettyRemotingServer(MultithreadEventLoopGroup messageExecutor, NettyServerConfig nettyServerConfig)
-		//public AbstractNettyRemotingServer(ThreadPoolExecutor messageExecutor, NettyServerConfig nettyServerConfig)
 			: base(messageExecutor)
 		{
 			serverBootstrap = new NettyServerBootstrap(nettyServerConfig);
@@ -207,7 +206,7 @@ namespace Zooyard.Rpc.NettyImpl.Support
 				{
 					Logger().LogInformation($"{ipAndPort} to server channel inactive.");
 				}
-				if (rpcContext != null && rpcContext.ClientRole != null)
+				if (rpcContext != null)
 				{
 					rpcContext.Release();
 					if (Logger().IsEnabled(LogLevel.Information))

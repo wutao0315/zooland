@@ -28,10 +28,6 @@ namespace Zooyard.Rpc.NettyImpl.Processor.Server
 
 		static BatchLogHandler()
 		{
-
-            //IExecutorService mergeSendExecutorService = new ExecutorTaskScheduler() SingleThreadEventExecutor(THREAD_PREFIX,TimeSpan.FromMilliseconds(KEEP_ALIVE_TIME));
-            //ThreadPoolExecutor(MAX_LOG_SEND_THREAD, MAX_LOG_SEND_THREAD, KEEP_ALIVE_TIME, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(), new NamedThreadFactory(THREAD_PREFIX, MAX_LOG_SEND_THREAD, true));
-            //mergeSendExecutorService.SubmitAsync(() => new BatchLogRunnable());
             IExecutorService mergeSendExecutorService = new MultithreadEventLoopGroup(MAX_LOG_SEND_THREAD);
             mergeSendExecutorService.SubmitAsync(() => new BatchLogRunnable().Run());
         }
@@ -73,7 +69,6 @@ namespace Zooyard.Rpc.NettyImpl.Processor.Server
 						}
 						logList.Clear();
 						Thread.Sleep(BUSY_SLEEP_MILLS);
-						//TimeUnit.MILLISECONDS.sleep(BUSY_SLEEP_MILLS);
 					}
 					catch (Exception exx)
 					{

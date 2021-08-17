@@ -36,14 +36,14 @@ namespace Zooyard.Rpc.Support
         {
             //连接池无空闲连接	
             var client = DequeueClient(url);
-            var validClient = ValidateClient(client);
+            var validClient = await ValidateClient(client);
             //连接池无空闲连接	
             if (!validClient)
             {
                 //先尝试关闭
                 await DestoryClient(client);
                 //然后重新初始化
-                client = InitializeClient(url);
+                client = await InitializeClient(url);
                 if (client == null)
                 {
                     throw new InvalidOperationException("connection access failed. please confirm call service status.");
@@ -119,18 +119,18 @@ namespace Zooyard.Rpc.Support
         /// 创建一个连接，虚函数，应由特定连接池继承
         /// </summary>
         /// <returns>连接</returns>
-        protected abstract IClient CreateClient(URL url);
+        protected abstract Task<IClient> CreateClient(URL url);
 
         /// <summary>
         /// 初始化连接，隐藏创建细节
         /// </summary>
         /// <returns>连接</returns>
-        protected IClient InitializeClient(URL url)
+        protected async Task<IClient> InitializeClient(URL url)
         {
             try
             {
-                var client = CreateClient(url);
-                if (ValidateClient(client))
+                var client = await CreateClient(url);
+                if (await ValidateClient(client))
                 {
                     client.Reset();
                     return client;
@@ -147,7 +147,7 @@ namespace Zooyard.Rpc.Support
         /// 校验连接，确保连接开启
         /// </summary>
         /// <param name="client">连接</param>
-        protected bool ValidateClient(IClient client)
+        protected async Task<bool> ValidateClient(IClient client)
         {
             if (client == null) 
             {
@@ -155,7 +155,7 @@ namespace Zooyard.Rpc.Support
             }
             try
             {
-                client.Open();
+                await client.Open();
                 return true;
             }
             catch (Exception e)

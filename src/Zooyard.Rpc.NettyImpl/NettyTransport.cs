@@ -21,7 +21,7 @@ namespace Zooyard.Rpc.NettyImpl
 {
     internal class HeliosBackwardsCompatabilityLengthFramePrepender : LengthFieldPrepender
     {
-        private readonly List<object> _temporaryOutput = new List<object>(2);
+        private readonly List<object> _temporaryOutput = new (2);
 
         public HeliosBackwardsCompatabilityLengthFramePrepender(int lengthFieldLength,
             bool lengthFieldIncludesLengthFieldLength) : base(ByteOrder.LittleEndian, lengthFieldLength, 0, lengthFieldIncludesLengthFieldLength)

@@ -23,13 +23,11 @@ namespace Zooyard.Rpc.NettyImpl.Support
         private IEventExecutorGroup _defaultEventExecutorGroup;
         private readonly AtomicBoolean _initialized = new (false);
         //private const string THREAD_PREFIX_SPLIT_CHAR = "_";
-        private readonly NettyPoolKey.TransactionRole _transactionRole;
         private IChannelHandler[] channelHandlers;
 
 
         public NettyClientBootstrap(NettyClientConfig nettyClientConfig, 
-            IEventExecutorGroup eventExecutorGroup, 
-            NettyPoolKey.TransactionRole transactionRole)
+            IEventExecutorGroup eventExecutorGroup)
         {
             if (nettyClientConfig == null)
             {
@@ -41,8 +39,6 @@ namespace Zooyard.Rpc.NettyImpl.Support
             }
             _nettyClientConfig = nettyClientConfig;
             //int selectorThreadSizeThreadSize = _nettyClientConfig.ClientSelectorThreadSize;
-            _transactionRole = transactionRole;
-            //this.eventLoopGroupWorker = new NioEventLoopGroup(selectorThreadSizeThreadSize, new NamedThreadFactory(getThreadPrefix(this.nettyClientConfig.ClientSelectorThreadPrefix), selectorThreadSizeThreadSize));
             _eventLoopGroupWorker = new MultithreadEventLoopGroup(_nettyClientConfig.ClientSelectorThreadSize);
             _defaultEventExecutorGroup = eventExecutorGroup;
         }
@@ -79,9 +75,7 @@ namespace Zooyard.Rpc.NettyImpl.Support
             if (this._defaultEventExecutorGroup == null)
             {
                 this._defaultEventExecutorGroup = new MultithreadEventLoopGroup(_nettyClientConfig.ClientWorkerThreads);
-                //this.defaultEventExecutorGroup = new DefaultEventExecutorGroup(nettyClientConfig.ClientWorkerThreads, new NamedThreadFactory(getThreadPrefix(nettyClientConfig.ClientWorkerThreadPrefix), nettyClientConfig.ClientWorkerThreads));
             }
-            //this.bootstrap.group(this.eventLoopGroupWorker).channel(nettyClientConfig.ClientChannelClazz).option(ChannelOption.TCP_NODELAY, true).option(ChannelOption.SO_KEEPALIVE, true).option(ChannelOption.CONNECT_TIMEOUT_MILLIS, nettyClientConfig.ConnectTimeoutMillis).option(ChannelOption.SO_SNDBUF, nettyClientConfig.ClientSocketSndBufSize).option(ChannelOption.SO_RCVBUF, nettyClientConfig.ClientSocketRcvBufSize);
             _bootstrap.Group(_eventLoopGroupWorker)
                 .ChannelFactory(()=> 
                 {
@@ -192,15 +186,5 @@ namespace Zooyard.Rpc.NettyImpl.Support
             }
             return channel;
         }
-
-        ///// <summary>
-        ///// Gets thread prefix.
-        ///// </summary>
-        ///// <param name="threadPrefix"> the thread prefix </param>
-        ///// <returns> the thread prefix </returns>
-        //private string GetThreadPrefix(string threadPrefix)
-        //{
-        //    return threadPrefix + THREAD_PREFIX_SPLIT_CHAR + _transactionRole;
-        //}
     }
 }
