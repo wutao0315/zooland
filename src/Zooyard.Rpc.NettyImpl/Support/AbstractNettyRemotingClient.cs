@@ -35,8 +35,8 @@ namespace Zooyard.Rpc.NettyImpl.Support
 
         private const int MAX_MERGE_SEND_THREAD = 1;
         //private static readonly long KEEP_ALIVE_TIME = int.MaxValue;
-        private static readonly long SCHEDULE_DELAY_MILLS = 60 * 1000L;
-        private static readonly long SCHEDULE_INTERVAL_MILLS = 10 * 1000L;
+        private static readonly int SCHEDULE_DELAY_MILLS = 60 * 1000;
+        private static readonly int SCHEDULE_INTERVAL_MILLS = 10 * 1000;
         //private const string MERGE_THREAD_PREFIX = "rpcMergeMessageSend";
         protected internal readonly object mergeLock = new ();
         protected internal readonly object @lock = new ();
@@ -61,14 +61,20 @@ namespace Zooyard.Rpc.NettyImpl.Support
         private MultithreadEventLoopGroup mergeSendExecutorService;
         private ITransactionMessageHandler transactionMessageHandler;
 
-        private Timer _timerExecutor;
+        private Task taskExecutor;
         public override async Task Init()
         {
-            _timerExecutor = new Timer(async(state) =>
+            //scheduleAtFixedRate
+            taskExecutor = new Task(async () =>
             {
-                await clientChannelManager.Reconnect(TransactionServiceGroup);
-            });
-            _timerExecutor.Change(TimeSpan.FromMilliseconds(SCHEDULE_DELAY_MILLS), TimeSpan.FromMilliseconds(SCHEDULE_INTERVAL_MILLS));
+                Thread.Sleep(SCHEDULE_DELAY_MILLS);
+                while (true)
+                {
+                    await clientChannelManager.Reconnect(TransactionServiceGroup);
+                    Thread.Sleep(SCHEDULE_INTERVAL_MILLS);
+                }
+            }, TaskCreationOptions.LongRunning);
+            taskExecutor.Start();
 
             if (NettyClientConfig.EnableClientBatchSendRequest)
             {
@@ -212,9 +218,9 @@ namespace Zooyard.Rpc.NettyImpl.Support
                 await mergeSendExecutorService.ShutdownGracefullyAsync();
                 //await mergeSendExecutorService.DisposeAsync();
             }
-            if (_timerExecutor!=null) 
+            if (taskExecutor != null) 
             {
-                await _timerExecutor.DisposeAsync();
+                taskExecutor.Dispose();
             }
             await base.DisposeAsync();
         }

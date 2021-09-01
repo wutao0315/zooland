@@ -29,7 +29,7 @@ namespace Zooyard.Rpc.NettyImpl.Support
         /// <summary>
         /// The Timer executor.
         /// </summary>
-        private Timer _timerExecutor;
+        private Task _timerExecutor;
         /// <summary>
         /// The Message executor.
         /// </summary>
@@ -72,24 +72,30 @@ namespace Zooyard.Rpc.NettyImpl.Support
         /// </summary>
         public virtual async Task Init()
         {
-            _timerExecutor = new Timer((state) =>
+            //scheduleAtFixedRate
+            _timerExecutor = new Task(() =>
             {
-                foreach (var entry in _futures.ToArray())
+                Thread.Sleep(TIMEOUT_CHECK_INTERVAL);
+                while (true)
                 {
-                    if (entry.Value.IsTimeout())
+                    foreach (var entry in _futures.ToArray())
                     {
-                        _futures.TryRemove(entry.Key, out _);
-                        entry.Value.ResultMessage = null;
-                        if (Logger().IsEnabled(LogLevel.Debug))
+                        if (entry.Value.IsTimeout())
                         {
-                            Logger().LogDebug($"timeout clear future: {entry.Value.RequestMessage.Body}");
+                            _futures.TryRemove(entry.Key, out _);
+                            entry.Value.ResultMessage = null;
+                            if (Logger().IsEnabled(LogLevel.Debug))
+                            {
+                                Logger().LogDebug($"timeout clear future: {entry.Value.RequestMessage.Body}");
+                            }
                         }
                     }
-                }
 
-                nowMills = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-            });
-            _timerExecutor.Change(TimeSpan.FromMilliseconds(TIMEOUT_CHECK_INTERVAL), TimeSpan.FromMilliseconds(TIMEOUT_CHECK_INTERVAL));
+                    nowMills = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                    Thread.Sleep(TIMEOUT_CHECK_INTERVAL);
+                }
+            }, TaskCreationOptions.LongRunning);
+            _timerExecutor.Start();
 
             await Task.CompletedTask;
         }
@@ -406,7 +412,7 @@ namespace Zooyard.Rpc.NettyImpl.Support
         {
             if (_timerExecutor != null)
             {
-                await _timerExecutor.DisposeAsync();
+                _timerExecutor.Dispose();
             }
             await messageExecutor.ShutdownGracefullyAsync();
         }
