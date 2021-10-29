@@ -54,13 +54,7 @@ namespace Zooyard.Rpc.NettyImpl.Support
         /// Get all channels registered on current Rpc Client.
         /// </summary>
         /// <returns> channels </returns>
-        internal virtual ConcurrentDictionary<string, IChannel> Channels
-        {
-            get
-            {
-                return channels;
-            }
-        }
+        internal virtual ConcurrentDictionary<string, IChannel> Channels => channels;
 
         /// <summary>
         /// Acquire netty client channel connected to remote server.
@@ -69,15 +63,13 @@ namespace Zooyard.Rpc.NettyImpl.Support
         /// <returns> netty channel </returns>
         internal virtual async Task<IChannel> AcquireChannel(string serverAddress)
         {
-            if (channels.TryGetValue(serverAddress, out IChannel channelToServer)) 
+            channels.TryGetValue(serverAddress, out IChannel channelToServer);
+            if (channelToServer != null)
             {
+                channelToServer = await GetExistAliveChannel(channelToServer, serverAddress);
                 if (channelToServer != null)
                 {
-                    channelToServer = await GetExistAliveChannel(channelToServer, serverAddress);
-                    if (channelToServer != null)
-                    {
-                        return channelToServer;
-                    }
+                    return channelToServer;
                 }
             }
             if (Logger().IsEnabled(LogLevel.Information))
@@ -110,26 +102,24 @@ namespace Zooyard.Rpc.NettyImpl.Support
             var lockObj = channelLocks.GetOrAdd(serverAddress, (key) => new object());
             lock (lockObj)
             {
-                if (channels.TryGetValue(serverAddress, out IChannel ch))
+                channels.TryGetValue(serverAddress, out IChannel ch);
+                if (ch == null)
                 {
-                    if (ch == null)
+                    nettyClientKeyPool.ReturnObject(poolKeyMap[serverAddress], channel);
+                    return;
+                }
+                if (ch.CompareTo(channel) == 0)
+                {
+                    if (Logger().IsEnabled(LogLevel.Information))
                     {
-                        nettyClientKeyPool.ReturnObject(poolKeyMap[serverAddress], channel);
-                        return;
+                        Logger().LogInformation($"return to pool, rm channel:{channel}");
                     }
-                    if (ch.CompareTo(channel) == 0)
-                    {
-                        if (Logger().IsEnabled(LogLevel.Information))
-                        {
-                            Logger().LogInformation($"return to pool, rm channel:{channel}");
-                        }
 
-                        DestroyChannel(serverAddress, channel).GetAwaiter().GetResult();
-                    }
-                    else
-                    {
-                        nettyClientKeyPool.ReturnObject(poolKeyMap[serverAddress], channel);
-                    }
+                    DestroyChannel(serverAddress, channel).GetAwaiter().GetResult();
+                }
+                else
+                {
+                    nettyClientKeyPool.ReturnObject(poolKeyMap[serverAddress], channel);
                 }
             }
         }
@@ -252,8 +242,10 @@ namespace Zooyard.Rpc.NettyImpl.Support
 
         private IList<string> GetAvailServerList(string transactionServiceGroup)
         {
-            var availList = new List<string>();
-            availList.Add("127.0.0.1:8091");
+            var availList = new List<string>
+            {
+                "127.0.0.1:8091"
+            };
             return availList;
 
             //IList<IPEndPoint> availInetSocketAddressList = RegistryFactory.Instance.Lookup(transactionServiceGroup);

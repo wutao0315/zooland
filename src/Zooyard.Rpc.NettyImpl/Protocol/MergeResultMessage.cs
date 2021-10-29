@@ -20,13 +20,7 @@ namespace Zooyard.Rpc.NettyImpl.Protocol
 		/// <returns> the abstract result message [ ] </returns>
 		public virtual AbstractResultMessage[] Msgs { get; set; }
 
-		public override short TypeCode
-		{
-			get
-			{
-				return MessageType.TYPE_SEATA_MERGE_RESULT;
-			}
-		}
+		public override short TypeCode => MessageType.TYPE_SEATA_MERGE_RESULT;
 
 		public override string ToString()
 		{
@@ -37,7 +31,7 @@ namespace Zooyard.Rpc.NettyImpl.Protocol
 			}
 			foreach (AbstractMessage msg in Msgs)
 			{
-				sb.Append(msg.ToString()).Append("\n");
+				sb.Append(msg.ToString()).Append('\n');
 			}
 			return sb.ToString();
 		}

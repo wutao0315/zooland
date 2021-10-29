@@ -12,7 +12,6 @@ using Zooyard.Utils;
 
 namespace Zooyard.Rpc.NettyImpl.Support
 {
-
     /// <summary>
     /// The type Rpc remoting server.
     /// 
@@ -21,13 +20,13 @@ namespace Zooyard.Rpc.NettyImpl.Support
 	{
 		private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(AbstractNettyRemotingServer));
 
-		private readonly NettyServerBootstrap serverBootstrap;
+		private readonly NettyServerBootstrap _serverBootstrap;
 		public readonly object @lock = new();
 
 		public override async Task Init()
 		{
 			await base.Init();
-			await serverBootstrap.Start();
+			await _serverBootstrap.Start();
 		}
 
 		/// <summary>
@@ -38,8 +37,8 @@ namespace Zooyard.Rpc.NettyImpl.Support
 		public AbstractNettyRemotingServer(MultithreadEventLoopGroup messageExecutor, NettyServerConfig nettyServerConfig)
 			: base(messageExecutor)
 		{
-			serverBootstrap = new NettyServerBootstrap(nettyServerConfig);
-			serverBootstrap.SetChannelHandlers(new ServerHandler(this));
+			_serverBootstrap = new NettyServerBootstrap(nettyServerConfig);
+			_serverBootstrap.SetChannelHandlers(new ServerHandler(this));
 		}
 
 		public virtual async Task<object> SendSyncRequest(string resourceId, string clientId, object msg)
@@ -94,7 +93,7 @@ namespace Zooyard.Rpc.NettyImpl.Support
 		public virtual async Task RegisterProcessor(int messageType, IRemotingProcessor processor, IExecutorService executor)
 		{
 			Pair<IRemotingProcessor, IExecutorService> pair = new (processor, executor);
-			this.processorTable[messageType] = pair;
+			this._processorTable[messageType] = pair;
 			await Task.CompletedTask;
 		}
 
@@ -106,17 +105,17 @@ namespace Zooyard.Rpc.NettyImpl.Support
 		{
 			set
 			{
-				serverBootstrap.ListenPort = value;
+				_serverBootstrap.ListenPort = value;
 			}
 			get
 			{
-				return serverBootstrap.ListenPort;
+				return _serverBootstrap.ListenPort;
 			}
 		}
 
         public override async ValueTask DisposeAsync()
         {
-			await serverBootstrap.Shutdown();
+			await _serverBootstrap.Shutdown();
 			await base.DisposeAsync();
         }
 
@@ -150,10 +149,10 @@ namespace Zooyard.Rpc.NettyImpl.Support
 		{
 			public override bool IsSharable => true;
 
-			private readonly AbstractNettyRemotingServer outerInstance;
+			private readonly AbstractNettyRemotingServer _outerInstance;
 			public ServerHandler(AbstractNettyRemotingServer outerInstance)
 			{
-				this.outerInstance = outerInstance;
+				_outerInstance = outerInstance;
 			}
 			/// <summary>
 			/// Channel read.
@@ -167,16 +166,16 @@ namespace Zooyard.Rpc.NettyImpl.Support
 				{
 					return;
 				}
-				outerInstance.ProcessMessage(ctx, (RpcMessage)msg);
+				_outerInstance.ProcessMessage(ctx, (RpcMessage)msg);
 			}
 
 			public override void ChannelWritabilityChanged(IChannelHandlerContext ctx)
 			{
-				lock (outerInstance.@lock)
+				lock (_outerInstance.@lock)
 				{
 					if (ctx.Channel.IsWritable)
 					{
-						Monitor.PulseAll(outerInstance.@lock);
+						Monitor.PulseAll(_outerInstance.@lock);
 					}
 				}
 				ctx.FireChannelWritabilityChanged();
@@ -189,8 +188,8 @@ namespace Zooyard.Rpc.NettyImpl.Support
 			/// <exception cref="Exception"> the exception </exception>
 			public override void ChannelInactive(IChannelHandlerContext ctx)
 			{
-				outerInstance.DebugLog($"inactive:{ctx}");
-				if (outerInstance.messageExecutor.IsShutdown)
+				_outerInstance.DebugLog($"inactive:{ctx}");
+				if (_outerInstance.messageExecutor.IsShutdown)
 				{
 					return;
 				}
@@ -256,7 +255,7 @@ namespace Zooyard.Rpc.NettyImpl.Support
 			{
 				if (evt is IdleStateEvent idleStateEvent)
 				{
-					outerInstance.DebugLog($"idle:{evt}");
+					_outerInstance.DebugLog($"idle:{evt}");
 					if (idleStateEvent.State == IdleState.ReaderIdle)
 					{
 						if (Logger().IsEnabled(LogLevel.Information))
@@ -266,7 +265,7 @@ namespace Zooyard.Rpc.NettyImpl.Support
 						HndleDisconnect(ctx);
 						try
 						{
-							outerInstance.CloseChannelHandlerContext(ctx).GetAwaiter().GetResult();
+							_outerInstance.CloseChannelHandlerContext(ctx).GetAwaiter().GetResult();
 						}
 						catch (Exception e)
 						{

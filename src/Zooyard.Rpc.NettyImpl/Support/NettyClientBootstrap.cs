@@ -89,7 +89,7 @@ namespace Zooyard.Rpc.NettyImpl.Support
                 .Option(ChannelOption.SoSndbuf, _nettyClientConfig.ClientSocketSndBufSize)
                 .Option(ChannelOption.SoRcvbuf, _nettyClientConfig.ClientSocketRcvBufSize);
 
-            if (_nettyClientConfig.enableNative())
+            if (_nettyClientConfig.EnableNative())
             {
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 {

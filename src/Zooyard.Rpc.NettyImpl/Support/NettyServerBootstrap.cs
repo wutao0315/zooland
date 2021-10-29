@@ -30,8 +30,8 @@ namespace Zooyard.Rpc.NettyImpl.Support
 		public NettyServerBootstrap(NettyServerConfig nettyServerConfig)
 		{
 			_nettyServerConfig = nettyServerConfig;
-			this._eventLoopGroupBoss = new MultithreadEventLoopGroup(nettyServerConfig.BossThreadSize);
-			this._eventLoopGroupWorker = new MultithreadEventLoopGroup(nettyServerConfig.ServerWorkerThreads);
+			_eventLoopGroupBoss = new MultithreadEventLoopGroup(nettyServerConfig.BossThreadSize);
+			_eventLoopGroupWorker = new MultithreadEventLoopGroup(nettyServerConfig.ServerWorkerThreads);
 		}
 
 		/// <summary>
@@ -75,7 +75,7 @@ namespace Zooyard.Rpc.NettyImpl.Support
 				{
 					throw new ArgumentException($"listen port: {value} is invalid!");
 				}
-				this.listenPort = value;
+				listenPort = value;
 			}
 		}
 

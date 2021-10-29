@@ -22,7 +22,6 @@ namespace Zooyard.Rpc.NettyImpl.Support
 
     }
 
-
 	/// <summary>
 	/// The type Netty base config.
 	/// 
@@ -39,17 +38,17 @@ namespace Zooyard.Rpc.NettyImpl.Support
 		/// <summary>
 		/// The constant BOSS_THREAD_PREFIX.
 		/// </summary>
-		protected internal static readonly string BOSS_THREAD_PREFIX = CONFIG.GetValue<string>(Constant.ConfigurationKeys.BOSS_THREAD_PREFIX);
+		protected internal static readonly string BOSS_THREAD_PREFIX = CONFIG.GetValue<string>(ConfigurationKeys.BOSS_THREAD_PREFIX);
 
 		/// <summary>
 		/// The constant WORKER_THREAD_PREFIX.
 		/// </summary>
-		protected internal static readonly string WORKER_THREAD_PREFIX = CONFIG.GetValue<string>(Constant.ConfigurationKeys.WORKER_THREAD_PREFIX);
+		protected internal static readonly string WORKER_THREAD_PREFIX = CONFIG.GetValue<string>(ConfigurationKeys.WORKER_THREAD_PREFIX);
 
 		/// <summary>
 		/// The constant SHARE_BOSS_WORKER.
 		/// </summary>
-		protected internal static readonly bool SHARE_BOSS_WORKER = CONFIG.GetValue<bool>(Constant.ConfigurationKeys.SHARE_BOSS_WORKER);
+		protected internal static readonly bool SHARE_BOSS_WORKER = CONFIG.GetValue<bool>(ConfigurationKeys.SHARE_BOSS_WORKER);
 
 		/// <summary>
 		/// The constant WORKER_THREAD_SIZE.
@@ -97,8 +96,8 @@ namespace Zooyard.Rpc.NettyImpl.Support
 
 		static NettyBaseConfig()
 		{
-            Enum.TryParse(CONFIG.GetValue(Constant.ConfigurationKeys.TRANSPORT_TYPE, TransportProtocolType.SOCKET.ToString()),true, out TRANSPORT_PROTOCOL_TYPE);
-			string workerThreadSize = CONFIG.GetValue<string>(Constant.ConfigurationKeys.WORKER_THREAD_SIZE);
+            Enum.TryParse(CONFIG.GetValue(ConfigurationKeys.TRANSPORT_TYPE, TransportProtocolType.SOCKET.ToString()),true, out TRANSPORT_PROTOCOL_TYPE);
+			string workerThreadSize = CONFIG.GetValue<string>(ConfigurationKeys.WORKER_THREAD_SIZE);
 			if ((!string.IsNullOrWhiteSpace(workerThreadSize)) && int.TryParse(workerThreadSize, out int value))
 			{
 				WORKER_THREAD_SIZE = value;
@@ -111,7 +110,7 @@ namespace Zooyard.Rpc.NettyImpl.Support
 			{
 				WORKER_THREAD_SIZE = WorkThreadMode.Default.GetValue();
 			}
-            Enum.TryParse(CONFIG.GetValue(Constant.ConfigurationKeys.TRANSPORT_SERVER, TransportServerType.NIO.ToString()), true, out TRANSPORT_SERVER_TYPE);
+            Enum.TryParse(CONFIG.GetValue(ConfigurationKeys.TRANSPORT_SERVER, TransportServerType.NIO.ToString()), true, out TRANSPORT_SERVER_TYPE);
 			switch (TRANSPORT_SERVER_TYPE)
 			{
 				case TransportServerType.NIO:

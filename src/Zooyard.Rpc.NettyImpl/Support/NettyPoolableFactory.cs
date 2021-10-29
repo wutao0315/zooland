@@ -144,7 +144,5 @@ namespace Zooyard.Rpc.NettyImpl.Support
             result = await this.MakeObject(key);
             return result;
         }
-
-      
     }
 }

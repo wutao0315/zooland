@@ -57,13 +57,12 @@ namespace Zooyard.Rpc.NettyImpl.Support
         /// The Is sending.
         /// </summary>
         protected internal volatile bool isSending = false;
-        private string group = "DEFAULT";
 
         /// <summary>
 		/// This container holds all processors.
 		/// processor type <seealso cref="MessageType"/>
 		/// </summary>
-		protected internal readonly Dictionary<int, Pair<IRemotingProcessor, IExecutorService>> processorTable = new (32); //MessageType
+		protected internal readonly Dictionary<int, Pair<IRemotingProcessor, IExecutorService>> _processorTable = new (32); //MessageType
 
         protected internal readonly IList<IRpcHook> rpcHooks = EnhancedServiceLoader.LoadAll<IRpcHook>();
 
@@ -122,17 +121,7 @@ namespace Zooyard.Rpc.NettyImpl.Support
         }
         public virtual ConcurrentDictionary<int, MessageFuture> Futures => _futures;
 
-        public virtual string Group
-        {
-            get
-            {
-                return group;
-            }
-            set
-            {
-                this.group = value;
-            }
-        }
+        public virtual string Group { get; set; } = "DEFAULT";
 
         public virtual async Task DestroyChannel(IChannel channel)
         {
@@ -164,7 +153,7 @@ namespace Zooyard.Rpc.NettyImpl.Support
             string remoteAddr = ChannelUtil.GetAddressFromChannel(channel);
             DoBeforeRpcHooks(remoteAddr, rpcMessage);
 
-            MessageFuture messageFuture = new(rpcMessage, TimeSpan.FromMilliseconds(timeoutMillis));
+            var messageFuture = new MessageFuture(rpcMessage, TimeSpan.FromMilliseconds(timeoutMillis));
             _futures[rpcMessage.Id] = messageFuture;
 
 
@@ -230,7 +219,7 @@ namespace Zooyard.Rpc.NettyImpl.Support
 
         protected internal virtual RpcMessage BuildRequestMessage(object msg, byte messageType)
         {
-            RpcMessage rpcMessage = new()
+            var rpcMessage = new RpcMessage
             {
                 Id = NextMessageId,
                 MessageType = messageType,
@@ -244,7 +233,7 @@ namespace Zooyard.Rpc.NettyImpl.Support
 
         protected internal virtual RpcMessage BuildResponseMessage(RpcMessage rpcMessage, object msg, byte messageType)
         {
-            RpcMessage rpcMsg = new ()
+            var rpcMsg = new RpcMessage
             {
                 MessageType = messageType,
                 Codec = rpcMessage.Codec, // same with request
@@ -274,55 +263,24 @@ namespace Zooyard.Rpc.NettyImpl.Support
 
             object body = rpcMessage.Body;
 
-            if (body is IMessageTypeAware messageTypeAware)
+            if (body is not IMessageTypeAware messageTypeAware) 
             {
-                if (this.processorTable.TryGetValue(messageTypeAware.TypeCode, out Pair<IRemotingProcessor, IExecutorService> pair) 
-                    && pair != null)
+                Logger().LogError($"This rpcMessage body[{body}] is not MessageTypeAware type.");
+                return;
+            }
+
+            _processorTable.TryGetValue(messageTypeAware.TypeCode, out Pair<IRemotingProcessor, IExecutorService> pair);
+            if (pair == null) 
+            {
+                Logger().LogError($"This message type [{messageTypeAware.TypeCode}] has no processor.");
+                return;
+            }
+
+            if (pair.Second != null)
+            {
+                try
                 {
-                    if (pair.Second != null)
-                    {
-                        try
-                        {
-                            pair.Second.Execute(() =>
-                            {
-                                try
-                                {
-                                    pair.First.Process(ctx, rpcMessage);
-                                }
-                                catch (Exception th)
-                                {
-                                    Logger().LogError(th,$"{FrameworkErrorCode.ExceptionCaught.GetErrCode()}:{th.Message}");
-                                }
-                            });
-                        }
-                        catch (RejectedExecutionException ex) //(Exception ex)
-                        {
-                            Logger().LogError(ex, $"thread pool is full, current max pool size is {messageExecutor.Items.Count()}");// messageExecutor.ActiveCount
-                            if (allowDumpStack)
-                            {
-                                var pid = Environment.ProcessId;
-                                int idx = (new Random()).Next(100);
-                                try
-                                {
-                                    using var process = new Process
-                                    {
-                                        StartInfo = new ProcessStartInfo("dotnet-dump collect", $"-p {pid} -o {Constants.DefaultDumpDir}{idx}.log")
-                                        {
-                                            RedirectStandardOutput = true,
-                                            UseShellExecute = false
-                                        }
-                                    };
-                                    process.Start();
-                                }
-                                catch (Exception exx)
-                                {
-                                    Logger().LogError(exx, exx.Message);
-                                }
-                                allowDumpStack = false;
-                            }
-                        }
-                    }
-                    else
+                    pair.Second.Execute(() =>
                     {
                         try
                         {
@@ -330,18 +288,47 @@ namespace Zooyard.Rpc.NettyImpl.Support
                         }
                         catch (Exception th)
                         {
-                            Logger().LogError(th, $"NetDispatch:{th.Message}");
+                            Logger().LogError(th, $"{FrameworkErrorCode.ExceptionCaught.GetErrCode()}:{th.Message}");
                         }
-                    }
+                    });
                 }
-                else
+                catch (RejectedExecutionException ex) //(Exception ex)
                 {
-                    Logger().LogError($"This message type [{messageTypeAware.TypeCode}] has no processor.");
+                    Logger().LogError(ex, $"thread pool is full, current max pool size is {messageExecutor.Items.Count()}");// messageExecutor.ActiveCount
+                    if (allowDumpStack)
+                    {
+                        var pid = Environment.ProcessId;
+                        int idx = new Random().Next(100);
+                        try
+                        {
+                            using var process = new Process
+                            {
+                                StartInfo = new ProcessStartInfo("dotnet-dump collect", $"-p {pid} -o {Constants.DefaultDumpDir}{idx}.log")
+                                {
+                                    RedirectStandardOutput = true,
+                                    UseShellExecute = false
+                                }
+                            };
+                            process.Start();
+                        }
+                        catch (Exception exx)
+                        {
+                            Logger().LogError(exx, exx.Message);
+                        }
+                        allowDumpStack = false;
+                    }
                 }
             }
             else
             {
-                Logger().LogError($"This rpcMessage body[{body}] is not MessageTypeAware type.");
+                try
+                {
+                    pair.First.Process(ctx, rpcMessage);
+                }
+                catch (Exception th)
+                {
+                    Logger().LogError(th, $"NetDispatch:{th.Message}");
+                }
             }
         }
 
@@ -410,10 +397,7 @@ namespace Zooyard.Rpc.NettyImpl.Support
 
         public virtual async ValueTask DisposeAsync()
         {
-            if (_timerExecutor != null)
-            {
-                _timerExecutor.Dispose();
-            }
+            _timerExecutor?.Dispose();
             await messageExecutor.ShutdownGracefullyAsync();
         }
     }

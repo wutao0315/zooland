@@ -76,13 +76,13 @@ namespace Zooyard.Rpc.NettyImpl.Support
         {
             get
             {
-                if (null == instance)
+                if (instance == null)
                 {
                     lock (typeof(NettyRemotingClient))
                     {
-                        if (null == instance)
+                        if (instance == null)
                         {
-                            NettyClientConfig nettyClientConfig = new ();
+                            var nettyClientConfig = new NettyClientConfig();
                             var threadPoolExecutor = new MultithreadEventLoopGroup(nettyClientConfig.ClientWorkerThreads);
                             instance = new NettyRemotingClient(nettyClientConfig, null, threadPoolExecutor);
                         }

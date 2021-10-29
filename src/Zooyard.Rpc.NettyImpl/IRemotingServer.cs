@@ -18,7 +18,7 @@ namespace Zooyard.Rpc.NettyImpl
 		/// </summary>
 		/// <param name="resourceId"> rm client resourceId </param>
 		/// <param name="clientId">   rm client id </param>
-		/// <param name="msg">        transaction message <seealso cref="io.seata.core.protocol"/> </param>
+		/// <param name="msg">        transaction message <seealso cref="IProtocol"/> </param>
 		/// <returns> client result message </returns>
 		/// <exception cref="TimeoutException"> TimeoutException </exception>
 		Task<object> SendSyncRequest(string resourceId, string clientId, object msg);
@@ -27,7 +27,7 @@ namespace Zooyard.Rpc.NettyImpl
 		/// server send sync request.
 		/// </summary>
 		/// <param name="channel"> client channel </param>
-		/// <param name="msg">     transaction message <seealso cref="io.seata.core.protocol"/> </param>
+		/// <param name="msg">     transaction message <seealso cref="IProtocol"/> </param>
 		/// <returns> client result message </returns>
 		/// <exception cref="TimeoutException"> TimeoutException </exception>
 		Task<object> SendSyncRequest(IChannel channel, object msg);
@@ -36,7 +36,7 @@ namespace Zooyard.Rpc.NettyImpl
 		/// server send async request.
 		/// </summary>
 		/// <param name="channel"> client channel </param>
-		/// <param name="msg">     transaction message <seealso cref="io.seata.core.protocol"/> </param>
+		/// <param name="msg">     transaction message <seealso cref="IProtocol"/> </param>
 		Task SendAsyncRequest(IChannel channel, object msg);
 
 		/// <summary>
@@ -50,7 +50,7 @@ namespace Zooyard.Rpc.NettyImpl
 		/// <summary>
 		/// register processor
 		/// </summary>
-		/// <param name="messageType"> <seealso cref="io.seata.core.protocol.MessageType"/> </param>
+		/// <param name="messageType"> <seealso cref="IProtocol.MessageType"/> </param>
 		/// <param name="processor">   <seealso cref="RemotingProcessor"/> </param>
 		/// <param name="executor">    thread pool </param>
 		Task RegisterProcessor(int messageType, IRemotingProcessor processor, IExecutorService executor);

@@ -16,7 +16,7 @@ namespace Zooyard.Rpc.NettyImpl.Support
 
 		private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(NettyRemotingServer));
 
-		private ITransactionMessageHandler transactionMessageHandler;
+		//private ITransactionMessageHandler transactionMessageHandler;
 
 		private readonly AtomicBoolean initialized = new (false);
 
@@ -43,17 +43,7 @@ namespace Zooyard.Rpc.NettyImpl.Support
 		/// Sets transactionMessageHandler.
 		/// </summary>
 		/// <param name="transactionMessageHandler"> the transactionMessageHandler </param>
-		public virtual ITransactionMessageHandler Handler
-		{
-			set
-			{
-				this.transactionMessageHandler = value;
-			}
-			get
-			{
-				return transactionMessageHandler;
-			}
-		}
+		public virtual ITransactionMessageHandler Handler { get; set; }
 
 
 		public override async Task DestroyChannel(string serverAddress, IChannel channel)

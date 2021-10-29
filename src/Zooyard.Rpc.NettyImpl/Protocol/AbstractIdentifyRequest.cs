@@ -31,9 +31,9 @@ namespace Zooyard.Rpc.NettyImpl.Protocol
             string transactionServiceGroup,
             string extraData)
         {
-            this.ApplicationId = applicationId;
-            this.TransactionServiceGroup = transactionServiceGroup;
-            this.ExtraData = extraData;
+            ApplicationId = applicationId;
+            TransactionServiceGroup = transactionServiceGroup;
+            ExtraData = extraData;
         }
 
 		/// <summary>
@@ -48,13 +48,11 @@ namespace Zooyard.Rpc.NettyImpl.Protocol
         /// <returns> the application id </returns>
         public virtual string ApplicationId { get; set; }
 
-
 		/// <summary>
 		/// Gets transaction service group.
 		/// </summary>
 		/// <returns> the transaction service group </returns>
 		public virtual string TransactionServiceGroup { get; set; }
-
 
 		/// <summary>
 		/// Gets extra data.

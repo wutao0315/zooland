@@ -11,7 +11,7 @@ namespace Zooyard.Rpc.NettyImpl.Protocol
 	/// </summary>
 	public class MessageFuture
 	{
-		private DateTime start = DateTime.Now;
+		private readonly DateTime start = DateTime.Now;
 
 		public TaskCompletionSource<object> Origin = new ();
 		public MessageFuture(RpcMessage reqeustMessage, TimeSpan timeout) 

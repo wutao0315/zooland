@@ -22,13 +22,7 @@ namespace Zooyard.Rpc.NettyImpl.Protocol
 		/// </summary>
 		public IList<int> msgIds = new List<int>();
 
-		public override short TypeCode
-		{
-			get
-			{
-				return MessageType.TYPE_SEATA_MERGE;
-			}
-		}
+		public override short TypeCode => MessageType.TYPE_SEATA_MERGE;
 
 		public override string ToString()
 		{

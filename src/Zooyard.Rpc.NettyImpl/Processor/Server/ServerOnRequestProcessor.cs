@@ -31,14 +31,15 @@ namespace Zooyard.Rpc.NettyImpl.Processor.Server
 	{
 		private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ServerOnRequestProcessor));
 
-		private IRemotingServer remotingServer;
+		private readonly IRemotingServer _remotingServer;
 
-		private ITransactionMessageHandler transactionMessageHandler;
+		private readonly ITransactionMessageHandler _transactionMessageHandler;
 
-		public ServerOnRequestProcessor(IRemotingServer remotingServer, ITransactionMessageHandler transactionMessageHandler)
+		public ServerOnRequestProcessor(IRemotingServer remotingServer,
+			ITransactionMessageHandler transactionMessageHandler)
 		{
-			this.remotingServer = remotingServer;
-			this.transactionMessageHandler = transactionMessageHandler;
+			_remotingServer = remotingServer;
+			_transactionMessageHandler = transactionMessageHandler;
 		}
 
 		public virtual async Task Process(IChannelHandlerContext ctx, RpcMessage rpcMessage)
@@ -98,20 +99,20 @@ namespace Zooyard.Rpc.NettyImpl.Processor.Server
 				for (int i = 0; i < results.Length; i++)
 				{
 					AbstractMessage subMessage = mergedWarpMessage.msgs[i];
-					results[i] = await transactionMessageHandler.OnRequest(subMessage, rpcContext);
+					results[i] = await _transactionMessageHandler.OnRequest(subMessage, rpcContext);
 				}
                 MergeResultMessage resultMessage = new ()
                 {
                     Msgs = results
                 };
-                await remotingServer.SendAsyncResponse(rpcMessage, ctx.Channel, resultMessage);
+                await _remotingServer.SendAsyncResponse(rpcMessage, ctx.Channel, resultMessage);
 			}
 			else
 			{
 				// the single send request message
 				var msg = (AbstractMessage) message;
-				AbstractResultMessage result = await transactionMessageHandler.OnRequest(msg, rpcContext);
-				await remotingServer.SendAsyncResponse(rpcMessage, ctx.Channel, result);
+				AbstractResultMessage result = await _transactionMessageHandler.OnRequest(msg, rpcContext);
+				await _remotingServer.SendAsyncResponse(rpcMessage, ctx.Channel, result);
 			}
 		}
 	}

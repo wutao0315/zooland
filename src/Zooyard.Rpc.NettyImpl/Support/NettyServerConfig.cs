@@ -13,13 +13,13 @@ namespace Zooyard.Rpc.NettyImpl.Support
     /// </summary>
     public class NettyServerConfig : NettyBaseConfig
 	{
-		private int serverSelectorThreads = SystemPropertyUtil.GetInt(ConfigurationKeys.TRANSPORT_PREFIX + "serverSelectorThreads", WORKER_THREAD_SIZE);
-		private int serverSocketSendBufSize = SystemPropertyUtil.GetInt(ConfigurationKeys.TRANSPORT_PREFIX + "serverSocketSendBufSize", 153600);
-		private int serverSocketResvBufSize = SystemPropertyUtil.GetInt(ConfigurationKeys.TRANSPORT_PREFIX + "serverSocketResvBufSize", 153600);
-		private int serverWorkerThreads = SystemPropertyUtil.GetInt(ConfigurationKeys.TRANSPORT_PREFIX + "serverWorkerThreads", WORKER_THREAD_SIZE);
-		private int soBackLogSize = SystemPropertyUtil.GetInt(ConfigurationKeys.TRANSPORT_PREFIX + "soBackLogSize", 1024);
-		private int writeBufferHighWaterMark = SystemPropertyUtil.GetInt(ConfigurationKeys.TRANSPORT_PREFIX + "writeBufferHighWaterMark", 67108864);
-		private int writeBufferLowWaterMark = SystemPropertyUtil.GetInt(ConfigurationKeys.TRANSPORT_PREFIX + "writeBufferLowWaterMark", 1048576);
+		//private int serverSelectorThreads = SystemPropertyUtil.GetInt(ConfigurationKeys.TRANSPORT_PREFIX + "serverSelectorThreads", WORKER_THREAD_SIZE);
+		//private int serverSocketSendBufSize = SystemPropertyUtil.GetInt(ConfigurationKeys.TRANSPORT_PREFIX + "serverSocketSendBufSize", 153600);
+		//private int serverSocketResvBufSize = SystemPropertyUtil.GetInt(ConfigurationKeys.TRANSPORT_PREFIX + "serverSocketResvBufSize", 153600);
+		//private int serverWorkerThreads = SystemPropertyUtil.GetInt(ConfigurationKeys.TRANSPORT_PREFIX + "serverWorkerThreads", WORKER_THREAD_SIZE);
+		//private int soBackLogSize = SystemPropertyUtil.GetInt(ConfigurationKeys.TRANSPORT_PREFIX + "soBackLogSize", 1024);
+		//private int writeBufferHighWaterMark = SystemPropertyUtil.GetInt(ConfigurationKeys.TRANSPORT_PREFIX + "writeBufferHighWaterMark", 67108864);
+		//private int writeBufferLowWaterMark = SystemPropertyUtil.GetInt(ConfigurationKeys.TRANSPORT_PREFIX + "writeBufferLowWaterMark", 1048576);
 		private const int DEFAULT_LISTEN_PORT = 8091;
 		private const int RPC_REQUEST_TIMEOUT = 30 * 1000;
 		private int serverChannelMaxIdleTimeSeconds = SystemPropertyUtil.GetInt(ConfigurationKeys.TRANSPORT_PREFIX + "serverChannelMaxIdleTimeSeconds", 30);
@@ -39,24 +39,14 @@ namespace Zooyard.Rpc.NettyImpl.Support
 		/// Gets server selector threads.
 		/// </summary>
 		/// <returns> the server selector threads </returns>
-		public virtual int ServerSelectorThreads
-		{
-			get
-			{
-				return serverSelectorThreads;
-			}
-			set
-			{
-				this.serverSelectorThreads = value;
-			}
-		}
+		public virtual int ServerSelectorThreads { get; set; } = SystemPropertyUtil.GetInt(ConfigurationKeys.TRANSPORT_PREFIX + "serverSelectorThreads", WORKER_THREAD_SIZE);
 
 
 		/// <summary>
 		/// Enable epoll boolean.
 		/// </summary>
 		/// <returns> the boolean </returns>
-		public static bool enableEpoll()
+		public static bool EnableEpoll()
 		{
 			return false;
 			//return NettyBaseConfig.SERVER_CHANNEL_CLAZZ.Equals(typeof(EpollServerSocketChannel)) && Epoll.Available;
@@ -66,151 +56,67 @@ namespace Zooyard.Rpc.NettyImpl.Support
 		/// Gets server socket send buf size.
 		/// </summary>
 		/// <returns> the server socket send buf size </returns>
-		public virtual int ServerSocketSendBufSize
-		{
-			get
-			{
-				return serverSocketSendBufSize;
-			}
-			set
-			{
-				this.serverSocketSendBufSize = value;
-			}
-		}
+		public virtual int ServerSocketSendBufSize { get; set; } = SystemPropertyUtil.GetInt(ConfigurationKeys.TRANSPORT_PREFIX + "serverSocketSendBufSize", 153600);
 
 
 		/// <summary>
 		/// Gets server socket resv buf size.
 		/// </summary>
 		/// <returns> the server socket resv buf size </returns>
-		public virtual int ServerSocketResvBufSize
-		{
-			get
-			{
-				return serverSocketResvBufSize;
-			}
-			set
-			{
-				this.serverSocketResvBufSize = value;
-			}
-		}
+		public virtual int ServerSocketResvBufSize { get; set; } = SystemPropertyUtil.GetInt(ConfigurationKeys.TRANSPORT_PREFIX + "serverSocketResvBufSize", 153600);
 
 
 		/// <summary>
 		/// Gets server worker threads.
 		/// </summary>
 		/// <returns> the server worker threads </returns>
-		public virtual int ServerWorkerThreads
-		{
-			get
-			{
-				return serverWorkerThreads;
-			}
-			set
-			{
-				this.serverWorkerThreads = value;
-			}
-		}
+		public virtual int ServerWorkerThreads { get; set; } = SystemPropertyUtil.GetInt(ConfigurationKeys.TRANSPORT_PREFIX + "serverWorkerThreads", WORKER_THREAD_SIZE);
 
 
 		/// <summary>
 		/// Gets so back log size.
 		/// </summary>
 		/// <returns> the so back log size </returns>
-		public virtual int SoBackLogSize
-		{
-			get
-			{
-				return soBackLogSize;
-			}
-			set
-			{
-				this.soBackLogSize = value;
-			}
-		}
+		public virtual int SoBackLogSize { get; set; } = SystemPropertyUtil.GetInt(ConfigurationKeys.TRANSPORT_PREFIX + "soBackLogSize", 1024);
 
 
 		/// <summary>
 		/// Gets write buffer high water mark.
 		/// </summary>
 		/// <returns> the write buffer high water mark </returns>
-		public virtual int WriteBufferHighWaterMark
-		{
-			get
-			{
-				return writeBufferHighWaterMark;
-			}
-			set
-			{
-				this.writeBufferHighWaterMark = value;
-			}
-		}
+		public virtual int WriteBufferHighWaterMark { get; set; } = SystemPropertyUtil.GetInt(ConfigurationKeys.TRANSPORT_PREFIX + "writeBufferHighWaterMark", 67108864);
 
 
 		/// <summary>
 		/// Gets write buffer low water mark.
 		/// </summary>
 		/// <returns> the write buffer low water mark </returns>
-		public virtual int WriteBufferLowWaterMark
-		{
-			get
-			{
-				return writeBufferLowWaterMark;
-			}
-			set
-			{
-				this.writeBufferLowWaterMark = value;
-			}
-		}
+		public virtual int WriteBufferLowWaterMark { get; set; } = SystemPropertyUtil.GetInt(ConfigurationKeys.TRANSPORT_PREFIX + "writeBufferLowWaterMark", 1048576);
 
 
 		/// <summary>
 		/// Gets listen port.
 		/// </summary>
 		/// <returns> the listen port </returns>
-		public virtual int DefaultListenPort
-		{
-			get
-			{
-				return DEFAULT_LISTEN_PORT;
-			}
-		}
+		public virtual int DefaultListenPort => DEFAULT_LISTEN_PORT;
 
 		/// <summary>
 		/// Gets channel max read idle seconds.
 		/// </summary>
 		/// <returns> the channel max read idle seconds </returns>
-		public virtual int ChannelMaxReadIdleSeconds
-		{
-			get
-			{
-				return MAX_READ_IDLE_SECONDS;
-			}
-		}
+		public virtual int ChannelMaxReadIdleSeconds => MAX_READ_IDLE_SECONDS;
 
 		/// <summary>
 		/// Gets server channel max idle time seconds.
 		/// </summary>
 		/// <returns> the server channel max idle time seconds </returns>
-		public virtual int ServerChannelMaxIdleTimeSeconds
-		{
-			get
-			{
-				return serverChannelMaxIdleTimeSeconds;
-			}
-		}
+		public virtual int ServerChannelMaxIdleTimeSeconds => serverChannelMaxIdleTimeSeconds;
 
 		/// <summary>
 		/// Gets rpc request timeout.
 		/// </summary>
 		/// <returns> the rpc request timeout </returns>
-		public static int RpcRequestTimeout
-		{
-			get
-			{
-				return RPC_REQUEST_TIMEOUT;
-			}
-		}
+		public static int RpcRequestTimeout => RPC_REQUEST_TIMEOUT;
 
 		/// <summary>
 		/// Get boss thread prefix string.
@@ -232,7 +138,7 @@ namespace Zooyard.Rpc.NettyImpl.Support
 		{
 			get
 			{
-				return CONFIG.GetValue(ConfigurationKeys.WORKER_THREAD_PREFIX, enableEpoll() ? EPOLL_WORKER_THREAD_PREFIX : DefaultValues.DEFAULT_NIO_WORKER_THREAD_PREFIX);
+				return CONFIG.GetValue(ConfigurationKeys.WORKER_THREAD_PREFIX, EnableEpoll() ? EPOLL_WORKER_THREAD_PREFIX : DefaultValues.DEFAULT_NIO_WORKER_THREAD_PREFIX);
 			}
 		}
 
@@ -272,36 +178,12 @@ namespace Zooyard.Rpc.NettyImpl.Support
 			}
 		}
 
-		public static int MinServerPoolSize
-		{
-			get
-			{
-				return minServerPoolSize;
-			}
-		}
+		public static int MinServerPoolSize => minServerPoolSize;
 
-		public static int MaxServerPoolSize
-		{
-			get
-			{
-				return maxServerPoolSize;
-			}
-		}
+		public static int MaxServerPoolSize => maxServerPoolSize;
 
-		public static int MaxTaskQueueSize
-		{
-			get
-			{
-				return maxTaskQueueSize;
-			}
-		}
+		public static int MaxTaskQueueSize => maxTaskQueueSize;
 
-		public static int KeepAliveTime
-		{
-			get
-			{
-				return keepAliveTime;
-			}
-		}
+		public static int KeepAliveTime => keepAliveTime;
 	}
 }

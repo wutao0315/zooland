@@ -1,9 +1,7 @@
-﻿using DotNetty.Buffers;
-using DotNetty.Transport.Channels;
+﻿using DotNetty.Transport.Channels;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using Zooyard;
 using Zooyard.Logging;
 using Zooyard.Rpc.NettyImpl.Protocol;
 using Zooyard.Rpc.NettyImpl.Support;

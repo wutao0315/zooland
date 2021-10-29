@@ -47,12 +47,12 @@ namespace Zooyard.Rpc.NettyImpl
             var protocol = _nettyProtocols[url.Protocol];
 
             IEventLoopGroup group = protocol.EventLoopGroupType
-                   .GetConstructor(new Type[] { })
-                   .Invoke(new object[] { }) as IEventLoopGroup;
+                   .GetConstructor(Array.Empty<Type>())
+                   .Invoke(Array.Empty<object>()) as IEventLoopGroup;
 
             IChannel clientChannel = protocol.ChannelType
-                   .GetConstructor(new Type[] { })
-                   .Invoke(new object[] { }) as IChannel;
+                   .GetConstructor(Array.Empty<Type>())
+                   .Invoke(Array.Empty<object>()) as IChannel;
 
             var isSsl = url.GetParameter(SSL_KEY, DEFAULT_SSL);
 

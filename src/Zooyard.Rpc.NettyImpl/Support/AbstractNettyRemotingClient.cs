@@ -12,9 +12,9 @@ using Zooyard.Logging;
 using Zooyard.Rpc.NettyImpl.Processor;
 using Zooyard.Rpc.NettyImpl.Protocol;
 
+
 namespace Zooyard.Rpc.NettyImpl.Support
 {
-
     /// <summary>
     /// The type Rpc remoting client.
     /// 
@@ -56,10 +56,10 @@ namespace Zooyard.Rpc.NettyImpl.Support
 
 
         private readonly NettyClientBootstrap clientBootstrap;
-        private NettyClientChannelManager clientChannelManager;
+        private readonly NettyClientChannelManager clientChannelManager;
         //private ThreadPoolExecutor mergeSendExecutorService;
         private MultithreadEventLoopGroup mergeSendExecutorService;
-        private ITransactionMessageHandler transactionMessageHandler;
+        //private ITransactionMessageHandler transactionMessageHandler;
 
         private Task taskExecutor;
         public override async Task Init()
@@ -201,7 +201,7 @@ namespace Zooyard.Rpc.NettyImpl.Support
         public virtual async Task RegisterProcessor(int requestCode, IRemotingProcessor processor, IExecutorService executor)
         {
             Pair<IRemotingProcessor, IExecutorService> pair = new (processor, executor);
-            this.processorTable[requestCode] = pair;
+            this._processorTable[requestCode] = pair;
             await Task.CompletedTask;
         }
 
@@ -212,30 +212,14 @@ namespace Zooyard.Rpc.NettyImpl.Support
 
         public override async ValueTask DisposeAsync()
         {
-            await clientBootstrap.Shutdown();
-            if (mergeSendExecutorService != null)
-            {
-                await mergeSendExecutorService.ShutdownGracefullyAsync();
-                //await mergeSendExecutorService.DisposeAsync();
-            }
-            if (taskExecutor != null) 
-            {
-                taskExecutor.Dispose();
-            }
+            await clientBootstrap?.Shutdown();
+            await mergeSendExecutorService?.ShutdownGracefullyAsync();
+            //await mergeSendExecutorService.DisposeAsync();
+            taskExecutor?.Dispose();
             await base.DisposeAsync();
         }
 
-        public virtual ITransactionMessageHandler TransactionMessageHandler
-        {
-            set
-            {
-                this.transactionMessageHandler = value;
-            }
-            get
-            {
-                return transactionMessageHandler;
-            }
-        }
+        public virtual ITransactionMessageHandler TransactionMessageHandler { get; set; }
         public virtual NettyClientChannelManager ClientChannelManager => clientChannelManager;
 
 
@@ -429,10 +413,10 @@ namespace Zooyard.Rpc.NettyImpl.Support
         {
             public override bool IsSharable => true;
 
-            private readonly AbstractNettyRemotingClient outerInstance;
+            private readonly AbstractNettyRemotingClient _outerInstance;
             public ClientHandler(AbstractNettyRemotingClient outerInstance)
             {
-                this.outerInstance = outerInstance;
+                _outerInstance = outerInstance;
             }
 
             public override void ChannelRead(IChannelHandlerContext ctx, object msg)
@@ -441,16 +425,16 @@ namespace Zooyard.Rpc.NettyImpl.Support
                 {
                     return;
                 }
-                outerInstance.ProcessMessage(ctx, (RpcMessage)msg);
+                _outerInstance.ProcessMessage(ctx, (RpcMessage)msg);
             }
 
             public override void ChannelWritabilityChanged(IChannelHandlerContext ctx)
             {
-                lock (outerInstance.@lock)
+                lock (_outerInstance.@lock)
                 {
                     if (ctx.Channel.IsWritable)
                     {
-                        Monitor.PulseAll(outerInstance.@lock);
+                        Monitor.PulseAll(_outerInstance.@lock);
                     }
                 }
                 ctx.FireChannelWritabilityChanged();
@@ -458,7 +442,7 @@ namespace Zooyard.Rpc.NettyImpl.Support
 
             public override void ChannelInactive(IChannelHandlerContext ctx)
             {
-                if (outerInstance.messageExecutor.IsShutdown)
+                if (_outerInstance.messageExecutor.IsShutdown)
                 {
                     return;
                 }
@@ -466,7 +450,7 @@ namespace Zooyard.Rpc.NettyImpl.Support
                 {
                     Logger().LogInformation($"channel inactive: {ctx.Channel}");
                 }
-                outerInstance.clientChannelManager.ReleaseChannel(ctx.Channel, Utils.NetUtil.ToStringAddress(ctx.Channel.RemoteAddress)).GetAwaiter().GetResult();
+                _outerInstance.clientChannelManager.ReleaseChannel(ctx.Channel, Utils.NetUtil.ToStringAddress(ctx.Channel.RemoteAddress)).GetAwaiter().GetResult();
                 base.ChannelInactive(ctx);
             }
 
@@ -483,7 +467,7 @@ namespace Zooyard.Rpc.NettyImpl.Support
                         try
                         {
                             string serverAddress = Utils.NetUtil.ToStringAddress(ctx.Channel.RemoteAddress);
-                            outerInstance.clientChannelManager.InvalidateObject(serverAddress, ctx.Channel).GetAwaiter().GetResult();
+                            _outerInstance.clientChannelManager.InvalidateObject(serverAddress, ctx.Channel).GetAwaiter().GetResult();
                         }
                         catch (Exception exx)
                         {
@@ -491,7 +475,7 @@ namespace Zooyard.Rpc.NettyImpl.Support
                         }
                         finally
                         {
-                            outerInstance.clientChannelManager.ReleaseChannel(ctx.Channel, outerInstance.GetAddressFromContext(ctx)).GetAwaiter().GetResult();
+                            _outerInstance.clientChannelManager.ReleaseChannel(ctx.Channel, _outerInstance.GetAddressFromContext(ctx)).GetAwaiter().GetResult();
                         }
                     }
                     if (idleStateEvent == IdleStateEvent.WriterIdleStateEvent)
@@ -502,7 +486,7 @@ namespace Zooyard.Rpc.NettyImpl.Support
                             {
                                 Logger().LogDebug($"will send ping msg,channel {ctx.Channel}");
                             }
-                            outerInstance.SendAsyncRequest(ctx.Channel, HeartbeatMessage.PING).GetAwaiter().GetResult();
+                            _outerInstance.SendAsyncRequest(ctx.Channel, HeartbeatMessage.PING).GetAwaiter().GetResult();
                         }
                         catch (Exception throwable)
                         {
@@ -515,7 +499,7 @@ namespace Zooyard.Rpc.NettyImpl.Support
             public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
             {
                 Logger().LogError(cause, $"{FrameworkErrorCode.ExceptionCaught.GetErrCode()}:{Utils.NetUtil.ToStringAddress(ctx.Channel.RemoteAddress)} connect exception.{cause.Message}");
-                outerInstance.clientChannelManager.ReleaseChannel(ctx.Channel, ChannelUtil.GetAddressFromChannel(ctx.Channel)).GetAwaiter().GetResult();
+                _outerInstance.clientChannelManager.ReleaseChannel(ctx.Channel, ChannelUtil.GetAddressFromChannel(ctx.Channel)).GetAwaiter().GetResult();
                 if (Logger().IsEnabled(LogLevel.Information))
                 {
                     Logger().LogInformation($"remove exception rm channel:{ctx.Channel}");

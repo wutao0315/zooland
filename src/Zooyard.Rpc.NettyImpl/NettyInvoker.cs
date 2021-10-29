@@ -15,8 +15,7 @@ namespace Zooyard.Rpc.NettyImpl
         private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(NettyInvoker));
 
         private readonly IChannel _channel;
-        private readonly ConcurrentDictionary<string, TaskCompletionSource<TransportMessage>> _resultDictionary =
-            new ConcurrentDictionary<string, TaskCompletionSource<TransportMessage>>();
+        private readonly ConcurrentDictionary<string, TaskCompletionSource<TransportMessage>> _resultDictionary =new();
         private readonly int _clientTimeout;
 
         public NettyInvoker(IChannel channel, IMessageListener _messageListener, int clientTimeout)

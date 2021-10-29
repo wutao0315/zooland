@@ -40,13 +40,7 @@ namespace Zooyard.Rpc.NettyImpl.Support
 		/// Gets get address.
 		/// </summary>
 		/// <returns> the get address </returns>
-		public virtual string Address
-		{
-			get
-			{
-				return address;
-			}
-		}
+		public virtual string Address => address;
 
 		/// <summary>
 		/// Sets set address.

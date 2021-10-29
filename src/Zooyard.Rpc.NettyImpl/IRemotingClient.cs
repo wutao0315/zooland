@@ -14,10 +14,10 @@ namespace Zooyard.Rpc.NettyImpl
     {
 		/// <summary>
 		/// client send sync request.
-		/// In this request, if <seealso cref="NettyClientConfig#isEnableClientBatchSendRequest"/> is enabled,
+		/// In this request, if <seealso cref="NettyClientConfig"/> is enabled,
 		/// the message will be sent in batches.
 		/// </summary>
-		/// <param name="msg"> transaction message <seealso cref="io.seata.core.protocol"/> </param>
+		/// <param name="msg"> transaction message <seealso cref="IProtocol"/> </param>
 		/// <returns> server result message </returns>
 		/// <exception cref="TimeoutException"> TimeoutException </exception>
 		Task<object> SendSyncRequest(object msg);

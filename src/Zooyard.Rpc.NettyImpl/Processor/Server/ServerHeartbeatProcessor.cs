@@ -20,18 +20,18 @@ namespace Zooyard.Rpc.NettyImpl.Processor.Server
 
 		private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ServerHeartbeatProcessor));
 
-		private IRemotingServer remotingServer;
+		private readonly IRemotingServer _remotingServer;
 
 		public ServerHeartbeatProcessor(IRemotingServer remotingServer)
 		{
-			this.remotingServer = remotingServer;
+			_remotingServer = remotingServer;
 		}
 
 		public virtual async Task Process(IChannelHandlerContext ctx, RpcMessage rpcMessage)
 		{
 			try
 			{
-				await remotingServer.SendAsyncResponse(rpcMessage, ctx.Channel, HeartbeatMessage.PONG);
+				await _remotingServer.SendAsyncResponse(rpcMessage, ctx.Channel, HeartbeatMessage.PONG);
 			}
 			catch (Exception throwable)
 			{

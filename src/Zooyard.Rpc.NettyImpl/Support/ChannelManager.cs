@@ -56,7 +56,7 @@ namespace Zooyard.Rpc.NettyImpl.Support
 			string dbkeys,
 			IChannel channel)
 		{
-            RpcContext holder = new()
+            var holder = new RpcContext
             {
                 Version = version,
                 ClientId = BuildClientId(applicationId, channel),

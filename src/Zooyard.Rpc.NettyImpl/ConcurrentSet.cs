@@ -88,18 +88,12 @@ namespace Zooyard.Rpc.NettyImpl
         /// <summary>
         /// TBD
         /// </summary>
-        public bool IsEmpty
-        {
-            get { return _storage.IsEmpty; }
-        }
+        public bool IsEmpty => _storage.IsEmpty;
 
         /// <summary>
         /// TBD
         /// </summary>
-        public int Count
-        {
-            get { return _storage.Count; }
-        }
+        public int Count => _storage.Count;
 
         /// <summary>
         /// TBD
@@ -167,8 +161,7 @@ namespace Zooyard.Rpc.NettyImpl
         /// <returns>TBD</returns>
         public bool TryRemove(T item)
         {
-            byte dontCare;
-            return _storage.TryRemove(item, out dontCare);
+            return _storage.TryRemove(item, out _);
         }
     }
 }

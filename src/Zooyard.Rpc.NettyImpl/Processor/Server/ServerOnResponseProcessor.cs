@@ -26,22 +26,23 @@ namespace Zooyard.Rpc.NettyImpl.Processor.Server
 		/// <summary>
 		/// To handle the received RPC message on upper level.
 		/// </summary>
-		private ITransactionMessageHandler transactionMessageHandler;
+		private ITransactionMessageHandler _transactionMessageHandler;
 
 		/// <summary>
 		/// The Futures from io.seata.core.rpc.netty.AbstractNettyRemoting#futures
 		/// </summary>
-		private ConcurrentDictionary<int, MessageFuture> futures;
+		private ConcurrentDictionary<int, MessageFuture> _futures;
 
-		public ServerOnResponseProcessor(ITransactionMessageHandler transactionMessageHandler, ConcurrentDictionary<int, MessageFuture> futures)
+		public ServerOnResponseProcessor(ITransactionMessageHandler transactionMessageHandler, 
+			ConcurrentDictionary<int, MessageFuture> futures)
 		{
-			this.transactionMessageHandler = transactionMessageHandler;
-			this.futures = futures;
+			_transactionMessageHandler = transactionMessageHandler;
+			_futures = futures;
 		}
 
 		public virtual async Task Process(IChannelHandlerContext ctx, RpcMessage rpcMessage)
 		{
-			if (futures.TryRemove(rpcMessage.Id, out MessageFuture messageFuture) && messageFuture != null)
+			if (_futures.TryRemove(rpcMessage.Id, out MessageFuture messageFuture) && messageFuture != null)
 			{
 				messageFuture.ResultMessage = rpcMessage.Body;
 			}
@@ -94,9 +95,8 @@ namespace Zooyard.Rpc.NettyImpl.Processor.Server
 			if (rpcMessage.Body is AbstractResultMessage abstractResultMessage)
 			{
 				RpcContext rpcContext = ChannelManager.GetContextFromIdentified(ctx.Channel);
-				await transactionMessageHandler.OnResponse(abstractResultMessage, rpcContext);
+				await _transactionMessageHandler.OnResponse(abstractResultMessage, rpcContext);
 			}
 		}
 	}
-
 }
