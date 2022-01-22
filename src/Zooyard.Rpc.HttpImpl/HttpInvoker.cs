@@ -122,7 +122,7 @@ namespace Zooyard.Rpc.HttpImpl
             catch (Exception ex)
             {
                 Debug.Print(ex.StackTrace);
-                throw ex;
+                throw;
             }
             finally
             {
