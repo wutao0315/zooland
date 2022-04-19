@@ -1,9 +1,8 @@
-﻿namespace Zooyard.Rpc.NettyImpl.Serializer
+﻿namespace Zooyard.Rpc.NettyImpl.Serializer;
+
+public enum SerializerType
 {
-    public enum SerializerType
-	{
-		ZOOTA = 0x1,
-		PROTOBUF = 0x2,
-		KRYO = 0x4
-	}
+	ZOOTA = 0x1,
+	PROTOBUF = 0x2,
+	KRYO = 0x4
 }

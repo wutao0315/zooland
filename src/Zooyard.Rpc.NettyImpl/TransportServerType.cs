@@ -1,8 +1,7 @@
-﻿namespace Zooyard.Rpc.NettyImpl
+﻿namespace Zooyard.Rpc.NettyImpl;
+
+public enum TransportServerType 
 {
-    public enum TransportServerType 
-    {
-        NATIVE = 0,
-        NIO = 1
-    }
+    NATIVE = 0,
+    NIO = 1
 }

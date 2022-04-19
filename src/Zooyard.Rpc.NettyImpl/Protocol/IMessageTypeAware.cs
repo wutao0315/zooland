@@ -1,14 +1,13 @@
-﻿namespace Zooyard.Rpc.NettyImpl.Protocol
-{
-    /// <summary>
-	/// 
-	/// </summary>
-	public interface IMessageTypeAware
-    {
+﻿namespace Zooyard.Rpc.NettyImpl.Protocol;
 
-        /// <summary>
-        /// return the message type
-        /// </summary>
-        short TypeCode { get; }
-    }
+/// <summary>
+/// 
+/// </summary>
+public interface IMessageTypeAware
+{
+
+    /// <summary>
+    /// return the message type
+    /// </summary>
+    short TypeCode { get; }
 }

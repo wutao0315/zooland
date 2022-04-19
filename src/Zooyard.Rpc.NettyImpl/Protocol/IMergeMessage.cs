@@ -1,12 +1,10 @@
 ﻿
-namespace Zooyard.Rpc.NettyImpl.Protocol
-{
+namespace Zooyard.Rpc.NettyImpl.Protocol;
 
-	/// <summary>
-	/// The interface Merge message.
-	/// 
-	/// </summary>
-	public interface IMergeMessage
-	{
-	}
+/// <summary>
+/// The interface Merge message.
+/// 
+/// </summary>
+public interface IMergeMessage
+{
 }

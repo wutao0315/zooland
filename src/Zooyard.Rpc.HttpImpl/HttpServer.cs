@@ -1,43 +1,37 @@
-﻿using System;
-using Zooyard.Rpc.Support;
-using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.Hosting;
-using System.Threading.Tasks;
-using Zooyard;
+﻿using Microsoft.AspNetCore.Hosting;
 using Zooyard.Logging;
-using System.Threading;
+using Zooyard.Rpc.Support;
 
-namespace Zooyard.Rpc.HttpImpl
+namespace Zooyard.Rpc.HttpImpl;
+
+public class HttpServer : AbstractServer
 {
-    public class HttpServer : AbstractServer
+    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(HttpServer));
+    private readonly IWebHost _server;
+    public HttpServer(IWebHost server, IRegistryService registryService)
+        : base(registryService)
     {
-        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(HttpServer));
-        private readonly IWebHost _server;
-        public HttpServer(IWebHost server, IRegistryService registryService)
-            : base(registryService)
+        _server = server;
+    }
+
+
+    public override async Task DoExport(CancellationToken cancellationToken)
+    {
+        try
         {
-            _server = server;
+            await _server.RunAsync(cancellationToken);
+            Logger().LogDebug("http server started");
+        }
+        catch (Exception ex)
+        {
+            Logger().LogError(ex, ex.Message);
         }
 
+    }
 
-        public override async Task DoExport(CancellationToken cancellationToken)
-        {
-            try
-            {
-                await _server.RunAsync(cancellationToken);
-                Logger().LogDebug("http server started");
-            }
-            catch (Exception ex)
-            {
-                Logger().LogError(ex, ex.Message);
-            }
-
-        }
-
-        public override async Task DoDispose()
-        {
-            await _server.StopAsync();
-            _server.Dispose();
-        }
+    public override async Task DoDispose()
+    {
+        await _server.StopAsync();
+        _server.Dispose();
     }
 }

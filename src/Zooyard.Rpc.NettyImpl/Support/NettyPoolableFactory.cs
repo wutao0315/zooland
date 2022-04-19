@@ -1,148 +1,145 @@
 ﻿using DotNetty.Transport.Channels;
-using System;
 using System.Collections.Concurrent;
 using System.Net;
-using System.Threading.Tasks;
 using Zooyard.Exceptions;
 using Zooyard.Logging;
 using Zooyard.Rpc.NettyImpl.Protocol;
 using Zooyard.Utils;
 
-namespace Zooyard.Rpc.NettyImpl.Support
+namespace Zooyard.Rpc.NettyImpl.Support;
+
+/// <summary>
+/// The type Netty key poolable factory.
+/// 
+/// </summary>
+public class NettyPoolableFactory: IAsyncDisposable
 {
+    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(NettyPoolableFactory));
+
+    private readonly ConcurrentDictionary<NettyPoolKey, IChannel> poolData = new ();
+    private readonly AbstractNettyRemotingClient rpcRemotingClient;
+    private readonly NettyClientBootstrap clientBootstrap;
+
     /// <summary>
-    /// The type Netty key poolable factory.
-    /// 
+    /// Instantiates a new Netty key poolable factory.
     /// </summary>
-    public class NettyPoolableFactory: IAsyncDisposable
+    /// <param name="rpcRemotingClient"> the rpc remoting client </param>
+    public NettyPoolableFactory(AbstractNettyRemotingClient rpcRemotingClient,
+        NettyClientBootstrap clientBootstrap)
     {
-        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(NettyPoolableFactory));
+        this.rpcRemotingClient = rpcRemotingClient;
+        this.clientBootstrap = clientBootstrap;
+    }
 
-        private readonly ConcurrentDictionary<NettyPoolKey, IChannel> poolData = new ();
-        private readonly AbstractNettyRemotingClient rpcRemotingClient;
-        private readonly NettyClientBootstrap clientBootstrap;
-
-        /// <summary>
-        /// Instantiates a new Netty key poolable factory.
-        /// </summary>
-        /// <param name="rpcRemotingClient"> the rpc remoting client </param>
-        public NettyPoolableFactory(AbstractNettyRemotingClient rpcRemotingClient,
-            NettyClientBootstrap clientBootstrap)
+    public async Task<IChannel> MakeObject(NettyPoolKey key)
+    {
+        IPEndPoint address = NetUtil.ToIPEndPoint(key.Address);
+        if (Logger().IsEnabled(LogLevel.Information)) 
         {
-            this.rpcRemotingClient = rpcRemotingClient;
-            this.clientBootstrap = clientBootstrap;
+            Logger().LogInformation($"NettyPool create channel to {key}");
         }
-
-        public async Task<IChannel> MakeObject(NettyPoolKey key)
+        IChannel tmpChannel = await clientBootstrap.GetNewChannel(address);
+        long start = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+        object response;
+        IChannel channelToServer = null;
+        if (key.Message == null)
         {
-            IPEndPoint address = NetUtil.ToIPEndPoint(key.Address);
-            if (Logger().IsEnabled(LogLevel.Information)) 
-            {
-                Logger().LogInformation($"NettyPool create channel to {key}");
-            }
-            IChannel tmpChannel = await clientBootstrap.GetNewChannel(address);
-            long start = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-            object response;
-            IChannel channelToServer = null;
-            if (key.Message == null)
-            {
-                throw new FrameworkException($"register msg is null.");
-            }
-            try
-            {
-                response = await rpcRemotingClient.SendSyncRequest(tmpChannel, key.Message);
-                if (!IsResponseSuccess(response))
-                {
-                    await rpcRemotingClient.OnRegisterMsgFail(key.Address, tmpChannel, response, key.Message);
-                }
-                else
-                {
-                    channelToServer = tmpChannel;
-                    await rpcRemotingClient.OnRegisterMsgSuccess(key.Address, tmpChannel, response, key.Message);
-                }
-            }
-            catch (Exception exx)
-            {
-                if (tmpChannel != null)
-                {
-                    await tmpChannel.CloseAsync();
-                }
-                throw new FrameworkException($"register error,err:{exx.Message}");
-            }
-            if (Logger().IsEnabled(LogLevel.Information))
-            {
-                Logger().LogInformation($"register success, cost {(DateTimeOffset.Now.ToUnixTimeMilliseconds() - start)}ms, version:{GetVersion(response)},channel:{channelToServer}");
-            }
-            return channelToServer;
+            throw new FrameworkException($"register msg is null.");
         }
-
-        private bool IsResponseSuccess(object response)
+        try
         {
-            if (response == null)
+            response = await rpcRemotingClient.SendSyncRequest(tmpChannel, key.Message);
+            if (!IsResponseSuccess(response))
             {
-                return false;
+                await rpcRemotingClient.OnRegisterMsgFail(key.Address, tmpChannel, response, key.Message);
             }
+            else
+            {
+                channelToServer = tmpChannel;
+                await rpcRemotingClient.OnRegisterMsgSuccess(key.Address, tmpChannel, response, key.Message);
+            }
+        }
+        catch (Exception exx)
+        {
+            if (tmpChannel != null)
+            {
+                await tmpChannel.CloseAsync();
+            }
+            throw new FrameworkException($"register error,err:{exx.Message}");
+        }
+        if (Logger().IsEnabled(LogLevel.Information))
+        {
+            Logger().LogInformation($"register success, cost {(DateTimeOffset.Now.ToUnixTimeMilliseconds() - start)}ms, version:{GetVersion(response)},channel:{channelToServer}");
+        }
+        return channelToServer;
+    }
+
+    private bool IsResponseSuccess(object response)
+    {
+        if (response == null)
+        {
             return false;
         }
+        return false;
+    }
 
-        private string GetVersion(object response)
-        {
-            return ((AbstractIdentifyResponse)response).Version;
-        }
+    private string GetVersion(object response)
+    {
+        return ((AbstractIdentifyResponse)response).Version;
+    }
 
-        public async Task DestroyObject(NettyPoolKey key, IChannel channel)
+    public async Task DestroyObject(NettyPoolKey key, IChannel channel)
+    {
+        if (channel != null)
         {
-            if (channel != null)
-            {
-                if (Logger().IsEnabled(LogLevel.Information)) 
-                {
-                    Logger().LogInformation($"will destroy channel:{channel}");
-                }
-
-                await channel.DisconnectAsync();
-                await channel.CloseAsync();
-            }
-            if (poolData.TryRemove(key, out IChannel cn)) 
-            {
-                await cn.DisconnectAsync();
-                await cn.CloseAsync();
-            }
-        }
-        public async ValueTask DisposeAsync()
-        {
-            foreach (var item in poolData)
-            {
-                await DestroyObject(item.Key, item.Value);
-            }
-        }
-        public bool ValidateObject(NettyPoolKey key, IChannel obj)
-        {
-            if (obj != null && obj.Active)
-            {
-                return true;
-            }
             if (Logger().IsEnabled(LogLevel.Information)) 
             {
-                Logger().LogInformation($"channel valid false,channel:{obj}");
+                Logger().LogInformation($"will destroy channel:{channel}");
             }
-            return false;
+
+            await channel.DisconnectAsync();
+            await channel.CloseAsync();
         }
-        public void ReturnObject(NettyPoolKey key, IChannel obj) 
+        if (poolData.TryRemove(key, out IChannel cn)) 
         {
-            poolData.TryAdd(key, obj);
+            await cn.DisconnectAsync();
+            await cn.CloseAsync();
         }
-        public async Task InvalidateObject(NettyPoolKey key, IChannel obj)
+    }
+    public async ValueTask DisposeAsync()
+    {
+        foreach (var item in poolData)
         {
-            await DestroyObject(key, obj);
+            await DestroyObject(item.Key, item.Value);
         }
-        public async Task<IChannel> BorrowObject(NettyPoolKey key)
+    }
+    public bool ValidateObject(NettyPoolKey key, IChannel obj)
+    {
+        if (obj != null && obj.Active)
         {
-            if (poolData.TryRemove(key, out IChannel result))
-            {
-                return result;
-            }
-            result = await this.MakeObject(key);
+            return true;
+        }
+        if (Logger().IsEnabled(LogLevel.Information)) 
+        {
+            Logger().LogInformation($"channel valid false,channel:{obj}");
+        }
+        return false;
+    }
+    public void ReturnObject(NettyPoolKey key, IChannel obj) 
+    {
+        poolData.TryAdd(key, obj);
+    }
+    public async Task InvalidateObject(NettyPoolKey key, IChannel obj)
+    {
+        await DestroyObject(key, obj);
+    }
+    public async Task<IChannel> BorrowObject(NettyPoolKey key)
+    {
+        if (poolData.TryRemove(key, out IChannel result))
+        {
             return result;
         }
+        result = await this.MakeObject(key);
+        return result;
     }
 }

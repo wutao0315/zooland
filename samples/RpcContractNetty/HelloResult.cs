@@ -1,16 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace RpcContractNetty;
 
-namespace RpcContractNetty
+[Serializable]
+public class HelloResult
 {
-    [Serializable]
-    public class HelloResult
-    {
-        public string Name { get; set; }
-        public string Gender { get; set; }
-        public string Head { get; set; }
-    }
+    public string Name { get; set; }
+    public string Gender { get; set; }
+    public string Head { get; set; }
 }

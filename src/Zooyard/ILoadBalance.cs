@@ -1,10 +1,7 @@
-﻿using System.Collections.Generic;
+﻿namespace Zooyard;
 
-namespace Zooyard
+public interface ILoadBalance
 {
-    public interface ILoadBalance
-    {
-        string Name { get; }
-        URL Select(IList<URL> urls,IInvocation invocation);
-    }
+    string Name { get; }
+    URL Select(IList<URL> urls,IInvocation invocation);
 }

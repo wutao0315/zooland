@@ -1,8 +1,7 @@
-﻿namespace Zooyard.Rpc.NettyImpl.Protocol
+﻿namespace Zooyard.Rpc.NettyImpl.Protocol;
+
+public enum ResultCode 
 {
-    public enum ResultCode 
-    {
-        Failed=0,
-        Success=1
-    }
+    Failed=0,
+    Success=1
 }

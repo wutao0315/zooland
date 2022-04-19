@@ -1,17 +1,13 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿namespace Zooyard;
 
-namespace Zooyard
+public interface IClient : IDisposable,IAsyncDisposable
 {
-    public interface IClient : IDisposable,IAsyncDisposable
-    {
-        URL Url { get; }
-        Task<IInvoker> Refer();
-        string Version { get; }
-        DateTime ActiveTime { get; set; }
-        Task Open();
-        Task Close();
-        void Reset();
-        
-    }
+    URL Url { get; }
+    Task<IInvoker> Refer();
+    string Version { get; }
+    DateTime ActiveTime { get; set; }
+    Task Open();
+    Task Close();
+    void Reset();
+    
 }

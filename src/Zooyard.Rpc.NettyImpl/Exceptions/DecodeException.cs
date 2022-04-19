@@ -1,14 +1,11 @@
-﻿using System;
+﻿namespace Zooyard.Rpc.NettyImpl.Exceptions;
 
-namespace Zooyard.Rpc.NettyImpl.Exceptions
+/// <summary>
+/// </summary>
+public class DecodeException : Exception
 {
-    /// <summary>
-    /// </summary>
-    public class DecodeException : Exception
-	{
 
-		public DecodeException(Exception throwable) : base(throwable.Message, throwable)
-		{
-		}
+	public DecodeException(Exception throwable) : base(throwable.Message, throwable)
+	{
 	}
 }

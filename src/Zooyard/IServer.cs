@@ -1,11 +1,6 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
+﻿namespace Zooyard;
 
-namespace Zooyard
+public interface IServer : IAsyncDisposable
 {
-    public interface IServer : IAsyncDisposable
-    {
-        Task Export(CancellationToken cancellationToken);
-    }
+    Task Export(CancellationToken cancellationToken);
 }

@@ -1,12 +1,9 @@
-﻿using System;
+﻿namespace Zooyard;
 
-namespace Zooyard
+public interface IMerger
 {
-    public interface IMerger
-    {
-    }
-    public interface IMerger<T> : IMerger
-    {
-        T Merge(params T[] items);
-    }
+}
+public interface IMerger<T> : IMerger
+{
+    T Merge(params T[] items);
 }

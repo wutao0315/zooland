@@ -1,9 +1,8 @@
-﻿namespace Zooyard
+﻿namespace Zooyard;
+
+public interface ICache
 {
-    public interface ICache
-    {
-        T Get<T>(object key);
-        void Put(object key,object value);
-        void Clear();
-    }
+    T Get<T>(object key);
+    void Put(object key,object value);
+    void Clear();
 }

@@ -1,67 +1,63 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
 using System.Reflection;
-using System.Text;
 
-namespace Zooyard.Rpc.NettyImpl
+namespace Zooyard.Rpc.NettyImpl;
+
+/// <summary>
+/// Class TypeExtensions.
+/// </summary>
+public static class TypeExtensions
 {
     /// <summary>
-    /// Class TypeExtensions.
+    /// Returns true if <paramref name="type" /> implements/inherits <typeparamref name="T" />.
+    /// <example><para>typeof(object[]).Implements&lt;IEnumerable&gt;() --&gt; true</para></example>
     /// </summary>
-    public static class TypeExtensions
+    /// <typeparam name="T">TBD</typeparam>
+    /// <param name="type">The type.</param>
+    /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
+    public static bool Implements<T>(this Type type)
     {
-        /// <summary>
-        /// Returns true if <paramref name="type" /> implements/inherits <typeparamref name="T" />.
-        /// <example><para>typeof(object[]).Implements&lt;IEnumerable&gt;() --&gt; true</para></example>
-        /// </summary>
-        /// <typeparam name="T">TBD</typeparam>
-        /// <param name="type">The type.</param>
-        /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
-        public static bool Implements<T>(this Type type)
+        return Implements(type, typeof(T));
+    }
+
+    /// <summary>
+    /// Returns true if <paramref name="type" /> implements/inherits <paramref name="moreGeneralType" />.
+    /// <example><para>typeof(object[]).Implements(typeof(IEnumerable)) --&gt; true</para></example>
+    /// </summary>
+    /// <param name="type">The type.</param>
+    /// <param name="moreGeneralType">Type of the more general.</param>
+    /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
+    public static bool Implements(this Type type, Type moreGeneralType)
+    {
+        return moreGeneralType.IsAssignableFrom(type);
+    }
+
+    private static readonly ConcurrentDictionary<Type, string> ShortenedTypeNames = new ConcurrentDictionary<Type, string>();
+    private static readonly string CoreAssemblyName = typeof(object).GetTypeInfo().Assembly.GetName().Name;
+
+    /// <summary>
+    /// INTERNAL API
+    /// Utility to be used by implementers to create a manifest from the type.
+    /// The manifest is used to look up the type on deserialization.
+    /// </summary>
+    /// <param name="type">TBD</param>
+    /// <returns>Returns the type qualified name including namespace and assembly, but not assembly version.</returns>
+
+    public static string TypeQualifiedName(this Type type)
+    {
+        string shortened;
+        if (ShortenedTypeNames.TryGetValue(type, out shortened))
         {
-            return Implements(type, typeof(T));
+            return shortened;
         }
-
-        /// <summary>
-        /// Returns true if <paramref name="type" /> implements/inherits <paramref name="moreGeneralType" />.
-        /// <example><para>typeof(object[]).Implements(typeof(IEnumerable)) --&gt; true</para></example>
-        /// </summary>
-        /// <param name="type">The type.</param>
-        /// <param name="moreGeneralType">Type of the more general.</param>
-        /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
-        public static bool Implements(this Type type, Type moreGeneralType)
+        else
         {
-            return moreGeneralType.IsAssignableFrom(type);
-        }
-
-        private static readonly ConcurrentDictionary<Type, string> ShortenedTypeNames = new ConcurrentDictionary<Type, string>();
-        private static readonly string CoreAssemblyName = typeof(object).GetTypeInfo().Assembly.GetName().Name;
-
-        /// <summary>
-        /// INTERNAL API
-        /// Utility to be used by implementers to create a manifest from the type.
-        /// The manifest is used to look up the type on deserialization.
-        /// </summary>
-        /// <param name="type">TBD</param>
-        /// <returns>Returns the type qualified name including namespace and assembly, but not assembly version.</returns>
-
-        public static string TypeQualifiedName(this Type type)
-        {
-            string shortened;
-            if (ShortenedTypeNames.TryGetValue(type, out shortened))
-            {
-                return shortened;
-            }
-            else
-            {
-                var assemblyName = type.GetTypeInfo().Assembly.GetName().Name;
-                shortened = assemblyName.Equals(CoreAssemblyName)
-                    ? type.GetTypeInfo().FullName
-                    : $"{type.GetTypeInfo().FullName}, {assemblyName}";
-                ShortenedTypeNames.TryAdd(type, shortened);
-                return shortened;
-            }
+            var assemblyName = type.GetTypeInfo().Assembly.GetName().Name;
+            shortened = assemblyName.Equals(CoreAssemblyName)
+                ? type.GetTypeInfo().FullName
+                : $"{type.GetTypeInfo().FullName}, {assemblyName}";
+            ShortenedTypeNames.TryAdd(type, shortened);
+            return shortened;
         }
     }
 }

@@ -1,27 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using Zooyard;
+﻿namespace Zooyard.Rpc.Merger;
 
-namespace Zooyard.Rpc.Merger
+public class SetMerger<T> : IMerger<ISet<T>>
 {
-    public class SetMerger<T> : IMerger<ISet<T>>
+    public ISet<T> Merge(params ISet<T>[] items)
     {
-        public ISet<T> Merge(params ISet<T>[] items)
+        var result = new HashSet<T>();
+        
+        foreach (var item in items)
         {
-            var result = new HashSet<T>();
-            
-            foreach (var item in items)
+            if (item != null)
             {
-                if (item != null)
+                foreach (var i in item)
                 {
-                    foreach (var i in item)
-                    {
-                        result.Add(i);
-                    }
+                    result.Add(i);
                 }
             }
-
-            return result;
         }
+
+        return result;
     }
 }

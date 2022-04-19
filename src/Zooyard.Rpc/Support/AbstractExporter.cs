@@ -1,11 +1,8 @@
-﻿using Zooyard;
+﻿namespace Zooyard.Rpc.Support;
 
-namespace Zooyard.Rpc.Support
+public abstract class AbstractExporter<T> : IExporter<T>
 {
-    public abstract class AbstractExporter<T> : IExporter<T>
-    {
-        public abstract IInvoker Invoker { get; }
+    public abstract IInvoker Invoker { get; }
 
-        public abstract void UnExport();
-    }
+    public abstract void UnExport();
 }

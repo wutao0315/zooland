@@ -1,90 +1,84 @@
 ﻿using Grpc.Core;
 using Grpc.Core.Interceptors;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Zooyard;
 using Zooyard.Logging;
 using Zooyard.Rpc.Support;
 
-namespace Zooyard.Rpc.GrpcImpl
+namespace Zooyard.Rpc.GrpcImpl;
+
+public class GrpcClientPool : AbstractClientPool
 {
-    public class GrpcClientPool : AbstractClientPool
+    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(GrpcClient));
+
+    public const string PROXY_KEY = "proxy";
+    public const string TIMEOUT_KEY = "grpc_timeout";
+    public const int DEFAULT_TIMEOUT = 5000;
+    public const string MAXLENGTH_KEY = "grpc_maxlength";
+    public const int DEFAULT_MAXLENGTH = int.MaxValue;
+    public const string CREDENTIALS_KEY = "protocol";
+    public const string DEFAULT_CREDENTIALS = "Insecure";
+
+
+    private readonly IDictionary<string, ChannelCredentials> _credentials;
+    private readonly IDictionary<string, Type> _grpcClientTypes;
+    private readonly IEnumerable<ClientInterceptor> _interceptors;
+
+
+    public GrpcClientPool(IDictionary<string, ChannelCredentials> credentials,
+        IDictionary<string, Type> grpcClientTypes,
+        IEnumerable<ClientInterceptor> interceptors)
     {
-        private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(GrpcClient));
+        _credentials = credentials;
+        _grpcClientTypes = grpcClientTypes;
+        _interceptors = interceptors;
+    }
 
-        public const string PROXY_KEY = "proxy";
-        public const string TIMEOUT_KEY = "grpc_timeout";
-        public const int DEFAULT_TIMEOUT = 5000;
-        public const string MAXLENGTH_KEY = "grpc_maxlength";
-        public const int DEFAULT_MAXLENGTH = int.MaxValue;
-        public const string CREDENTIALS_KEY = "protocol";
-        public const string DEFAULT_CREDENTIALS = "Insecure";
+    protected override async Task<IClient> CreateClient(URL url)
+    {
+        //实例化TheTransport
+        //获得transport参数,用于反射实例化
+        var timeout = url.GetParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
 
-
-        private readonly IDictionary<string, ChannelCredentials> _credentials;
-        private readonly IDictionary<string, Type> _grpcClientTypes;
-        private readonly IEnumerable<ClientInterceptor> _interceptors;
-
-
-        public GrpcClientPool(IDictionary<string, ChannelCredentials> credentials,
-            IDictionary<string, Type> grpcClientTypes,
-            IEnumerable<ClientInterceptor> interceptors)
+        var proxyKey = url.GetParameter(PROXY_KEY);
+        if (string.IsNullOrEmpty(proxyKey) || !_grpcClientTypes.ContainsKey(proxyKey))
         {
-            _credentials = credentials;
-            _grpcClientTypes = grpcClientTypes;
-            _interceptors = interceptors;
+            throw new RpcException("not find the proxy grpc client");
         }
 
-        protected override async Task<IClient> CreateClient(URL url)
+        var maxReceiveMessageLength = url.GetParameter(MAXLENGTH_KEY, DEFAULT_MAXLENGTH);
+        var options = new List<ChannelOption>
         {
-            //实例化TheTransport
-            //获得transport参数,用于反射实例化
-            var timeout = url.GetParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
+            new ChannelOption(ChannelOptions.MaxReceiveMessageLength, maxReceiveMessageLength)
+        };
 
-            var proxyKey = url.GetParameter(PROXY_KEY);
-            if (string.IsNullOrEmpty(proxyKey) || !_grpcClientTypes.ContainsKey(proxyKey))
-            {
-                throw new RpcException("not find the proxy grpc client");
-            }
+        //ChannelCredentials.Create(ChannelCredentials.Insecure, CallCredentials.FromInterceptor(CreateAuthInterceptor()));
+        var credentials = ChannelCredentials.Insecure;
+        
 
-            var maxReceiveMessageLength = url.GetParameter(MAXLENGTH_KEY, DEFAULT_MAXLENGTH);
-            var options = new List<ChannelOption>
-            {
-                new ChannelOption(ChannelOptions.MaxReceiveMessageLength, maxReceiveMessageLength)
-            };
+        var credentialsKey = url.GetParameter(CREDENTIALS_KEY, DEFAULT_CREDENTIALS);
+        if (_credentials != null 
+            && _credentials.ContainsKey(credentialsKey) 
+            && credentialsKey!= DEFAULT_CREDENTIALS)
+        {
+            credentials = _credentials[credentialsKey];
+        }
 
-            //ChannelCredentials.Create(ChannelCredentials.Insecure, CallCredentials.FromInterceptor(CreateAuthInterceptor()));
-            var credentials = ChannelCredentials.Insecure;
-            
+        var channel = new Channel(url.Host, url.Port, credentials, options);
 
-            var credentialsKey = url.GetParameter(CREDENTIALS_KEY, DEFAULT_CREDENTIALS);
-            if (_credentials != null 
-                && _credentials.ContainsKey(credentialsKey) 
-                && credentialsKey!= DEFAULT_CREDENTIALS)
-            {
-                credentials = _credentials[credentialsKey];
-            }
+        await Task.CompletedTask;
 
-            var channel = new Channel(url.Host, url.Port, credentials, options);
+        if (_interceptors?.Count() > 0)
+        {
+            var callInvoker = channel.Intercept(_interceptors.ToArray());
+            //实例化GrpcClient
+            var client = Activator.CreateInstance(_grpcClientTypes[proxyKey], callInvoker);
 
-            await Task.CompletedTask;
+            return new GrpcClient(channel, client, url, credentials, timeout);
+        }
+        else {
+            //实例化GrpcClient
+            var client = Activator.CreateInstance(_grpcClientTypes[proxyKey], channel);
 
-            if (_interceptors?.Count() > 0)
-            {
-                var callInvoker = channel.Intercept(_interceptors.ToArray());
-                //实例化GrpcClient
-                var client = Activator.CreateInstance(_grpcClientTypes[proxyKey], callInvoker);
-
-                return new GrpcClient(channel, client, url, credentials, timeout);
-            }
-            else {
-                //实例化GrpcClient
-                var client = Activator.CreateInstance(_grpcClientTypes[proxyKey], channel);
-
-                return new GrpcClient(channel, client, url, credentials, timeout);
-            }
+            return new GrpcClient(channel, client, url, credentials, timeout);
         }
     }
 }

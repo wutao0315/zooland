@@ -1,201 +1,197 @@
-﻿using System;
-using Zooyard.Atomic;
+﻿namespace Zooyard.Atomic;
 
-namespace Zooyard.Atomic
+public class AtomicPositiveInteger
 {
-    public class AtomicPositiveInteger
+    private readonly AtomicInteger i;
+
+    public AtomicPositiveInteger()
     {
-        private readonly AtomicInteger i;
+        i = new AtomicInteger();
+    }
 
-        public AtomicPositiveInteger()
-        {
-            i = new AtomicInteger();
-        }
+    public AtomicPositiveInteger(int initialValue)
+    {
+        i = new AtomicInteger(initialValue);
+    }
 
-        public AtomicPositiveInteger(int initialValue)
+    public int GetAndIncrement()
+    {
+        for (; ; )
         {
-            i = new AtomicInteger(initialValue);
-        }
+            int current = i.Value;
+            int next = (current >= int.MaxValue ? 0 : current + 1);
 
-        public int GetAndIncrement()
-        {
-            for (; ; )
+            if (i.CompareAndSet(current, next))
             {
-                int current = i.Value;
-                int next = (current >= int.MaxValue ? 0 : current + 1);
-
-                if (i.CompareAndSet(current, next))
-                {
-                    return current;
-                }
+                return current;
             }
         }
+    }
 
-        public int GetAndDecrement()
+    public int GetAndDecrement()
+    {
+        for (; ; )
         {
-            for (; ; )
-            {
-                int current = i.Value;
-                int next = (current <= 0 ? int.MaxValue : current - 1);
+            int current = i.Value;
+            int next = (current <= 0 ? int.MaxValue : current - 1);
 
-                if (i.CompareAndSet(current, next))
-                {
-                    return current;
-                }
+            if (i.CompareAndSet(current, next))
+            {
+                return current;
             }
         }
+    }
 
-        public int IncrementAndGet()
+    public int IncrementAndGet()
+    {
+        for (; ; )
         {
-            for (; ; )
-            {
-                int current = i.Value;
-                int next = (current >= int.MaxValue ? 0 : current + 1);
+            int current = i.Value;
+            int next = (current >= int.MaxValue ? 0 : current + 1);
 
-                if (i.CompareAndSet(current, next))
-                {
-                    return next;
-                }
+            if (i.CompareAndSet(current, next))
+            {
+                return next;
             }
         }
+    }
 
-        public int DecrementAndGet()
+    public int DecrementAndGet()
+    {
+        for (; ; )
         {
-            for (; ; )
+            int current = i.Value;
+            int next = (current <= 0 ? int.MaxValue : current - 1);
+            
+            if (i.CompareAndSet(current, next))
             {
-                int current = i.Value;
-                int next = (current <= 0 ? int.MaxValue : current - 1);
-                
-                if (i.CompareAndSet(current, next))
-                {
-                    return next;
-                }
+                return next;
             }
         }
+    }
 
-        public int Get()
+    public int Get()
+    {
+        return i.Value;
+    }
+
+    public void Set(int newValue)
+    {
+        if (newValue < 0)
         {
-            return i.Value;
+            throw new ArgumentException("new value " + newValue + " < 0");
         }
+        i.Value = newValue;
+    }
 
-        public void Set(int newValue)
+    public int GetAndSet(int newValue)
+    {
+        if (newValue < 0)
         {
-            if (newValue < 0)
+            throw new ArgumentException("new value " + newValue + " < 0");
+        }
+        return i.GetAndSet(newValue);
+    }
+
+    public int GetAndAdd(int delta)
+    {
+        if (delta < 0)
+        {
+            throw new ArgumentException("delta " + delta + " < 0");
+        }
+        for (; ; )
+        {
+            int current = i.Value;
+            int next = (current >= int.MaxValue - delta + 1 ? delta - 1 : current + delta);
+
+            if (i.CompareAndSet(current, next))
             {
-                throw new ArgumentException("new value " + newValue + " < 0");
+                return current;
             }
-            i.Value = newValue;
+            
         }
+    }
 
-        public int GetAndSet(int newValue)
+    public int AddAndGet(int delta)
+    {
+        if (delta < 0)
         {
-            if (newValue < 0)
+            throw new ArgumentException("delta " + delta + " < 0");
+        }
+        for (; ; )
+        {
+            int current = i.Value;
+            int next = (current >= int.MaxValue - delta + 1 ? delta - 1 : current + delta);
+
+            if (i.CompareAndSet(current, next))
             {
-                throw new ArgumentException("new value " + newValue + " < 0");
-            }
-            return i.GetAndSet(newValue);
-        }
-
-        public int GetAndAdd(int delta)
-        {
-            if (delta < 0)
-            {
-                throw new ArgumentException("delta " + delta + " < 0");
-            }
-            for (; ; )
-            {
-                int current = i.Value;
-                int next = (current >= int.MaxValue - delta + 1 ? delta - 1 : current + delta);
-
-                if (i.CompareAndSet(current, next))
-                {
-                    return current;
-                }
-                
+                return next;
             }
         }
+    }
 
-        public int AddAndGet(int delta)
+    public bool CompareAndSet(int expect, int update)
+    {
+        if (update < 0)
         {
-            if (delta < 0)
-            {
-                throw new ArgumentException("delta " + delta + " < 0");
-            }
-            for (; ; )
-            {
-                int current = i.Value;
-                int next = (current >= int.MaxValue - delta + 1 ? delta - 1 : current + delta);
+            throw new ArgumentException("update value " + update + " < 0");
+        }
+        return i.CompareAndSet(expect, update);
+    }
+    public virtual byte ByteValue()
+    {
+        return (byte)i.Value;
+    }
 
-                if (i.CompareAndSet(current, next))
-                {
-                    return next;
-                }
-            }
-        }
+    public virtual short ShortValue()
+    {
+        return (short)i.Value;
+    }
 
-        public bool CompareAndSet(int expect, int update)
-        {
-            if (update < 0)
-            {
-                throw new ArgumentException("update value " + update + " < 0");
-            }
-            return i.CompareAndSet(expect, update);
-        }
-        public virtual byte ByteValue()
-        {
-            return (byte)i.Value;
-        }
+    public virtual int IntValue()
+    {
+        return i.Value;
+    }
 
-        public virtual short ShortValue()
-        {
-            return (short)i.Value;
-        }
+    public virtual long LongValue()
+    {
+        return i.Value;
+    }
 
-        public virtual int IntValue()
-        {
-            return i.Value;
-        }
+    public virtual float FloatValue()
+    {
+        return i.Value;
+    }
 
-        public virtual long LongValue()
-        {
-            return i.Value;
-        }
+    public virtual double DoubleValue()
+    {
+        return i.Value;
+    }
 
-        public virtual float FloatValue()
-        {
-            return i.Value;
-        }
+    public override string ToString()
+    {
+        return i.ToString();
+    }
 
-        public virtual double DoubleValue()
-        {
-            return i.Value;
-        }
+    public override int GetHashCode()
+    {
+        const int prime = 31;
+        int result = 1;
+        result = prime * result + i.GetHashCode();
+        return result;
+    }
 
-        public override string ToString()
+    public override bool Equals(object obj)
+    {
+        if (this == obj)
         {
-            return i.ToString();
+            return true;
         }
-
-        public override int GetHashCode()
+        if (!(obj is AtomicPositiveInteger))
         {
-            const int prime = 31;
-            int result = 1;
-            result = prime * result + i.GetHashCode();
-            return result;
+            return false;
         }
-
-        public override bool Equals(object obj)
-        {
-            if (this == obj)
-            {
-                return true;
-            }
-            if (!(obj is AtomicPositiveInteger))
-            {
-                return false;
-            }
-            var other = (AtomicPositiveInteger)obj;
-            return i.Value == other.IntValue();
-        }
+        var other = (AtomicPositiveInteger)obj;
+        return i.Value == other.IntValue();
     }
 }

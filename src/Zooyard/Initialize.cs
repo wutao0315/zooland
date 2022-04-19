@@ -1,21 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace Zooyard;
 
-namespace Zooyard
+/// <summary>
+/// The interface Initialize.
+/// 
+/// </summary>
+public interface Initialize
 {
-    /// <summary>
-    /// The interface Initialize.
-    /// 
-    /// </summary>
-    public interface Initialize
-    {
 
-        /// <summary>
-        /// init method
-        /// </summary>
-        void Init();
-    }
+    /// <summary>
+    /// init method
+    /// </summary>
+    void Init();
 }

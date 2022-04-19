@@ -1,56 +1,54 @@
-﻿using System.Collections.Generic;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using Zooyard.Loader;
 
 
-namespace Zooyard.Rpc.NettyImpl.Compressor
+namespace Zooyard.Rpc.NettyImpl.Compressor;
+
+/// <summary>
+/// the type compressor factory
+/// </summary>
+public class CompressorFactory
 {
+
 	/// <summary>
-	/// the type compressor factory
+	/// The constant COMPRESSOR_MAP.
 	/// </summary>
-	public class CompressorFactory
+	protected internal static readonly ConcurrentDictionary<CompressorType, ICompressor> COMPRESSOR_MAP = new ();
+
+	static CompressorFactory()
 	{
+		COMPRESSOR_MAP[CompressorType.NONE] = new NoneCompressor();
+	}
 
-		/// <summary>
-		/// The constant COMPRESSOR_MAP.
-		/// </summary>
-		protected internal static readonly ConcurrentDictionary<CompressorType, ICompressor> COMPRESSOR_MAP = new ();
+	/// <summary>
+	/// Get compressor by code.
+	/// </summary>
+	/// <param name="code"> the code </param>
+	/// <returns> the compressor </returns>
+	public static ICompressor GetCompressor(byte code)
+	{
+		var type = (CompressorType)code;
 
-		static CompressorFactory()
+		ICompressor impl = COMPRESSOR_MAP.GetOrAdd(type, (key)=>EnhancedServiceLoader.Load<ICompressor>(type.ToString()));
+		return impl;
+	}
+
+	/// <summary>
+	/// None compressor
+	/// </summary>
+	[LoadLevel(name: "NONE")]
+	public class NoneCompressor : ICompressor
+	{
+		public virtual byte[] Compress(byte[] bytes)
 		{
-			COMPRESSOR_MAP[CompressorType.NONE] = new NoneCompressor();
+			return bytes;
 		}
 
-		/// <summary>
-		/// Get compressor by code.
-		/// </summary>
-		/// <param name="code"> the code </param>
-		/// <returns> the compressor </returns>
-		public static ICompressor GetCompressor(byte code)
+		public virtual byte[] Decompress(byte[] bytes)
 		{
-			var type = (CompressorType)code;
-
-			ICompressor impl = COMPRESSOR_MAP.GetOrAdd(type, (key)=>EnhancedServiceLoader.Load<ICompressor>(type.ToString()));
-			return impl;
+			return bytes;
 		}
-
-		/// <summary>
-		/// None compressor
-		/// </summary>
-		[LoadLevel(name: "NONE")]
-		public class NoneCompressor : ICompressor
-		{
-			public virtual byte[] Compress(byte[] bytes)
-			{
-				return bytes;
-			}
-
-			public virtual byte[] Decompress(byte[] bytes)
-			{
-				return bytes;
-			}
-		}
-
 	}
 
 }
+

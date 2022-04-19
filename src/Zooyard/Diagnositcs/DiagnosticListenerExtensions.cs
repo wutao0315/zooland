@@ -1,51 +1,45 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
+﻿using System.Diagnostics;
 
-namespace Zooyard.Diagnositcs
+namespace Zooyard.Diagnositcs;
+
+public class Constant
 {
-    public class Constant
+    public const string DiagnosticListenerName = "ZooyardDiagnosticListener";
+
+    public const string ZooyardPrefix = "Zooyard.Rpc.";
+
+    public const string ConsumerBefore = ZooyardPrefix + nameof(ConsumerBefore);
+    public const string ConsumerAfter = ZooyardPrefix + nameof(ConsumerAfter);
+    public const string ConsumerError = ZooyardPrefix + nameof(ConsumerError);
+
+    public const string ProviderBefore = ZooyardPrefix + nameof(ProviderBefore);
+    public const string ProviderAfter = ZooyardPrefix + nameof(ProviderAfter);
+    public const string ProviderError = ZooyardPrefix + nameof(ProviderError);
+}
+public static class DiagnosticListenerExtensions
+{
+    public static void WriteConsumerBefore(this DiagnosticSource _this, object instance, URL url, IInvocation invocation)
     {
-        public const string DiagnosticListenerName = "ZooyardDiagnosticListener";
-
-        public const string ZooyardPrefix = "Zooyard.Rpc.";
-
-        public const string ConsumerBefore = ZooyardPrefix + nameof(ConsumerBefore);
-        public const string ConsumerAfter = ZooyardPrefix + nameof(ConsumerAfter);
-        public const string ConsumerError = ZooyardPrefix + nameof(ConsumerError);
-
-        public const string ProviderBefore = ZooyardPrefix + nameof(ProviderBefore);
-        public const string ProviderAfter = ZooyardPrefix + nameof(ProviderAfter);
-        public const string ProviderError = ZooyardPrefix + nameof(ProviderError);
+        if (!_this.IsEnabled(Constant.ConsumerBefore))
+        {
+            return;
+        }
+        _this.Write(Constant.ConsumerBefore, new { instance, url, invocation  });
     }
-    public static class DiagnosticListenerExtensions
+    public static void WriteConsumerAfter<T>(this DiagnosticSource _this, URL url, IInvocation invocation, IResult<T> result)
     {
-        public static void WriteConsumerBefore(this DiagnosticSource _this, object instance, URL url, IInvocation invocation)
+        if (!_this.IsEnabled(Constant.ConsumerAfter))
         {
-            if (!_this.IsEnabled(Constant.ConsumerBefore))
-            {
-                return;
-            }
-            _this.Write(Constant.ConsumerBefore, new { instance, url, invocation  });
+            return;
         }
-        public static void WriteConsumerAfter<T>(this DiagnosticSource _this, URL url, IInvocation invocation, IResult<T> result)
+        _this.Write(Constant.ConsumerAfter, new { url, invocation, result });
+    }
+    public static void WriteConsumerError(this DiagnosticSource _this, URL url, IInvocation invocation, Exception exception)
+    {
+        if (!_this.IsEnabled(Constant.ConsumerAfter))
         {
-            if (!_this.IsEnabled(Constant.ConsumerAfter))
-            {
-                return;
-            }
-            _this.Write(Constant.ConsumerAfter, new { url, invocation, result });
+            return;
         }
-        public static void WriteConsumerError(this DiagnosticSource _this, URL url, IInvocation invocation, Exception exception)
-        {
-            if (!_this.IsEnabled(Constant.ConsumerAfter))
-            {
-                return;
-            }
-            _this.Write(Constant.ConsumerAfter, new { url, invocation, exception });
-        }
+        _this.Write(Constant.ConsumerAfter, new { url, invocation, exception });
     }
 }

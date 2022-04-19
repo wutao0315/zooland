@@ -1,9 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
 
-namespace Zooyard.Config
+namespace Zooyard.Config;
+
+public class ConfigurationFactory
 {
-    public class ConfigurationFactory
-    {
-        public static IConfiguration Instance;
-    }
+    public static IConfiguration Instance;
 }

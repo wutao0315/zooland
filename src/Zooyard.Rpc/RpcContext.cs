@@ -1,533 +1,526 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Threading;
-using System.Threading.Tasks;
-using Zooyard;
+﻿using System.Net;
 using Zooyard.Utils;
 
-namespace Zooyard.Rpc
+namespace Zooyard.Rpc;
+
+/// <summary>
+/// Thread local context. (API, ThreadLocal, ThreadSafe)
+/// 
+/// 注意：RpcContext是一个临时状态记录器，当接收到RPC请求，或发起RPC请求时，RpcContext的状态都会变化。
+/// 比如：A调B，B再调C，则B机器上，在B调C之前，RpcContext记录的是A调B的信息，在B调C之后，RpcContext记录的是B调C的信息。
+/// </summary>
+public class RpcContext
 {
-    /// <summary>
-    /// Thread local context. (API, ThreadLocal, ThreadSafe)
-    /// 
-    /// 注意：RpcContext是一个临时状态记录器，当接收到RPC请求，或发起RPC请求时，RpcContext的状态都会变化。
-    /// 比如：A调B，B再调C，则B机器上，在B调C之前，RpcContext记录的是A调B的信息，在B调C之后，RpcContext记录的是B调C的信息。
-    /// </summary>
-    public class RpcContext
+    public const string ASYNC_KEY = "async";
+    public const string RETURN_KEY = "return";
+    private static readonly AsyncLocal<RpcContext> LOCAL = new AsyncLocal<RpcContext>();
+    
+    //private Task future;
+
+    private IList<URL> urls;
+
+    private DnsEndPoint localAddress;
+
+    private DnsEndPoint remoteAddress;
+
+    private readonly IDictionary<string, string> attachments = new Dictionary<string, string>();
+
+    private readonly IDictionary<string, object> values = new Dictionary<string, object>();
+
+    protected internal RpcContext()
     {
-        public const string ASYNC_KEY = "async";
-        public const string RETURN_KEY = "return";
-        private static readonly AsyncLocal<RpcContext> LOCAL = new AsyncLocal<RpcContext>();
-        
-        //private Task future;
+    }
 
-        private IList<URL> urls;
+    public static RpcContext GetContext()
+    {
+        LOCAL.Value ??= new RpcContext();
+        return LOCAL.Value;
+    }
 
-        private DnsEndPoint localAddress;
-
-        private DnsEndPoint remoteAddress;
-
-        private readonly IDictionary<string, string> attachments = new Dictionary<string, string>();
-
-        private readonly IDictionary<string, object> values = new Dictionary<string, object>();
-
-        protected internal RpcContext()
+    /// <summary>
+    /// is provider side.
+    /// </summary>
+    /// <returns> provider side. </returns>
+    public virtual bool ProviderSide
+    {
+        get
         {
-        }
-
-        public static RpcContext GetContext()
-        {
-            LOCAL.Value ??= new RpcContext();
-            return LOCAL.Value;
-        }
-
-        /// <summary>
-        /// is provider side.
-        /// </summary>
-        /// <returns> provider side. </returns>
-        public virtual bool ProviderSide
-        {
-            get
+            URL url = Url;
+            if (url == null)
             {
-                URL url = Url;
-                if (url == null)
-                {
-                    return false;
-                }
-                DnsEndPoint address = RemoteAddress;
-                if (address == null)
-                {
-                    return false;
-                }
-                string host = address.Host;
-                return url.Port != address.Port || !NetUtil.FilterLocalHost(url.Ip).Equals(NetUtil.FilterLocalHost(host));
+                return false;
             }
-        }
-
-        /// <summary>
-        /// is consumer side.
-        /// </summary>
-        /// <returns> consumer side. </returns>
-        public virtual bool ConsumerSide
-        {
-            get
+            DnsEndPoint address = RemoteAddress;
+            if (address == null)
             {
-                URL url = Url;
-                if (url == null)
-                {
-                    return false;
-                }
-                DnsEndPoint address = RemoteAddress;
-                if (address == null)
-                {
-                    return false;
-                }
-                string host = address.Host;
-                return url.Port == address.Port && NetUtil.FilterLocalHost(url.Ip).Equals(NetUtil.FilterLocalHost(host));
+                return false;
             }
+            string host = address.Host;
+            return url.Port != address.Port || !NetUtil.FilterLocalHost(url.Ip).Equals(NetUtil.FilterLocalHost(host));
         }
+    }
 
-        /// <summary>
-        /// get future.
-        /// </summary>
-        /// @param <T> </param>
-        /// <returns> future </returns>
-        public virtual Task Future { get; set; }
-
-
-        public virtual IList<URL> Urls
+    /// <summary>
+    /// is consumer side.
+    /// </summary>
+    /// <returns> consumer side. </returns>
+    public virtual bool ConsumerSide
+    {
+        get
         {
-            get
+            URL url = Url;
+            if (url == null)
             {
-                return urls == null && Url != null ? new List<URL>() { Url } : urls;
+                return false;
             }
-            set
+            DnsEndPoint address = RemoteAddress;
+            if (address == null)
             {
-                this.urls = value;
+                return false;
             }
+            string host = address.Host;
+            return url.Port == address.Port && NetUtil.FilterLocalHost(url.Ip).Equals(NetUtil.FilterLocalHost(host));
         }
+    }
+
+    /// <summary>
+    /// get future.
+    /// </summary>
+    /// @param <T> </param>
+    /// <returns> future </returns>
+    public virtual Task Future { get; set; }
 
 
-        public virtual URL Url { get; set; }
-
-
-        /// <summary>
-        /// get method name.
-        /// </summary>
-        /// <returns> method name. </returns>
-        public virtual string MethodName { get; set; }
-
-
-        /// <summary>
-        /// get parameter types.
-        /// 
-        /// @serial
-        /// </summary>
-        public virtual Type[] ParameterTypes { get; set; }
-
-
-        /// <summary>
-        /// get arguments.
-        /// </summary>
-        /// <returns> arguments. </returns>
-        public virtual object[] Arguments { get; set; }
-
-
-        /// <summary>
-        /// set local address.
-        /// </summary>
-        /// <param name="address"> </param>
-        /// <returns> context </returns>
-        public virtual RpcContext SetLocalAddress(DnsEndPoint address)
+    public virtual IList<URL> Urls
+    {
+        get
         {
-            this.localAddress = address;
-            return this;
+            return urls == null && Url != null ? new List<URL>() { Url } : urls;
         }
-
-        /// <summary>
-        /// set local address.
-        /// </summary>
-        /// <param name="host"> </param>
-        /// <param name="port"> </param>
-        /// <returns> context </returns>
-        public virtual RpcContext SetLocalAddress(string host, int port)
+        set
         {
-            if (port < 0)
-            {
-                port = 0;
-            }
-            this.localAddress = new DnsEndPoint(host, port);
-            return this;
+            this.urls = value;
         }
+    }
 
-        /// <summary>
-        /// get local address.
-        /// </summary>
-        /// <returns> local address </returns>
-        public virtual DnsEndPoint LocalAddress
+
+    public virtual URL Url { get; set; }
+
+
+    /// <summary>
+    /// get method name.
+    /// </summary>
+    /// <returns> method name. </returns>
+    public virtual string MethodName { get; set; }
+
+
+    /// <summary>
+    /// get parameter types.
+    /// 
+    /// @serial
+    /// </summary>
+    public virtual Type[] ParameterTypes { get; set; }
+
+
+    /// <summary>
+    /// get arguments.
+    /// </summary>
+    /// <returns> arguments. </returns>
+    public virtual object[] Arguments { get; set; }
+
+
+    /// <summary>
+    /// set local address.
+    /// </summary>
+    /// <param name="address"> </param>
+    /// <returns> context </returns>
+    public virtual RpcContext SetLocalAddress(DnsEndPoint address)
+    {
+        this.localAddress = address;
+        return this;
+    }
+
+    /// <summary>
+    /// set local address.
+    /// </summary>
+    /// <param name="host"> </param>
+    /// <param name="port"> </param>
+    /// <returns> context </returns>
+    public virtual RpcContext SetLocalAddress(string host, int port)
+    {
+        if (port < 0)
         {
-            get
-            {
-                return localAddress;
-            }
+            port = 0;
         }
+        this.localAddress = new DnsEndPoint(host, port);
+        return this;
+    }
 
-        public virtual string LocalAddressString
+    /// <summary>
+    /// get local address.
+    /// </summary>
+    /// <returns> local address </returns>
+    public virtual DnsEndPoint LocalAddress
+    {
+        get
         {
-            get
-            {
-                return LocalHost + ":" + LocalPort;
-            }
+            return localAddress;
         }
+    }
 
-        /// <summary>
-        /// get local host name.
-        /// </summary>
-        /// <returns> local host name </returns>
-        public virtual string LocalHostName
+    public virtual string LocalAddressString
+    {
+        get
         {
-            get
-            {
-                var host = localAddress == null ? null : localAddress.Host;
-                if (host == null || host.Length == 0)
-                {
-                    return LocalHost;
-                }
-                return host;
-            }
+            return LocalHost + ":" + LocalPort;
         }
+    }
 
-        /// <summary>
-        /// set remote address.
-        /// </summary>
-        /// <param name="address"> </param>
-        /// <returns> context </returns>
-        public virtual RpcContext SetRemoteAddress(DnsEndPoint address)
+    /// <summary>
+    /// get local host name.
+    /// </summary>
+    /// <returns> local host name </returns>
+    public virtual string LocalHostName
+    {
+        get
         {
-            this.remoteAddress = address;
-            return this;
+            var host = localAddress == null ? null : localAddress.Host;
+            if (host == null || host.Length == 0)
+            {
+                return LocalHost;
+            }
+            return host;
         }
+    }
 
-        /// <summary>
-        /// set remote address.
-        /// </summary>
-        /// <param name="host"> </param>
-        /// <param name="port"> </param>
-        /// <returns> context </returns>
-        public virtual RpcContext SetRemoteAddress(string host, int port)
+    /// <summary>
+    /// set remote address.
+    /// </summary>
+    /// <param name="address"> </param>
+    /// <returns> context </returns>
+    public virtual RpcContext SetRemoteAddress(DnsEndPoint address)
+    {
+        this.remoteAddress = address;
+        return this;
+    }
+
+    /// <summary>
+    /// set remote address.
+    /// </summary>
+    /// <param name="host"> </param>
+    /// <param name="port"> </param>
+    /// <returns> context </returns>
+    public virtual RpcContext SetRemoteAddress(string host, int port)
+    {
+        if (port < 0)
         {
-            if (port < 0)
-            {
-                port = 0;
-            }
-            this.remoteAddress = new DnsEndPoint(host, port);
-            return this;
+            port = 0;
         }
+        this.remoteAddress = new DnsEndPoint(host, port);
+        return this;
+    }
 
-        /// <summary>
-        /// get remote address.
-        /// </summary>
-        /// <returns> remote address </returns>
-        public virtual DnsEndPoint RemoteAddress
+    /// <summary>
+    /// get remote address.
+    /// </summary>
+    /// <returns> remote address </returns>
+    public virtual DnsEndPoint RemoteAddress
+    {
+        get
         {
-            get
-            {
-                return remoteAddress;
-            }
-            set
-            {
-                remoteAddress = value;
-            }
+            return remoteAddress;
         }
-
-        /// <summary>
-        /// get remote address string.
-        /// </summary>
-        /// <returns> remote address string. </returns>
-        public virtual string RemoteAddressString
+        set
         {
-            get
-            {
-                return RemoteHost + ":" + RemotePort;
-            }
+            remoteAddress = value;
         }
+    }
 
-        /// <summary>
-        /// get remote host name.
-        /// </summary>
-        /// <returns> remote host name </returns>
-        public virtual string RemoteHostName
+    /// <summary>
+    /// get remote address string.
+    /// </summary>
+    /// <returns> remote address string. </returns>
+    public virtual string RemoteAddressString
+    {
+        get
         {
-            get
-            {
-                return remoteAddress?.Host;
-            }
+            return RemoteHost + ":" + RemotePort;
         }
+    }
 
-        /// <summary>
-        /// get local host.
-        /// </summary>
-        /// <returns> local host </returns>
-        public virtual string LocalHost
+    /// <summary>
+    /// get remote host name.
+    /// </summary>
+    /// <returns> remote host name </returns>
+    public virtual string RemoteHostName
+    {
+        get
         {
-            get
-            {
-                string host = localAddress == null ? null : NetUtil.FilterLocalHost(localAddress.Host);
-                if (host == null || host.Length == 0)
-                {
-                    return NetUtil.LocalHost;
-                }
-                return host;
-            }
+            return remoteAddress?.Host;
         }
+    }
 
-        /// <summary>
-        /// get local port.
-        /// </summary>
-        /// <returns> port </returns>
-        public virtual int LocalPort
+    /// <summary>
+    /// get local host.
+    /// </summary>
+    /// <returns> local host </returns>
+    public virtual string LocalHost
+    {
+        get
         {
-            get
+            string host = localAddress == null ? null : NetUtil.FilterLocalHost(localAddress.Host);
+            if (host == null || host.Length == 0)
             {
-                return localAddress?.Port??0;
+                return NetUtil.LocalHost;
             }
+            return host;
         }
+    }
 
-        /// <summary>
-        /// get remote host.
-        /// </summary>
-        /// <returns> remote host </returns>
-        public virtual string RemoteHost
+    /// <summary>
+    /// get local port.
+    /// </summary>
+    /// <returns> port </returns>
+    public virtual int LocalPort
+    {
+        get
         {
-            get
-            {
-                return remoteAddress == null ? null : NetUtil.FilterLocalHost(remoteAddress.Host);
-            }
+            return localAddress?.Port??0;
         }
+    }
 
-        /// <summary>
-        /// get remote port.
-        /// </summary>
-        /// <returns> remote port </returns>
-        public virtual int RemotePort
+    /// <summary>
+    /// get remote host.
+    /// </summary>
+    /// <returns> remote host </returns>
+    public virtual string RemoteHost
+    {
+        get
         {
-            get
-            {
-                return remoteAddress?.Port??0;
-            }
+            return remoteAddress == null ? null : NetUtil.FilterLocalHost(remoteAddress.Host);
         }
+    }
 
-        /// <summary>
-        /// get attachment.
-        /// </summary>
-        /// <param name="key"> </param>
-        /// <returns> attachment </returns>
-        public virtual string GetAttachment(string key)
+    /// <summary>
+    /// get remote port.
+    /// </summary>
+    /// <returns> remote port </returns>
+    public virtual int RemotePort
+    {
+        get
         {
-            return attachments[key];
+            return remoteAddress?.Port??0;
         }
+    }
 
-        /// <summary>
-        /// set attachment.
-        /// </summary>
-        /// <param name="key"> </param>
-        /// <param name="value"> </param>
-        /// <returns> context </returns>
-        public virtual RpcContext SetAttachment(string key, string value)
-        {
-            if (value == null)
-            {
-                attachments.Remove(key);
-            }
-            else
-            {
-                attachments[key] = value;
-            }
-            return this;
-        }
+    /// <summary>
+    /// get attachment.
+    /// </summary>
+    /// <param name="key"> </param>
+    /// <returns> attachment </returns>
+    public virtual string GetAttachment(string key)
+    {
+        return attachments[key];
+    }
 
-        /// <summary>
-        /// remove attachment.
-        /// </summary>
-        /// <param name="key"> </param>
-        /// <returns> context </returns>
-        public virtual RpcContext RemoveAttachment(string key)
+    /// <summary>
+    /// set attachment.
+    /// </summary>
+    /// <param name="key"> </param>
+    /// <param name="value"> </param>
+    /// <returns> context </returns>
+    public virtual RpcContext SetAttachment(string key, string value)
+    {
+        if (value == null)
         {
             attachments.Remove(key);
-            return this;
         }
-
-        /// <summary>
-        /// get attachments.
-        /// </summary>
-        /// <returns> attachments </returns>
-        public virtual IDictionary<string, string> Attachments
+        else
         {
-            get
-            {
-                return attachments;
-            }
+            attachments[key] = value;
         }
+        return this;
+    }
 
-        /// <summary>
-        /// set attachments
-        /// </summary>
-        /// <param name="attachment"> </param>
-        /// <returns> context </returns>
-        public virtual RpcContext SetAttachments(IDictionary<string, string> attachment)
+    /// <summary>
+    /// remove attachment.
+    /// </summary>
+    /// <param name="key"> </param>
+    /// <returns> context </returns>
+    public virtual RpcContext RemoveAttachment(string key)
+    {
+        attachments.Remove(key);
+        return this;
+    }
+
+    /// <summary>
+    /// get attachments.
+    /// </summary>
+    /// <returns> attachments </returns>
+    public virtual IDictionary<string, string> Attachments
+    {
+        get
         {
-            this.attachments.Clear();
-            if (attachment != null && attachment.Count > 0)
-            {
-                this.attachments.PutAll(attachment);
-            }
-            return this;
+            return attachments;
         }
+    }
 
-        public virtual void ClearAttachments()
+    /// <summary>
+    /// set attachments
+    /// </summary>
+    /// <param name="attachment"> </param>
+    /// <returns> context </returns>
+    public virtual RpcContext SetAttachments(IDictionary<string, string> attachment)
+    {
+        this.attachments.Clear();
+        if (attachment != null && attachment.Count > 0)
         {
-            this.attachments.Clear();
+            this.attachments.PutAll(attachment);
         }
+        return this;
+    }
 
-        /// <summary>
-        /// get values.
-        /// </summary>
-        /// <returns> values </returns>
-        public virtual IDictionary<string, object> Get()
-        {
-            return values;
-        }
+    public virtual void ClearAttachments()
+    {
+        this.attachments.Clear();
+    }
 
-        /// <summary>
-        /// set value.
-        /// </summary>
-        /// <param name="key"> </param>
-        /// <param name="value"> </param>
-        /// <returns> context </returns>
-        public virtual RpcContext Set(string key, object value)
-        {
-            if (value == null)
-            {
-                values.Remove(key);
-            }
-            else
-            {
-                values[key] = value;
-            }
-            return this;
-        }
+    /// <summary>
+    /// get values.
+    /// </summary>
+    /// <returns> values </returns>
+    public virtual IDictionary<string, object> Get()
+    {
+        return values;
+    }
 
-        /// <summary>
-        /// remove value.
-        /// </summary>
-        /// <param name="key"> </param>
-        /// <returns> value </returns>
-        public virtual RpcContext Remove(string key)
+    /// <summary>
+    /// set value.
+    /// </summary>
+    /// <param name="key"> </param>
+    /// <param name="value"> </param>
+    /// <returns> context </returns>
+    public virtual RpcContext Set(string key, object value)
+    {
+        if (value == null)
         {
             values.Remove(key);
-            return this;
         }
-
-        /// <summary>
-        /// get value.
-        /// </summary>
-        /// <param name="key"> </param>
-        /// <returns> value </returns>
-        public virtual object Get(string key)
+        else
         {
-            return values[key];
+            values[key] = value;
         }
+        return this;
+    }
 
-        public virtual RpcContext SetInvokers(IList<URL> invokers)
+    /// <summary>
+    /// remove value.
+    /// </summary>
+    /// <param name="key"> </param>
+    /// <returns> value </returns>
+    public virtual RpcContext Remove(string key)
+    {
+        values.Remove(key);
+        return this;
+    }
+
+    /// <summary>
+    /// get value.
+    /// </summary>
+    /// <param name="key"> </param>
+    /// <returns> value </returns>
+    public virtual object Get(string key)
+    {
+        return values[key];
+    }
+
+    public virtual RpcContext SetInvokers(IList<URL> invokers)
+    {
+        //this.invokers = invokers;
+        if (invokers != null && invokers.Count > 0)
         {
-            //this.invokers = invokers;
-            if (invokers != null && invokers.Count > 0)
+            IList<URL> urls = new List<URL>(invokers.Count);
+            foreach (var invoker in invokers)
             {
-                IList<URL> urls = new List<URL>(invokers.Count);
-                foreach (var invoker in invokers)
-                {
-                    urls.Add(invoker);
-                }
-                Urls = urls;
+                urls.Add(invoker);
             }
-            return this;
+            Urls = urls;
         }
+        return this;
+    }
 
-        public virtual RpcContext SetInvoker<T>(URL invoker)
+    public virtual RpcContext SetInvoker<T>(URL invoker)
+    {
+        //this.invoker = invoker;
+        if (invoker != null)
         {
-            //this.invoker = invoker;
-            if (invoker != null)
-            {
-                Url = invoker;
-            }
-            return this;
+            Url = invoker;
         }
+        return this;
+    }
 
-        public virtual RpcContext SetInvocation<T>(IInvocation invocation)
+    public virtual RpcContext SetInvocation<T>(IInvocation invocation)
+    {
+        //this.invocation = invocation;
+        if (invocation != null)
         {
-            //this.invocation = invocation;
-            if (invocation != null)
-            {
-                MethodName = invocation.MethodInfo.Name;
-                ParameterTypes = (from item in invocation.Arguments select item.GetType()).ToArray();
-                Arguments = invocation.Arguments;
-            }
-            return this;
+            MethodName = invocation.MethodInfo.Name;
+            ParameterTypes = (from item in invocation.Arguments select item.GetType()).ToArray();
+            Arguments = invocation.Arguments;
         }
+        return this;
+    }
 
-        /// <summary>
-        /// 异步调用 ，需要返回值，即使步调用Future.get方法，也会处理调用超时问题.
-        /// </summary>
-        /// <param name="callable"> </param>
-        /// <returns> 通过future.get()获取返回结果. </returns>
-        public virtual async Task<T> AsyncCall<T>(Func<T> callable)
+    /// <summary>
+    /// 异步调用 ，需要返回值，即使步调用Future.get方法，也会处理调用超时问题.
+    /// </summary>
+    /// <param name="callable"> </param>
+    /// <returns> 通过future.get()获取返回结果. </returns>
+    public virtual async Task<T> AsyncCall<T>(Func<T> callable)
+    {
+        try
         {
             try
             {
-                try
-                {
-                    SetAttachment(ASYNC_KEY, true.ToString());
+                SetAttachment(ASYNC_KEY, true.ToString());
 
-                    var result = await Task.Run<T>(callable);
-                    return result;
-                }
-                catch (Exception e)
-                {
-                    throw new RpcException(e);
-                }
-                finally
-                {
-                    RemoveAttachment(ASYNC_KEY);
-                }
-            }
-            catch (RpcException e)
-            {
-                throw e;
-            }
-        }
-        
-        /// <summary>
-        /// oneway调用，只发送请求，不接收返回结果.
-        /// </summary>
-        /// <param name="callable"> </param>
-        public virtual void AsyncCall(Task runable)
-        {
-            try
-            {
-                SetAttachment(RETURN_KEY, false.ToString());
-                runable.Start();
+                var result = await Task.Run<T>(callable);
+                return result;
             }
             catch (Exception e)
             {
-                //FIXME 异常是否应该放在future中？
-                throw new RpcException("oneway call error ." + e.Message, e);
+                throw new RpcException(e);
             }
             finally
             {
-                RemoveAttachment(RETURN_KEY);
+                RemoveAttachment(ASYNC_KEY);
             }
+        }
+        catch (RpcException e)
+        {
+            throw e;
+        }
+    }
+    
+    /// <summary>
+    /// oneway调用，只发送请求，不接收返回结果.
+    /// </summary>
+    /// <param name="callable"> </param>
+    public virtual void AsyncCall(Task runable)
+    {
+        try
+        {
+            SetAttachment(RETURN_KEY, false.ToString());
+            runable.Start();
+        }
+        catch (Exception e)
+        {
+            //FIXME 异常是否应该放在future中？
+            throw new RpcException("oneway call error ." + e.Message, e);
+        }
+        finally
+        {
+            RemoveAttachment(RETURN_KEY);
         }
     }
 }

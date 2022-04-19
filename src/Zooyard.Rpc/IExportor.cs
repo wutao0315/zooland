@@ -1,10 +1,7 @@
-﻿using Zooyard;
+﻿namespace Zooyard.Rpc;
 
-namespace Zooyard.Rpc
+public interface IExporter<T>
 {
-    public interface IExporter<T>
-    {
-        IInvoker Invoker { get; }
-        void UnExport();
-    }
+    IInvoker Invoker { get; }
+    void UnExport();
 }

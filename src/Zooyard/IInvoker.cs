@@ -1,11 +1,8 @@
-﻿using System.Threading.Tasks;
+﻿namespace Zooyard;
 
-namespace Zooyard
+public interface IInvoker
 {
-    public interface IInvoker
-    {
-        object Instance { get; }
-        int ClientTimeout { get; }
-        Task<IResult<T>> Invoke<T>(IInvocation invocation);
-    }
+    object Instance { get; }
+    int ClientTimeout { get; }
+    Task<IResult<T>> Invoke<T>(IInvocation invocation);
 }

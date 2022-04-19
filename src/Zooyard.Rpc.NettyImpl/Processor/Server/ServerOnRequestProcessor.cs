@@ -1,119 +1,116 @@
 ﻿using DotNetty.Transport.Channels;
-using System;
-using System.Threading.Tasks;
-using Zooyard.Rpc.NettyImpl.Protocol;
 using Zooyard.Logging;
-using Zooyard.Utils;
+using Zooyard.Rpc.NettyImpl.Protocol;
 using Zooyard.Rpc.NettyImpl.Support;
+using Zooyard.Utils;
 
-namespace Zooyard.Rpc.NettyImpl.Processor.Server
+namespace Zooyard.Rpc.NettyImpl.Processor.Server;
+
+/// <summary>
+/// process RM/TM client request message.
+/// <para>
+/// message type:
+/// RM:
+/// 1) <seealso cref="MergedWarpMessage"/>
+/// 2) <seealso cref="BranchRegisterRequest"/>
+/// 3) <seealso cref="BranchReportRequest"/>
+/// 4) <seealso cref="GlobalLockQueryRequest"/>
+/// TM:
+/// 1) <seealso cref="MergedWarpMessage"/>
+/// 2) <seealso cref="GlobalBeginRequest"/>
+/// 3) <seealso cref="GlobalCommitRequest"/>
+/// 4) <seealso cref="GlobalReportRequest"/>
+/// 5) <seealso cref="GlobalRollbackRequest"/>
+/// 6) <seealso cref="GlobalStatusRequest"/>
+/// 
+/// </para>
+/// </summary>
+public class ServerOnRequestProcessor : IRemotingProcessor
 {
-	/// <summary>
-	/// process RM/TM client request message.
-	/// <para>
-	/// message type:
-	/// RM:
-	/// 1) <seealso cref="MergedWarpMessage"/>
-	/// 2) <seealso cref="BranchRegisterRequest"/>
-	/// 3) <seealso cref="BranchReportRequest"/>
-	/// 4) <seealso cref="GlobalLockQueryRequest"/>
-	/// TM:
-	/// 1) <seealso cref="MergedWarpMessage"/>
-	/// 2) <seealso cref="GlobalBeginRequest"/>
-	/// 3) <seealso cref="GlobalCommitRequest"/>
-	/// 4) <seealso cref="GlobalReportRequest"/>
-	/// 5) <seealso cref="GlobalRollbackRequest"/>
-	/// 6) <seealso cref="GlobalStatusRequest"/>
-	/// 
-	/// </para>
-	/// </summary>
-	public class ServerOnRequestProcessor : IRemotingProcessor
+	private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ServerOnRequestProcessor));
+
+	private readonly IRemotingServer _remotingServer;
+
+	private readonly ITransactionMessageHandler _transactionMessageHandler;
+
+	public ServerOnRequestProcessor(IRemotingServer remotingServer,
+		ITransactionMessageHandler transactionMessageHandler)
 	{
-		private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ServerOnRequestProcessor));
+		_remotingServer = remotingServer;
+		_transactionMessageHandler = transactionMessageHandler;
+	}
 
-		private readonly IRemotingServer _remotingServer;
-
-		private readonly ITransactionMessageHandler _transactionMessageHandler;
-
-		public ServerOnRequestProcessor(IRemotingServer remotingServer,
-			ITransactionMessageHandler transactionMessageHandler)
+	public virtual async Task Process(IChannelHandlerContext ctx, RpcMessage rpcMessage)
+	{
+		if (ChannelManager.IsRegistered(ctx.Channel))
 		{
-			_remotingServer = remotingServer;
-			_transactionMessageHandler = transactionMessageHandler;
+			await OnRequestMessage(ctx, rpcMessage);
 		}
-
-		public virtual async Task Process(IChannelHandlerContext ctx, RpcMessage rpcMessage)
+		else
 		{
-			if (ChannelManager.IsRegistered(ctx.Channel))
+			try
 			{
-				await OnRequestMessage(ctx, rpcMessage);
-			}
-			else
-			{
-				try
-				{
-					if (Logger().IsEnabled(LogLevel.Debug))
-					{
-						Logger().LogInformation($"closeChannelHandlerContext channel:{ctx.Channel}");
-					}
-					await ctx.DisconnectAsync();
-					await ctx.CloseAsync();
-				}
-				catch (Exception exx)
-				{
-					Logger().LogError(exx, exx.Message);
-				}
 				if (Logger().IsEnabled(LogLevel.Debug))
 				{
-					Logger().LogInformation($"close a unhandled connection! [{ctx.Channel}]");
+					Logger().LogInformation($"closeChannelHandlerContext channel:{ctx.Channel}");
 				}
+				await ctx.DisconnectAsync();
+				await ctx.CloseAsync();
 			}
-		}
-
-		private async Task OnRequestMessage(IChannelHandlerContext ctx, RpcMessage rpcMessage)
-		{
-			object message = rpcMessage.Body;
-			RpcContext rpcContext = ChannelManager.GetContextFromIdentified(ctx.Channel);
+			catch (Exception exx)
+			{
+				Logger().LogError(exx, exx.Message);
+			}
 			if (Logger().IsEnabled(LogLevel.Debug))
 			{
-				Logger().LogDebug($"server received:{message},clientIp:{NetUtil.ToIpAddress(ctx.Channel.RemoteAddress)},vgroup:{rpcContext.TransactionServiceGroup}");
+				Logger().LogInformation($"close a unhandled connection! [{ctx.Channel}]");
 			}
-			else
+		}
+	}
+
+	private async Task OnRequestMessage(IChannelHandlerContext ctx, RpcMessage rpcMessage)
+	{
+		object message = rpcMessage.Body;
+		RpcContext rpcContext = ChannelManager.GetContextFromIdentified(ctx.Channel);
+		if (Logger().IsEnabled(LogLevel.Debug))
+		{
+			Logger().LogDebug($"server received:{message},clientIp:{NetUtil.ToIpAddress(ctx.Channel.RemoteAddress)},vgroup:{rpcContext.TransactionServiceGroup}");
+		}
+		else
+		{
+			try
 			{
-				try
-				{
-					BatchLogHandler.INSTANCE.LogQueue.Add($"{message},clientIp:{NetUtil.ToIpAddress(ctx.Channel.RemoteAddress)},vgroup:{rpcContext.TransactionServiceGroup}");
-				}
-				catch (Exception e)
-				{
-					Logger().LogError(e, $"put message to logQueue error: {e.Message}");
-				}
+				BatchLogHandler.INSTANCE.LogQueue.Add($"{message},clientIp:{NetUtil.ToIpAddress(ctx.Channel.RemoteAddress)},vgroup:{rpcContext.TransactionServiceGroup}");
 			}
-			if (!(message is AbstractMessage))
+			catch (Exception e)
 			{
-				return;
+				Logger().LogError(e, $"put message to logQueue error: {e.Message}");
 			}
-			if (message is MergedWarpMessage mergedWarpMessage)
+		}
+		if (!(message is AbstractMessage))
+		{
+			return;
+		}
+		if (message is MergedWarpMessage mergedWarpMessage)
+		{
+			AbstractResultMessage[] results = new AbstractResultMessage[mergedWarpMessage.msgs.Count];
+			for (int i = 0; i < results.Length; i++)
 			{
-				AbstractResultMessage[] results = new AbstractResultMessage[mergedWarpMessage.msgs.Count];
-				for (int i = 0; i < results.Length; i++)
-				{
-					AbstractMessage subMessage = mergedWarpMessage.msgs[i];
-					results[i] = await _transactionMessageHandler.OnRequest(subMessage, rpcContext);
-				}
+				AbstractMessage subMessage = mergedWarpMessage.msgs[i];
+				results[i] = await _transactionMessageHandler.OnRequest(subMessage, rpcContext);
+			}
                 MergeResultMessage resultMessage = new ()
                 {
                     Msgs = results
                 };
                 await _remotingServer.SendAsyncResponse(rpcMessage, ctx.Channel, resultMessage);
-			}
-			else
-			{
-				// the single send request message
-				var msg = (AbstractMessage) message;
-				AbstractResultMessage result = await _transactionMessageHandler.OnRequest(msg, rpcContext);
-				await _remotingServer.SendAsyncResponse(rpcMessage, ctx.Channel, result);
-			}
+		}
+		else
+		{
+			// the single send request message
+			var msg = (AbstractMessage) message;
+			AbstractResultMessage result = await _transactionMessageHandler.OnRequest(msg, rpcContext);
+			await _remotingServer.SendAsyncResponse(rpcMessage, ctx.Channel, result);
 		}
 	}
 }
