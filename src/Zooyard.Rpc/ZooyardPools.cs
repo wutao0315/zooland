@@ -66,11 +66,11 @@ public class ZooyardPools : IZooyardPools
     /// <summary>
     /// 计时器用于处理过期的链接和链接池
     /// </summary>
-    private System.Timers.Timer cycleTimer;
+    private System.Timers.Timer? cycleTimer;
     /// <summary>
     /// 计时器用于处理隔离区域自动恢复到正常区域
     /// </summary>
-    private System.Timers.Timer recoveryTimer;
+    private System.Timers.Timer? recoveryTimer;
     /// <summary>
     /// threed lock
     /// </summary>		
@@ -94,6 +94,10 @@ public class ZooyardPools : IZooyardPools
         //参数
         foreach (var item in clients.CurrentValue.Clients.Values)
         {
+            if (string.IsNullOrWhiteSpace(item.Service.FullName)) 
+            {
+                continue;
+            }
             var list = item.Urls.Select(w => URL.ValueOf(w).AddParameterIfAbsent("interface", item.Service.FullName)).ToList();
             this.Urls.TryAdd(item.Service.FullName, list);
         }
@@ -101,15 +105,18 @@ public class ZooyardPools : IZooyardPools
         this.Caches = new ConcurrentDictionary<string, ICache>();
         foreach (var cache in caches)
         {
-            try
+            var ctr = cache.Value.GetConstructor(new Type[] { typeof(URL) });
+            if (ctr != null && ctr.Invoke(new object[] { this.Address }) is ICache value)
             {
-                var value = cache.Value.GetConstructor(new Type[] { typeof(URL) }).Invoke(new object[] { this.Address }) as ICache;
                 this.Caches.TryAdd(cache.Key, value);
             }
-            catch
+            else 
             {
-                var value = cache.Value.GetConstructor(new Type[] { }).Invoke(new object[] { }) as ICache;
-                this.Caches.TryAdd(cache.Key, value);
+                var ctrEmpty = cache.Value.GetConstructor(new Type[] { });
+                if (ctrEmpty != null && ctrEmpty.Invoke(new object[] { }) is ICache val)
+                {
+                    this.Caches.TryAdd(cache.Key, val);
+                }
             }
         }
 
@@ -297,7 +304,7 @@ public class ZooyardPools : IZooyardPools
     /// </summary>
     /// <param name="invocation">服务路径</param>
     /// <returns>客户端服务连接</returns>
-    private ICache GetCache(IInvocation invocation)
+    private ICache? GetCache(IInvocation invocation)
     {
         //参数检查
         if (Caches == null)
@@ -305,7 +312,7 @@ public class ZooyardPools : IZooyardPools
             return null;
         }
 
-        ICache result = null;
+        ICache? result = null;
         //app interface version
         var methodParameter = $"{invocation.AppPoint()}{invocation.TargetType.FullName}.{invocation.MethodInfo.Name}{invocation.PointVersion()}";
         var key = this.Address.GetMethodParameter(methodParameter, CACHE_KEY, "");
