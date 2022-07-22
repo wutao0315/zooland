@@ -25,9 +25,6 @@ public class GrpcClient : AbstractClient
         _grpcClient = grpcClient;
         _clientTimeout = clientTimeout;
     }
-
-
-
    
     public override async Task<IInvoker> Refer()
     {
@@ -35,7 +32,6 @@ public class GrpcClient : AbstractClient
         {
             _channel = new Channel(_channel.Target, _channelCredentials);
         }
-       
 
         await Open();
         //grpc client service
@@ -62,7 +58,6 @@ public class GrpcClient : AbstractClient
             await _channel.ShutdownAsync();
         }
     }
-
     public override async ValueTask DisposeAsync()
     {
         await Close();

@@ -1,29 +1,39 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net6.0</TargetFrameworks>
+	  <TargetFrameworks>net6.0</TargetFrameworks>
 	  <ImplicitUsings>enable</ImplicitUsings>
 	  <Nullable>enable</Nullable>
-    <PackageLicenseUrl>https://github.com/wutao0315/zooland/blob/master/LICENSE</PackageLicenseUrl>
-    <Copyright>MIT</Copyright>
-    <PackageProjectUrl>https://github.com/wutao0315/zooland</PackageProjectUrl>
-    <PackageReleaseNotes />
-    <Description>Zooyard RPC Framework microservice</Description>
-    <Authors>wutao0315</Authors>
-    <Version>1.2.0</Version>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	  <NoWarn>$(NoWarn);1591</NoWarn>
+	  <PackageLicenseUrl>https://github.com/wutao0315/zooland/blob/master/LICENSE</PackageLicenseUrl>
+	  <Copyright>MIT</Copyright>
+	  <PackageProjectUrl>https://github.com/wutao0315/zooland</PackageProjectUrl>
+	  <PackageReleaseNotes />
+	  <Description>Zooyard RPC Framework microservice</Description>
+	  <Authors>wutao0315</Authors>
+	  <Version>1.2.1</Version>
+	  <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Config\ConfigurationKeys.cs" />
-    <Compile Remove="Config\IConfigChangeListener.cs" />
+    <Compile Remove="Config\**" />
+    <Compile Remove="Loader\**" />
+    <EmbeddedResource Remove="Config\**" />
+    <EmbeddedResource Remove="Loader\**" />
+    <None Remove="Config\**" />
+    <None Remove="Loader\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Remove="DynamicProxy\IInterceptor.cs" />
     <Compile Remove="DynamicProxy\InterfaceProxy.cs" />
+    <Compile Remove="IRegistry.cs" />
     <Compile Remove="IRegistryHealthChecks.cs" />
     <Compile Remove="IRegistryHost.cs" />
     <Compile Remove="IRegistryKeyValues.cs" />
     <Compile Remove="IRegistryService.cs" />
     <Compile Remove="IRegistryServiceFind.cs" />
+    <Compile Remove="IServer.cs" />
   </ItemGroup>
 
 

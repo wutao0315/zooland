@@ -9,37 +9,47 @@ namespace Zooyard.Rpc.NettyImpl.Support;
 /// </summary>
 public class NettyClientConfig : NettyBaseConfig
 {
-        //private int connectTimeoutMillis = 10000;
-        //private int clientSocketSndBufSize = 153600;
-        //private int clientSocketRcvBufSize = 153600;
-        //private int clientWorkerThreads = WORKER_THREAD_SIZE;
-        private readonly Type clientChannelClazz = CLIENT_CHANNEL_CLAZZ;
-        private int perHostMaxConn = 2;
-        private const int PER_HOST_MIN_CONN = 2;
-        //private int pendingConnSize = int.MaxValue;
-        private const int RPC_REQUEST_TIMEOUT = 30 * 1000;
-        //private static string vgroup;
-        //private static string clientAppName;
-        //private static int clientType;
-        private static int maxInactiveChannelCheck = 10;
-        private const int MAX_NOT_WRITEABLE_RETRY = 2000;
-        private const int MAX_CHECK_ALIVE_RETRY = 300;
-        private const int CHECK_ALIVE_INTERVAL = 10;
-        private const string SOCKET_ADDRESS_START_CHAR = "/";
-        private static readonly long MAX_ACQUIRE_CONN_MILLS = 60 * 1000L;
-        private const string RPC_DISPATCH_THREAD_PREFIX = "rpcDispatch";
-        private const int DEFAULT_MAX_POOL_ACTIVE = 1;
-        private const int DEFAULT_MIN_POOL_IDLE = 0;
-        private const bool DEFAULT_POOL_TEST_BORROW = true;
-        private const bool DEFAULT_POOL_TEST_RETURN = true;
-        private const bool DEFAULT_POOL_LIFO = true;
-        private static readonly bool ENABLE_CLIENT_BATCH_SEND_REQUEST = CONFIG.GetValue(ConfigurationKeys.ENABLE_CLIENT_BATCH_SEND_REQUEST, DefaultValues.DEFAULT_ENABLE_CLIENT_BATCH_SEND_REQUEST);
+	//private int connectTimeoutMillis = 10000;
+	//private int clientSocketSndBufSize = 153600;
+	//private int clientSocketRcvBufSize = 153600;
+	//private int clientWorkerThreads = WORKER_THREAD_SIZE;
+	private readonly Type clientChannelClazz = CLIENT_CHANNEL_CLAZZ;
+	private int perHostMaxConn = 2;
+	private const int PER_HOST_MIN_CONN = 2;
+	//private int pendingConnSize = int.MaxValue;
+	private const int RPC_REQUEST_TIMEOUT = 30 * 1000;
+	//private static string vgroup;
+	//private static string clientAppName;
+	//private static int clientType;
+	private static int maxInactiveChannelCheck = 10;
+	private const int MAX_NOT_WRITEABLE_RETRY = 2000;
+	private const int MAX_CHECK_ALIVE_RETRY = 300;
+	private const int CHECK_ALIVE_INTERVAL = 10;
+	private const string SOCKET_ADDRESS_START_CHAR = "/";
+	private static readonly long MAX_ACQUIRE_CONN_MILLS = 60 * 1000L;
+	private const string RPC_DISPATCH_THREAD_PREFIX = "rpcDispatch";
+	private const int DEFAULT_MAX_POOL_ACTIVE = 1;
+	private const int DEFAULT_MIN_POOL_IDLE = 0;
+	private const bool DEFAULT_POOL_TEST_BORROW = true;
+	private const bool DEFAULT_POOL_TEST_RETURN = true;
+	private const bool DEFAULT_POOL_LIFO = true;
+	private static readonly bool ENABLE_CLIENT_BATCH_SEND_REQUEST = GetRequest();
 
+	private static bool GetRequest() 
+	{
+		var str = Environment.GetEnvironmentVariable(ConfigurationKeys.ENABLE_CLIENT_BATCH_SEND_REQUEST);
+		if (bool.TryParse(str, out bool size))
+		{
+			return size;
+		}
+		return DefaultValues.DEFAULT_ENABLE_CLIENT_BATCH_SEND_REQUEST;
+		//CONFIG.GetValue(ConfigurationKeys.ENABLE_CLIENT_BATCH_SEND_REQUEST, DefaultValues.DEFAULT_ENABLE_CLIENT_BATCH_SEND_REQUEST)
+	}
 	/// <summary>
 	/// Gets connect timeout millis.
 	/// </summary>
 	/// <returns> the connect timeout millis </returns>
-	public virtual int ConnectTimeoutMillis { get; set; }= 10000;
+	public virtual int ConnectTimeoutMillis { get; set; } = 10000;
 
 
 	/// <summary>
@@ -191,7 +201,13 @@ public class NettyClientConfig : NettyBaseConfig
 	{
 		get
 		{
-			return CONFIG.GetValue(ConfigurationKeys.CLIENT_SELECTOR_THREAD_SIZE, DefaultValues.DEFAULT_SELECTOR_THREAD_SIZE);
+			var sizeStr = Environment.GetEnvironmentVariable(ConfigurationKeys.CLIENT_SELECTOR_THREAD_SIZE);
+			if (int.TryParse(sizeStr, out int size))
+			{
+				return size;
+			}
+			return DefaultValues.DEFAULT_SELECTOR_THREAD_SIZE;
+			//return CONFIG.GetValue(ConfigurationKeys.CLIENT_SELECTOR_THREAD_SIZE, DefaultValues.DEFAULT_SELECTOR_THREAD_SIZE);
 		}
 	}
 
@@ -209,7 +225,13 @@ public class NettyClientConfig : NettyBaseConfig
 	{
 		get
 		{
-			return CONFIG.GetValue(ConfigurationKeys.CLIENT_SELECTOR_THREAD_PREFIX, DefaultValues.DEFAULT_SELECTOR_THREAD_PREFIX);
+			var str = Environment.GetEnvironmentVariable(ConfigurationKeys.CLIENT_SELECTOR_THREAD_PREFIX);
+			if (!string.IsNullOrWhiteSpace(str))
+			{
+				return str;
+			}
+			return DefaultValues.DEFAULT_SELECTOR_THREAD_PREFIX;
+			//return CONFIG.GetValue(ConfigurationKeys.CLIENT_SELECTOR_THREAD_PREFIX, DefaultValues.DEFAULT_SELECTOR_THREAD_PREFIX);
 		}
 	}
 
@@ -221,7 +243,13 @@ public class NettyClientConfig : NettyBaseConfig
 	{
 		get
 		{
-			return CONFIG.GetValue(ConfigurationKeys.CLIENT_WORKER_THREAD_PREFIX, DefaultValues.DEFAULT_WORKER_THREAD_PREFIX);
+			var str = Environment.GetEnvironmentVariable(ConfigurationKeys.CLIENT_WORKER_THREAD_PREFIX);
+			if (!string.IsNullOrWhiteSpace(str))
+			{
+				return str;
+			}
+			return DefaultValues.DEFAULT_WORKER_THREAD_PREFIX;
+			//return CONFIG.GetValue(ConfigurationKeys.CLIENT_WORKER_THREAD_PREFIX, DefaultValues.DEFAULT_WORKER_THREAD_PREFIX);
 		}
 	}
 

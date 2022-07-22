@@ -36,11 +36,11 @@ public class ZooyardPools : IZooyardPools
     /// <summary>
     /// good service url list
     /// </summary>
-    public ConcurrentDictionary<string, IList<URL>> Urls { get; private set; }
+    public ConcurrentDictionary<string, List<URL>> Urls { get; init; }
     /// <summary>
     /// bad service url list
     /// </summary>
-    public ConcurrentDictionary<string, IList<BadUrl>> BadUrls { get; private set; }
+    public ConcurrentDictionary<string, List<BadUrl>> BadUrls { get; init; }
     /// <summary>
     /// 注册中心的配置
     /// </summary>
@@ -50,19 +50,19 @@ public class ZooyardPools : IZooyardPools
     /// key ApplicationName,
     /// value diff version of client pool
     /// </summary>
-    public ConcurrentDictionary<string, IClientPool> Pools { get; private set; }
+    public ConcurrentDictionary<string, IClientPool> Pools { get; init; }
     /// <summary>
     /// loadbalance
     /// </summary>
-    public ConcurrentDictionary<string, ILoadBalance> LoadBalances { get; private set; }
+    public ConcurrentDictionary<string, ILoadBalance> LoadBalances { get; init; }
     /// <summary>
     /// cluster
     /// </summary>
-    public ConcurrentDictionary<string, ICluster> Clusters { get; private set; }
+    public ConcurrentDictionary<string, ICluster> Clusters { get; init; }
     /// <summary>
     /// cache
     /// </summary>
-    public ConcurrentDictionary<string, ICache> Caches { get; private set; }
+    public ConcurrentDictionary<string, ICache> Caches { get; init; }
     /// <summary>
     /// 计时器用于处理过期的链接和链接池
     /// </summary>
@@ -74,7 +74,7 @@ public class ZooyardPools : IZooyardPools
     /// <summary>
     /// threed lock
     /// </summary>		
-    protected object locker = new object();
+    private readonly SemaphoreSlim _semaphore = new(1, 1);
     /// <summary>
     /// 构造函数
     /// </summary>
@@ -88,32 +88,36 @@ public class ZooyardPools : IZooyardPools
         this.Pools = new ConcurrentDictionary<string, IClientPool>(pools);
         this.LoadBalances = new ConcurrentDictionary<string, ILoadBalance>(loadbalances);
         this.Clusters = new ConcurrentDictionary<string, ICluster>(clusters);
-        this.Address = URL.ValueOf(string.IsNullOrWhiteSpace(clients.CurrentValue.RegisterUrl)? "zooyard://127.0.0.1" : clients.CurrentValue.RegisterUrl);
-        this.Urls = new ConcurrentDictionary<string, IList<URL>>();
-        this.BadUrls = new ConcurrentDictionary<string, IList<BadUrl>>();
-        //参数
-        foreach (var item in clients.CurrentValue.Clients.Values)
-        {
-            if (string.IsNullOrWhiteSpace(item.Service.FullName)) 
-            {
-                continue;
-            }
-            var list = item.Urls.Select(w => URL.ValueOf(w).AddParameterIfAbsent("interface", item.Service.FullName)).ToList();
-            this.Urls.TryAdd(item.Service.FullName, list);
-        }
+        
+        //this.Address = URL.ValueOf(string.IsNullOrWhiteSpace(clients.CurrentValue.RegisterUrl)? "zooyard://127.0.0.1" : clients.CurrentValue.RegisterUrl);
+        
+        this.Urls = new ConcurrentDictionary<string, List<URL>>();
+        this.BadUrls = new ConcurrentDictionary<string, List<BadUrl>>();
+        ////参数
+        //foreach (var item in clients.CurrentValue.Clients)
+        //{
+        //    if (string.IsNullOrWhiteSpace(item.Value.Service.FullName)) 
+        //    {
+        //        continue;
+        //    }
+        //    var list = item.Urls.Select(w => URL.ValueOf(w).AddParameterIfAbsent("interface", item.Service.FullName)).ToList();
+        //    this.Urls.TryAdd(item.Service.FullName, list);
+        //}
 
         this.Caches = new ConcurrentDictionary<string, ICache>();
         foreach (var cache in caches)
         {
             var ctr = cache.Value.GetConstructor(new Type[] { typeof(URL) });
-            if (ctr != null && ctr.Invoke(new object[] { this.Address }) is ICache value)
+            if (ctr != null 
+                && ctr.Invoke(new object[] { this.Address }) is ICache value)
             {
                 this.Caches.TryAdd(cache.Key, value);
             }
             else 
             {
-                var ctrEmpty = cache.Value.GetConstructor(new Type[] { });
-                if (ctrEmpty != null && ctrEmpty.Invoke(new object[] { }) is ICache val)
+                var ctrEmpty = cache.Value.GetConstructor(Array.Empty<Type>());
+                if (ctrEmpty != null 
+                    && ctrEmpty.Invoke(Array.Empty<object>()) is ICache val)
                 {
                     this.Caches.TryAdd(cache.Key, val);
                 }
@@ -130,70 +134,70 @@ public class ZooyardPools : IZooyardPools
         Logger().LogInformation($"{name} has changed:{ value}");
         Console.WriteLine($"{name} has changed:{ value}");
 
-        this.Address = URL.ValueOf(value.RegisterUrl);
+        //this.Address = URL.ValueOf(value.RegisterUrl);
 
-        foreach (var item in value.Clients)
-        {
-            var list = item.Value.Urls.Select(w => URL.ValueOf(w).AddParameterIfAbsent("interface", item.Value.Service.FullName)).ToList();
-            //优先移除被隔离了的URL
-            if (this.BadUrls.ContainsKey(item.Key))
-            {
-                var removeUrls = new List<BadUrl>();
-                foreach (var badUrl in this.BadUrls[item.Key])
-                {
-                    var exitsUrl = list.FirstOrDefault(w => w.ToIdentityString() == badUrl.Url.ToIdentityString());
-                    if (exitsUrl == null)
-                    {
-                        removeUrls.Add(badUrl);
-                    }
-                }
-                foreach (var url in removeUrls)
-                {
-                    this.BadUrls[item.Key].Remove(url);
-                }
-            }
+        //foreach (var item in value.Clients)
+        //{
+        //    var list = item.Value.Urls.Select(w => URL.ValueOf(w).AddParameterIfAbsent("interface", item.Value.Service.FullName)).ToList();
+        //    //优先移除被隔离了的URL
+        //    if (this.BadUrls.ContainsKey(item.Key))
+        //    {
+        //        var removeUrls = new List<BadUrl>();
+        //        foreach (var badUrl in this.BadUrls[item.Key])
+        //        {
+        //            var exitsUrl = list.FirstOrDefault(w => w.ToIdentityString() == badUrl.Url.ToIdentityString());
+        //            if (exitsUrl == null)
+        //            {
+        //                removeUrls.Add(badUrl);
+        //            }
+        //        }
+        //        foreach (var url in removeUrls)
+        //        {
+        //            this.BadUrls[item.Key].Remove(url);
+        //        }
+        //    }
 
-            if (this.Urls.ContainsKey(item.Key))
-            {
-                //移除注销的提供者
-                var removeUrls = new List<URL>();
-                foreach (var url in this.Urls[item.Key])
-                {
-                    var exitsUrl = list.FirstOrDefault(w => w.ToIdentityString() == url.ToIdentityString());
-                    if (exitsUrl == null)
-                    {
-                        removeUrls.Add(url);
-                    }
-                }
-                foreach (var url in removeUrls)
-                {
-                    this.Urls[item.Key].Remove(url);
-                }
+        //    if (this.Urls.ContainsKey(item.Key))
+        //    {
+        //        //移除注销的提供者
+        //        var removeUrls = new List<URL>();
+        //        foreach (var url in this.Urls[item.Key])
+        //        {
+        //            var exitsUrl = list.FirstOrDefault(w => w.ToIdentityString() == url.ToIdentityString());
+        //            if (exitsUrl == null)
+        //            {
+        //                removeUrls.Add(url);
+        //            }
+        //        }
+        //        foreach (var url in removeUrls)
+        //        {
+        //            this.Urls[item.Key].Remove(url);
+        //        }
 
-                //发现新的提供者
-                foreach (var i in list)
-                {
-                    URL exitsUrl = null;
-                    if (this.Urls.TryGetValue(item.Key, out IList<URL> urlList)) 
-                    {
-                        exitsUrl = urlList.FirstOrDefault(w => w.ToIdentityString() == i.ToIdentityString());
-                    }
-                    BadUrl exitsBadUrl = null;
-                    if (BadUrls.TryGetValue(item.Key, out IList<BadUrl> badUrlList)) 
-                    {
-                        badUrlList.FirstOrDefault(w => w.Url.ToIdentityString() == i.ToIdentityString());
-                    }
-                    if (exitsUrl == null && exitsBadUrl == null)
-                    {
-                        this.Urls[item.Key].Add(i);
-                    }
-                }
-            }
-            else
-            {
-                this.Urls.TryAdd(item.Key, list);
-            }
-        }
+        //        //发现新的提供者
+        //        foreach (var i in list)
+        //        {
+        //            URL? exitsUrl = null;
+        //            if (this.Urls.TryGetValue(item.Key, out List<URL>? urlList)) 
+        //            {
+        //                exitsUrl = urlList.FirstOrDefault(w => w.ToIdentityString() == i.ToIdentityString());
+        //            }
+        //            BadUrl? exitsBadUrl = null;
+        //            if (BadUrls.TryGetValue(item.Key, out List<BadUrl>? badUrlList)) 
+        //            {
+        //                badUrlList.FirstOrDefault(w => w.Url.ToIdentityString() == i.ToIdentityString());
+        //            }
+        //            if (exitsUrl == null && exitsBadUrl == null)
+        //            {
+        //                this.Urls[item.Key].Add(i);
+        //            }
+        //        }
+        //    }
+        //    else
+        //    {
+        //        this.Urls.TryAdd(item.Key, list);
+        //    }
+        //}
     }
     /// <summary>
     /// 初始化调用
@@ -204,12 +208,12 @@ public class ZooyardPools : IZooyardPools
         var internalCycle = this.Address.GetParameter(CYCLE_PERIOD_KEY, DEFAULT_CYCLE_PERIOD);
 
         cycleTimer = new System.Timers.Timer(internalCycle);
-        cycleTimer.Elapsed += new System.Timers.ElapsedEventHandler((object sender, System.Timers.ElapsedEventArgs events) =>
+        cycleTimer.Elapsed += new System.Timers.ElapsedEventHandler((object? sender, System.Timers.ElapsedEventArgs events) =>
         {
             // 定时循环处理过期链接
             try
             {
-                cycleProcess();
+                CycleProcess();
             }
             catch (Exception t)
             {   // 防御性容错
@@ -223,12 +227,12 @@ public class ZooyardPools : IZooyardPools
         var internalRecovery = this.Address.GetParameter(RECOVERY_PERIOD_KEY, DEFAULT_RECOVERY_PERIOD);
 
         recoveryTimer = new System.Timers.Timer(internalRecovery);
-        recoveryTimer.Elapsed += new System.Timers.ElapsedEventHandler((object sender, System.Timers.ElapsedEventArgs events) =>
+        recoveryTimer.Elapsed += new System.Timers.ElapsedEventHandler((object? sender, System.Timers.ElapsedEventArgs events) =>
         {
             // 定时循环恢复隔离区到正常区
             try
             {
-                recoveryProcess();
+                RecoveryProcess();
             }
             catch (Exception t)
             {   // 防御性容错
@@ -241,7 +245,7 @@ public class ZooyardPools : IZooyardPools
     /// <summary>
     /// 定时循环处理过期链接
     /// </summary>
-    void cycleProcess()
+    void CycleProcess()
     {
         var overtime = this.Address.GetParameter(OVER_TIME_KEY, DEFAULT_OVER_TIME);
         var overtimeDate = DateTime.Now.AddMinutes(-overtime);
@@ -254,14 +258,15 @@ public class ZooyardPools : IZooyardPools
     /// <summary>
     /// 定时循环恢复隔离区到正常区
     /// </summary>
-    void recoveryProcess()
+    async Task RecoveryProcess()
     {
         var recoverytime = this.Address.GetParameter(RECOVERY_TIME_KEY, DEFAULT_RECOVERY_TIME);
         var recoverytimeDate = DateTime.Now.AddMinutes(-recoverytime);
 
-        lock (locker)
+        try
         {
-            foreach (var badUrls in BadUrls)
+            await _semaphore.WaitAsync(100);
+            foreach (var badUrls in this.BadUrls)
             {
                 var list = new List<BadUrl>();
                 foreach (var badUrl in badUrls.Value)
@@ -270,7 +275,7 @@ public class ZooyardPools : IZooyardPools
                     {
                         this.Urls[badUrls.Key].Add(badUrl.Url);
                         list.Add(badUrl);
-                        Console.WriteLine($"auto timer recovery url {badUrl.Url.ToString()}");
+                        Console.WriteLine($"auto timer recovery url {badUrl.Url}");
                         Logger().LogInformation($"recovery:{badUrl.Url.ToString()}");
                     }
                 }
@@ -279,6 +284,14 @@ public class ZooyardPools : IZooyardPools
                     badUrls.Value.Remove(item);
                 }
             }
+        }
+        catch (Exception ex)
+        {
+            Logger().LogError(ex, ex.Message);
+        }
+        finally 
+        {
+            _semaphore.Release();
         }
     }
 
@@ -419,7 +432,7 @@ public class ZooyardPools : IZooyardPools
         if (Urls.ContainsKey(invocation.TargetType.FullName) 
             && Urls?[invocation.TargetType.FullName]?.Count() > 0)
         {
-            var result = filterUrls(invocation, Urls[invocation.TargetType.FullName]);
+            var result = FilterUrls(invocation, Urls[invocation.TargetType.FullName]);
             if (result?.Count > 0)
             {
                 Logger().LogInformation("from good urls");
@@ -430,7 +443,7 @@ public class ZooyardPools : IZooyardPools
         if (BadUrls.ContainsKey(invocation.TargetType.FullName) 
             && BadUrls?[invocation.TargetType.FullName]?.Count() > 0)
         {
-            var result = filterUrls(invocation, BadUrls[invocation.TargetType.FullName].Select(w => w.Url).ToList());
+            var result = FilterUrls(invocation, BadUrls[invocation.TargetType.FullName].Select(w => w.Url).ToList());
             if (result?.Count > 0)
             {
                 Logger().LogInformation("from bad urls");
@@ -447,10 +460,10 @@ public class ZooyardPools : IZooyardPools
     /// <param name="invocation"></param>
     /// <param name="urls"></param>
     /// <returns></returns>
-    private IList<URL> filterUrls(IInvocation invocation, IList<URL> urls)
+    private IList<URL>? FilterUrls(IInvocation invocation, IList<URL> urls)
     {
-        var result = filterAppUrls(invocation, urls);
-        result = filterVersionUrls(invocation, urls);
+        var result = FilterAppUrls(invocation, urls);
+        result = FilterVersionUrls(invocation, urls);
         return result;
     }
     /// <summary>
@@ -459,9 +472,11 @@ public class ZooyardPools : IZooyardPools
     /// <param name="invocation"></param>
     /// <param name="urls"></param>
     /// <returns></returns>
-    private IList<URL> filterAppUrls(IInvocation invocation, IList<URL> urls)
+    private IList<URL>? FilterAppUrls(IInvocation invocation, IList<URL> urls)
     {
-        if (string.IsNullOrEmpty(invocation.App) || (urls?.Count ?? 0) <= 0)
+        if (string.IsNullOrEmpty(invocation.App)
+            || urls == null
+            || urls.Count <= 0)
         {
             return urls;
         }
@@ -483,9 +498,9 @@ public class ZooyardPools : IZooyardPools
     /// <param name="invocation"></param>
     /// <param name="urls"></param>
     /// <returns></returns>
-    private IList<URL> filterVersionUrls(IInvocation invocation, IList<URL> urls)
+    private IList<URL>? FilterVersionUrls(IInvocation invocation, IList<URL>? urls)
     {
-        if (string.IsNullOrEmpty(invocation.Version) || (urls?.Count ?? 0) <= 0)
+        if (string.IsNullOrEmpty(invocation.Version) || urls == null || urls.Count <= 0)
         {
             return urls;
         }
@@ -540,7 +555,7 @@ public class ZooyardPools : IZooyardPools
     /// </summary>
     public void CacheClear()
     {
-        if ((Caches?.Count??0)<=0)
+        if (Caches == null || Caches.Count <=0)
         {
             return;
         }
@@ -576,12 +591,14 @@ public class ZooyardPools : IZooyardPools
 
         var result = await cluster.DoInvoke<T>(pool, loadbalance, this.Address, urls, invocation);
 
-        lock (locker)
+        try
         {
-            IList<URL> goodUrls = new List<URL>();
+            await _semaphore.WaitAsync(100);
 
+            var goodUrls = new List<URL>();
             // insulate the exception rpc url address 
-            IList<BadUrl> badUrls = new List<BadUrl>();
+            var badUrls = new List<BadUrl>();
+
             if (this.Urls.ContainsKey(invocation.TargetType.FullName))
             {
                 goodUrls = this.Urls[invocation.TargetType.FullName];
@@ -597,20 +614,22 @@ public class ZooyardPools : IZooyardPools
             {
                 var goodUrl = goodUrls.FirstOrDefault(w => w == item.Url);
                 //remove from good urls ,add to bad urls
-                if (goodUrl != null)
+                if (goodUrl == null)
                 {
-                    goodUrls.Remove(goodUrl);
-
-                    //refresh badurl timer
-                    var badUrl = badUrls.FirstOrDefault(w => w.Url == goodUrl);
-                    if (badUrl != null)
-                    {
-                        badUrls.Remove(badUrl);
-                    }
-
-                    Logger().LogInformation(item.CurrentException,$"isolation url {item}");
-                    badUrls.Add(item);
+                    continue;
                 }
+
+                goodUrls.Remove(goodUrl);
+
+                //refresh badurl timer
+                var badUrl = badUrls.FirstOrDefault(w => w.Url == goodUrl);
+                if (badUrl != null)
+                {
+                    badUrls.Remove(badUrl);
+                }
+
+                Logger().LogInformation(item.CurrentException, $"isolation url {item}");
+                badUrls.Add(item);
             }
 
             //扫描所有正常调用的地址，将隔离区的自动恢复到正常区域
@@ -618,23 +637,33 @@ public class ZooyardPools : IZooyardPools
             {
                 var badUrl = badUrls.FirstOrDefault(w => w.Url == item);
                 //从隔离区删除,添加到正常区域
-                if (badUrl != null)
+                if (badUrl == null)
                 {
-                    badUrls.Remove(badUrl);
+                    continue;
+                }
 
-                    if (!goodUrls.Contains(badUrl.Url))
-                    {
-                        goodUrls.Add(badUrl.Url);
-                        Logger().LogInformation($"recovery url {badUrl}");
-                    }
+                badUrls.Remove(badUrl);
 
+                if (!goodUrls.Contains(badUrl.Url))
+                {
+                    goodUrls.Add(badUrl.Url);
+                    Logger().LogInformation($"recovery url {badUrl}");
                 }
             }
 
-            if (!this.BadUrls.ContainsKey(invocation.TargetType.FullName) && badUrls.Count() > 0)
+            if (!this.BadUrls.ContainsKey(invocation.TargetType.FullName) 
+                && badUrls.Count() > 0)
             {
                 this.BadUrls.TryAdd(invocation.TargetType.FullName, badUrls);
             }
+        }
+        catch (Exception ex)
+        {
+            Logger().LogError(ex, ex.Message);
+            throw;
+        }
+        finally {
+            _semaphore.Release();
         }
         
         //是否有异常，并抛出异常

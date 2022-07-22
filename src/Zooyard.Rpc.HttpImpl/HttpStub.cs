@@ -17,7 +17,7 @@ public class HttpStub
     /// <summary>
     /// http客户端
     /// </summary>
-    protected HttpClient client;
+    protected readonly HttpClient _client;
 
     /// <summary>
     /// http客户端状态标识
@@ -31,7 +31,7 @@ public class HttpStub
     /// <param name="isOpen">http客户端状态标识</param>
     public HttpStub(HttpClient client, bool[] isOpen)
     {
-        this.client = client;
+        _client = client;
         openFlag = isOpen;
     }
 
@@ -58,7 +58,7 @@ public class HttpStub
 
             //request.Headers.Add("","");
 
-            var response = await client.SendAsync(request);
+            var response = await _client.SendAsync(request);
             var data = await response.Content.ReadAsStreamAsync();
 
             if (!response.IsSuccessStatusCode)

@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
-using Zooyard.Config;
+//using Zooyard.Config;
 using Zooyard.Rpc.NettyImpl.Compressor;
 using Zooyard.Rpc.NettyImpl.Serializer;
 
@@ -54,10 +54,32 @@ public class ProtocolConstants
     /// <summary>
     /// Configured codec by user, default is ZOOTA
     /// </summary>
-    public readonly static byte CONFIGURED_CODEC = (byte)Enum.Parse<SerializerType>(ConfigurationFactory.Instance.GetValue(Constant.ConfigurationKeys.SERIALIZE_FOR_RPC, SerializerType.ZOOTA.ToString()), true);
+    public readonly static byte CONFIGURED_CODEC = (byte)Enum.Parse<SerializerType>(GetCodec(), true);
 
+    private static string GetCodec()
+    {
+        var str = Environment.GetEnvironmentVariable(Constant.ConfigurationKeys.SERIALIZE_FOR_RPC);
+        if (!string.IsNullOrWhiteSpace(str))
+        {
+            return str;
+        }
+        return SerializerType.ZOOTA.ToString();
+        //ConfigurationFactory.Instance.GetValue(Constant.ConfigurationKeys.SERIALIZE_FOR_RPC, SerializerType.ZOOTA.ToString())
+    }
     /// <summary>
     ///  Configured compressor by user, default is NONE
     /// </summary>
-    public readonly static byte CONFIGURED_COMPRESSOR = (byte)Enum.Parse<CompressorType>(ConfigurationFactory.Instance.GetValue(Constant.ConfigurationKeys.COMPRESSOR_FOR_RPC, CompressorType.NONE.ToString()), true);
+    public readonly static byte CONFIGURED_COMPRESSOR = (byte)Enum.Parse<CompressorType>(GetCompressor(), true);
+
+    private static string GetCompressor()
+    {
+        var str = Environment.GetEnvironmentVariable(Constant.ConfigurationKeys.COMPRESSOR_FOR_RPC);
+        if (!string.IsNullOrWhiteSpace(str))
+        {
+            return str;
+        }
+        return CompressorType.NONE.ToString();
+        //ConfigurationFactory.Instance.GetValue(Constant.ConfigurationKeys.COMPRESSOR_FOR_RPC, CompressorType.NONE.ToString())
+    }
+
 }

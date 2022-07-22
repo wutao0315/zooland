@@ -1,25 +1,30 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net6.0</TargetFrameworks>
+	  <TargetFrameworks>net6.0</TargetFrameworks>
 	  <ImplicitUsings>enable</ImplicitUsings>
 	  <Nullable>enable</Nullable>
-    <PackageLicenseUrl>https://github.com/wutao0315/zooland/blob/master/LICENSE</PackageLicenseUrl>
-    <Copyright>MIT</Copyright>
-    <PackageProjectUrl>https://github.com/wutao0315/zooland</PackageProjectUrl>
-    <PackageReleaseNotes />
-    <Description>Zooyard RPC Framework microservice</Description>
-    <Authors>wutao0315</Authors>
-    <Version>1.2.0</Version>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	  <PackageLicenseUrl>https://github.com/wutao0315/zooland/blob/master/LICENSE</PackageLicenseUrl>
+	  <Copyright>MIT</Copyright>
+	  <PackageProjectUrl>https://github.com/wutao0315/zooland</PackageProjectUrl>
+	  <PackageReleaseNotes />
+	  <Description>Zooyard RPC Framework microservice</Description>
+	  <Authors>wutao0315</Authors>
+	  <Version>1.2.1</Version>
+	  <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	  <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ApacheThrift" Version="0.16.0" />
-    <PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Server.IISIntegration" Version="2.2.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="6.0.0" />
+    <Compile Remove="ThriftServer.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+	  <PackageReference Include="ApacheThrift" Version="0.16.0" />
+	  <!--<PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
+	  <PackageReference Include="Microsoft.AspNetCore.Server.IISIntegration" Version="2.2.1" />
+	  <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.2.0" />-->
+	  <!--<PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="6.0.0" />-->
   </ItemGroup>
 
   <ItemGroup>

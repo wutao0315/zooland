@@ -10,16 +10,16 @@ using NLog.Extensions.Hosting;
 using NLog.Extensions.Logging;
 using Thrift.Processor;
 using Zooyard;
-using Zooyard.Extensions;
+//using Zooyard.Extensions;
 //using RpcContractWcf.HelloService;
-using Zooyard.Rpc.Extensions;
+//using Zooyard.Rpc.Extensions;
 using Zooyard.Rpc.GrpcImpl;
 //using Zooyard.Rpc.AkkaImpl.Extensions;
-using Zooyard.Rpc.GrpcImpl.Extensions;
-using Zooyard.Rpc.HttpImpl.Extensions;
-using Zooyard.Rpc.NettyImpl.Extensions;
+//using Zooyard.Rpc.GrpcImpl.Extensions;
+//using Zooyard.Rpc.HttpImpl.Extensions;
+//using Zooyard.Rpc.NettyImpl.Extensions;
 using Zooyard.Rpc.ThriftImpl;
-using Zooyard.Rpc.ThriftImpl.Extensions;
+//using Zooyard.Rpc.ThriftImpl.Extensions;
 
 namespace RpcProviderCore;
 
@@ -59,19 +59,19 @@ public class Program
 
             var config = builder.Build();
 
-            ZooyardLogManager.UseConsoleLogging(Zooyard.Logging.LogLevel.Debug);
+            //ZooyardLogManager.UseConsoleLogging(Zooyard.Logging.LogLevel.Debug);
 
             //services.Configure<AkkaServerOption>(config.GetSection("akka"));
             services.Configure<GrpcServerOption>(config.GetSection("grpc"));
             services.Configure<NettyServerOption>(config.GetSection("netty"));
-            services.Configure<ThriftServerOption>(config.GetSection("thrift"));
+            //services.Configure<ThriftServerOption>(config.GetSection("thrift"));
             services.Configure<HttpServerOption>(config.GetSection("http"));
             services.AddLogging();
 
-            //实现注册接口代码
-            services.AddSingleton<IRegistryService>((provider)=> {
-                return default;
-            });
+            ////实现注册接口代码
+            //services.AddSingleton<IRegistryService>((provider)=> {
+            //    return default;
+            //});
 
             services.AddTransient((serviceProvider) => "A");
             //services.AddAkkaServer();
@@ -82,7 +82,7 @@ public class Program
 
 
             services.AddTransient<RpcContractGrpc.HelloService.HelloServiceBase, HelloServiceGrpcImpl>();
-            services.AddGrpcServer();
+            //services.AddGrpcServer();
            
 
 
@@ -96,7 +96,7 @@ public class Program
             });
 
             services.AddTransient((serviceProvider) => new HelloServiceNettyImpl { ServiceName = "A" });
-            services.AddNettyServer();
+            //services.AddNettyServer();
 
 
             services.AddTransient<RpcContractThrift.HelloService.IAsync>((serviceProvider) => new HelloServiceThriftImpl { ServiceName = "A" });
@@ -151,15 +151,15 @@ public class Program
             //        logger: loggerFactory.CreateLogger<TSimpleAsyncServer>());
             //});
 
-            services.AddThriftServer();
+            //services.AddThriftServer();
 
-            services.AddHttpServer<Startup>(args);
+            //services.AddHttpServer<Startup>(args);
 
             //services.AddTransient<IHelloServiceWcf, HelloServiceWcfImpl>();
 
 
             //services.AddZoolandServer();
-            services.AddHostedService<ZoolandHostedService>();
+            //services.AddHostedService<ZoolandHostedService>();
 
         })
         .ConfigureWebHostDefaults(webBuilder =>

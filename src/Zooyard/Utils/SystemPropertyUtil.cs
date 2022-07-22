@@ -22,7 +22,7 @@ public static class SystemPropertyUtil
     ///     <c>key</c>, while falling back to <c>null</c> if the property access fails.
     /// </summary>
     /// <returns>the property value or <c>null</c></returns>
-    public static string Get(string key) => Get(key, null);
+    public static string? Get(string key) => Get(key, null);
 
     /// <summary>
     ///     Returns the value of the system property with the specified
@@ -34,7 +34,7 @@ public static class SystemPropertyUtil
     ///     <c>def</c> if there's no such property or if an access to the
     ///     specified property is not allowed.
     /// </returns>
-    public static string Get(string key, string def = null)
+    public static string? Get(string key, string? def = default)
     {
         Contract.Requires(!string.IsNullOrEmpty(key));
 
@@ -82,7 +82,7 @@ public static class SystemPropertyUtil
     /// </returns>
     public static bool GetBoolean(string key, bool def)
     {
-        string value = Get(key);
+        string? value = Get(key);
         if (value == null)
         {
             return def;
@@ -127,7 +127,7 @@ public static class SystemPropertyUtil
     /// </returns>
     public static int GetInt(string key, int def)
     {
-        string value = Get(key);
+        string? value = Get(key);
         if (value == null)
         {
             return def;
@@ -158,7 +158,7 @@ public static class SystemPropertyUtil
     /// </returns>
     public static long GetLong(string key, long def)
     {
-        string value = Get(key);
+        string? value = Get(key);
         if (value == null)
         {
             return def;

@@ -2,17 +2,17 @@
 
 public interface IResult<T>
 {
-    T Value { get; }
+    T? Value { get; }
     long ElapsedMilliseconds{get;}
     bool HasException { get; }
-    Exception Exception { get; }
+    Exception? Exception { get; }
 }
 
 public class RpcResult<T> : IResult<T>
 {
-    public T Value { get; private set; }
+    public T? Value { get; private set; }
     public long ElapsedMilliseconds { get; private set; }
-    public Exception Exception { get; private set; }
+    public Exception? Exception { get; private set; }
 
     public RpcResult(long elapsedMilliseconds)
     {
@@ -51,9 +51,8 @@ public class ClusterResult<T> : IClusterResult<T>
     public IList<BadUrl> BadUrls { get; private set; }
 
     public Exception ClusterException { get; private set; }
+
     public bool IsThrow { get; private set; }
-
-
 
     public ClusterResult(IResult<T> result, IList<URL> urls, IList<BadUrl> badUrls, Exception clusterException, bool isThrow)
     {

@@ -1,5 +1,5 @@
 ﻿using System.Collections.Concurrent;
-using Zooyard.Loader;
+//using Zooyard.Loader;
 
 
 namespace Zooyard.Rpc.NettyImpl.Compressor;
@@ -29,14 +29,15 @@ public class CompressorFactory
 	{
 		var type = (CompressorType)code;
 
-		ICompressor impl = COMPRESSOR_MAP.GetOrAdd(type, (key)=>EnhancedServiceLoader.Load<ICompressor>(type.ToString()));
+		//ICompressor impl = COMPRESSOR_MAP.GetOrAdd(type, (key)=>EnhancedServiceLoader.Load<ICompressor>(type.ToString()));
+		ICompressor impl = new NoneCompressor();
 		return impl;
 	}
 
 	/// <summary>
 	/// None compressor
 	/// </summary>
-	[LoadLevel(name: "NONE")]
+	//[LoadLevel(name: "NONE")]
 	public class NoneCompressor : ICompressor
 	{
 		public virtual byte[] Compress(byte[] bytes)

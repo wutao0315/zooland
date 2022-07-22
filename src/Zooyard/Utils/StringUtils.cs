@@ -57,7 +57,7 @@ public sealed class StringUtils
             if (arg.GetType().IsValueType || arg.GetType().IsPrimitive || arg is string)
             {
                 buf.Append(parameterInfos[i].Name);
-                buf.Append("=");
+                buf.Append('=');
                 buf.Append(arg);
             }
             else
@@ -88,7 +88,7 @@ public sealed class StringUtils
         foreach (var item in parameterInfos)
         {
             buf.Append(item.Name);
-            buf.Append("_");
+            buf.Append('_');
         }
 
         buf.Length -= 1;
@@ -98,7 +98,7 @@ public sealed class StringUtils
 
     public static string Md5(string input)
     {
-        var md5Hasher = new MD5CryptoServiceProvider();
+        var md5Hasher = MD5.Create();
         var data = md5Hasher.ComputeHash(Encoding.Default.GetBytes(input));
         var sbuilder = new StringBuilder();
         foreach (var item in data)

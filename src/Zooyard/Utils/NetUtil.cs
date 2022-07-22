@@ -49,14 +49,14 @@ public class NetUtil
     {
         get
         {
-            IPAddress address = LocalAddress;
+            IPAddress? address = LocalAddress;
             return address == null ? LOCALHOST : address.MapToIPv4().ToString();
         }
     }
 
     public static string FilterLocalHost(string host)
     {
-        if (host == null || host.Length == 0)
+        if (string.IsNullOrWhiteSpace(host))
         {
             return host;
         }
@@ -86,13 +86,13 @@ public class NetUtil
         return host;
     }
 
-    private static volatile IPAddress LOCAL_ADDRESS = null;
+    private static volatile IPAddress? LOCAL_ADDRESS = null;
 
     /// <summary>
     /// 遍历本地网卡，返回第一个合理的IP。
     /// </summary>
     /// <returns> 本地网卡IP </returns>
-    public static IPAddress LocalAddress
+    public static IPAddress? LocalAddress
     {
         get
         {
@@ -100,18 +100,18 @@ public class NetUtil
             {
                 return LOCAL_ADDRESS;
             }
-            IPAddress localAddress = LocalAddress0;
+            IPAddress? localAddress = LocalAddress0;
             LOCAL_ADDRESS = localAddress;
             return localAddress;
         }
     }
 
 
-    private static IPAddress LocalAddress0
+    private static IPAddress? LocalAddress0
     {
         get
         {
-            IPAddress localAddress = null;
+            IPAddress? localAddress = null;
             try
             {
                 var localHost = Dns.GetHostAddresses(Dns.GetHostName());

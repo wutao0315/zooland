@@ -1,17 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+	  <TargetFramework>net6.0</TargetFramework>
 	  <ImplicitUsings>enable</ImplicitUsings>
 	  <Nullable>enable</Nullable>
-    <PackageLicenseUrl>https://github.com/wutao0315/zooland/blob/master/LICENSE</PackageLicenseUrl>
-    <Copyright>MIT</Copyright>
-    <PackageProjectUrl>https://github.com/wutao0315/zooland</PackageProjectUrl>
-    <PackageReleaseNotes />
-    <Description>Zooyard RPC Framework microservice</Description>
-    <Authors>wutao0315</Authors>
-    <Version>1.2.0</Version>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	  <PackageLicenseUrl>https://github.com/wutao0315/zooland/blob/master/LICENSE</PackageLicenseUrl>
+	  <Copyright>MIT</Copyright>
+	  <PackageProjectUrl>https://github.com/wutao0315/zooland</PackageProjectUrl>
+	  <PackageReleaseNotes />
+	  <Description>Zooyard RPC Framework microservice</Description>
+	  <Authors>wutao0315</Authors>
+	  <Version>1.2.1</Version>
+	  <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	  <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

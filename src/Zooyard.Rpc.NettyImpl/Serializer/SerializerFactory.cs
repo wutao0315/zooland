@@ -1,5 +1,5 @@
 ﻿using System.Collections.Concurrent;
-using Zooyard.Loader;
+//using Zooyard.Loader;
 using Zooyard.Rpc.NettyImpl.Protocol;
 
 namespace Zooyard.Rpc.NettyImpl.Serializer;
@@ -24,8 +24,9 @@ public class SerializerFactory
 	public static ISerializer GetSerializer(byte serializeCode)
 	{
 		SerializerType serializerType = (SerializerType)serializeCode;
-		ISerializer codecImpl = CODEC_MAP.GetOrAdd(serializerType,(key)=> EnhancedServiceLoader.Load<ISerializer>(serializerType.ToString()));
-		return codecImpl;
+		//ISerializer codecImpl = CODEC_MAP.GetOrAdd(serializerType,(key)=> EnhancedServiceLoader.Load<ISerializer>(serializerType.ToString()));
+		//return codecImpl;
+		return null;
 	}
 
 	/// <summary>

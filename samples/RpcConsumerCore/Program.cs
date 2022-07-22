@@ -1,12 +1,12 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Zooyard;
-using Zooyard.Extensions;
+//using Zooyard.Extensions;
 //using Zooyard.Rpc.AkkaImpl.Extensions;
-using Zooyard.Rpc.GrpcImpl.Extensions;
-using Zooyard.Rpc.HttpImpl.Extensions;
-using Zooyard.Rpc.NettyImpl.Extensions;
-using Zooyard.Rpc.ThriftImpl.Extensions;
+//using Zooyard.Rpc.GrpcImpl.Extensions;
+//using Zooyard.Rpc.HttpImpl.Extensions;
+//using Zooyard.Rpc.NettyImpl.Extensions;
+//using Zooyard.Rpc.ThriftImpl.Extensions;
 //using Zooyard.Rpc.WcfImpl.Extensions;
 
 namespace RpcConsumerCore;
@@ -28,7 +28,7 @@ class Program
             .AddJsonFile("nlog.json", false, true);
 
         var config = builder.Build();
-        ZooyardLogManager.UseConsoleLogging(Zooyard.Logging.LogLevel.Debug);
+        //ZooyardLogManager.UseConsoleLogging(Zooyard.Logging.LogLevel.Debug);
 
         IServiceCollection services = new ServiceCollection();
         //services.Configure<AkkaOption>(config.GetSection("akka"));
@@ -39,11 +39,11 @@ class Program
         services.Configure<ZooyardOption>(config.GetSection("zooyard"));
         services.AddLogging();
         //services.AddAkkaClient();
-        services.AddGrpcClient();
-        services.AddHttpClient();
-        services.AddNettyClient();
+        services.AddGrpcImpl();
+        services.AddHttpImpl();
+        services.AddNettyImpl();
 
-        services.AddThriftClient();
+        services.AddThriftImpl();
         //services.AddWcfClient();
         services.AddZoolandClient(config);
 

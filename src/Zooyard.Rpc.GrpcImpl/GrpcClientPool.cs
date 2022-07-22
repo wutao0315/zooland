@@ -66,19 +66,24 @@ public class GrpcClientPool : AbstractClientPool
 
         await Task.CompletedTask;
 
+        object? client;
+
         if (_interceptors?.Count() > 0)
         {
             var callInvoker = channel.Intercept(_interceptors.ToArray());
             //实例化GrpcClient
-            var client = Activator.CreateInstance(_grpcClientTypes[proxyKey], callInvoker);
-
-            return new GrpcClient(channel, client, url, credentials, timeout);
+            client = Activator.CreateInstance(_grpcClientTypes[proxyKey], callInvoker);
         }
         else {
             //实例化GrpcClient
-            var client = Activator.CreateInstance(_grpcClientTypes[proxyKey], channel);
-
-            return new GrpcClient(channel, client, url, credentials, timeout);
+            client = Activator.CreateInstance(_grpcClientTypes[proxyKey], channel);
+            //return new GrpcClient(channel, client, url, credentials, timeout);
         }
+        if (client == null) 
+        {
+            throw new Exception($"grpc client is null");
+        }
+
+        return new GrpcClient(channel, client, url, credentials, timeout);
     }
 }

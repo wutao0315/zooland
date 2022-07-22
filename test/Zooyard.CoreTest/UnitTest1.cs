@@ -2,11 +2,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
-using Zooyard.Extensions;
+//using Zooyard.Extensions;
 using Zooyard;
-using Zooyard.Rpc.GrpcImpl.Extensions;
-using Zooyard.Rpc.HttpImpl.Extensions;
-using Zooyard.Rpc.NettyImpl.Extensions;
+//using Zooyard.Rpc.GrpcImpl.Extensions;
+//using Zooyard.Rpc.HttpImpl.Extensions;
+//using Zooyard.Rpc.NettyImpl.Extensions;
 
 namespace ZooyardTest
 {
@@ -36,11 +36,11 @@ namespace ZooyardTest
             services.Configure<ZooyardOption>(config.GetSection("zooyard"));
             services.AddLogging();
             //services.AddAkkaClient();
-            services.AddGrpcClient();
-            services.AddHttpClient();
+            services.AddGrpcImpl();
+            services.AddHttpImpl();
 
 
-            services.AddNettyClient();
+            services.AddNettyImpl();
 
             //services.AddThriftClient();
             //services.AddWcfClient();

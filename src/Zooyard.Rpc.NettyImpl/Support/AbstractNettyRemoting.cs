@@ -4,7 +4,6 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using Zooyard.Atomic;
 using Zooyard.Exceptions;
-using Zooyard.Loader;
 using Zooyard.Logging;
 using Zooyard.Rpc.NettyImpl.Constant;
 using Zooyard.Rpc.NettyImpl.Hook;
@@ -59,7 +58,7 @@ public abstract class AbstractNettyRemoting : IAsyncDisposable
 		/// </summary>
 		protected internal readonly Dictionary<int, Pair<IRemotingProcessor, IExecutorService>> _processorTable = new (32); //MessageType
 
-    protected internal readonly IList<IRpcHook> rpcHooks = EnhancedServiceLoader.LoadAll<IRpcHook>();
+    //protected internal readonly IList<IRpcHook> rpcHooks = EnhancedServiceLoader.LoadAll<IRpcHook>();
 
     /// <summary>
     /// Init.
@@ -376,18 +375,18 @@ public abstract class AbstractNettyRemoting : IAsyncDisposable
 
     protected internal virtual void DoBeforeRpcHooks(string remoteAddr, RpcMessage request)
     {
-        foreach (IRpcHook rpcHook in rpcHooks)
-        {
-            rpcHook.DoBeforeRequest(remoteAddr, request);
-        }
+        //foreach (IRpcHook rpcHook in rpcHooks)
+        //{
+        //    rpcHook.DoBeforeRequest(remoteAddr, request);
+        //}
     }
 
     protected internal virtual void DoAfterRpcHooks(string remoteAddr, RpcMessage request, object response)
     {
-        foreach (IRpcHook rpcHook in rpcHooks)
-        {
-            rpcHook.DoAfterResponse(remoteAddr, request, response);
-        }
+        //foreach (IRpcHook rpcHook in rpcHooks)
+        //{
+        //    rpcHook.DoAfterResponse(remoteAddr, request, response);
+        //}
     }
 
     public virtual async ValueTask DisposeAsync()

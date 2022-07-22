@@ -1,7 +1,7 @@
 ﻿using DotNetty.Buffers;
 using DotNetty.Codecs;
 using DotNetty.Transport.Channels;
-using Zooyard.Loader;
+//using Zooyard.Loader;
 using Zooyard.Logging;
 using Zooyard.Rpc.NettyImpl.Compressor;
 using Zooyard.Rpc.NettyImpl.Exceptions;
@@ -133,8 +133,8 @@ public class ProtocolV1Decoder : LengthFieldBasedFrameDecoder
                 frame.ReadBytes(bs);
                 ICompressor compressor = CompressorFactory.GetCompressor(compressorType);
                 bs = compressor.Decompress(bs);
-                ISerializer serializer = EnhancedServiceLoader.Load<ISerializer>(((SerializerType)rpcMessage.Codec).ToString());
-                rpcMessage.Body = serializer.Deserialize<AbstractMessage>(bs);
+                //ISerializer serializer = EnhancedServiceLoader.Load<ISerializer>(((SerializerType)rpcMessage.Codec).ToString());
+                //rpcMessage.Body = serializer.Deserialize<AbstractMessage>(bs);
             }
         }
 

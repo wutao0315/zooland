@@ -43,9 +43,19 @@ public class GrpcInvoker : AbstractInvoker
         var watch = Stopwatch.StartNew();
         try
         {
+            if (method == null) 
+            {
+                throw new Exception($"method {invocation.MethodInfo.Name} not exits");
+            }
             var taskResult = method.Invoke(_instance, parasPlus);
-            if (taskResult.GetType().GetTypeInfo().IsGenericType &&
-                      taskResult.GetType().GetGenericTypeDefinition() == typeof(AsyncUnaryCall<>))
+            if (taskResult == null) 
+            {
+                var result = new RpcResult<T>(default!, watch.ElapsedMilliseconds);
+                return result;
+            }
+
+            if (taskResult.GetType().GetTypeInfo().IsGenericType 
+                && taskResult.GetType().GetGenericTypeDefinition() == typeof(AsyncUnaryCall<>))
             {
                 var resultData = await (AsyncUnaryCall<T>)taskResult;
                 watch.Stop();
@@ -55,6 +65,7 @@ public class GrpcInvoker : AbstractInvoker
             else
             {
                 watch.Stop();
+
                 var result = new RpcResult<T>((T)taskResult.ChangeType(typeof(T)), watch.ElapsedMilliseconds);
                 return result;
             }
@@ -62,14 +73,15 @@ public class GrpcInvoker : AbstractInvoker
         catch (Exception ex)
         {
             Debug.Print(ex.StackTrace);
-            throw ex;
+            throw;
         }
         finally
         {
-            if (watch.IsRunning)
+            if (watch.IsRunning) 
+            {
                 watch.Stop();
+            }
             Logger().LogInformation($"Grpc Invoke {watch.ElapsedMilliseconds} ms");
         }
-        
     }
 }

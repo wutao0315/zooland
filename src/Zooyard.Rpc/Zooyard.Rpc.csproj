@@ -10,13 +10,17 @@
 	  <PackageReleaseNotes />
 	  <Description>Zooyard RPC Framework microservice</Description>
 	  <Authors>wutao0315</Authors>
-	  <Version>1.2.0</Version>
+	  <Version>1.2.1</Version>
 	  <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	  <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="IClient.cs" />
+    <Compile Remove="IExportor.cs" />
     <Compile Remove="Support\AbstractClientPool_OLD.cs" />
+    <Compile Remove="Support\AbstractExporter.cs" />
+    <Compile Remove="Support\AbstractServer.cs" />
   </ItemGroup>
 
   <ItemGroup>

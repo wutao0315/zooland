@@ -125,7 +125,13 @@ public class NettyServerConfig : NettyBaseConfig
 	{
 		get
 		{
-			return CONFIG.GetValue(ConfigurationKeys.BOSS_THREAD_PREFIX, DefaultValues.DEFAULT_BOSS_THREAD_PREFIX);
+			var str = Environment.GetEnvironmentVariable(ConfigurationKeys.BOSS_THREAD_PREFIX);
+			if (!string.IsNullOrWhiteSpace(str))
+			{
+				return str;
+			}
+			return DefaultValues.DEFAULT_BOSS_THREAD_PREFIX;
+			//return CONFIG.GetValue(ConfigurationKeys.BOSS_THREAD_PREFIX, DefaultValues.DEFAULT_BOSS_THREAD_PREFIX);
 		}
 	}
 
@@ -137,7 +143,14 @@ public class NettyServerConfig : NettyBaseConfig
 	{
 		get
 		{
-			return CONFIG.GetValue(ConfigurationKeys.WORKER_THREAD_PREFIX, EnableEpoll() ? EPOLL_WORKER_THREAD_PREFIX : DefaultValues.DEFAULT_NIO_WORKER_THREAD_PREFIX);
+			var str = Environment.GetEnvironmentVariable(ConfigurationKeys.WORKER_THREAD_PREFIX);
+			if (!string.IsNullOrWhiteSpace(str))
+			{
+				return str;
+			}
+			return EnableEpoll() ? EPOLL_WORKER_THREAD_PREFIX : DefaultValues.DEFAULT_NIO_WORKER_THREAD_PREFIX;
+
+			//return CONFIG.GetValue(ConfigurationKeys.WORKER_THREAD_PREFIX, EnableEpoll() ? EPOLL_WORKER_THREAD_PREFIX : DefaultValues.DEFAULT_NIO_WORKER_THREAD_PREFIX);
 		}
 	}
 
@@ -149,7 +162,14 @@ public class NettyServerConfig : NettyBaseConfig
 	{
 		get
 		{
-			return CONFIG.GetValue(ConfigurationKeys.SERVER_EXECUTOR_THREAD_PREFIX, DefaultValues.DEFAULT_EXECUTOR_THREAD_PREFIX);
+			var str = Environment.GetEnvironmentVariable(ConfigurationKeys.SERVER_EXECUTOR_THREAD_PREFIX);
+			if (!string.IsNullOrWhiteSpace(str))
+			{
+				return str;
+			}
+			return DefaultValues.DEFAULT_EXECUTOR_THREAD_PREFIX;
+
+			//return CONFIG.GetValue(ConfigurationKeys.SERVER_EXECUTOR_THREAD_PREFIX, DefaultValues.DEFAULT_EXECUTOR_THREAD_PREFIX);
 		}
 	}
 
@@ -161,7 +181,14 @@ public class NettyServerConfig : NettyBaseConfig
 	{
 		get
 		{
-			return CONFIG.GetValue(ConfigurationKeys.BOSS_THREAD_SIZE, DefaultValues.DEFAULT_BOSS_THREAD_SIZE);
+			var str = Environment.GetEnvironmentVariable(ConfigurationKeys.BOSS_THREAD_SIZE);
+			if (int.TryParse(str,out int size))
+			{
+				return size;
+			}
+			return DefaultValues.DEFAULT_BOSS_THREAD_SIZE;
+
+			//return CONFIG.GetValue(ConfigurationKeys.BOSS_THREAD_SIZE, DefaultValues.DEFAULT_BOSS_THREAD_SIZE);
 		}
 	}
 
@@ -173,7 +200,13 @@ public class NettyServerConfig : NettyBaseConfig
 	{
 		get
 		{
-			return CONFIG.GetValue(ConfigurationKeys.SHUTDOWN_WAIT, DefaultValues.DEFAULT_SHUTDOWN_TIMEOUT_SEC);
+			var str = Environment.GetEnvironmentVariable(ConfigurationKeys.SHUTDOWN_WAIT);
+			if (int.TryParse(str, out int size))
+			{
+				return size;
+			}
+			return DefaultValues.DEFAULT_SHUTDOWN_TIMEOUT_SEC;
+			//return CONFIG.GetValue(ConfigurationKeys.SHUTDOWN_WAIT, DefaultValues.DEFAULT_SHUTDOWN_TIMEOUT_SEC);
 		}
 	}
 

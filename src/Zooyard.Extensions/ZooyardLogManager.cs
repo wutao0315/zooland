@@ -4,10 +4,10 @@ namespace Zooyard.Extensions;
 
 public static class ZooyardLogManager
 {
-    public static void UseConsoleLogging(LogLevel minimumLevel = LogLevel.Trace)
-    {
-        LogManager.UseConsoleLogging(minimumLevel);
-    }
+    //public static void UseConsoleLogging(LogLevel minimumLevel = LogLevel.Trace)
+    //{
+    //    LogManager.UseConsoleLogging(minimumLevel);
+    //}
     public static void UseNLogLogging(LogLevel minimumLevel = LogLevel.Trace)
     {
         LogManager.SetLevel(minimumLevel);

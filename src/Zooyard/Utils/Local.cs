@@ -15,11 +15,11 @@ public class Local
         catch (Exception) { }
     }
 
-    public static string HostName { get; private set; }
+    public static string HostName { get; private set; } = string.Empty;
 
-    public static string Ipv4 { get; private set; }
+    public static string Ipv4 { get; private set; } = string.Empty;
 
-    public static string Ipv6 { get; private set; }
+    public static string Ipv6 { get; private set; } = string.Empty;
 
     public static int ProcessorCount { get; private set; }
 

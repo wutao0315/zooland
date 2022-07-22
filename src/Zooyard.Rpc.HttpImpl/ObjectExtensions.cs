@@ -22,6 +22,8 @@ public static class ObjectExtensions
             new DateTimeNullableConverter(),
             new BoolConverter(),
             new BoolNullableConverter(),
+            new GuidConverter(),
+            new GuidNullableConverter(),
             new DictionaryLongStringJsonConverter()
         }
     };
@@ -46,7 +48,7 @@ public static class ObjectExtensions
     /// </summary>
     /// <param name="str">The STR.</param>
     /// <returns></returns>
-    public static T DeserializeJson<T>(this string str, T defaultValue = default)
+    public static T DeserializeJson<T>(this string str, T defaultValue = default!)
     {
         if (!string.IsNullOrEmpty(str))
         {
@@ -81,11 +83,11 @@ public static class ObjectExtensions
             }
             catch (Exception)
             {
-                return default;
+                return default!;
             }
 
         }
-        return default;
+        return default!;
     }
 
     public static async Task<T> DeserializeJsonAsync<T>(this Stream utf8stream, CancellationToken cancellationToken)
@@ -100,6 +102,7 @@ public static class ObjectExtensions
         return result;
     }
 }
+
 public class BoolConverter : JsonConverter<bool>
 {
     public override bool Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -379,6 +382,84 @@ public class DateTimeConverter : JsonConverter<DateTime>
     public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
     {
         writer.WriteStringValue(value.ToString("yyyy-MM-dd HH:mm:ss"));
+    }
+}
+class GuidConverter : JsonConverter<Guid>
+{
+    public override Guid Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TryGetGuid(out Guid val))
+        {
+            return val;
+        }
+
+        if (reader.TokenType == JsonTokenType.Null)
+        {
+            return Guid.Empty;
+        }
+
+        if (reader.TokenType == JsonTokenType.String)
+        {
+            var readStr = reader.GetString();
+            if (string.IsNullOrWhiteSpace(readStr))
+            {
+                return Guid.Empty;
+            }
+
+            if (Guid.TryParse(readStr, out Guid data))
+            {
+                return data;
+            }
+        }
+
+        return reader.GetGuid();
+    }
+
+    public override void Write(Utf8JsonWriter writer, Guid value, JsonSerializerOptions options)
+    {
+        writer.WriteStringValue(value.ToString("N"));
+    }
+}
+class GuidNullableConverter : JsonConverter<Guid?>
+{
+    public override Guid? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.Null)
+        {
+            return null;
+        }
+        if (reader.TryGetGuid(out Guid data))
+        {
+            return data;
+        }
+
+        if (reader.TokenType == JsonTokenType.String)
+        {
+            var readStr = reader.GetString();
+            if (string.IsNullOrWhiteSpace(readStr))
+            {
+                return null;
+            }
+
+            if (Guid.TryParse(readStr, out Guid val))
+            {
+                return val;
+            }
+        }
+
+        return reader.GetGuid();
+    }
+
+    public override void Write(Utf8JsonWriter writer, Guid? value, JsonSerializerOptions options)
+    {
+        if (value == null)
+        {
+            writer.WriteStringValue("");
+        }
+        else
+        {
+            writer.WriteStringValue(value.Value.ToString("N"));
+        }
     }
 }
 public class DictionaryLongStringJsonConverter : JsonConverter<Dictionary<long, string>>
