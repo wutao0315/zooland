@@ -5,7 +5,7 @@ using DotNetty.Transport.Channels;
 
 namespace Zooyard.Rpc.NettyImpl;
 
-internal class HeliosBackwardsCompatabilityLengthFramePrepender : LengthFieldPrepender
+public class HeliosBackwardsCompatabilityLengthFramePrepender : LengthFieldPrepender
 {
     private readonly List<object> _temporaryOutput = new (2);
 

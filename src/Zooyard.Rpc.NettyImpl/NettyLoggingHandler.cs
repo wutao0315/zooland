@@ -11,7 +11,7 @@ namespace Zooyard.Rpc.NettyImpl;
 /// 
 /// Used for adding additional debug logging to the DotNetty transport
 /// </summary>
-internal class NettyLoggingHandler : ChannelHandlerAdapter
+public class NettyLoggingHandler : ChannelHandlerAdapter
 {
     private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(NettyLoggingHandler));
 

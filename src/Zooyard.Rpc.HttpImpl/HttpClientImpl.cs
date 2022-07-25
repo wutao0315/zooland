@@ -6,10 +6,10 @@ public class HttpClientImpl : AbstractClient
 {
     //private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(HttpClientImpl));
     public override URL Url { get; }
-    private readonly HttpClient _transport;
+    private readonly IHttpClientFactory _transport;
     private readonly int _clientTimeout;
     
-    public HttpClientImpl(HttpClient transport,URL url,int clientTimeout)
+    public HttpClientImpl(IHttpClientFactory transport,URL url,int clientTimeout)
     {
         this.Url = url;
         _transport = transport;
@@ -26,7 +26,8 @@ public class HttpClientImpl : AbstractClient
 
     public override async Task<IInvoker> Refer()
     {
-        var result = await _transport.SendAsync(new HttpRequestMessage
+        var client = _transport.CreateClient();
+        var result = await client.SendAsync(new HttpRequestMessage
         {
             Method = new HttpMethod("GET"),
             RequestUri = new Uri($"{this.Url.Protocol}://{this.Url.Host}:{this.Url.Port}/health")
@@ -52,17 +53,13 @@ public class HttpClientImpl : AbstractClient
     /// </summary>
     public override void Reset()
     {
-        _transport.DefaultRequestHeaders.Clear();
-        _transport.DefaultRequestHeaders.UserAgent.TryParseAdd("Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.93 Safari/537.36");
-        _transport.DefaultRequestHeaders.Connection.TryParseAdd("Keep-Alive");
+        //_transport.DefaultRequestHeaders.Clear();
+        //_transport.DefaultRequestHeaders.UserAgent.TryParseAdd("Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.93 Safari/537.36");
+        //_transport.DefaultRequestHeaders.Connection.TryParseAdd("Keep-Alive");
     }
 
     public override async ValueTask DisposeAsync()
     {
         await Task.CompletedTask;
-        if (_transport != null)
-        {
-            _transport.Dispose();
-        }
     }
 }

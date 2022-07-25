@@ -9,7 +9,7 @@ namespace Zooyard.Rpc.NettyImpl;
 /// 
 /// Defines the settings for the <see cref="DotNettyTransport"/>.
 /// </summary>
-internal sealed class NettyTransportSettings
+public sealed class NettyTransportSettings
 {
     public static NettyTransportSettings Create(URL config)
     {
@@ -215,7 +215,7 @@ internal sealed class NettyTransportSettings
     }
 }
 
-internal sealed class SslSettings
+public sealed class SslSettings
 {
     public static readonly SslSettings Empty = new SslSettings();
     public static SslSettings Create(URL config)

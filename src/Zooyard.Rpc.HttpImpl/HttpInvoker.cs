@@ -15,14 +15,14 @@ public class HttpInvoker : AbstractInvoker
     //public const string METHODTYPE_KEY = "methodtype";
     public const string DEFAULT_METHODTYPE = "post";
     private readonly URL _url;
-    private readonly HttpClient _instance;
+    private readonly IHttpClientFactory _instance;
     private readonly int _clientTimeout;
     /// <summary>
     /// 开启标志
     /// </summary>
     protected bool[] isOpen = new bool[] { false };
 
-    public HttpInvoker(HttpClient instance, int clientTimeout, URL url, bool[] isOpen)
+    public HttpInvoker(IHttpClientFactory instance, int clientTimeout, URL url, bool[] isOpen)
     {
         _instance = instance;
         _clientTimeout = clientTimeout;
@@ -87,12 +87,16 @@ public class HttpInvoker : AbstractInvoker
         }
 
         var parameters = invocation.MethodInfo.GetParameters();
-        var stub = new HttpStub(_instance, isOpen);
+        var stub = new HttpStub(_instance, isOpen, _clientTimeout);
         var watch = Stopwatch.StartNew();
-        string value = null;
+        string? value = null;
         try
         {
             using var stream = await stub.Request($"/{string.Join('/', pathUrl)}", parameterType, method, parameters, invocation.Arguments);
+            if (stream == null)
+            {
+                throw new Exception($"{nameof(stream)} is null");
+            }
             var genType = typeof(T);
             //文件流处理
             if (genType == typeof(byte[]))

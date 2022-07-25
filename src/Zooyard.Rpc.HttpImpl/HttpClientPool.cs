@@ -20,10 +20,10 @@ public class HttpClientPool : AbstractClientPool
         //实例化TheTransport
         //获得transport参数,用于反射实例化
         var timeout = url.GetParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
-        var client = _httpClientFactory.CreateClient();
-        client.Timeout = TimeSpan.FromMilliseconds(timeout);
-        client.BaseAddress = new Uri($"{url.Protocol}://{url.Host}:{url.Port}");
+        //var client = _httpClientFactory.CreateClient();
+        //client.Timeout = TimeSpan.FromMilliseconds(timeout);
+        //client.BaseAddress = new Uri($"{url.Protocol}://{url.Host}:{url.Port}");
 
-        return new HttpClientImpl(client, url,timeout);
+        return new HttpClientImpl(_httpClientFactory, url, timeout);
     }
 }

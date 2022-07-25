@@ -2,11 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
-//using Zooyard.Extensions;
 using Zooyard;
-//using Zooyard.Rpc.GrpcImpl.Extensions;
-//using Zooyard.Rpc.HttpImpl.Extensions;
-//using Zooyard.Rpc.NettyImpl.Extensions;
 
 namespace ZooyardTest
 {

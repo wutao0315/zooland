@@ -17,22 +17,25 @@ public class HttpStub
     /// <summary>
     /// http客户端
     /// </summary>
-    protected readonly HttpClient _client;
+    protected readonly IHttpClientFactory _httpClientFactory;
 
     /// <summary>
     /// http客户端状态标识
     /// </summary>
-    protected bool[] openFlag;
+    protected readonly bool[] _openFlag;
+
+    protected readonly int _timeout;
 
     /// <summary>
     /// 初始化
     /// </summary>
     /// <param name="client">http长连接客户端</param>
     /// <param name="isOpen">http客户端状态标识</param>
-    public HttpStub(HttpClient client, bool[] isOpen)
+    public HttpStub(IHttpClientFactory httpClientFactory, bool[] isOpen, int timeout)
     {
-        _client = client;
-        openFlag = isOpen;
+        _httpClientFactory = httpClientFactory;
+        _openFlag = isOpen;
+        _timeout = timeout;
     }
 
     ///// <summary>
@@ -42,7 +45,7 @@ public class HttpStub
 
     
 
-    public async Task<Stream> Request(string methodName, string parameterType, string method, ParameterInfo[] parameterInfos, object[] paras)
+    public async Task<Stream?> Request(string methodName, string parameterType, string method, ParameterInfo[] parameterInfos, object[] paras)
     {
         try
         {
@@ -57,8 +60,10 @@ public class HttpStub
             var request = new HttpRequestMessage(httpMethod, relatedUrl) { Content = content };
 
             //request.Headers.Add("","");
+            var client = _httpClientFactory.CreateClient();
+            client.Timeout = TimeSpan.FromMilliseconds(_timeout);
 
-            var response = await _client.SendAsync(request);
+            var response = await client.SendAsync(request);
             var data = await response.Content.ReadAsStreamAsync();
 
             if (!response.IsSuccessStatusCode)
@@ -72,9 +77,9 @@ public class HttpStub
         }
         catch(Exception ex)
         {
-            openFlag[0] = false;
+            _openFlag[0] = false;
             Logger().LogError(ex);
-            throw ex;
+            throw;
         }
     }
 

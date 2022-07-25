@@ -31,8 +31,4 @@ public static class ServiceBuilderExtensions
             return pool;
         });
     }
-    //public static void AddThriftServer(this IServiceCollection services)
-    //{
-    //    services.AddSingleton<IServer, ThriftServer>();
-    //}
 }

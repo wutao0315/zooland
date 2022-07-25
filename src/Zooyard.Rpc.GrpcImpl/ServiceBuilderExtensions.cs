@@ -1,7 +1,6 @@
 ﻿using Grpc.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Zooyard;
 using Zooyard.Rpc.GrpcImpl;
 
 namespace Microsoft.Extensions.Configuration;
@@ -64,46 +63,4 @@ public static class ServiceBuilderExtensions
         });
 
     }
-
-    //public static void AddGrpcServer(this IServiceCollection services)
-    //{
-    //    //services.AddTransient<IEnumerable<ServerServiceDefinition>>((serviceProvder) => 
-    //    //{
-    //    //    var option = serviceProvder.GetRequiredService<IOptionsMonitor<GrpcServerOption>>().CurrentValue;
-    //    //    var result = new List<ServerServiceDefinition>();
-
-    //    //    foreach (var item in option.Services)
-    //    //    {
-    //    //        var contractType = Type.GetType(item.Key);
-    //    //        var implType = Type.GetType(item.Value);
-    //    //        var implValue = serviceProvder.GetService(implType);
-    //    //        var definition = contractType.GetMethod("BindService",new[] { implType })
-    //    //        .Invoke(null, new[] { implValue }) as ServerServiceDefinition;
-    //    //        result.Add(definition);
-    //    //    }
-
-    //    //    return result;
-    //    //});
-
-    //    //services.AddTransient<IEnumerable<ServerPort>>((serviceProvder) => 
-    //    //{
-    //    //    var option = serviceProvder.GetRequiredService<IOptionsMonitor<GrpcServerOption>>().CurrentValue;
-    //    //    var result = new List<ServerPort>();
-    //    //    foreach (var item in option.ServerPorts)
-    //    //    {
-    //    //        var defaultCredential = ServerCredentials.Insecure;
-    //    //        if (!string.IsNullOrWhiteSpace(item.Credentials) 
-    //    //        && item.Credentials!="default"
-    //    //        && item.Credentials!= "Insecure"
-    //    //        ) {
-    //    //            var credentialType = Type.GetType(item.Credentials);
-    //    //            defaultCredential = serviceProvder.GetService(credentialType) as ServerCredentials;
-    //    //        }
-    //    //        var port = new ServerPort(item.Host,item.Port, defaultCredential);
-    //    //        result.Add(port);
-    //    //    }
-    //    //    return result;
-    //    //});
-    //    //services.AddTransient<IServer, GrpcServer>();
-    //}
 }
