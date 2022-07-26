@@ -4,7 +4,7 @@ public interface IClientPool
 {
     URL Address { get; set; }
 
-    Task<IClient> GetClient(URL url);
+    Task<IClient?> GetClient(URL url);
 
     /// <summary>
     /// 归还一个连接至连接池

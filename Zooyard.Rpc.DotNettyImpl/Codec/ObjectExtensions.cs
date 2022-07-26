@@ -1,8 +1,9 @@
-﻿using System.Text.Encodings.Web;
+﻿using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Zooyard.Rpc.HttpImpl;
+namespace Zooyard.Rpc.DotNettyImpl.Codec;
 
 public static class ObjectExtensions
 {
@@ -32,6 +33,22 @@ public static class ObjectExtensions
     /// </summary>
     /// <param name="obj"></param>
     /// <returns></returns>
+    public static byte[] ToJsonBytes(this object obj, string empty = "")
+    {
+        if (obj == null)
+        {
+            return Array.Empty<byte>();
+        }
+
+        var content = JsonSerializer.Serialize(obj, _option);
+        var result = Encoding.UTF8.GetBytes(content);
+        return result;
+    }
+    /// <summary>
+    /// Convert an object to a JSON string with camelCase formatting
+    /// </summary>
+    /// <param name="obj"></param>
+    /// <returns></returns>
     public static string ToJsonString(this object obj, string empty = "")
     {
         if (obj == null)
@@ -50,21 +67,20 @@ public static class ObjectExtensions
     /// <returns></returns>
     public static T DeserializeJson<T>(this string str, T defaultValue = default!)
     {
-        if (!string.IsNullOrEmpty(str))
+        if (string.IsNullOrEmpty(str))
         {
-            try
-            {
-                var result = JsonSerializer.Deserialize<T>(str, _option);
-
-                return result;
-            }
-            catch (Exception)
-            {
-                return defaultValue;
-            }
-
+            return defaultValue;
         }
-        return defaultValue;
+
+        try
+        {
+            var result = JsonSerializer.Deserialize<T>(str, _option);
+            return result!;
+        }
+        catch (Exception)
+        {
+            return defaultValue;
+        }
     }
 
     /// <summary>
@@ -76,18 +92,18 @@ public static class ObjectExtensions
     {
         if (!string.IsNullOrEmpty(str))
         {
-            try
-            {
-                var result = JsonSerializer.Deserialize(str, returnType, _option);
-                return result;
-            }
-            catch (Exception)
-            {
-                return default!;
-            }
-
+            return default!;
         }
-        return default!;
+        
+        try
+        {
+            var result = JsonSerializer.Deserialize(str, returnType, _option);
+            return result!;
+        }
+        catch (Exception)
+        {
+            return default!;
+        }
     }
 
     public static async Task<T> DeserializeJsonAsync<T>(this Stream utf8stream, CancellationToken cancellationToken)
@@ -99,7 +115,7 @@ public static class ObjectExtensions
             throw new Exception(" utf8stream is null");
         }
         var result = await JsonSerializer.DeserializeAsync<T>(utf8stream, _option, cancellationToken);
-        return result;
+        return result!;
     }
 }
 
@@ -147,7 +163,7 @@ public class BoolNullableConverter : JsonConverter<bool?>
 {
     public override bool? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        if (reader.TokenType == JsonTokenType.Null) 
+        if (reader.TokenType == JsonTokenType.Null)
         {
             return null;
         }
@@ -184,7 +200,8 @@ public class BoolNullableConverter : JsonConverter<bool?>
         {
             writer.WriteStringValue("");
         }
-        else {
+        else
+        {
             writer.WriteBooleanValue(value.Value);
         }
     }
@@ -197,7 +214,7 @@ public class LongNullableConverter : JsonConverter<long?>
         {
             return null;
         }
-        
+
         if (reader.TokenType == JsonTokenType.String)
         {
             var readStr = reader.GetString();
@@ -216,13 +233,13 @@ public class LongNullableConverter : JsonConverter<long?>
         {
             return value;
         }
-        
+
         return reader.GetInt64();
     }
 
     public override void Write(Utf8JsonWriter writer, long? value, JsonSerializerOptions options)
     {
-        writer.WriteStringValue(value?.ToString()??"");
+        writer.WriteStringValue(value?.ToString() ?? "");
     }
 }
 public class LongConverter : JsonConverter<long>
@@ -293,7 +310,8 @@ public class IntNullableConverter : JsonConverter<int?>
         {
             writer.WriteStringValue("");
         }
-        else {
+        else
+        {
             writer.WriteNumberValue(value.Value);
         }
     }
@@ -338,13 +356,13 @@ public class DateTimeNullableConverter : JsonConverter<DateTime?>
             return null;
         }
 
-        if (reader.TokenType == JsonTokenType.String) 
+        if (reader.TokenType == JsonTokenType.String)
         {
             var tokenValue = reader.GetString();
             return string.IsNullOrEmpty(tokenValue) ? default(DateTime?) : DateTime.Parse(tokenValue);
         }
 
-        if (reader.TryGetDateTime(out DateTime value)) 
+        if (reader.TryGetDateTime(out DateTime value))
         {
             return value;
         }
@@ -354,11 +372,11 @@ public class DateTimeNullableConverter : JsonConverter<DateTime?>
 
     public override void Write(Utf8JsonWriter writer, DateTime? value, JsonSerializerOptions options)
     {
-        if (value == null) 
+        if (value == null)
         {
             writer.WriteStringValue("");
         }
-        writer.WriteStringValue(value?.ToString("yyyy-MM-dd HH:mm:ss")??"");
+        writer.WriteStringValue(value?.ToString("yyyy-MM-dd HH:mm:ss") ?? "");
     }
 }
 public class DateTimeConverter : JsonConverter<DateTime>

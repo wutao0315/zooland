@@ -1,4 +1,6 @@
-﻿using System.Net;
+﻿using System.Collections.Concurrent;
+using System.Net;
+using System.Runtime.CompilerServices;
 using Zooyard.Utils;
 
 namespace Zooyard.Rpc;
@@ -524,3 +526,59 @@ public class RpcContext
         }
     }
 }
+
+
+//public class RpcContext
+//{
+//    private ConcurrentDictionary<string, object> contextParameters;
+
+//    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+//    public ConcurrentDictionary<string, object> GetContextParameters()
+//    {
+//        return contextParameters;
+//    }
+
+//    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+//    public void SetAttachment(string key, object value)
+//    {
+//        contextParameters.AddOrUpdate(key, value, (k, v) => value);
+//    }
+
+//    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+//    public object GetAttachment(string key)
+//    {
+//        contextParameters.TryGetValue(key, out object result);
+//        return result;
+//    }
+
+//    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+//    public void SetContextParameters(ConcurrentDictionary<string, object> contextParameters)
+//    {
+//        this.contextParameters = contextParameters;
+//    }
+
+//    private static AsyncLocal<RpcContext> rpcContextThreadLocal = new AsyncLocal<RpcContext>();
+
+//    public static RpcContext GetContext()
+//    {
+//        var context = rpcContextThreadLocal.Value;
+
+//        if (context == null)
+//        {
+//            context = new RpcContext();
+//            context.SetContextParameters(new ConcurrentDictionary<string, object>());
+//            rpcContextThreadLocal.Value = context;
+//        }
+
+//        return rpcContextThreadLocal.Value;
+//    }
+
+//    public static void RemoveContext()
+//    {
+//        rpcContextThreadLocal.Value = null;
+//    }
+
+//    private RpcContext()
+//    {
+//    }
+//}

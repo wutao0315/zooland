@@ -3,7 +3,7 @@ using Zooyard.Logging;
 
 namespace Zooyard.Rpc.Support;
 
-public abstract class AbstractClientPool : IClientPool,IAsyncDisposable
+public abstract class AbstractClientPool: IClientPool, IAsyncDisposable
 {
     private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(AbstractClientPool));
 
@@ -26,10 +26,14 @@ public abstract class AbstractClientPool : IClientPool,IAsyncDisposable
     /// 从连接池取出一个连接
     /// </summary>
     /// <returns>连接</returns>
-    public virtual async Task<IClient> GetClient(URL url)
+    public virtual async Task<IClient?> GetClient(URL url)
     {
         //连接池无空闲连接	
         var client = DequeueClient(url);
+        if (client == null)
+        {
+            return null;
+        }
         var validClient = await ValidateClient(client);
         //连接池无空闲连接	
         if (!validClient)
@@ -54,7 +58,7 @@ public abstract class AbstractClientPool : IClientPool,IAsyncDisposable
     /// <param name="client">连接</param>
     public virtual async Task Recovery(IClient client)
     {
-        if (!ClientsPool.TryGetValue(client.Url, out ConcurrentBag<IClient> clientBag) || clientBag.Count <= MaxIdle)
+        if (!ClientsPool.TryGetValue(client.Url, out ConcurrentBag<IClient>? clientBag) || clientBag.Count <= MaxIdle)
         {
             //更新最近触发时间
             client.ActiveTime = DateTime.Now;
@@ -88,7 +92,7 @@ public abstract class AbstractClientPool : IClientPool,IAsyncDisposable
     {
         foreach (var item in ClientsPool)
         {
-            while (item.Value.TryTake(out IClient client)) 
+            while (item.Value.TryTake(out IClient? client)) 
             {
                 await DestoryClient(client);
                 Logger().LogInformation($"Dispose :[{ClientsPool[item.Key].Count}][{client.Version}:{item.Key}]");
@@ -100,9 +104,10 @@ public abstract class AbstractClientPool : IClientPool,IAsyncDisposable
     /// 连接取出连接池
     /// </summary>
     /// <returns>连接</returns>
-    protected IClient DequeueClient(URL url)
+    protected IClient? DequeueClient(URL url)
     {
-        if (ClientsPool.TryGetValue(url, out ConcurrentBag<IClient> clients) && clients.TryTake(out IClient result)) 
+        if (ClientsPool.TryGetValue(url, out ConcurrentBag<IClient>? clients) 
+            && clients.TryTake(out IClient? result)) 
         {
             return result;
         }
@@ -119,7 +124,7 @@ public abstract class AbstractClientPool : IClientPool,IAsyncDisposable
     /// 初始化连接，隐藏创建细节
     /// </summary>
     /// <returns>连接</returns>
-    protected async Task<IClient> InitializeClient(URL url)
+    protected async Task<IClient?> InitializeClient(URL url)
     {
         try
         {
@@ -143,10 +148,7 @@ public abstract class AbstractClientPool : IClientPool,IAsyncDisposable
     /// <param name="client">连接</param>
     protected async Task<bool> ValidateClient(IClient client)
     {
-        if (client == null) 
-        {
-            return false;
-        }
+        
         try
         {
             await client.Open();
@@ -169,7 +171,7 @@ public abstract class AbstractClientPool : IClientPool,IAsyncDisposable
         foreach (var item in ClientsPool)
         {
             var list = new List<IClient>();
-            while (item.Value.TryTake(out IClient client)) 
+            while (item.Value.TryTake(out IClient? client)) 
             {
                 if (client.ActiveTime <= DateTime.MinValue || client.ActiveTime < overTime)
                 {
