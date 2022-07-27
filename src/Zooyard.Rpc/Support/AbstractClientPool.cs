@@ -30,10 +30,6 @@ public abstract class AbstractClientPool: IClientPool, IAsyncDisposable
     {
         //连接池无空闲连接	
         var client = DequeueClient(url);
-        if (client == null)
-        {
-            return null;
-        }
         var validClient = await ValidateClient(client);
         //连接池无空闲连接	
         if (!validClient)
@@ -77,7 +73,7 @@ public abstract class AbstractClientPool: IClientPool, IAsyncDisposable
     /// 销毁连接
     /// </summary>
     /// <param name="client">连接</param>
-    public async Task DestoryClient(IClient client)
+    public async Task DestoryClient(IClient? client)
     {
         if (client == null)
         {
@@ -146,9 +142,12 @@ public abstract class AbstractClientPool: IClientPool, IAsyncDisposable
     /// 校验连接，确保连接开启
     /// </summary>
     /// <param name="client">连接</param>
-    protected async Task<bool> ValidateClient(IClient client)
+    protected async Task<bool> ValidateClient(IClient? client)
     {
-        
+        if (client == null)
+        {
+            return false;
+        }
         try
         {
             await client.Open();

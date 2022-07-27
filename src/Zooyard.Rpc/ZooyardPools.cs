@@ -227,12 +227,12 @@ public class ZooyardPools : IZooyardPools
         var internalRecovery = this.Address.GetParameter(RECOVERY_PERIOD_KEY, DEFAULT_RECOVERY_PERIOD);
 
         recoveryTimer = new System.Timers.Timer(internalRecovery);
-        recoveryTimer.Elapsed += new System.Timers.ElapsedEventHandler((object? sender, System.Timers.ElapsedEventArgs events) =>
+        recoveryTimer.Elapsed += new System.Timers.ElapsedEventHandler(async (object? sender, System.Timers.ElapsedEventArgs events) =>
         {
             // 定时循环恢复隔离区到正常区
             try
             {
-                RecoveryProcess();
+                await RecoveryProcess();
             }
             catch (Exception t)
             {   // 防御性容错
@@ -302,13 +302,14 @@ public class ZooyardPools : IZooyardPools
     /// <returns>客户端服务连接</returns>
     private IClientPool GetClientPool(IInvocation invocation)
     {
+        var invocationTypeName = invocation.TargetType.FullName!;
         //参数检查
-        if (!Pools.ContainsKey(invocation.TargetType.FullName))
+        if (!Pools.ContainsKey(invocationTypeName))
         {
             throw new Exception($"not find the {invocation.TargetType.FullName}'s pool,please config it ");
         }
 
-        var clientPool = Pools[invocation.TargetType.FullName];
+        var clientPool = Pools[invocationTypeName];
         clientPool.Address = Address;
         return clientPool;
     }

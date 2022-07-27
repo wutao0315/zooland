@@ -28,7 +28,7 @@ public abstract class DotNettyMessageSender
 /// <summary>
 /// 基于DotNetty客户端的消息发送者。
 /// </summary>
-public class DotNettyMessageClientSender : DotNettyMessageSender, IMessageSender, IAsyncDisposable
+public class DotNettyMessageClientSender : DotNettyMessageSender, IMessageSender
 {
     private readonly IChannel _channel;
 

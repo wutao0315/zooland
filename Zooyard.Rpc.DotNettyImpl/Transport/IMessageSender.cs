@@ -5,7 +5,7 @@ namespace Zooyard.Rpc.DotNettyImpl.Transport
     /// <summary>
     /// 一个抽象的发送者。
     /// </summary>
-    public interface IMessageSender
+    public interface IMessageSender: IAsyncDisposable
     {
         /// <summary>
         /// 发送消息。

@@ -111,8 +111,7 @@ public class ConsistentHashLoadBalance : AbstractLoadBalance
         }
         private byte[] Md5(string value)
         {
-            MD5CryptoServiceProvider provider;
-            provider = new MD5CryptoServiceProvider();
+           var provider = MD5.Create();
             byte[] bytes = Encoding.UTF8.GetBytes(value);
             bytes = provider.ComputeHash(bytes);
             return bytes;
