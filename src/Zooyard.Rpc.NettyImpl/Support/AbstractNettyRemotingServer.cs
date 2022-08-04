@@ -15,7 +15,7 @@ namespace Zooyard.Rpc.NettyImpl.Support;
 /// </summary>
 public abstract class AbstractNettyRemotingServer : AbstractNettyRemoting, IRemotingServer
 {
-	private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(AbstractNettyRemotingServer));
+	private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(AbstractNettyRemotingServer));
 
 	private readonly NettyServerBootstrap _serverBootstrap;
 	public readonly object @lock = new();

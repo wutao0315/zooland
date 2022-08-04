@@ -30,7 +30,7 @@ namespace Zooyard.Rpc.NettyImpl.Processor.Client;
 public class ClientOnResponseProcessor : IRemotingProcessor
 {
 
-	private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ClientOnResponseProcessor));
+	private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ClientOnResponseProcessor));
 	/// <summary>
 	/// The Merge msg map from io.seata.core.rpc.netty.AbstractNettyRemotingClient#mergeMsgMap.
 	/// </summary>

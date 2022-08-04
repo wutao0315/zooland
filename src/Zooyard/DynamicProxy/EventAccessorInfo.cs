@@ -8,9 +8,9 @@ internal sealed class EventAccessorInfo
     public MethodInfo InterfaceAddMethod { get; }
     public MethodInfo InterfaceRemoveMethod { get; }
     public MethodInfo InterfaceRaiseMethod { get; }
-    public MethodBuilder AddMethodBuilder { get; set; }
-    public MethodBuilder RemoveMethodBuilder { get; set; }
-    public MethodBuilder RaiseMethodBuilder { get; set; }
+    public MethodBuilder? AddMethodBuilder { get; set; }
+    public MethodBuilder? RemoveMethodBuilder { get; set; }
+    public MethodBuilder? RaiseMethodBuilder { get; set; }
 
     public EventAccessorInfo(MethodInfo interfaceAddMethod, MethodInfo interfaceRemoveMethod, MethodInfo interfaceRaiseMethod)
     {

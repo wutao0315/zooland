@@ -9,12 +9,12 @@ public class ThreadLocalCache : ICache
     }
     public void Put(object key, object value)
     {
-        _store.Value.Add(key, value);
+        _store.Value!.Add(key, value);
     }
 
     public T Get<T>(object key)
     {
-        if (_store.Value.TryGetValue(key, out object value) && value != null) 
+        if (_store.Value!.TryGetValue(key, out object? value) && value != null) 
         {
             return (T)value;
         }
@@ -23,6 +23,6 @@ public class ThreadLocalCache : ICache
 
     public void Clear()
     {
-        _store.Value.Clear();
+        _store.Value!.Clear();
     }
 }

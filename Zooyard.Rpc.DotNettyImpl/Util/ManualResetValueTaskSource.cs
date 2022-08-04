@@ -67,7 +67,7 @@ public class ManualResetValueTaskSource<T> : IStrongBox<ManualResetValueTaskSour
 
     public bool RunContinuationsAsynchronously { get; set; } = true;
 
-    public void OnCompleted(Action<object> continuation, object state, short token, ValueTaskSourceOnCompletedFlags flags) => _logic.OnCompleted(continuation, state, token, flags);
+    public void OnCompleted(Action<object?> continuation, object? state, short token, ValueTaskSourceOnCompletedFlags flags) => _logic.OnCompleted(continuation, state, token, flags);
 
     ref ManualResetValueTaskSourceLogic<T> IStrongBox<ManualResetValueTaskSourceLogic<T>>.Value => ref _logic;
 
@@ -97,7 +97,7 @@ internal struct ManualResetValueTaskSourceLogic<TResult>
 
     private readonly IStrongBox<ManualResetValueTaskSourceLogic<TResult>> _parent;
     private readonly ContinuationOptions _options;
-    private Action<object>? _continuation;
+    private Action<object?>? _continuation;
     private object? _continuationState;
     private object? _capturedContext;
     private ExecutionContext? _executionContext;
@@ -144,7 +144,7 @@ internal struct ManualResetValueTaskSourceLogic<TResult>
             ValueTaskSourceStatus.Faulted;
     }
 
-    public TResult? GetResult(short token)
+    public TResult GetResult(short token)
     {
         ValidateToken(token);
 
@@ -158,7 +158,7 @@ internal struct ManualResetValueTaskSourceLogic<TResult>
         Reset();
 
         error?.Throw();
-        return result;
+        return result!;
     }
 
     public void Reset()
@@ -170,14 +170,14 @@ internal struct ManualResetValueTaskSourceLogic<TResult>
         _completed = false;
         _continuation = null;
         _continuationState = null;
-        _result = default(TResult);
+        _result = default;
         _error = null;
         _executionContext = null;
         _capturedContext = null;
         _registration = null;
     }
 
-    public void OnCompleted(Action<object> continuation, object state, short token, ValueTaskSourceOnCompletedFlags flags)
+    public void OnCompleted(Action<object?> continuation, object? state, short token, ValueTaskSourceOnCompletedFlags flags)
     {
         if (continuation == null)
         {
@@ -226,7 +226,7 @@ internal struct ManualResetValueTaskSourceLogic<TResult>
                 case SynchronizationContext sc:
                     sc.Post(s =>
                     {
-                        var tuple = (Tuple<Action<object>, object>)s;
+                        var tuple = (Tuple<Action<object>, object>)s!;
                         tuple.Item1(tuple.Item2);
                     }, Tuple.Create(continuation, state));
                     break;
@@ -259,13 +259,13 @@ internal struct ManualResetValueTaskSourceLogic<TResult>
 
         _completed = true;
 
-        if (Interlocked.CompareExchange(ref _continuation, s_sentinel, null) != null)
+        if (Interlocked.CompareExchange(ref _continuation!, s_sentinel, null) != null)
         {
             if (_executionContext != null)
             {
                 ExecutionContext.Run(
                     _executionContext,
-                    s => ((IStrongBox<ManualResetValueTaskSourceLogic<TResult>>)s).Value.InvokeContinuation(),
+                    s => ((IStrongBox<ManualResetValueTaskSourceLogic<TResult>>)s!).Value.InvokeContinuation(),
                     _parent ?? throw new InvalidOperationException());
             }
             else
@@ -290,7 +290,7 @@ internal struct ManualResetValueTaskSourceLogic<TResult>
             case null:
                 if (_parent.RunContinuationsAsynchronously)
                 {
-                    var c = _continuation;
+                    var c = _continuation!;
                     if (_executionContext != null)
                     {
                         ThreadPool.QueueUserWorkItem(s => c(s), _continuationState);
@@ -302,20 +302,20 @@ internal struct ManualResetValueTaskSourceLogic<TResult>
                 }
                 else
                 {
-                    _continuation(_continuationState);
+                    _continuation!(_continuationState);
                 }
                 break;
 
             case SynchronizationContext sc:
                 sc.Post(s =>
                 {
-                    ref ManualResetValueTaskSourceLogic<TResult> logicRef = ref ((IStrongBox<ManualResetValueTaskSourceLogic<TResult>>)s).Value;
-                    logicRef._continuation(logicRef._continuationState);
+                    ref ManualResetValueTaskSourceLogic<TResult> logicRef = ref ((IStrongBox<ManualResetValueTaskSourceLogic<TResult>>)s!).Value;
+                    logicRef._continuation!(logicRef._continuationState);
                 }, _parent ?? throw new InvalidOperationException());
                 break;
 
             case TaskScheduler ts:
-                Task.Factory.StartNew(_continuation, _continuationState, CancellationToken.None, TaskCreationOptions.DenyChildAttach, ts);
+                Task.Factory.StartNew(_continuation!, _continuationState, CancellationToken.None, TaskCreationOptions.DenyChildAttach, ts);
                 break;
         }
     }

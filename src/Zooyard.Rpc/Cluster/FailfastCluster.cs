@@ -6,7 +6,7 @@ namespace Zooyard.Rpc.Cluster;
 
 public class FailfastCluster : AbstractCluster
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(FailfastCluster));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(FailfastCluster));
 
     public override string Name => NAME;
     public const string NAME = "failfast";
@@ -16,12 +16,12 @@ public class FailfastCluster : AbstractCluster
     {
         var goodUrls = new List<URL>();
         var badUrls = new List<BadUrl>();
-        IResult<T> result = null;
-        Exception exception = null;
+        IResult<T>? result = null;
+        Exception? exception = null;
         var isThrow = false;
 
-        checkInvokers(urls, invocation, address);
-        var invoker = base.select(loadbalance, invocation, urls, null);
+        CheckInvokers(urls, invocation, address);
+        var invoker = base.Select(loadbalance, invocation, urls, null);
 
         try
         {
@@ -39,7 +39,7 @@ public class FailfastCluster : AbstractCluster
             {
                 await pool.DestoryClient(client);
                 _source.WriteConsumerError(invoker,invocation ,ex);
-                throw ex;
+                throw;
             }
         }
         catch (Exception e)

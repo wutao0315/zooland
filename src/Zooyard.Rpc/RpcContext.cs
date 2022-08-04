@@ -19,15 +19,15 @@ public class RpcContext
     
     //private Task future;
 
-    private IList<URL> urls;
+    private IList<URL>? urls;
 
-    private DnsEndPoint localAddress;
+    private DnsEndPoint? localAddress;
 
-    private DnsEndPoint remoteAddress;
+    private DnsEndPoint? remoteAddress;
 
-    private readonly IDictionary<string, string> attachments = new Dictionary<string, string>();
+    private readonly Dictionary<string, string> attachments = new ();
 
-    private readonly IDictionary<string, object> values = new Dictionary<string, object>();
+    private readonly Dictionary<string, object> values = new ();
 
     protected internal RpcContext()
     {
@@ -47,18 +47,18 @@ public class RpcContext
     {
         get
         {
-            URL url = Url;
+            URL? url = Url;
             if (url == null)
             {
                 return false;
             }
-            DnsEndPoint address = RemoteAddress;
+            DnsEndPoint? address = RemoteAddress;
             if (address == null)
             {
                 return false;
             }
             string host = address.Host;
-            return url.Port != address.Port || !NetUtil.FilterLocalHost(url.Ip).Equals(NetUtil.FilterLocalHost(host));
+            return url.Port != address.Port || !NetUtil.FilterLocalHost(url.Ip??"").Equals(NetUtil.FilterLocalHost(host));
         }
     }
 
@@ -70,18 +70,18 @@ public class RpcContext
     {
         get
         {
-            URL url = Url;
+            URL? url = Url;
             if (url == null)
             {
                 return false;
             }
-            DnsEndPoint address = RemoteAddress;
+            DnsEndPoint? address = RemoteAddress;
             if (address == null)
             {
                 return false;
             }
             string host = address.Host;
-            return url.Port == address.Port && NetUtil.FilterLocalHost(url.Ip).Equals(NetUtil.FilterLocalHost(host));
+            return url.Port == address.Port && NetUtil.FilterLocalHost(url.Ip??"").Equals(NetUtil.FilterLocalHost(host));
         }
     }
 
@@ -90,10 +90,10 @@ public class RpcContext
     /// </summary>
     /// @param <T> </param>
     /// <returns> future </returns>
-    public virtual Task Future { get; set; }
+    public virtual Task? Future { get; set; }
 
 
-    public virtual IList<URL> Urls
+    public virtual IList<URL>? Urls
     {
         get
         {
@@ -106,14 +106,14 @@ public class RpcContext
     }
 
 
-    public virtual URL Url { get; set; }
+    public virtual URL? Url { get; set; }
 
 
     /// <summary>
     /// get method name.
     /// </summary>
     /// <returns> method name. </returns>
-    public virtual string MethodName { get; set; }
+    public virtual string? MethodName { get; set; }
 
 
     /// <summary>
@@ -121,14 +121,14 @@ public class RpcContext
     /// 
     /// @serial
     /// </summary>
-    public virtual Type[] ParameterTypes { get; set; }
+    public virtual Type[]? ParameterTypes { get; set; }
 
 
     /// <summary>
     /// get arguments.
     /// </summary>
     /// <returns> arguments. </returns>
-    public virtual object[] Arguments { get; set; }
+    public virtual object[]? Arguments { get; set; }
 
 
     /// <summary>
@@ -162,7 +162,7 @@ public class RpcContext
     /// get local address.
     /// </summary>
     /// <returns> local address </returns>
-    public virtual DnsEndPoint LocalAddress
+    public virtual DnsEndPoint? LocalAddress
     {
         get
         {
@@ -182,7 +182,7 @@ public class RpcContext
     /// get local host name.
     /// </summary>
     /// <returns> local host name </returns>
-    public virtual string LocalHostName
+    public virtual string? LocalHostName
     {
         get
         {
@@ -226,7 +226,7 @@ public class RpcContext
     /// get remote address.
     /// </summary>
     /// <returns> remote address </returns>
-    public virtual DnsEndPoint RemoteAddress
+    public virtual DnsEndPoint? RemoteAddress
     {
         get
         {
@@ -254,7 +254,7 @@ public class RpcContext
     /// get remote host name.
     /// </summary>
     /// <returns> remote host name </returns>
-    public virtual string RemoteHostName
+    public virtual string? RemoteHostName
     {
         get
         {
@@ -266,12 +266,12 @@ public class RpcContext
     /// get local host.
     /// </summary>
     /// <returns> local host </returns>
-    public virtual string LocalHost
+    public virtual string? LocalHost
     {
         get
         {
-            string host = localAddress == null ? null : NetUtil.FilterLocalHost(localAddress.Host);
-            if (host == null || host.Length == 0)
+            string? host = localAddress == null ? null : NetUtil.FilterLocalHost(localAddress.Host);
+            if (string.IsNullOrWhiteSpace(host))
             {
                 return NetUtil.LocalHost;
             }
@@ -295,7 +295,7 @@ public class RpcContext
     /// get remote host.
     /// </summary>
     /// <returns> remote host </returns>
-    public virtual string RemoteHost
+    public virtual string? RemoteHost
     {
         get
         {
@@ -436,17 +436,12 @@ public class RpcContext
         return values[key];
     }
 
-    public virtual RpcContext SetInvokers(IList<URL> invokers)
+    public virtual RpcContext SetInvokers(IList<URL>? invokers)
     {
         //this.invokers = invokers;
         if (invokers != null && invokers.Count > 0)
         {
-            IList<URL> urls = new List<URL>(invokers.Count);
-            foreach (var invoker in invokers)
-            {
-                urls.Add(invoker);
-            }
-            Urls = urls;
+            Urls = new List<URL>(invokers);
         }
         return this;
     }

@@ -7,7 +7,7 @@ namespace Zooyard.Rpc.NettyImpl.Support;
 
 public class ChannelUtil
 {
-	private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ChannelUtil));
+	private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ChannelUtil));
 
 	/// <summary>
 	/// get address from channel </summary>

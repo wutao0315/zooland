@@ -13,7 +13,7 @@ namespace Zooyard.Rpc.NettyImpl.Support;
 
 public class NettyClientBootstrap: IRemotingBootstrap
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(NettyClientBootstrap));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(NettyClientBootstrap));
 
     private readonly NettyClientConfig _nettyClientConfig;
     private readonly Bootstrap _bootstrap = new ();

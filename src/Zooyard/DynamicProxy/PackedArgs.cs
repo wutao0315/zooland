@@ -30,7 +30,7 @@ internal class PackedArgs
     internal object[] Args => (object[])_args[ArgsPosition];
     internal Type[] GenericTypes => (Type[])_args[GenericTypesPosition];
 
-    internal object ReturnValue
+    internal object? ReturnValue
     {
         /*get { return args[ReturnValuePosition]; }*/
         set => _args[ReturnValuePosition] = value;

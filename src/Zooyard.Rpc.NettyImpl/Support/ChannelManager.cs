@@ -13,7 +13,7 @@ namespace Zooyard.Rpc.NettyImpl.Support;
 public class ChannelManager
 {
 
-	private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ChannelManager));
+	private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ChannelManager));
 
 	private static readonly ConcurrentDictionary<IChannel, RpcContext> IDENTIFIED_CHANNELS = new ();
 

@@ -18,7 +18,7 @@ namespace Zooyard.Rpc.NettyImpl.Support;
 /// </summary>
 public abstract class AbstractNettyRemoting : IAsyncDisposable
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(AbstractNettyRemoting));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(AbstractNettyRemoting));
 
     /// <summary>
     /// The Timer executor.

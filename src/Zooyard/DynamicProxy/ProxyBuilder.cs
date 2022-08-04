@@ -8,10 +8,10 @@ internal class ProxyBuilder
 {
     private const int InvokeActionFieldAndCtorParameterIndex = 0;
 
-    private static readonly MethodInfo SDelegateInvoke = typeof(ProxyHandler).GetMethod("InvokeHandle");
-    private static readonly MethodInfo SDelegateInvokeT = typeof(ProxyHandler).GetMethod("InvokeHandleT");
-    private static readonly MethodInfo SDelegateInvokeAsync = typeof(ProxyHandler).GetMethod("InvokeAsyncHandle");
-    private static readonly MethodInfo SDelegateinvokeAsyncT = typeof(ProxyHandler).GetMethod("InvokeAsyncHandleT");
+    private static readonly MethodInfo SDelegateInvoke = typeof(ProxyHandler).GetMethod(nameof(ProxyHandler.InvokeHandle))!;
+    private static readonly MethodInfo SDelegateInvokeT = typeof(ProxyHandler).GetMethod(nameof(ProxyHandler.InvokeHandleT))!;
+    private static readonly MethodInfo SDelegateInvokeAsync = typeof(ProxyHandler).GetMethod(nameof(ProxyHandler.InvokeAsyncHandle))!;
+    private static readonly MethodInfo SDelegateinvokeAsyncT = typeof(ProxyHandler).GetMethod(nameof(ProxyHandler.InvokeAsyncHandleT))!;
 
     private readonly ProxyAssembly _assembly;
     private readonly TypeBuilder _tb;
@@ -77,7 +77,7 @@ internal class ProxyBuilder
     internal Type CreateType()
     {
         Complete();
-        return _tb.CreateTypeInfo().AsType();
+        return _tb.CreateTypeInfo()!.AsType();
     }
 
     internal void AddInterfaceImpl(Type iface)
@@ -92,7 +92,7 @@ internal class ProxyBuilder
         var propertyMap = new Dictionary<MethodInfo, PropertyAccessorInfo>(MethodInfoEqualityComparer.Instance);
         foreach (var pi in iface.GetRuntimeProperties())
         {
-            var ai = new PropertyAccessorInfo(pi.GetMethod, pi.SetMethod);
+            var ai = new PropertyAccessorInfo(pi.GetMethod!, pi.SetMethod!);
             if (pi.GetMethod != null)
                 propertyMap[pi.GetMethod] = ai;
             if (pi.SetMethod != null)
@@ -102,7 +102,7 @@ internal class ProxyBuilder
         var eventMap = new Dictionary<MethodInfo, EventAccessorInfo>(MethodInfoEqualityComparer.Instance);
         foreach (var ei in iface.GetRuntimeEvents())
         {
-            var ai = new EventAccessorInfo(ei.AddMethod, ei.RemoveMethod, ei.RaiseMethod);
+            var ai = new EventAccessorInfo(ei.AddMethod!, ei.RemoveMethod!, ei.RaiseMethod!);
             if (ei.AddMethod != null)
                 eventMap[ei.AddMethod] = ai;
             if (ei.RemoveMethod != null)
@@ -135,7 +135,7 @@ internal class ProxyBuilder
 
         foreach (var pi in iface.GetRuntimeProperties())
         {
-            var ai = propertyMap[pi.GetMethod ?? pi.SetMethod];
+            var ai = propertyMap[pi.GetMethod ?? pi.SetMethod!];
             var pb = _tb.DefineProperty(pi.Name, pi.Attributes, pi.PropertyType, pi.GetIndexParameters().Select(p => p.ParameterType).ToArray());
             if (ai.GetMethodBuilder != null)
                 pb.SetGetMethod(ai.GetMethodBuilder);
@@ -145,8 +145,8 @@ internal class ProxyBuilder
 
         foreach (var ei in iface.GetRuntimeEvents())
         {
-            var ai = eventMap[ei.AddMethod ?? ei.RemoveMethod];
-            var eb = _tb.DefineEvent(ei.Name, ei.Attributes, ei.EventHandlerType);
+            var ai = eventMap[ei.AddMethod ?? ei.RemoveMethod!];
+            var eb = _tb.DefineEvent(ei.Name, ei.Attributes, ei.EventHandlerType!);
             if (ai.AddMethodBuilder != null)
                 eb.SetAddOnMethod(ai.AddMethodBuilder);
             if (ai.RemoveMethodBuilder != null)
@@ -209,7 +209,7 @@ internal class ProxyBuilder
         _assembly.GetTokenForMethod(mi, out var declaringType, out var methodToken);
         packedArr.BeginSet(PackedArgs.DeclaringTypePosition);
         il.Emit(OpCodes.Ldtoken, declaringType);
-        il.Emit(OpCodes.Call, typeGetTypeFromHandle);
+        il.Emit(OpCodes.Call, typeGetTypeFromHandle!);
         packedArr.EndSet(typeof(object));
 
         // packed[PackedArgs.MethodTokenPosition] = iface method token;
@@ -232,7 +232,7 @@ internal class ProxyBuilder
             {
                 typeArr.BeginSet(i);
                 il.Emit(OpCodes.Ldtoken, genericTypes[i]);
-                il.Emit(OpCodes.Call, typeGetTypeFromHandle);
+                il.Emit(OpCodes.Call, typeGetTypeFromHandle!);
                 typeArr.EndSet(typeof(Type));
             }
             typeArr.Load();
@@ -290,7 +290,7 @@ internal class ProxyBuilder
         {
             types[i] = parms[i].ParameterType;
             if (noByRef && types[i].IsByRef)
-                types[i] = types[i].GetElementType();
+                types[i] = types[i].GetElementType()!;
         }
         return types;
     }

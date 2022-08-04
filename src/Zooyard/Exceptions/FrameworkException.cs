@@ -8,7 +8,7 @@ namespace Zooyard.Exceptions;
 /// </summary>
 public class FrameworkException : Exception
 {
-	private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(FrameworkException));
+	private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(FrameworkException));
 	private readonly FrameworkErrorCode errcode;
 	/// <summary>
 	/// Instantiates a new Framework exception.

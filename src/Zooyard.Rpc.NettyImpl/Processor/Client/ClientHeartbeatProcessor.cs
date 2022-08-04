@@ -13,7 +13,7 @@ namespace Zooyard.Rpc.NettyImpl.Processor.Client;
 /// </summary>
 public class ClientHeartbeatProcessor : IRemotingProcessor
 {
-	private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ClientHeartbeatProcessor));
+	private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ClientHeartbeatProcessor));
 
 	public virtual async Task Process(IChannelHandlerContext ctx, RpcMessage rpcMessage)
 	{

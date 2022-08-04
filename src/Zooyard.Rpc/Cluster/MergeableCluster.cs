@@ -8,7 +8,7 @@ namespace Zooyard.Rpc.Cluster;
 
 public class MergeableCluster : AbstractCluster
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(MergeableCluster));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(MergeableCluster));
     public override string Name => NAME;
     public const string NAME = "mergeable";
     public const string MERGER_KEY = "merger";
@@ -60,7 +60,7 @@ public class MergeableCluster : AbstractCluster
                     {
                         _source.WriteConsumerError(invoker,invocation ,ex);
                         await pool.DestoryClient(client).ConfigureAwait(false);
-                        throw ex;
+                        throw;
                     }
                 }
                 catch (Exception e)
@@ -74,9 +74,9 @@ public class MergeableCluster : AbstractCluster
             return new ClusterResult<T>(new RpcResult<T>(exMerger), goodUrls, badUrls, exMerger, true);
         }
 
-        Type returnType = invocation.TargetType.GetMethod(invocation.MethodInfo.Name, invocation.ArgumentTypes).ReturnType;
+        Type? returnType = invocation.TargetType.GetMethod(invocation.MethodInfo.Name, invocation.ArgumentTypes)?.ReturnType;
 
-        object resultValue = null;
+        object? resultValue = null;
         var watch = Stopwatch.StartNew();
         try
         {
@@ -102,7 +102,7 @@ public class MergeableCluster : AbstractCluster
                         {
                             await pool.DestoryClient(client);
                             _source.WriteConsumerError(invoker, invocation, ex);
-                            throw ex;
+                            throw;
                         }
                     }
                     catch (Exception e)
@@ -111,7 +111,7 @@ public class MergeableCluster : AbstractCluster
                         return new RpcResult<T>(e);
                     }
                 });
-                results.Add(invoker.ServiceKey, task);
+                results.Add(invoker.ServiceKey??"", task);
             }
 
             var resultList = new List<IResult<T>>(results.Count);
@@ -123,7 +123,7 @@ public class MergeableCluster : AbstractCluster
                 var r = await entry.Value;
                 if (r.HasException)
                 {
-                    Logger().LogError(r.Exception, $"Invoke {entry.Key} {getGroupDescFromServiceKey(entry.Key)}  failed: {r.Exception.Message}");
+                    Logger().LogError(r.Exception, $"Invoke {entry.Key} {getGroupDescFromServiceKey(entry.Key)}  failed: {r.Exception?.Message}");
                     return new ClusterResult<T>(new RpcResult<T>(r.Exception), goodUrls, badUrls, r.Exception, true);
                 }
                 else

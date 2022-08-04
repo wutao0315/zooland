@@ -8,6 +8,7 @@ namespace Zooyard.Rpc.NettyImpl;
 /// </summary>
 /// <typeparam name="T">TBD</typeparam>
 public class ConcurrentSet<T> : ICollection<T>, IEnumerable<T>, IEnumerable
+    where T : notnull
 {
     private readonly ConcurrentDictionary<T, byte> _storage;
 

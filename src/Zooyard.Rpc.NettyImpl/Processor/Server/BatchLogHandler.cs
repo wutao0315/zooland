@@ -11,7 +11,7 @@ namespace Zooyard.Rpc.NettyImpl.Processor.Server;
 /// </summary>
 public class BatchLogHandler
 {
-	private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(BatchLogHandler));
+	private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(BatchLogHandler));
 	private static readonly BlockingCollection <string> LOG_QUEUE = new ();
 	public static readonly BatchLogHandler INSTANCE = new ();
 

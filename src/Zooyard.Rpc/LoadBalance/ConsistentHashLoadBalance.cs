@@ -25,7 +25,7 @@ public class ConsistentHashLoadBalance : AbstractLoadBalance
     }
     private sealed class ConsistentHashSelector
     {
-        public Regex COMMA_SPLIT_PATTERN = new Regex("\\s*[,]+\\s*",RegexOptions.Compiled);
+        public Regex COMMA_SPLIT_PATTERN = new ("\\s*[,]+\\s*",RegexOptions.Compiled);
         private readonly IDictionary<long, URL> virtualInvokers;
         private readonly int replicaNumber;
 

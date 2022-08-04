@@ -19,13 +19,13 @@ public class RpcException : Exception
     {
     }
 
-    public RpcException(string message, Exception cause)
+    public RpcException(string? message, Exception? cause)
         : base(message, cause)
     {
 
     }
 
-    public RpcException(string message)
+    public RpcException(string? message)
         : base(message)
     {
     }
@@ -41,13 +41,13 @@ public class RpcException : Exception
         this.Code = code;
     }
 
-    public RpcException(int code, string message, Exception cause)
+    public RpcException(int code, string? message, Exception? cause)
         : base(message, cause)
     {
         this.Code = code;
     }
 
-    public RpcException(int code, string message)
+    public RpcException(int code, string? message)
         : base(message)
     {
         this.Code = code;

@@ -12,7 +12,7 @@ namespace Zooyard.Rpc.NettyImpl.Support;
 public class NettyRemotingServer : AbstractNettyRemotingServer
 {
 
-	private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(NettyRemotingServer));
+	private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(NettyRemotingServer));
 
 	//private ITransactionMessageHandler transactionMessageHandler;
 

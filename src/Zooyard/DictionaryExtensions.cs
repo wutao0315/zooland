@@ -2,8 +2,12 @@
 
 public static class DictionaryExtensions
 {
-    public static void PutAll<T, V>(this IDictionary<T, V> value, IDictionary<T, V> other) 
+    public static void PutAll<T, V>(this IDictionary<T, V> value, IDictionary<T, V>? other) 
     {
+        if (other == null) 
+        {
+            return;
+        }
         foreach (var item in other)
         {
             if (value.ContainsKey(item.Key))

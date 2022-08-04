@@ -16,7 +16,7 @@ namespace Zooyard.Rpc.NettyImpl;
 //public class NettyServer : AbstractServer
 //{
 //    //UseLibuv
-//    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(NettyServer));
+//    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(NettyServer));
 
 //    private readonly object _service;
 //    private readonly bool _isSsl = false;
@@ -170,7 +170,7 @@ namespace Zooyard.Rpc.NettyImpl;
 //}
 //internal abstract class ServerCommonHandlers : ChannelHandlerAdapter
 //{
-//    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ServerCommonHandlers));
+//    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ServerCommonHandlers));
 //    protected readonly NettyServer Server;
     
 
@@ -208,7 +208,7 @@ namespace Zooyard.Rpc.NettyImpl;
 //internal class ServerHandler : ServerCommonHandlers
 //{
 //    private readonly object _service;
-//    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ServerHandler));
+//    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ServerHandler));
 
 //    public ServerHandler(NettyServer server, object service):base(server)
 //    {

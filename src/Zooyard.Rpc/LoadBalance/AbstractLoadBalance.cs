@@ -8,9 +8,9 @@ public abstract class AbstractLoadBalance : ILoadBalance
     public const int DEFAULT_WEIGHT = 100;
     public const string REMOTE_TIMESTAMP_KEY = "remote.timestamp";
 
-    public virtual string Name { get; }
+    public abstract string Name { get; }
     
-    public URL Select(IList<URL> urls, IInvocation invocation)
+    public URL? Select(IList<URL>? urls, IInvocation invocation)
     {
         if (urls == null || urls.Count == 0)
         {

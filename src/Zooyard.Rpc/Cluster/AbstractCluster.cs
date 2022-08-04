@@ -6,7 +6,7 @@ namespace Zooyard.Rpc.Cluster;
 
 public abstract class AbstractCluster : ICluster
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(BroadcastCluster));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(BroadcastCluster));
 
     protected static DiagnosticSource _source = new DiagnosticListener(Constant.DiagnosticListenerName);
     public const string TIMEOUT_KEY = "timeout";
@@ -21,10 +21,10 @@ public abstract class AbstractCluster : ICluster
     /// </summary>
     public const bool DEFAULT_CLUSTER_STICKY = false;
 
-    private volatile URL stickyInvoker = null;
+    private volatile URL? stickyInvoker = null;
     protected bool availablecheck;
 
-    public virtual string Name { get; }
+    public abstract string Name { get; }
 
     /// <summary>
     /// 使用loadbalance选择invoker.</br>
@@ -36,30 +36,28 @@ public abstract class AbstractCluster : ICluster
     /// <param name="invokers"></param>
     /// <param name="selected"> 已选过的invoker.注意：输入保证不重复</param>
     /// <returns></returns>
-    protected URL select(ILoadBalance loadbalance, IInvocation invocation, IList<URL> invokers, IList<URL> selected)
+    protected URL? Select(ILoadBalance loadbalance, IInvocation invocation, IList<URL>? invokers, IList<URL>? selected)
     {
         if (invokers == null || invokers.Count == 0)
             return null;
-        string methodName = invocation == null ? "" : invocation.MethodInfo.Name;
+
+        string methodName = invocation.MethodInfo.Name;
 
         var sticky = invokers[0].GetMethodParameter<bool>(methodName, CLUSTER_STICKY_KEY, DEFAULT_CLUSTER_STICKY);
-
+        //ignore overloaded method
+        if (invokers != null && stickyInvoker != null && !invokers.Contains(stickyInvoker))
         {
-            //ignore overloaded method
-            if (invokers != null && !invokers.Contains(stickyInvoker))
+            stickyInvoker = null;
+        }
+        //ignore cucurrent problem
+        if (sticky && stickyInvoker != null && (selected == null || !selected.Contains(stickyInvoker)))
+        {
+            if (availablecheck)//&& stickyInvoker.IsAvailable()
             {
-                stickyInvoker = null;
-            }
-            //ignore cucurrent problem
-            if (sticky && stickyInvoker != null && (selected == null || !selected.Contains(stickyInvoker)))
-            {
-                if (availablecheck)//&& stickyInvoker.IsAvailable()
-                {
-                    return stickyInvoker;
-                }
+                return stickyInvoker;
             }
         }
-        var invoker = doselect(loadbalance, invocation, invokers, selected);
+        var invoker = DoSelect(loadbalance, invocation, invokers, selected);
 
         if (sticky)
         {
@@ -68,7 +66,7 @@ public abstract class AbstractCluster : ICluster
         return invoker;
     }
 
-    private URL doselect(ILoadBalance loadbalance, IInvocation invocation, IList<URL> invokers, IList<URL> selected)
+    private URL? DoSelect(ILoadBalance loadbalance, IInvocation invocation, IList<URL>? invokers, IList<URL>? selected)
     {
         if (invokers == null || invokers.Count == 0)
             return null;
@@ -86,7 +84,7 @@ public abstract class AbstractCluster : ICluster
         {
             try
             {
-                var rinvoker = reselect(loadbalance, invocation, invokers, selected, availablecheck);
+                var rinvoker = ReSelect(loadbalance, invocation, invokers, selected, availablecheck);
                 if (rinvoker != null)
                 {
                     invoker = rinvoker;
@@ -123,11 +121,10 @@ public abstract class AbstractCluster : ICluster
     /// <param name="selected"></param>
     /// <param name="availablecheck"></param>
     /// <returns></returns>
-    private URL reselect(ILoadBalance loadbalance, IInvocation invocation, IList<URL> invokers, IList<URL> selected, bool availablecheck)
+    private URL? ReSelect(ILoadBalance loadbalance, IInvocation invocation, IList<URL> invokers, IList<URL>? selected, bool availablecheck)
     {
-
         //预先分配一个，这个列表是一定会用到的.
-        List<URL> reselectInvokers = new List<URL>(invokers.Count > 1 ? (invokers.Count - 1) : invokers.Count);
+        var reselectInvokers = new List<URL>(invokers.Count > 1 ? (invokers.Count - 1) : invokers.Count);
 
         //先从非select中选
         if (availablecheck)
@@ -178,7 +175,7 @@ public abstract class AbstractCluster : ICluster
         return null;
     }
 
-    protected void checkInvokers(IList<URL> invokers, IInvocation invocation, URL address)
+    protected void CheckInvokers(IList<URL>? invokers, IInvocation invocation, URL address)
     {
         if (invokers == null || invokers.Count == 0)
         {

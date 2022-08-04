@@ -6,7 +6,7 @@ namespace Zooyard.Rpc.NettyImpl;
 
 public class DotNettyClientPool : AbstractClientPool
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(NettyClientPool));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(NettyClientPool));
 
     
 

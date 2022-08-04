@@ -620,7 +620,7 @@ public class NettyServer
 }
 internal abstract class ServerCommonHandlers : ChannelHandlerAdapter
 {
-    //private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ServerCommonHandlers));
+    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ServerCommonHandlers));
     protected readonly NettyServer Server;
 
 
@@ -658,7 +658,7 @@ internal abstract class ServerCommonHandlers : ChannelHandlerAdapter
 internal class ServerHandler : ServerCommonHandlers
 {
     private readonly object _service;
-    //private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ServerHandler));
+    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ServerHandler));
 
     public ServerHandler(NettyServer server, object service) : base(server)
     {

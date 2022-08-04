@@ -15,7 +15,7 @@ namespace Zooyard.Rpc.NettyImpl;
 
 public class NettyClientPool : AbstractClientPool
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(NettyClientPool));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(NettyClientPool));
 
     public const string TIMEOUT_KEY = "http_timeout";
     public const int DEFAULT_TIMEOUT = 5000;
@@ -141,7 +141,7 @@ public class NettyClientPool : AbstractClientPool
 
 internal class ClientHandler : ChannelHandlerAdapter
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ClientHandler));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ClientHandler));
     private readonly Action<IChannelHandlerContext,TransportMessage> _receviedAction;
     public ClientHandler(Action<IChannelHandlerContext,TransportMessage> receviedAction)
     {

@@ -7,7 +7,7 @@ namespace Zooyard.Rpc.ThriftImpl;
 
 public class ThriftInvoker : AbstractInvoker
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ThriftInvoker));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ThriftInvoker));
     private readonly TBaseClient _instance;
     private readonly int _clientTimeout;
 

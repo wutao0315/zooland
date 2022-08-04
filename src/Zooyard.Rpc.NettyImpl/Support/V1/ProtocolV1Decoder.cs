@@ -34,7 +34,7 @@ namespace Zooyard.Rpc.NettyImpl.Support.V1;
 /// </summary>
 public class ProtocolV1Decoder : LengthFieldBasedFrameDecoder
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ProtocolV1Decoder));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ProtocolV1Decoder));
     /// <summary>
     /// default is 8M
     /// </summary>

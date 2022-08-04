@@ -5,18 +5,18 @@ namespace Zooyard.Rpc.Cluster;
 
 public class BroadcastCluster : AbstractCluster
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(BroadcastCluster));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(BroadcastCluster));
     public override string Name => NAME;
     public const string NAME = "broadcast";
-    public override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
+    public override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL>? urls, IInvocation invocation)
     {
-        checkInvokers(urls, invocation, address);
+        CheckInvokers(urls, invocation, address);
         RpcContext.GetContext().SetInvokers(urls);
-        Exception exception = null;
+        Exception? exception = null;
         var goodUrls = new List<URL>();
         var badUrls = new List<BadUrl>();
         var isThrow = false;
-        IResult<T> result = null;
+        IResult<T>? result = null;
         foreach (var invoker in urls)
         {
             try
@@ -35,7 +35,7 @@ public class BroadcastCluster : AbstractCluster
                 {
                     await pool.DestoryClient(client);
                     _source.WriteConsumerError(invoker,invocation ,ex);
-                    throw ex;
+                    throw;
                 }
             }
             catch (Exception e)

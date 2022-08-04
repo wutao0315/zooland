@@ -11,7 +11,7 @@ namespace Zooyard.Rpc.NettyImpl;
 public class ShutdownHook
 {
 
-	private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ShutdownHook));
+	private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ShutdownHook));
 
 	private static readonly ShutdownHook SHUTDOWN_HOOK = new ("ShutdownHook");
 

@@ -4,7 +4,7 @@ namespace Zooyard.Rpc.Support;
 
 public abstract class AbstractInvoker : IInvoker
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(AbstractClientPool));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(AbstractClientPool));
     public abstract int ClientTimeout { get; }
     public abstract object Instance { get; }
     public virtual async Task<IResult<T>> Invoke<T>(IInvocation invocation)

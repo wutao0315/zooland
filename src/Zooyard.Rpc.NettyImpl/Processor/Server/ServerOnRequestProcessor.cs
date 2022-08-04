@@ -27,7 +27,7 @@ namespace Zooyard.Rpc.NettyImpl.Processor.Server;
 /// </summary>
 public class ServerOnRequestProcessor : IRemotingProcessor
 {
-	private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ServerOnRequestProcessor));
+	private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ServerOnRequestProcessor));
 
 	private readonly IRemotingServer _remotingServer;
 

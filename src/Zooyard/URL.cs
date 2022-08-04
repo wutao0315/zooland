@@ -10,7 +10,7 @@ public sealed class URL
 {
     public const string BACKUP_KEY = "backup";
     public const string DEFAULT_KEY_PREFIX = "default.";
-    public static readonly Regex COMMA_SPLIT_PATTERN = new Regex("\\s*[,]+\\s*", RegexOptions.Compiled);
+    public static readonly Regex COMMA_SPLIT_PATTERN = new("\\s*[,]+\\s*", RegexOptions.Compiled);
     public const string LOCALHOST_KEY = "localhost";
     public const string ANYHOST_KEY = "anyhost";
     public const string ANYHOST_VALUE = "0.0.0.0";
@@ -22,13 +22,13 @@ public sealed class URL
 
     // ==== cache ====
 
-    private volatile IDictionary<string, IConvertible> numbers;//Number to long
-    private volatile IDictionary<string, URL> urls;
-    private volatile string ip;
-    private volatile string full;
-    private volatile string identity;
-    private volatile string parameter;
-    private volatile string @string;
+    private volatile IDictionary<string, IConvertible>? numbers;//Number to long
+    private volatile IDictionary<string, URL>? urls;
+    private volatile string? ip;
+    private volatile string? full;
+    private volatile string? identity;
+    private volatile string? parameter;
+    private volatile string? @string;
 
     internal URL()
     {
@@ -56,7 +56,7 @@ public sealed class URL
     public URL(string protocol, string username, string password, string host, int port, string path)
         : this(protocol, username, password, host, port, path, null) { }
 
-    public URL(string protocol, string username, string password, string host, int port, string path, IDictionary<string, string> parameters)
+    public URL(string? protocol, string? username, string? password, string? host, int port, string? path, IDictionary<string, string>? parameters)
     {
         if (string.IsNullOrWhiteSpace(username)
             && !string.IsNullOrWhiteSpace(password))
@@ -97,13 +97,13 @@ public sealed class URL
         {
             throw new ArgumentException("url == null");
         }
-        string protocol = null;
-        string username = null;
-        string password = null;
-        string host = null;
+        string? protocol = null;
+        string? username = null;
+        string? password = null;
+        string? host = null;
         int port = 0;
-        string path = null;
-        IDictionary<string, string> parameters = null;
+        string? path = null;
+        IDictionary<string, string>? parameters = null;
         int i = url.IndexOf("?"); // seperator between body and parameters
         if (i >= 0)
         {
@@ -182,13 +182,13 @@ public sealed class URL
         return new URL(protocol, username, password, host, port, path, parameters);
     }
 
-    public string Protocol { get; }
+    public string? Protocol { get; private set;}
 
-    public string Username { get; }
+    public string? Username { get; private set; }
 
-    public string Password { get; }
+    public string? Password { get; private set; }
 
-    public string Authority
+    public string? Authority
     {
         get
         {
@@ -201,7 +201,7 @@ public sealed class URL
         }
     }
 
-    public string Host { get; }
+    public string? Host { get; private set; }
 
     /// <summary>
     /// 获取IP地址.
@@ -213,11 +213,11 @@ public sealed class URL
     /// 否则配置域名会有问题
     /// </summary>
     /// <returns> ip </returns>
-    public string Ip
+    public string? Ip
     {
         get
         {
-            if (ip == null)
+            if (ip == null && !string.IsNullOrWhiteSpace(Host))
             {
                 ip = NetUtil.GetIpByHost(Host);
             }
@@ -225,19 +225,16 @@ public sealed class URL
         }
     }
 
-    public int Port { get; }
+    public int Port { get; private set; }
 
     public int GetPort(int defaultPort)
     {
         return Port <= 0 ? defaultPort : Port;
     }
 
-    public string Address
+    public string? Address
     {
-        get
-        {
-            return Port <= 0 ? Host : Host + ":" + Port;
-        }
+        get=> Port <= 0 ? Host : $"{Host}:{Port}";
     }
 
     public string BackupAddress
@@ -251,12 +248,12 @@ public sealed class URL
     public string GetBackupAddress(int defaultPort)
     {
         var address = new StringBuilder(AppendDefaultPort(Address, defaultPort));
-        var backups = GetParameter(BACKUP_KEY, new string[0]);
+        var backups = GetParameter(BACKUP_KEY, Array.Empty<string>());
         if (backups != null && backups.Length > 0)
         {
             foreach (var backup in backups)
             {
-                address.Append(",");
+                address.Append(',');
                 address.Append(AppendDefaultPort(backup, defaultPort));
             }
         }
@@ -271,7 +268,7 @@ public sealed class URL
             {
                 this
             };
-            string[] backups = GetParameter(BACKUP_KEY, new string[0]);
+            string[]? backups = GetParameter(BACKUP_KEY, new string[0]);
             if (backups?.Length > 0)
             {
                 foreach (var backup in backups)
@@ -283,7 +280,7 @@ public sealed class URL
         }
     }
 
-    private string AppendDefaultPort(string address, int defaultPort)
+    private string? AppendDefaultPort(string? address, int defaultPort)
     {
         if (!string.IsNullOrEmpty(address) && defaultPort > 0)
         {
@@ -300,9 +297,9 @@ public sealed class URL
         return address;
     }
 
-    public string Path { get; }
+    public string? Path { get; private set; }
 
-    public string AbsolutePath
+    public string? AbsolutePath
     {
         get
         {
@@ -361,20 +358,24 @@ public sealed class URL
         return new URL(Protocol, Username, Password, Host, Port, path, Parameters);
     }
 
-    public IDictionary<string, string> Parameters { get; private set; }
+    public IDictionary<string, string>? Parameters { get; private set; }
 
     public string GetParameterAndDecoded(string key)
     {
         return GetParameterAndDecoded(key, null);
     }
 
-    public string GetParameterAndDecoded(string key, string defaultValue)
+    public string GetParameterAndDecoded(string key, string? defaultValue)
     {
         return Decode(GetParameter(key, defaultValue));
     }
 
-    public string GetParameter(string key)
+    public string? GetParameter(string key)
     {
+        if (this.Parameters == null) 
+        {
+            return null;
+        }
         if (this.Parameters.ContainsKey(key))
         {
             return this.Parameters[key];
@@ -387,20 +388,20 @@ public sealed class URL
         return null;
     }
 
-    public string GetParameter(string key, string defaultValue)
+    public string? GetParameter(string key, string? defaultValue)
     {
-        string value = GetParameter(key);
-        if (string.IsNullOrEmpty(value))
+        string? value = GetParameter(key);
+        if (string.IsNullOrWhiteSpace(value))
         {
             return defaultValue;
         }
         return value;
     }
 
-    public string[] GetParameter(string key, string[] defaultValue)
+    public string[]? GetParameter(string key, string[]? defaultValue)
     {
-        string value = GetParameter(key);
-        if (string.IsNullOrEmpty(value))
+        string? value = GetParameter(key);
+        if (string.IsNullOrWhiteSpace(value))
         {
             return defaultValue;
         }
@@ -431,7 +432,7 @@ public sealed class URL
         }
     }
 
-    public URL GetUrlParameter(string key)
+    public URL? GetUrlParameter(string key)
     {
         if (Urls.ContainsKey(key))
         {
@@ -447,7 +448,7 @@ public sealed class URL
         return u;
     }
 
-    public T GetParameter<T>(string key, T defaultValue = default)
+    public T GetParameter<T>(string key, T defaultValue = default!)
         where T : IConvertible
     {
         if (Numbers.ContainsKey(key))
@@ -455,11 +456,11 @@ public sealed class URL
             return (T)Numbers[key];
         }
         var value = GetParameter(key);
-        if (string.IsNullOrEmpty(value))
+        if (string.IsNullOrWhiteSpace(value))
         {
             return defaultValue;
         }
-        T b = (T)value.ChangeType(typeof(T));
+        T b = (T)value.ChangeType(typeof(T))!;
         Numbers.Add(key, b);
         return b;
     }
@@ -482,8 +483,8 @@ public sealed class URL
 
     public char GetParameter(string key, char defaultValue)
     {
-        string value = GetParameter(key);
-        if (string.IsNullOrEmpty(value))
+        string? value = GetParameter(key);
+        if (string.IsNullOrWhiteSpace(value))
         {
             return defaultValue;
         }
@@ -492,8 +493,8 @@ public sealed class URL
 
     public bool GetParameter(string key, bool defaultValue)
     {
-        string value = GetParameter(key);
-        if (string.IsNullOrEmpty(value))
+        string? value = GetParameter(key);
+        if (string.IsNullOrWhiteSpace(value))
         {
             return defaultValue;
         }
@@ -516,25 +517,27 @@ public sealed class URL
         return Decode(GetMethodParameter(method, key, defaultValue));
     }
 
-    public string GetInterfaceParameter(string interfaceName, string key)
+    public string? GetInterfaceParameter(string interfaceName, string key)
     {
+        string? value = null;
+
         var interfaceKey = $"interface.{interfaceName}.{key}";
-        var value = "";
-        if (this.Parameters.ContainsKey(interfaceKey))
+        
+        if (this.Parameters!= null && this.Parameters.ContainsKey(interfaceKey))
         {
             value = this.Parameters[interfaceKey];
         }
-        if (string.IsNullOrEmpty(value))
+        if (string.IsNullOrWhiteSpace(value))
         {
-            return GetParameter(key);
+            value = GetParameter(key);
         }
         return value;
     }
 
     public string GetInterfaceParameter(string interfaceName, string key, string defaultValue)
     {
-        string value = GetInterfaceParameter(interfaceName, key);
-        if (string.IsNullOrEmpty(value))
+        string? value = GetInterfaceParameter(interfaceName, key);
+        if (string.IsNullOrWhiteSpace(value))
         {
             return defaultValue;
         }
@@ -542,32 +545,32 @@ public sealed class URL
     }
 
 
-    public string GetMethodParameter(string method, string key)
+    public string? GetMethodParameter(string method, string key)
     {
         var methodKey = method + "." + key;
-        var value = "";
-        if (this.Parameters.ContainsKey(methodKey))
+        string? value = null;
+        if (this.Parameters!=null && this.Parameters.ContainsKey(methodKey))
         {
             value = this.Parameters[methodKey];
         }
-        if (string.IsNullOrEmpty(value))
+        if (string.IsNullOrWhiteSpace(value))
         {
-            return GetParameter(key);
+            value = GetParameter(key);
         }
         return value;
     }
 
     public string GetMethodParameter(string method, string key, string defaultValue)
     {
-        string value = GetMethodParameter(method, key);
-        if (string.IsNullOrEmpty(value))
+        string? value = GetMethodParameter(method, key);
+        if (string.IsNullOrWhiteSpace(value))
         {
             return defaultValue;
         }
         return value;
     }
 
-    public T GetMethodParameter<T>(string method, string key, T defaultValue=default) 
+    public T GetMethodParameter<T>(string method, string key, T defaultValue=default!) 
         where T:IConvertible
     {
         var methodKey = method + "." + key;
@@ -576,11 +579,11 @@ public sealed class URL
             return (T)Numbers[methodKey];
         }
         var value = GetMethodParameter(method, key);
-        if (string.IsNullOrEmpty(value))
+        if (string.IsNullOrWhiteSpace(value))
         {
             return defaultValue;
         }
-        T d = (T)value.ChangeType(typeof(T));
+        T d = (T)value.ChangeType(typeof(T))!;
         Numbers.Add(methodKey, d);
         return d;
     }
@@ -620,10 +623,14 @@ public sealed class URL
         return Convert.ToBoolean(value);
     }
 
-    public bool HasMethodParameter(string method, string key)
+    public bool HasMethodParameter(string? method, string? key)
     {
         if (method == null)
         {
+            if (this.Parameters == null) 
+            {
+                return false;
+            }
             var suffix = "." + key;
             foreach (var fullKey in this.Parameters.Keys)
             {
@@ -636,6 +643,10 @@ public sealed class URL
         }
         if (key == null)
         {
+            if (this.Parameters == null)
+            {
+                return false;
+            }
             var prefix = method + ".";
             foreach (var fullKey in this.Parameters.Keys)
             {
@@ -706,24 +717,29 @@ public sealed class URL
         return AddParameter(key, Convert.ToString(value));
     }
 
-    public URL AddParameter(string key, string value)
+    public URL AddParameter(string? key, string? value)
     {
-        if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(value))
+        if (string.IsNullOrEmpty(key) 
+            || string.IsNullOrEmpty(value))
         {
             return this;
         }
         //如果没有修改，直接返回。
-        if (Parameters.ContainsKey(key) && Parameters[key] == value) // value != null
+        if (this.Parameters!=null 
+            && this.Parameters.ContainsKey(key) 
+            && Parameters[key] == value) // value != null
         {
             return this;
         }
 
-        var map = new Dictionary<string, string>(Parameters);
-        map[key] = value;
+        var map = new Dictionary<string, string>(Parameters ?? new Dictionary<string, string>())
+        {
+            [key] = value
+        };
         return new URL(Protocol, Username, Password, Host, Port, Path, map);
     }
 
-    public URL AddParameterIfAbsent(string key, string value)
+    public URL AddParameterIfAbsent(string? key, string? value)
     {
         if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(value))
         {
@@ -733,7 +749,7 @@ public sealed class URL
         {
             return this;
         }
-        var map = new Dictionary<string, string>(Parameters) 
+        var map = new Dictionary<string, string>(Parameters??new Dictionary<string,string>()) 
         {
             [key] = value
         };
@@ -755,8 +771,8 @@ public sealed class URL
         bool hasAndEqual = true;
         foreach (var entry in parameters)
         {
-            if (!Parameters.ContainsKey(entry.Key) 
-                && entry.Value != null 
+            if (Parameters == null 
+                || (!Parameters.ContainsKey(entry.Key) && !string.IsNullOrWhiteSpace(entry.Value)) 
                 || !Parameters[entry.Key].Equals(entry.Value))
             {
                 hasAndEqual = false;
@@ -769,7 +785,7 @@ public sealed class URL
             return this;
         }
 
-        var map = new Dictionary<string, string>(Parameters);
+        var map = new Dictionary<string, string>(Parameters??new Dictionary<string,string>());
         map.PutAll(parameters);
         return new URL(Protocol, Username, Password, Host, Port, Path, map);
     }
@@ -837,12 +853,12 @@ public sealed class URL
         {
             return this;
         }
-        var map = new Dictionary<string, string>(Parameters);
+        var map = new Dictionary<string, string>(Parameters ?? new Dictionary<string, string>());
         foreach (string key in keys)
         {
             map.Remove(key);
         }
-        if (map.Count == Parameters.Count)
+        if (map.Count == Parameters?.Count)
         {
             return this;
         }
@@ -854,29 +870,29 @@ public sealed class URL
         return new URL(Protocol, Username, Password, Host, Port, Path, new Dictionary<string, string>());
     }
 
-    public string GetRawParameter(string key)
+    public string? GetRawParameter(string key)
     {
-        if ("protocol".Equals(key))
+        if ("protocol".Equals(key, StringComparison.OrdinalIgnoreCase))
         {
             return Protocol;
         }
-        if ("username".Equals(key))
+        if ("username".Equals(key, StringComparison.OrdinalIgnoreCase))
         {
             return Username;
         }
-        if ("password".Equals(key))
+        if ("password".Equals(key, StringComparison.OrdinalIgnoreCase))
         {
             return Password;
         }
-        if ("host".Equals(key))
+        if ("host".Equals(key, StringComparison.OrdinalIgnoreCase))
         {
             return Host;
         }
-        if ("port".Equals(key))
+        if ("port".Equals(key, StringComparison.OrdinalIgnoreCase))
         {
             return Convert.ToString(Port);
         }
-        if ("path".Equals(key))
+        if ("path".Equals(key, StringComparison.OrdinalIgnoreCase))
         {
             return Path;
         }
@@ -885,7 +901,7 @@ public sealed class URL
 
     public IDictionary<string, string> ToMap()
     {
-        var map = new Dictionary<string, string>(this.Parameters);
+        var map = new Dictionary<string, string>(this.Parameters??new Dictionary<string,string>());
         if (Protocol != null)
         {
             map["protocol"] = Protocol;
@@ -979,7 +995,7 @@ public sealed class URL
     {
         if (Parameters?.Count > 0)
         {
-            IList<string> includes = (parameters == null || parameters.Length == 0 ? null : new List<string>(parameters));
+            IList<string>? includes = (parameters == null || parameters.Length == 0 ? null : new List<string>(parameters));
             bool first = true;
             foreach (var entry in Parameters)
             {
@@ -1023,12 +1039,12 @@ public sealed class URL
             buf.Append(Username);
             if (Password?.Length > 0)
             {
-                buf.Append(":");
+                buf.Append(':');
                 buf.Append(Password);
             }
-            buf.Append("@");
+            buf.Append('@');
         }
-        string host;
+        string? host;
         if (useIP)
         {
             host = Ip;
@@ -1046,7 +1062,7 @@ public sealed class URL
                 buf.Append(Port);
             }
         }
-        string path;
+        string? path;
         if (useService)
         {
             path = ServiceKey;
@@ -1057,7 +1073,7 @@ public sealed class URL
         }
         if (path?.Length > 0)
         {
-            buf.Append("/");
+            buf.Append('/');
             buf.Append(path);
         }
         if (appendParameter)
@@ -1069,9 +1085,13 @@ public sealed class URL
 
     public DnsEndPoint ToDnsEndPoint()
     {
+        if (string.IsNullOrWhiteSpace(Host)) 
+        {
+            throw new ArgumentException($"{nameof(Host)} is null or empty");
+        }
         return new DnsEndPoint(Host, Port);
     }
-    public string ServiceKey
+    public string? ServiceKey
     {
         get
         {
@@ -1084,13 +1104,13 @@ public sealed class URL
             var group = GetParameter(GROUP_KEY);
             if (group?.Length > 0)
             {
-                buf.Append(group).Append("/");
+                buf.Append(group).Append('/');
             }
             buf.Append(inf);
             var version = GetParameter(VERSION_KEY);
             if (version?.Length > 0)
             {
-                buf.Append(":").Append(version);
+                buf.Append(':').Append(version);
             }
             return buf.ToString();
         }
@@ -1101,7 +1121,7 @@ public sealed class URL
         return BuildString(true, false, true, true);
     }
 
-    public string ServiceInterface
+    public string? ServiceInterface
     {
         get
         {
@@ -1124,25 +1144,25 @@ public sealed class URL
         {
             return WebUtility.UrlEncode(value);
         }
-        catch (Exception e)
+        catch
         {
-            throw e;
+            throw;
         }
     }
 
-    public static string Decode(string value)
+    public static string Decode(string? value)
     {
-        if (string.IsNullOrEmpty(value))
+        if (string.IsNullOrWhiteSpace(value))
         {
-            return "";
+            return string.Empty;
         }
         try
         {
             return WebUtility.UrlDecode(value);
         }
-        catch (Exception e)
+        catch
         {
-            throw e;
+            throw;
         }
     }
 
@@ -1160,7 +1180,7 @@ public sealed class URL
         return result;
     }
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         if (this == obj)
         {

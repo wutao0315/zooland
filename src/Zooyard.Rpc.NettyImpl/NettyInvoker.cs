@@ -9,7 +9,7 @@ namespace Zooyard.Rpc.NettyImpl;
 
 public class NettyInvoker : AbstractInvoker
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(NettyInvoker));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(NettyInvoker));
 
     private readonly IChannel _channel;
     private readonly ConcurrentDictionary<string, TaskCompletionSource<TransportMessage>> _resultDictionary =new();

@@ -7,7 +7,7 @@ namespace Zooyard.Rpc.GrpcImpl;
 
 public class GrpcClientPool : AbstractClientPool
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(GrpcClient));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(GrpcClient));
 
     public const string PROXY_KEY = "proxy";
     public const string TIMEOUT_KEY = "grpc_timeout";

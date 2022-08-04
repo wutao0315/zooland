@@ -7,7 +7,7 @@ namespace Zooyard.Rpc.NettyImpl;
 
 public class NettyClient : AbstractClient
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(NettyClient));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(NettyClient));
 
     public const string QUIETPERIOD_KEY = "quietPeriod";
     public const int DEFAULT_QUIETPERIOD = 100;

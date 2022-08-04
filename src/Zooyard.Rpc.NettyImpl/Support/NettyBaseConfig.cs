@@ -27,7 +27,7 @@ public class NettyTransportBaseConfigOptoin
 /// </summary>
 public class NettyBaseConfig
 {
-	private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(NettyBaseConfig));
+	private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(NettyBaseConfig));
 
 	///// <summary>
 	///// The constant CONFIG.

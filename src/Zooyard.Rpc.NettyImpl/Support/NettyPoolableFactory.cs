@@ -14,7 +14,7 @@ namespace Zooyard.Rpc.NettyImpl.Support;
 /// </summary>
 public class NettyPoolableFactory: IAsyncDisposable
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(NettyPoolableFactory));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(NettyPoolableFactory));
 
     private readonly ConcurrentDictionary<NettyPoolKey, IChannel> poolData = new ();
     private readonly AbstractNettyRemotingClient rpcRemotingClient;

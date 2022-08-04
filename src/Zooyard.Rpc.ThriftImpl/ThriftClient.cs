@@ -6,7 +6,7 @@ namespace Zooyard.Rpc.ThriftImpl;
 
 public class ThriftClient : AbstractClient
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ThriftClient));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ThriftClient));
     public override URL Url { get; }
     private readonly TBaseClient _thriftclient;
     private readonly int _clientTimeout;

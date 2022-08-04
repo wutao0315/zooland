@@ -13,7 +13,7 @@ namespace Zooyard.Rpc.HttpImpl;
 /// </summary>
 public class HttpStub
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(HttpStub));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(HttpStub));
     /// <summary>
     /// http客户端
     /// </summary>

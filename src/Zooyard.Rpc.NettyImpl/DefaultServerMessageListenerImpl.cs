@@ -13,7 +13,7 @@ namespace Zooyard.Rpc.NettyImpl;
 /// </summary>
 public class DefaultServerMessageListenerImpl//: IServerMessageListener
 {
-	private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(DefaultServerMessageListenerImpl));
+	private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(DefaultServerMessageListenerImpl));
 
 	private static BlockingCollection<string> logQueue = new();
 	private IRemotingServer remotingServer;

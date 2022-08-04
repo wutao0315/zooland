@@ -8,7 +8,7 @@ namespace Zooyard.DynamicProxy;
 
 public class AsyncProxyGenerator : IDisposable
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(AsyncProxyGenerator));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(AsyncProxyGenerator));
     private readonly ConcurrentDictionary<Type, Dictionary<Type, Type>> _proxyTypeCaches;
 
     private readonly ProxyAssembly _proxyAssembly;

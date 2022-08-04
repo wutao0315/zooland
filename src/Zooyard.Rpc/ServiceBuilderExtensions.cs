@@ -13,7 +13,7 @@ namespace Microsoft.Extensions.Configuration;
 
 public static class ServiceBuilderExtensions
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ServiceBuilderExtensions));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ServiceBuilderExtensions));
     public static void AddZoolandClient(this IServiceCollection services, IConfiguration config, string zooyard= "zooyard")
     {
         services.AddSingleton<IDictionary<string, IClientPool>>((serviceProvder) =>
@@ -23,8 +23,8 @@ public static class ServiceBuilderExtensions
 
             foreach (var item in option.Clients)
             {
-                var pool = serviceProvder.GetService(Type.GetType(item.Value.PoolType)) as IClientPool;
-                result.Add(item.Value.Service.FullName, pool);
+                var pool = (IClientPool)serviceProvder.GetRequiredService(Type.GetType(item.Value.PoolType)!);
+                result.Add(item.Value.Service.FullName!, pool);
             }
             return result;
         });

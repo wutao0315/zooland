@@ -8,9 +8,9 @@ namespace Zooyard.Utils;
 
 public sealed class StringUtils
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(StringUtils));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(StringUtils));
 
-    private static readonly Regex KVP_PATTERN = new Regex("([_.a-zA-Z0-9][-_.a-zA-Z0-9]*)[=](.*)", RegexOptions.Compiled);  //key value pair pattern.
+    private static readonly Regex KVP_PATTERN = new ("([_.a-zA-Z0-9][-_.a-zA-Z0-9]*)[=](.*)", RegexOptions.Compiled);  //key value pair pattern.
 
     /// <summary>
     /// parse key-value pair.

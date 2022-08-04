@@ -13,7 +13,7 @@ namespace Zooyard.Rpc.DotNettyImpl;
 
 public class NettyClient : AbstractClient
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(NettyClient));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(NettyClient));
     public const string QUIETPERIOD_KEY = "quietPeriod";
     public const int DEFAULT_QUIETPERIOD = 100;
     //public const string TIMEOUT_KEY = "timeout";
@@ -41,6 +41,7 @@ public class NettyClient : AbstractClient
 
     public override async Task Open()
     {
+        await Task.CompletedTask;
         //if (!_channel.Open || !_channel.Active)
         //{
         //    var k = new IPEndPoint(IPAddress.Parse(Url.Host), Url.Port);
@@ -50,6 +51,7 @@ public class NettyClient : AbstractClient
 
     public override async Task Close()
     {
+        await Task.CompletedTask;
         //if (_channel.Active || _channel.Open)
         //{
         //    await _channel.CloseAsync();

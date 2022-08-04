@@ -237,7 +237,7 @@ public static class FrameworkErrorCodeExtensions
     {
         var type = errorCode.GetType();
         var item = type.GetField(errorCode.ToString());
-        var atts = item.GetCustomAttributes(typeof(ErrorCodeAttribute), false);
+        var atts = item?.GetCustomAttributes(typeof(ErrorCodeAttribute), false);
         if (atts != null && atts.Length != 0)
         {
             var description = (ErrorCodeAttribute)atts[0];//获取特性的描述信息；  description就是特性中的描述信息

@@ -14,7 +14,7 @@ namespace Zooyard.Rpc.NettyImpl.Support;
 public sealed class NettyRemotingClient : AbstractNettyRemotingClient
 	{
 
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(NettyRemotingClient));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(NettyRemotingClient));
 
     private static volatile NettyRemotingClient instance;
     private readonly AtomicBoolean initialized = new (false);
@@ -113,6 +113,7 @@ public sealed class NettyRemotingClient : AbstractNettyRemotingClient
 
     public override async Task OnRegisterMsgSuccess(string serverAddress, IChannel channel, object response, AbstractMessage requestMessage)
     {
+        await Task.CompletedTask;
         //var registerRMRequest = (RegisterRMRequest)requestMessage;
         //var registerRMResponse = (RegisterRMResponse)response;
         //if (Logger().IsEnabled(LogLevel.Information))
@@ -133,6 +134,7 @@ public sealed class NettyRemotingClient : AbstractNettyRemotingClient
 
     public override async Task OnRegisterMsgFail(string serverAddress, IChannel channel, object response, AbstractMessage requestMessage)
     {
+        await Task.CompletedTask;
         //var registerRMRequest = (RegisterRMRequest)requestMessage;
         //var registerRMResponse = (RegisterRMResponse)response;
         //string errMsg = $"register RM failed. client version: {registerRMRequest.Version},server version: {registerRMResponse?.Version}, errorMsg: {registerRMResponse?.Msg}, channel: {channel}";
@@ -177,6 +179,7 @@ public sealed class NettyRemotingClient : AbstractNettyRemotingClient
 
     public async Task SendRegisterMessage(string serverAddress, IChannel channel, string resourceId)
     {
+        await Task.CompletedTask;
         //RegisterRMRequest message = new (applicationId, transactionServiceGroup);
         //message.ResourceIds = resourceId;
         //try

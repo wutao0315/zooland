@@ -8,7 +8,7 @@ namespace Zooyard.Rpc.GrpcImpl;
 
 public class GrpcInvoker : AbstractInvoker
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(GrpcInvoker));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(GrpcInvoker));
 
     private readonly object _instance;
     private readonly int _clientTimeout;

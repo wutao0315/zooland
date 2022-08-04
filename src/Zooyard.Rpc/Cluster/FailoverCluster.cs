@@ -6,7 +6,7 @@ namespace Zooyard.Rpc.Cluster;
 
 public class FailoverCluster : AbstractCluster
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(FailoverCluster));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(FailoverCluster));
     public override string Name => NAME;
     public const string NAME = "failover";
     public const string RETRIES_KEY = "retries";
@@ -19,7 +19,7 @@ public class FailoverCluster : AbstractCluster
         //IResult result = null;
 
         var copyinvokers = urls;
-        checkInvokers(copyinvokers, invocation, address);
+        CheckInvokers(copyinvokers, invocation, address);
 
         //*getUrl();
         int len = address.GetMethodParameter(invocation.MethodInfo.Name, RETRIES_KEY, DEFAULT_RETRIES) + 1;
@@ -40,9 +40,9 @@ public class FailoverCluster : AbstractCluster
                 //*checkWhetherDestroyed();
                 //*copyinvokers = list(invocation);
                 //重新检查一下
-                checkInvokers(copyinvokers, invocation, address);
+                CheckInvokers(copyinvokers, invocation, address);
             }
-            var invoker = base.select(loadbalance, invocation, copyinvokers, invoked);
+            var invoker = base.Select(loadbalance, invocation, copyinvokers, invoked);
             invoked.Add(invoker);
             RpcContext.GetContext().SetInvokers(invoked);
             try

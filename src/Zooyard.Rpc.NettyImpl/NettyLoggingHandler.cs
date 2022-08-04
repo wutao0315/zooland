@@ -13,7 +13,7 @@ namespace Zooyard.Rpc.NettyImpl;
 /// </summary>
 public class NettyLoggingHandler : ChannelHandlerAdapter
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(NettyLoggingHandler));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(NettyLoggingHandler));
 
     public override void ChannelRegistered(IChannelHandlerContext ctx)
     {

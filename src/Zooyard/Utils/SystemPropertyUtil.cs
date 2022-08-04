@@ -8,7 +8,7 @@ namespace Zooyard.Utils;
 /// </summary>
 public static class SystemPropertyUtil
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(SystemPropertyUtil));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(SystemPropertyUtil));
     static bool loggedException;
 
     /// <summary>

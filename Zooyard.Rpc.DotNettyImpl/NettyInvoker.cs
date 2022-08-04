@@ -11,7 +11,7 @@ namespace Zooyard.Rpc.DotNettyImpl;
 
 public class NettyInvoker : AbstractInvoker
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(NettyInvoker));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(NettyInvoker));
 
     private readonly ITransportClient _transportClient;
     private readonly int _clientTimeout;

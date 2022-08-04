@@ -2,7 +2,9 @@
 
 namespace Zooyard.Rpc.Cache.Support;
 
-public class LruCacheData<TKey, TValue> where TValue : class
+public class LruCacheData<TKey, TValue> 
+    where TValue : class
+    where TKey : notnull
 {
     private readonly Dictionary<TKey, NodeInfo> cachedNodesDictionary = new ();
     private readonly LinkedList<NodeInfo> lruLinkedList = new ();
@@ -34,8 +36,7 @@ public class LruCacheData<TKey, TValue> where TValue : class
         rwl.EnterWriteLock();
         try
         {
-            NodeInfo node;
-            if (this.cachedNodesDictionary.TryGetValue(key, out node))
+            if (this.cachedNodesDictionary.TryGetValue(key, out NodeInfo? node))
             {
                 this.Delete(node);
             }
@@ -49,19 +50,18 @@ public class LruCacheData<TKey, TValue> where TValue : class
         }
     }
 
-    public TValue GetObject(TKey key)
+    public TValue? GetObject(TKey key)
     {
         if (key == null)
         {
             throw new ArgumentNullException("key");
         }
 
-        TValue data = null;
-        NodeInfo node;
+        TValue? data = null;
         rwl.EnterReadLock();
         try
         {
-            if (this.cachedNodesDictionary.TryGetValue(key, out node))
+            if (this.cachedNodesDictionary.TryGetValue(key, out NodeInfo? node))
             {
                 if (node != null && !node.IsExpired())
                 {
@@ -112,7 +112,7 @@ public class LruCacheData<TKey, TValue> where TValue : class
         }
     }
 
-    private void RemoveExpiredElements(object stateInfo)
+    private void RemoveExpiredElements(object? stateInfo)
     {
         rwl.EnterWriteLock();
         try
@@ -138,27 +138,30 @@ public class LruCacheData<TKey, TValue> where TValue : class
 
     private void CreateNodeandAddtoList(TKey userKey, TValue cacheObject)
     {
-        var node = new NodeInfo(userKey, cacheObject, (this.timeOut > DateTime.MaxValue.Subtract(DateTime.UtcNow) ? DateTime.MaxValue : DateTime.UtcNow.Add(this.timeOut)));
+        var node = new NodeInfo(userKey, 
+            cacheObject, 
+            (this.timeOut > DateTime.MaxValue.Subtract(DateTime.UtcNow) ? DateTime.MaxValue : DateTime.UtcNow.Add(this.timeOut))
+            );
 
         node.LLNode = this.lruLinkedList.AddFirst(node);
         this.cachedNodesDictionary[userKey] = node;
     }
 
-    private void AddBeforeFirstNode(object stateinfo)
+    private void AddBeforeFirstNode(object? stateinfo)
     {
+        if (stateinfo == null) { return; }
         rwl.EnterWriteLock();
         try
         {
             var key = (TKey)stateinfo;
-            NodeInfo nodeInfo;
-            if (this.cachedNodesDictionary.TryGetValue(key, out nodeInfo))
+            if (this.cachedNodesDictionary.TryGetValue(key, out NodeInfo? nodeInfo))
             {
                 if (nodeInfo != null && !nodeInfo.IsExpired() && nodeInfo.AccessCount > 20)
                 {
                     if (nodeInfo.LLNode != this.lruLinkedList.First)
                     {
-                        this.lruLinkedList.Remove(nodeInfo.LLNode);
-                        nodeInfo.LLNode = this.lruLinkedList.AddBefore(this.lruLinkedList.First, nodeInfo);
+                        this.lruLinkedList.Remove(nodeInfo.LLNode!);
+                        nodeInfo.LLNode = this.lruLinkedList.AddBefore(this.lruLinkedList.First!, nodeInfo);
                         nodeInfo.AccessCount = 0;
                     }
                 }
@@ -189,8 +192,8 @@ public class LruCacheData<TKey, TValue> where TValue : class
 
     private void Delete(NodeInfo node)
     {
-        Trace.WriteLine(string.Format("Evicting object from cache for key: {0}", node.Key.ToString()));
-        this.lruLinkedList.Remove(node.LLNode);
+        Trace.WriteLine($"Evicting object from cache for key: {node.Key}");
+        this.lruLinkedList.Remove(node.LLNode!);
         this.cachedNodesDictionary.Remove(node.Key);
     }
 
@@ -212,7 +215,7 @@ public class LruCacheData<TKey, TValue> where TValue : class
 
         internal int AccessCount { get; set; }
 
-        internal LinkedListNode<NodeInfo> LLNode { get; set; }
+        internal LinkedListNode<NodeInfo>? LLNode { get; set; }
 
         internal bool IsExpired()
         {

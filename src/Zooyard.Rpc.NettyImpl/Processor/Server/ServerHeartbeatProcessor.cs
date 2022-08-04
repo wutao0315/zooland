@@ -15,7 +15,7 @@ namespace Zooyard.Rpc.NettyImpl.Processor.Server;
 public class ServerHeartbeatProcessor : IRemotingProcessor
 {
 
-	private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ServerHeartbeatProcessor));
+	private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ServerHeartbeatProcessor));
 
 	private readonly IRemotingServer _remotingServer;
 

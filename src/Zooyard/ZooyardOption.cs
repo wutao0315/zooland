@@ -37,7 +37,7 @@ public class ZooyardClientOption
     public string PoolType { get; set; } = string.Empty;
 
     private Type? _service;
-    public Type? Service { get { return _service == null ? _service = Type.GetType(ServiceType) : _service; } }
+    public Type Service { get { return _service == null ? _service = Type.GetType(ServiceType)! : _service; } }
 }
 
 //public class ZooyardOption

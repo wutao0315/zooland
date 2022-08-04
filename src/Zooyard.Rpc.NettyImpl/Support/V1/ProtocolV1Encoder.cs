@@ -33,7 +33,7 @@ namespace Zooyard.Rpc.NettyImpl.Support.V1;
 /// </summary>
 public class ProtocolV1Encoder : MessageToByteEncoder<object>
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ProtocolV1Encoder));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ProtocolV1Encoder));
 
     protected override void Encode(IChannelHandlerContext context, object msg, IByteBuffer output)
     {

@@ -13,7 +13,7 @@ namespace Zooyard.Rpc;
 /// </summary>
 public class ZooyardPools : IZooyardPools
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ZooyardPools));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ZooyardPools));
 
     public const string CACHE_KEY = "cache";
     public const string CLUSTER_KEY = "cluster";
@@ -89,14 +89,14 @@ public class ZooyardPools : IZooyardPools
         this.LoadBalances = new ConcurrentDictionary<string, ILoadBalance>(loadbalances);
         this.Clusters = new ConcurrentDictionary<string, ICluster>(clusters);
         
-        //this.Address = URL.ValueOf(string.IsNullOrWhiteSpace(clients.CurrentValue.RegisterUrl)? "zooyard://127.0.0.1" : clients.CurrentValue.RegisterUrl);
+        this.Address = URL.ValueOf(string.IsNullOrWhiteSpace(clients.CurrentValue.RegisterUrl)? "zooyard://127.0.0.1" : clients.CurrentValue.RegisterUrl);
         
         this.Urls = new ConcurrentDictionary<string, List<URL>>();
         this.BadUrls = new ConcurrentDictionary<string, List<BadUrl>>();
         ////参数
         //foreach (var item in clients.CurrentValue.Clients)
         //{
-        //    if (string.IsNullOrWhiteSpace(item.Value.Service.FullName)) 
+        //    if (string.IsNullOrWhiteSpace(item.Value.Service.FullName))
         //    {
         //        continue;
         //    }
@@ -325,30 +325,36 @@ public class ZooyardPools : IZooyardPools
         {
             return null;
         }
-
+        var invocationTypeName = invocation.TargetType.FullName!;
+        var invocationMethodName = invocation.MethodInfo.Name;
         ICache? result = null;
         //app interface version
-        var methodParameter = $"{invocation.AppPoint()}{invocation.TargetType.FullName}.{invocation.MethodInfo.Name}{invocation.PointVersion()}";
+        var methodParameter = $"{invocation.AppPoint()}{invocationTypeName}.{invocationMethodName}{invocation.PointVersion()}";
         var key = this.Address.GetMethodParameter(methodParameter, CACHE_KEY, "");
         //app interface
-        if (string.IsNullOrEmpty(key))
+        if (string.IsNullOrWhiteSpace(key))
         {
-            key = this.Address.GetMethodParameter($"{invocation.AppPoint()}{invocation.TargetType.FullName}.{invocation.MethodInfo.Name}", CACHE_KEY, "");
+            key = this.Address.GetMethodParameter($"{invocation.AppPoint()}{invocationTypeName}.{invocationMethodName}", CACHE_KEY, "");
         }
         //interface version
-        if (string.IsNullOrEmpty(key))
+        if (string.IsNullOrWhiteSpace(key))
         {
-            key = this.Address.GetMethodParameter($"{invocation.TargetType.FullName}.{invocation.MethodInfo.Name}{invocation.PointVersion()}", CACHE_KEY, "");
+            key = this.Address.GetMethodParameter($"{invocationTypeName}.{invocationMethodName}{invocation.PointVersion()}", CACHE_KEY, "");
         }
         //interface
-        if (string.IsNullOrEmpty(key))
+        if (string.IsNullOrWhiteSpace(key))
         {
-            key = this.Address.GetMethodParameter($"{invocation.TargetType.FullName}.{invocation.MethodInfo.Name}", CACHE_KEY, "");
+            key = this.Address.GetMethodParameter($"{invocationTypeName}.{invocationMethodName}", CACHE_KEY, "");
         }
         //key
-        if (string.IsNullOrEmpty(key))
+        if (string.IsNullOrWhiteSpace(key))
         {
             key = this.Address.GetParameter(CACHE_KEY, "");
+        }
+
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            return result;
         }
 
         if (key.ToLower() == "true" || key.ToLower() == LruCache.NAME)
@@ -371,12 +377,14 @@ public class ZooyardPools : IZooyardPools
     private ILoadBalance GetLoadBalance(IInvocation invocation)
     {
         var result = LoadBalances[RandomLoadBalance.NAME];
+        var invocationTypeName = invocation.TargetType.FullName!;
+        var invocationMethodName = invocation.MethodInfo.Name;
 
-        var key = this.Address.GetMethodParameter($"{invocation.TargetType.FullName}.{ invocation.MethodInfo.Name }", LOADBANCE_KEY, "");
+        var key = this.Address.GetMethodParameter($"{invocationTypeName}.{ invocationMethodName }", LOADBANCE_KEY, "");
 
         if (string.IsNullOrEmpty(key))
         {
-            key = this.Address.GetInterfaceParameter(invocation.TargetType.FullName, LOADBANCE_KEY, "");
+            key = this.Address.GetInterfaceParameter(invocationTypeName, LOADBANCE_KEY, "");
         }
 
         if (string.IsNullOrEmpty(key))
@@ -399,12 +407,14 @@ public class ZooyardPools : IZooyardPools
     private ICluster GetCluster(IInvocation invocation)
     {
         var result = Clusters[FailoverCluster.NAME];
+        var invocationTypeName = invocation.TargetType.FullName!;
+        var invocationMethodName = invocation.MethodInfo.Name;
 
-        var key = this.Address.GetMethodParameter($"{invocation.TargetType.FullName}.{ invocation.MethodInfo.Name }", CLUSTER_KEY, "");
+        var key = this.Address.GetMethodParameter($"{invocationTypeName}.{ invocationMethodName }", CLUSTER_KEY, "");
 
         if (string.IsNullOrEmpty(key))
         {
-            key = this.Address.GetInterfaceParameter(invocation.TargetType.FullName, CLUSTER_KEY, "");
+            key = this.Address.GetInterfaceParameter(invocationTypeName, CLUSTER_KEY, "");
         }
         if (string.IsNullOrEmpty(key))
         {
@@ -424,16 +434,16 @@ public class ZooyardPools : IZooyardPools
     /// <returns></returns>
     private IList<URL> GetUrls(IInvocation invocation)
     {
+        var invocationName = invocation.TargetType.FullName!;
         //参数检查
-        if (!Urls.ContainsKey(invocation.TargetType.FullName) && !BadUrls.ContainsKey(invocation.TargetType.FullName))
+        if (!Urls.ContainsKey(invocationName) && !BadUrls.ContainsKey(invocationName))
         {
             throw new Exception($"not find the {invocation.TargetType.FullName}'s urls,please config it ");
         }
 
-        if (Urls.ContainsKey(invocation.TargetType.FullName) 
-            && Urls?[invocation.TargetType.FullName]?.Count() > 0)
+        if (Urls.TryGetValue(invocationName, out List<URL>? urls) && urls.Count>0)
         {
-            var result = FilterUrls(invocation, Urls[invocation.TargetType.FullName]);
+            var result = FilterUrls(invocation, urls);
             if (result?.Count > 0)
             {
                 Logger().LogInformation("from good urls");
@@ -441,10 +451,9 @@ public class ZooyardPools : IZooyardPools
             }
         }
 
-        if (BadUrls.ContainsKey(invocation.TargetType.FullName) 
-            && BadUrls?[invocation.TargetType.FullName]?.Count() > 0)
+        if (BadUrls.TryGetValue(invocationName, out List<BadUrl>? badUrls) && badUrls.Count>0)
         {
-            var result = FilterUrls(invocation, BadUrls[invocation.TargetType.FullName].Select(w => w.Url).ToList());
+            var result = FilterUrls(invocation, badUrls.Select(w => w.Url).ToList());
             if (result?.Count > 0)
             {
                 Logger().LogInformation("from bad urls");
@@ -452,7 +461,7 @@ public class ZooyardPools : IZooyardPools
             }
         }
 
-        throw new Exception($"not find the {invocation.AppPoint()}{invocation.TargetType.FullName}{invocation.PointVersion()}'s urls,please config it,config version must <= Url version ");
+        throw new Exception($"not find the {invocation.AppPoint()}{invocationName}{invocation.PointVersion()}'s urls,please config it,config version must <= Url version ");
     }
 
     /// <summary>
@@ -461,62 +470,66 @@ public class ZooyardPools : IZooyardPools
     /// <param name="invocation"></param>
     /// <param name="urls"></param>
     /// <returns></returns>
-    private IList<URL>? FilterUrls(IInvocation invocation, IList<URL> urls)
+    private IList<URL> FilterUrls(IInvocation invocation, IList<URL> urls)
     {
-        var result = FilterAppUrls(invocation, urls);
-        result = FilterVersionUrls(invocation, urls);
-        return result;
-    }
-    /// <summary>
-    /// 将url集合中没有设置App或者和调用App一致的URL集合取出
-    /// </summary>
-    /// <param name="invocation"></param>
-    /// <param name="urls"></param>
-    /// <returns></returns>
-    private IList<URL>? FilterAppUrls(IInvocation invocation, IList<URL> urls)
-    {
-        if (string.IsNullOrEmpty(invocation.App)
-            || urls == null
-            || urls.Count <= 0)
-        {
-            return urls;
-        }
-
         var result = new List<URL>();
-        foreach (var item in urls)
-        {
-            var appName = item.GetParameter(APP_KEY);
-            if (string.IsNullOrWhiteSpace(appName) || appName == invocation.App)
-            {
-                result.Add(item);
-            }
-        }
+        var appResult = FilterAppUrls(invocation, urls);
+        var versionResult = FilterVersionUrls(invocation, urls);
+        result.AddRange(appResult);
+        result.AddRange(versionResult);
         return result;
-    }
-    /// <summary>
-    /// 将url集合中没有设置Version或者和调用Version一致或高于Version的URL集合取出
-    /// </summary>
-    /// <param name="invocation"></param>
-    /// <param name="urls"></param>
-    /// <returns></returns>
-    private IList<URL>? FilterVersionUrls(IInvocation invocation, IList<URL>? urls)
-    {
-        if (string.IsNullOrEmpty(invocation.Version) || urls == null || urls.Count <= 0)
-        {
-            return urls;
-        }
 
-        var result = new List<URL>();
-        foreach (var item in urls)
+        /// <summary>
+        /// 将url集合中没有设置App或者和调用App一致的URL集合取出
+        /// </summary>
+        /// <param name="invocation"></param>
+        /// <param name="urls"></param>
+        /// <returns></returns>
+        IList<URL> FilterAppUrls(IInvocation invocation, IList<URL> urls)
         {
-            var version = item.GetParameter(URL.VERSION_KEY);
-            if (string.IsNullOrWhiteSpace(version) || string.Compare(version, invocation.Version, true)>=0)
+            if (string.IsNullOrEmpty(invocation.App)
+                || urls.Count == 0)
             {
-                result.Add(item);
+                return urls;
             }
+
+            var result = new List<URL>();
+            foreach (var item in urls)
+            {
+                var appName = item.GetParameter(APP_KEY);
+                if (string.IsNullOrWhiteSpace(appName) || appName == invocation.App)
+                {
+                    result.Add(item);
+                }
+            }
+            return result;
         }
-        return result;
+        /// <summary>
+        /// 将url集合中没有设置Version或者和调用Version一致或高于Version的URL集合取出
+        /// </summary>
+        /// <param name="invocation"></param>
+        /// <param name="urls"></param>
+        /// <returns></returns>
+        IList<URL> FilterVersionUrls(IInvocation invocation, IList<URL> urls)
+        {
+            if (string.IsNullOrEmpty(invocation.Version)|| urls.Count == 0)
+            {
+                return urls;
+            }
+
+            var result = new List<URL>();
+            foreach (var item in urls)
+            {
+                var version = item.GetParameter(URL.VERSION_KEY);
+                if (string.IsNullOrWhiteSpace(version) || string.Compare(version, invocation.Version, true) >= 0)
+                {
+                    result.Add(item);
+                }
+            }
+            return result;
+        }
     }
+    
     /// <summary>
     /// exec rpc
     /// </summary>
@@ -526,9 +539,10 @@ public class ZooyardPools : IZooyardPools
     {
         //cache
         var cache = this.GetCache(invocation);
-
+        var invocationTypeName = invocation.TargetType.FullName!;
+        var invocationMethodName = invocation.MethodInfo.Name;
         var parameters = invocation.MethodInfo.GetParameters();
-        var key =$"{invocation.AppPoint()}{invocation.TargetType.FullName}.{invocation.MethodInfo.Name}@{StringUtils.Md5(StringUtils.ToArgumentString(parameters, invocation.Arguments))}{invocation.PointVersion()}";
+        var key =$"{invocation.AppPoint()}{invocationTypeName}.{invocationMethodName}@{StringUtils.Md5(StringUtils.ToArgumentString(parameters, invocation.Arguments))}{invocation.PointVersion()}";
         if (cache != null)
         {
             var value = cache.Get<T>(key);
@@ -540,7 +554,7 @@ public class ZooyardPools : IZooyardPools
             }
 
             var resultInner = await this.InvokeInner<T>(invocation);
-            if (!resultInner.HasException)
+            if (!resultInner.HasException && resultInner.Value!=null)
             {
                 cache.Put(key, resultInner.Value);
             }
@@ -578,7 +592,7 @@ public class ZooyardPools : IZooyardPools
         var urls = this.GetUrls(invocation);
 
         //get the url address
-        if (urls.Count <= 0)
+        if (urls == null || urls.Count == 0)
         {
             throw new Exception($"there is no alive url to access the remote interface {invocation.TargetType.FullName}");
         }
@@ -600,14 +614,14 @@ public class ZooyardPools : IZooyardPools
             // insulate the exception rpc url address 
             var badUrls = new List<BadUrl>();
 
-            if (this.Urls.ContainsKey(invocation.TargetType.FullName))
+            if (this.Urls.ContainsKey(invocation.TargetType.FullName!))
             {
-                goodUrls = this.Urls[invocation.TargetType.FullName];
+                goodUrls = this.Urls[invocation.TargetType.FullName!];
             }
 
-            if (this.BadUrls.ContainsKey(invocation.TargetType.FullName))
+            if (this.BadUrls.ContainsKey(invocation.TargetType.FullName!))
             {
-                badUrls = this.BadUrls[invocation.TargetType.FullName];
+                badUrls = this.BadUrls[invocation.TargetType.FullName!];
             }
 
             //get all bad url, insulate from good url
@@ -652,10 +666,10 @@ public class ZooyardPools : IZooyardPools
                 }
             }
 
-            if (!this.BadUrls.ContainsKey(invocation.TargetType.FullName) 
+            if (!this.BadUrls.ContainsKey(invocation.TargetType.FullName!) 
                 && badUrls.Count() > 0)
             {
-                this.BadUrls.TryAdd(invocation.TargetType.FullName, badUrls);
+                this.BadUrls.TryAdd(invocation.TargetType.FullName!, badUrls);
             }
         }
         catch (Exception ex)

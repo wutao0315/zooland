@@ -11,7 +11,7 @@ namespace Zooyard.Rpc.NettyImpl.Support;
 /// </summary>
 public class NettyClientChannelManager
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(NettyClientChannelManager));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(NettyClientChannelManager));
 
     private readonly ConcurrentDictionary<string, object> channelLocks = new ();
 
@@ -21,7 +21,7 @@ public class NettyClientChannelManager
 
     private readonly NettyPoolableFactory nettyClientKeyPool;
 
-    private readonly int CHANNEL_LOCKS_MILS = 1500;
+    //private readonly int CHANNEL_LOCKS_MILS = 1500;
 
     private Func<string, NettyPoolKey> poolKeyFunction;
 
@@ -204,7 +204,7 @@ public class NettyClientChannelManager
 
     internal virtual void RegisterChannel(string serverAddress, IChannel channel)
     {
-        if (channels.TryGetValue(serverAddress, out IChannel channelToServer) && channelToServer.Active) 
+        if (channels.TryGetValue(serverAddress, out IChannel? channelToServer) && channelToServer.Active) 
         {
             return;
         }
@@ -214,7 +214,7 @@ public class NettyClientChannelManager
 
     private async Task<IChannel> DoConnect(string serverAddress)
     {
-        if (channels.TryGetValue(serverAddress, out IChannel channelToServer) && channelToServer.Active)
+        if (channels.TryGetValue(serverAddress, out IChannel? channelToServer) && channelToServer.Active)
         {
             return channelToServer;
         }

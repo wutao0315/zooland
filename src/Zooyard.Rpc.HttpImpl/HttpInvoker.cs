@@ -8,7 +8,7 @@ namespace Zooyard.Rpc.HttpImpl;
 
 public class HttpInvoker : AbstractInvoker
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(HttpInvoker));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(HttpInvoker));
 
     //public const string PARAMETERTYPE_KEY = "parametertype";
     public const string DEFAULT_PARAMETERTYPE = "json";

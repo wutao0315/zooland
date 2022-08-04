@@ -6,7 +6,7 @@ namespace Zooyard.Rpc.GrpcImpl;
 
 public class GrpcClient : AbstractClient
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(GrpcClient));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(GrpcClient));
 
     public override URL Url { get; }
     private Channel _channel;

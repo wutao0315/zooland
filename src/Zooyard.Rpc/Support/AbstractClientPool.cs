@@ -5,13 +5,13 @@ namespace Zooyard.Rpc.Support;
 
 public abstract class AbstractClientPool: IClientPool, IAsyncDisposable
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(AbstractClientPool));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(AbstractClientPool));
 
     #region 内部成员
     /// <summary>
     /// client pools
     /// </summary>
-    protected readonly ConcurrentDictionary<URL, ConcurrentBag<IClient>> ClientsPool = new ConcurrentDictionary<URL, ConcurrentBag<IClient>> ();
+    protected readonly ConcurrentDictionary<URL, ConcurrentBag<IClient>> ClientsPool = new ();
    
     #endregion
 
@@ -26,10 +26,19 @@ public abstract class AbstractClientPool: IClientPool, IAsyncDisposable
     /// 从连接池取出一个连接
     /// </summary>
     /// <returns>连接</returns>
-    public virtual async Task<IClient?> GetClient(URL url)
+    public virtual async Task<IClient> GetClient(URL url)
     {
         //连接池无空闲连接	
         var client = DequeueClient(url);
+        if (client == null) 
+        {
+            client = await InitializeClient(url);
+            if (client == null)
+            {
+                throw new InvalidOperationException("connection access failed. please confirm call service status.");
+            }
+            Logger().LogInformation($"create new client [{client.Version}:{url}]");
+        }
         var validClient = await ValidateClient(client);
         //连接池无空闲连接	
         if (!validClient)
@@ -73,12 +82,8 @@ public abstract class AbstractClientPool: IClientPool, IAsyncDisposable
     /// 销毁连接
     /// </summary>
     /// <param name="client">连接</param>
-    public async Task DestoryClient(IClient? client)
+    public async Task DestoryClient(IClient client)
     {
-        if (client == null)
-        {
-            return;
-        }
         await client.Close();
         await client.DisposeAsync();
         Logger().LogInformation($"DestoryClient :[{client.Version}:{client.Url}]");
@@ -142,12 +147,8 @@ public abstract class AbstractClientPool: IClientPool, IAsyncDisposable
     /// 校验连接，确保连接开启
     /// </summary>
     /// <param name="client">连接</param>
-    protected async Task<bool> ValidateClient(IClient? client)
+    protected async Task<bool> ValidateClient(IClient client)
     {
-        if (client == null)
-        {
-            return false;
-        }
         try
         {
             await client.Open();

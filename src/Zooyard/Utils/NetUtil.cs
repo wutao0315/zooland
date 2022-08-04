@@ -8,7 +8,7 @@ namespace Zooyard.Utils;
 
 public class NetUtil
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(NetUtil));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(NetUtil));
 
     public const string LOCALHOST = "127.0.0.1";
 
@@ -16,7 +16,7 @@ public class NetUtil
 
     private static readonly Regex LOCAL_IP_PATTERN = new Regex("127(\\.\\d{1,3}){3}$", RegexOptions.Compiled);
 
-    public static bool IsLocalHost(string host)
+    public static bool IsLocalHost(string? host)
     {
         return host != null && (LOCAL_IP_PATTERN.IsMatch(host) || host.Equals("localhost", StringComparison.CurrentCultureIgnoreCase));
     }
@@ -26,12 +26,12 @@ public class NetUtil
         return "0.0.0.0".Equals(host);
     }
 
-    public static bool IsInvalidLocalHost(string host)
+    public static bool IsInvalidLocalHost(string? host)
     {
-        return host == null || host.Length == 0 || host.Equals("localhost", StringComparison.CurrentCultureIgnoreCase) || host.Equals("0.0.0.0") || (LOCAL_IP_PATTERN.IsMatch(host));
+        return string.IsNullOrWhiteSpace(host) || host.Equals("localhost", StringComparison.CurrentCultureIgnoreCase) || host.Equals("0.0.0.0") || (LOCAL_IP_PATTERN.IsMatch(host));
     }
 
-    private static readonly Regex IP_PATTERN = new Regex("\\d{1,3}(\\.\\d{1,3}){3,5}$", RegexOptions.Compiled);
+    private static readonly Regex IP_PATTERN = new ("\\d{1,3}(\\.\\d{1,3}){3,5}$", RegexOptions.Compiled);
 
     private static bool IsValidAddress(IPAddress address)
     {
@@ -68,7 +68,7 @@ public class NetUtil
                 return u.SetHost(LocalHost).ToFullString();
             }
         }
-        else if (host.Contains(":"))
+        else if (host.Contains(':'))
         {
             int i = host.LastIndexOf(':');
             if (IsInvalidLocalHost(host.Substring(0, i)))

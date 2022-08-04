@@ -4,7 +4,7 @@ public class ArrayMerger : IMerger<object[]>
 {
     public static ArrayMerger INSTANCE = new ();
     
-    public object[] Merge(params object[][] items)
+    public object[]? Merge(params object[][] items)
     {
         if (items.Length == 0)
         {
@@ -31,7 +31,7 @@ public class ArrayMerger : IMerger<object[]>
 
         var type = items[0].GetType().GetElementType();
 
-        var result = Array.CreateInstance(type, totalLen);
+        var result = Array.CreateInstance(type!, totalLen);
         int index = 0;
         foreach (var array in items)
         {

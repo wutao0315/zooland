@@ -10,7 +10,7 @@ namespace Zooyard.Rpc.Cluster;
 /// </summary>
 public class FailbackCluster : AbstractCluster
 {
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(FailbackCluster));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(FailbackCluster));
     public override string Name => NAME;
     public const string NAME = "failback";
     private static readonly long RETRY_FAILED_PERIOD = 5 * 1000;
@@ -84,10 +84,10 @@ public class FailbackCluster : AbstractCluster
     {
         var goodUrls = new List<URL>();
         var badUrls = new List<BadUrl>();
-        Exception exception = null;
+        Exception? exception = null;
 
-        checkInvokers(urls, invocation, address);
-        var invoker = base.select(loadbalance, invocation, urls, null);
+        CheckInvokers(urls, invocation, address);
+        var invoker = base.Select(loadbalance, invocation, urls, null);
 
         IResult<T> result;
         var watch = Stopwatch.StartNew();
@@ -107,7 +107,7 @@ public class FailbackCluster : AbstractCluster
             {
                 await pool.DestoryClient(client).ConfigureAwait(false);
                 _source.WriteConsumerError(invoker, invocation, ex);
-                throw ex;
+                throw;
             }
         }
         catch (Exception e)

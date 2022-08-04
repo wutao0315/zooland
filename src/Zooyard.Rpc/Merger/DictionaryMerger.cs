@@ -1,8 +1,9 @@
 ﻿namespace Zooyard.Rpc.Merger;
 
 public class DictionaryMerger<key, value> : IMerger<IDictionary<key, value>>
+    where key:notnull
 {
-    public IDictionary<key, value> Merge(params IDictionary<key, value>[] items)
+    public IDictionary<key, value>? Merge(params IDictionary<key, value>[] items)
     {
         if (items.Length == 0)
         {

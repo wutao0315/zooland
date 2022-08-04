@@ -22,7 +22,7 @@ public abstract class AbstractNettyRemotingClient : AbstractNettyRemoting, IRemo
     public abstract Task OnRegisterMsgSuccess(string serverAddress, IChannel channel, object response, AbstractMessage requestMessage);
 
 
-    private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(AbstractNettyRemotingClient));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(AbstractNettyRemotingClient));
     private const string MSG_ID_PREFIX = "msgId:";
 		private const string FUTURES_PREFIX = "futures:";
 		private const string SINGLE_LOG_POSTFIX = ";";

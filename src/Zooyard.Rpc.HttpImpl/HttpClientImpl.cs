@@ -4,7 +4,7 @@ namespace Zooyard.Rpc.HttpImpl;
 
 public class HttpClientImpl : AbstractClient
 {
-    //private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(HttpClientImpl));
+    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(HttpClientImpl));
     public override URL Url { get; }
     private readonly IHttpClientFactory _transport;
     private readonly int _clientTimeout;

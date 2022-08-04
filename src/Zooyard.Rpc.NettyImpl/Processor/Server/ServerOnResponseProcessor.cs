@@ -20,7 +20,7 @@ namespace Zooyard.Rpc.NettyImpl.Processor.Server;
 public class ServerOnResponseProcessor : IRemotingProcessor
 {
 
-	private static readonly Func<Action<LogLevel, string, Exception>> Logger = () => LogManager.CreateLogger(typeof(ServerOnRequestProcessor));
+	private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ServerOnRequestProcessor));
 	/// <summary>
 	/// To handle the received RPC message on upper level.
 	/// </summary>
