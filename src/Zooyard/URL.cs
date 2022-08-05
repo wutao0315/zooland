@@ -17,6 +17,7 @@ public sealed class URL
     public const string GROUP_KEY = "group";
     public const string VERSION_KEY = "version";
     public const string INTERFACE_KEY = "interface";
+    public const string APP_KEY = "app";
 
     //private readonly IDictionary<string, string> parameters;
 
@@ -1090,6 +1091,25 @@ public sealed class URL
             throw new ArgumentException($"{nameof(Host)} is null or empty");
         }
         return new DnsEndPoint(Host, Port);
+    }
+    public string? Application
+    {
+        get
+        {
+            var inf = GetParameter(APP_KEY);
+            if (inf == null)
+            {
+                return null;
+            }
+            var buf = new StringBuilder();
+            buf.Append(inf);
+            var version = GetParameter(VERSION_KEY);
+            if (version?.Length > 0)
+            {
+                buf.Append(':').Append(version);
+            }
+            return buf.ToString();
+        }
     }
     public string? ServiceKey
     {

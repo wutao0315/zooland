@@ -27,6 +27,7 @@
   <ItemGroup>
     <Compile Remove="DynamicProxy\IInterceptor.cs" />
     <Compile Remove="DynamicProxy\InterfaceProxy.cs" />
+    <Compile Remove="Initialize.cs" />
     <Compile Remove="IRegistry.cs" />
     <Compile Remove="IRegistryHealthChecks.cs" />
     <Compile Remove="IRegistryHost.cs" />
@@ -40,6 +41,7 @@
   <ItemGroup>
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="6.0.0" />
     <PackageReference Include="System.Reflection.Emit" Version="4.7.0" />
+    <PackageReference Include="System.Runtime.Caching" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.1" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="6.0.0" />
   </ItemGroup>
@@ -63,19 +65,19 @@
       <_Parameter1>Zooyard.Extensions</_Parameter1>
     </AssemblyAttribute>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-      <_Parameter1>Zooyard.Rpc.GrpcImpl</_Parameter1>
+      <_Parameter1>Zooyard.GrpcImpl</_Parameter1>
     </AssemblyAttribute>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-      <_Parameter1>Zooyard.Rpc.HttpImpl</_Parameter1>
+      <_Parameter1>Zooyard.HttpImpl</_Parameter1>
     </AssemblyAttribute>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
       <_Parameter1>Zooyard.Rpc.NettyImpl</_Parameter1>
     </AssemblyAttribute>
 	  <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-		  <_Parameter1>Zooyard.Rpc.DotNettyImpl</_Parameter1>
+		  <_Parameter1>Zooyard.DotNettyImpl</_Parameter1>
 	  </AssemblyAttribute>
 	  <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-      <_Parameter1>Zooyard.Rpc.ThriftImpl</_Parameter1>
+      <_Parameter1>Zooyard.ThriftImpl</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
 

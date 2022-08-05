@@ -31,10 +31,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Zooyard\Zooyard.csproj" />
-    <ProjectReference Include="..\..\src\Zooyard.Rpc.GrpcImpl\Zooyard.Rpc.GrpcImpl.csproj" />
-    <ProjectReference Include="..\..\src\Zooyard.Rpc.HttpImpl\Zooyard.Rpc.HttpImpl.csproj" />
-    <ProjectReference Include="..\..\src\Zooyard.Rpc.ThriftImpl\Zooyard.Rpc.ThriftImpl.csproj" />
-    <ProjectReference Include="..\..\src\Zooyard.Rpc\Zooyard.Rpc.csproj" />
+    <ProjectReference Include="..\..\src\Zooyard.GrpcImpl\Zooyard.GrpcImpl.csproj" />
+    <ProjectReference Include="..\..\src\Zooyard.HttpImpl\Zooyard.HttpImpl.csproj" />
+    <ProjectReference Include="..\..\src\Zooyard.ThriftImpl\Zooyard.ThriftImpl.csproj" />
     <ProjectReference Include="..\RpcContractGrpc\RpcContractGrpc.csproj" />
     <ProjectReference Include="..\RpcContractHttp\RpcContractHttp.csproj" />
     <ProjectReference Include="..\RpcContractNetty\RpcContractNetty.csproj" />

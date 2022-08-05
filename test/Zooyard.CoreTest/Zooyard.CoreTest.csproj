@@ -27,9 +27,8 @@
     <ProjectReference Include="..\..\samples\RpcContractHttp\RpcContractHttp.csproj" />
     <ProjectReference Include="..\..\samples\RpcContractNetty\RpcContractNetty.csproj" />
     <ProjectReference Include="..\..\src\Zooyard\Zooyard.csproj" />
-    <ProjectReference Include="..\..\src\Zooyard.Rpc.GrpcImpl\Zooyard.Rpc.GrpcImpl.csproj" />
-    <ProjectReference Include="..\..\src\Zooyard.Rpc.HttpImpl\Zooyard.Rpc.HttpImpl.csproj" />
-    <ProjectReference Include="..\..\src\Zooyard.Rpc\Zooyard.Rpc.csproj" />
+    <ProjectReference Include="..\..\src\Zooyard.GrpcImpl\Zooyard.GrpcImpl.csproj" />
+    <ProjectReference Include="..\..\src\Zooyard.HttpImpl\Zooyard.HttpImpl.csproj" />
   </ItemGroup>
 
   <ItemGroup>

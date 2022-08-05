@@ -10,10 +10,10 @@
       "socket://127.0.0.1:12121?interface=RpcContractNetty.IHelloService&cluster=failfast"
     ],
     "ClientPools": {
-      "RpcContractThrift.IHelloService": "Zooyard.Rpc.ThriftImpl.ThriftClientPool, Zooyard.Rpc.ThriftImpl",
+      "RpcContractThrift.IHelloService": "Zooyard.ThriftImpl.ThriftClientPool, Zooyard.ThriftImpl",
       "RpcContractWcf.IHelloService": "Zooyard.Rpc.WcfImpl.WcfClientPool, Zooyard.Rpc.WcfImpl",
-      "RpcContractGrpc.IHelloService": "Zooyard.Rpc.GrpcImpl.GrpcClientPool, Zooyard.Rpc.GrpcImpl",
-      "RpcContractHttp.IHelloService": "Zooyard.Rpc.HttpImpl.HttpClientPool, Zooyard.Rpc.HttpImpl",
+      "RpcContractGrpc.IHelloService": "Zooyard.GrpcImpl.GrpcClientPool, Zooyard.GrpcImpl",
+      "RpcContractHttp.IHelloService": "Zooyard.HttpImpl.HttpClientPool, Zooyard.HttpImpl",
       "RpcContractAkka.IHelloService": "Zooyard.Rpc.AkkaImpl.AkkaClientPool, Zooyard.Rpc.AkkaImpl",
       "RpcContractNetty.IHelloService": "Zooyard.Rpc.NettyImpl.NettyClientPool, Zooyard.Rpc.NettyImpl"
     },

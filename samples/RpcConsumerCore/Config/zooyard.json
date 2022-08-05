@@ -5,7 +5,7 @@
       "thrift_helloservice": {
         "Version": "1.0",
         "ServiceType": "RpcContractThrift.IHelloService, RpcContractThrift",
-        "PoolType": "Zooyard.Rpc.ThriftImpl.ThriftClientPool, Zooyard.Rpc.ThriftImpl",
+        "PoolType": "Zooyard.ThriftImpl.ThriftClientPool, Zooyard.ThriftImpl",
         "Urls": [
           //&bf=Framed
           "Binary://127.0.0.1:9090?proxy=HelloService"
@@ -22,7 +22,7 @@
       "grpc_helloservice": {
         "Version": "1.0",
         "ServiceType": "RpcContractGrpc.IHelloService, RpcContractGrpc",
-        "PoolType": "Zooyard.Rpc.GrpcImpl.GrpcClientPool, Zooyard.Rpc.GrpcImpl",
+        "PoolType": "Zooyard.GrpcImpl.GrpcClientPool, Zooyard.GrpcImpl",
         "Urls": [
           "grpc://127.0.0.1:10008?proxy=HelloService"
         ]
@@ -30,7 +30,7 @@
       "http_helloservice": {
         "Version": "1.0",
         "ServiceType": "RpcContractHttp.IHelloService, RpcContractHttp",
-        "PoolType": "Zooyard.Rpc.HttpImpl.HttpClientPool, Zooyard.Rpc.HttpImpl",
+        "PoolType": "Zooyard.HttpImpl.HttpClientPool, Zooyard.HttpImpl",
         "Urls": [
           "http://localhost:10010?proxy=HelloService"
         ]

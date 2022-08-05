@@ -12,13 +12,13 @@ nuget:Install-Package Zooyard.Extensions -Version  版本号
 
 nuget:Install-Package Zooyard.Rpc.Extensions -Version  版本号
 
-nuget:Install-Package Zooyard.Rpc.GrpcImpl.Extensions -Version  版本号
+nuget:Install-Package Zooyard.GrpcImpl.Extensions -Version  版本号
 
-nuget:Install-Package Zooyard.Rpc.ThriftImpl.Extensions -Version  版本号
+nuget:Install-Package Zooyard.ThriftImpl.Extensions -Version  版本号
 
 nuget:Install-Package Zooyard.Rpc.AkkaImpl.Extensions -Version  版本号
 
-nuget:Install-Package Zooyard.Rpc.HttpImpl.Extensions -Version  版本号
+nuget:Install-Package Zooyard.HttpImpl.Extensions -Version  版本号
 
 nuget:Install-Package Zooyard.Rpc.NettyImpl.Extensions -Version  版本号
 

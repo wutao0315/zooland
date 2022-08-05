@@ -3,10 +3,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Zooyard;
 //using Zooyard.Extensions;
 //using Zooyard.Rpc.AkkaImpl.Extensions;
-//using Zooyard.Rpc.GrpcImpl.Extensions;
-//using Zooyard.Rpc.HttpImpl.Extensions;
+//using Zooyard.GrpcImpl.Extensions;
+//using Zooyard.HttpImpl.Extensions;
 //using Zooyard.Rpc.NettyImpl.Extensions;
-//using Zooyard.Rpc.ThriftImpl.Extensions;
+//using Zooyard.ThriftImpl.Extensions;
 //using Zooyard.Rpc.WcfImpl.Extensions;
 
 namespace RpcConsumerCore;
@@ -33,7 +33,7 @@ class Program
         IServiceCollection services = new ServiceCollection();
         //services.Configure<AkkaOption>(config.GetSection("akka"));
         services.Configure<GrpcOption>(config.GetSection("grpc"));
-        services.Configure<NettyOption>(config.GetSection("netty"));
+        //services.Configure<NettyOption>(config.GetSection("netty"));
         services.Configure<ThriftOption>(config.GetSection("thrift"));
         //services.Configure<WcfOption>(config.GetSection("wcf"));
         services.Configure<ZooyardOption>(config.GetSection("zooyard"));
@@ -41,7 +41,7 @@ class Program
         //services.AddAkkaClient();
         services.AddGrpcImpl();
         services.AddHttpImpl();
-        services.AddNettyImpl();
+        //services.AddNettyImpl();
 
         services.AddThriftImpl();
         //services.AddWcfClient();

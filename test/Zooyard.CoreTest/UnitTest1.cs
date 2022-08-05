@@ -26,7 +26,7 @@ namespace ZooyardTest
             IServiceCollection services = new ServiceCollection();
             //services.Configure<AkkaOption>(config.GetSection("akka"));
             services.Configure<GrpcOption>(config.GetSection("grpc"));
-            services.Configure<NettyOption>(config.GetSection("netty"));
+            //services.Configure<NettyOption>(config.GetSection("netty"));
             //services.Configure<ThriftOption>(config.GetSection("thrift"));
             //services.Configure<WcfOption>(config.GetSection("wcf"));
             services.Configure<ZooyardOption>(config.GetSection("zooyard"));
@@ -36,7 +36,7 @@ namespace ZooyardTest
             services.AddHttpImpl();
 
 
-            services.AddNettyImpl();
+            //services.AddNettyImpl();
 
             //services.AddThriftClient();
             //services.AddWcfClient();

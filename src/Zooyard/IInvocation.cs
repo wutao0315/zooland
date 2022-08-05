@@ -12,6 +12,9 @@ public interface IInvocation
     Type[] ArgumentTypes { get; }
     string AppPoint();
     string PointVersion();
+    string getAttachment(string key, string defaultValue=default!) {
+        return "";
+    }
 }
 
 public class RpcInvocation : IInvocation
