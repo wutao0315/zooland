@@ -14,20 +14,20 @@ namespace Zooyard.Rpc.Route.File
 
         private IStateRouterFactory<T> routerFactory;
 
-        public void setRouterFactory(IStateRouterFactory<T> routerFactory)
+        public void SetRouterFactory(IStateRouterFactory<T> routerFactory)
         {
             this.routerFactory = routerFactory;
         }
 
-        public IStateRouter<T> getRouter(Type interfaceClass, URL url)
+        public IStateRouter<T> GetRouter(Type interfaceClass, URL url)
         {
             try
             {
                 // Transform File URL into Script Route URL, and Load
                 // file:///d:/path/to/route.js?router=script ==> script:///d:/path/to/route.js?type=js&rule=<file-content>
-                String protocol = url.GetParameter(Constants.ROUTER_KEY, ScriptStateRouterFactory<T>.NAME); // Replace original protocol (maybe 'file') with 'script'
-                String type = null; // Use file suffix to config script type, e.g., js, groovy ...
-                String path = url.Path;
+                string protocol = url.GetParameter(Constants.ROUTER_KEY, ScriptStateRouterFactory<T>.NAME); // Replace original protocol (maybe 'file') with 'script'
+                string? type = null; // Use file suffix to config script type, e.g., js, groovy ...
+                string? path = url.Path;
                 if (path != null)
                 {
                     int i = path.LastIndexOf('.');
@@ -47,7 +47,7 @@ namespace Zooyard.Rpc.Route.File
                         .AddParameter(Constants.RUNTIME_KEY, runtime)
                         .AddParameterAndEncoded(Constants.RULE_KEY, rule);
 
-                return routerFactory.getRouter(interfaceClass, script);
+                return routerFactory.GetRouter(interfaceClass, script);
             }
             catch (IOException e)
             {

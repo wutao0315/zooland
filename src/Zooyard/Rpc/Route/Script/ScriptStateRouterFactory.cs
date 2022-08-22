@@ -11,7 +11,7 @@ public class ScriptStateRouterFactory<T>: IStateRouterFactory<T>
 {
     public const string NAME = "script";
 
-    public IStateRouter<T> getRouter(Type interfaceClass, URL url)
+    public IStateRouter<T> GetRouter(Type interfaceClass, URL url)
     {
         return new ScriptStateRouter<T>(url);
     }

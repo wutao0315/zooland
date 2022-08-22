@@ -1,4 +1,8 @@
-﻿using Zooyard.Logging;
+﻿using Microsoft.ClearScript;
+using Microsoft.ClearScript.V8;
+using System.Collections.Concurrent;
+using System.Data;
+using Zooyard.Logging;
 using Zooyard.Rpc.Route.State;
 using Zooyard.Utils;
 
@@ -10,13 +14,13 @@ public class ScriptStateRouter<T> : AbstractStateRouter<T>
     private const int SCRIPT_ROUTER_DEFAULT_PRIORITY = 0;
     private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ScriptStateRouter<>));
 
-    //private static readonly Dictionary<String, ScriptEngine> ENGINES = new ConcurrentDictionary<>();
+    private static readonly ConcurrentDictionary<string, ScriptEngine> ENGINES = new ();
 
-    //private readonly ScriptEngine engine;
+    private readonly ScriptEngine _engine;
 
-    private readonly string rule;
+    private readonly string _rule;
 
-    //private CompiledScript function;
+    private readonly dynamic _function;
 
     //private AccessControlContext accessControlContext;
     //{
@@ -33,18 +37,20 @@ public class ScriptStateRouter<T> : AbstractStateRouter<T>
     {
         this.Url = url;
 
-        //engine = getEngine(url);
-        //rule = getRule(url);
-        //try
-        //{
-        //    Compilable compilable = (Compilable)engine;
-        //    function = compilable.compile(rule);
-        //}
-        //catch //(ScriptException e)
-        //{
-        //    //Logger().LogError("route error, rule has been ignored. rule: " + rule +
-        //    //    ", url: " + RpcContext.getServiceContext().getUrl(), e);
-        //}
+        _engine = GetEngine(url);
+        _rule = GetRule(url);
+        try
+        {
+            _engine.Execute(_rule);
+            _function =_engine.Script;
+            //Compilable compilable = (Compilable)_engine;
+            //function = compilable.compile(rule);
+        }
+        catch //(ScriptException e)
+        {
+            //Logger().LogError("route error, rule has been ignored. rule: " + _rule +
+            //    ", url: " + RpcContext.GetServiceContext().Url, e);
+        }
     }
 
     /// <summary>
@@ -53,7 +59,7 @@ public class ScriptStateRouter<T> : AbstractStateRouter<T>
     /// <param name="url"></param>
     /// <returns></returns>
     /// <exception cref="IllegalStateException"></exception>
-    private String getRule(URL url)
+    private string GetRule(URL url)
     {
         string vRule = url.GetParameterAndDecoded(Constants.RULE_KEY);
         if (string.IsNullOrWhiteSpace(vRule))
@@ -63,75 +69,96 @@ public class ScriptStateRouter<T> : AbstractStateRouter<T>
         return vRule;
     }
 
-    ///// <summary>
-    ///// create ScriptEngine instance by type from url parameters, then cache it
-    ///// </summary>
-    ///// <param name="url"></param>
-    ///// <returns></returns>
-    ///// <exception cref="IllegalStateException"></exception>
-    //private ScriptEngine getEngine(URL url)
-    //{
-    //    string type = url.GetParameter(Constants.TYPE_KEY, Constants.DEFAULT_SCRIPT_TYPE_KEY);
+    /// <summary>
+    /// create ScriptEngine instance by type from url parameters, then cache it
+    /// </summary>
+    /// <param name="url"></param>
+    /// <returns></returns>
+    private ScriptEngine GetEngine(URL url)
+    {
+        string type = url.GetParameter(Constants.TYPE_KEY, Constants.DEFAULT_SCRIPT_TYPE_KEY);
 
-    //    return ENGINES.computeIfAbsent(type, t => {
-    //        ScriptEngine scriptEngine = new ScriptEngineManager().getEngineByName(type);
-    //        if (scriptEngine == null)
-    //        {
-    //            throw new Exception("unsupported route engine type: " + type);
-    //        }
-    //        return scriptEngine;
-    //    });
-    //}
+        var result = ENGINES.GetOrAdd(type, (t) => {
+
+            // 这边定义一个变量engine  生成一个v8引擎  用来执行js脚本
+            ScriptEngine scriptEngine = new V8ScriptEngine(type, V8ScriptEngineFlags.EnableDebugging | V8ScriptEngineFlags.AwaitDebuggerAndPauseOnStart, 9222);
+            // 里面的参数9222为调试端口， V8ScriptEngineFlags.EnableDebugging 是否启用调试模式
+            // V8ScriptEngineFlags.AwaitDebuggerAndPauseOnStart  异步停止或开始等待调试
+            // type  调试引擎模式
+            scriptEngine.DocumentSettings.AccessFlags = Microsoft.ClearScript.DocumentAccessFlags.EnableFileLoading;
+            scriptEngine.DefaultAccess = Microsoft.ClearScript.ScriptAccess.Full; // 这两行是为了允许加载js文件
+
+            return scriptEngine;
+        });
+
+        return result;
+
+        //return ENGINES.computeIfAbsent(type, t =>
+        //{
+        //    ScriptEngine scriptEngine = new ScriptEngineManager().getEngineByName(type);
+        //    if (scriptEngine == null)
+        //    {
+        //        throw new Exception("unsupported route engine type: " + type);
+        //    }
+        //    return scriptEngine;
+        //});
+    }
 
     protected override BitList<IInvoker> DoRoute(BitList<IInvoker> invokers, URL url, IInvocation invocation, bool needToPrintMessage, Holder<RouterSnapshotNode<T>> nodeHolder, Holder<String> messageHolder)
     {
-        //if (engine == null || function == null)
-        //{
-        //    if (needToPrintMessage)
-        //    {
-        //        messageHolder.Value = "Directly Return. Reason: engine or function is null";
-        //    }
-        //    return invokers;
-        //}
+        if (_engine == null || _function == null)
+        {
+            if (needToPrintMessage)
+            {
+                messageHolder.Value = "Directly Return. Reason: engine or function is null";
+            }
+            return invokers;
+        }
+
+        //_engine.Invoke();
+
         //Bindings bindings = createBindings(invokers, invocation);
         //return getRoutedInvokers(invokers, AccessController.doPrivileged((PrivilegedAction<Object>)()-> {
         //    try
         //    {
-        //        return function.eval(bindings);
+        //        return _function.eval(bindings);
         //    }
-        //    catch (ScriptException e)
+        //    catch(Exception e) //(ScriptException e)
         //    {
-        //        logger.error("route error, rule has been ignored. rule: " + rule + ", method:" +
-        //            invocation.getMethodName() + ", url: " + RpcContext.getContext().getUrl(), e);
+        //        Logger().LogError(e, "route error, rule has been ignored. rule: " + _rule + ", method:" +
+        //            invocation.MethodInfo.Name + ", url: " + RpcContext.GetContext().Url);
         //        return invokers;
         //    }
         //}, accessControlContext));
         return null;
     }
 
-    /// <summary>
-    /// get routed invokers from result of script rule evaluation
-    /// </summary>
-    /// <param name="invokers"></param>
-    /// <param name="obj"></param>
-    /// <returns></returns>
-    protected BitList<IInvoker> getRoutedInvokers(BitList<IInvoker> invokers, object obj)
-    {
-        BitList<IInvoker> result = invokers;//.clone();
-                                            //    if (obj is IInvoker[]) {
-                                            //    result.retainAll(Arrays.asList((IInvoker[])obj));
-                                            //} else if (obj is object[]) {
-                                            //    result.retainAll(Arrays.stream((Object[])obj).map(item-> (Invoker<T>) item).collect(Collectors.toList()));
-                                            //} else
-                                            //{
-                                            //    result.retainAll((List<Invoker<T>>)obj);
-                                            //}
-        return result;
-    }
+    ///// <summary>
+    ///// get routed invokers from result of script rule evaluation
+    ///// </summary>
+    ///// <param name="invokers"></param>
+    ///// <param name="obj"></param>
+    ///// <returns></returns>
+    //protected BitList<IInvoker> getRoutedInvokers(BitList<IInvoker> invokers, object obj)
+    //{
+    //    BitList<IInvoker> result = invokers;//.clone();
+    //                                        //    if (obj is IInvoker[]) {
+    //                                        //    result.retainAll(Arrays.asList((IInvoker[])obj));
+    //                                        //} else if (obj is object[]) {
+    //                                        //    result.retainAll(Arrays.stream((Object[])obj).map(item-> (Invoker<T>) item).collect(Collectors.toList()));
+    //                                        //} else
+    //                                        //{
+    //                                        //    result.retainAll((List<Invoker<T>>)obj);
+    //                                        //}
+    //    return result;
+    //}
 
-    ///**
-    // * create bindings for script engine
-    // */
+    ///// <summary>
+    ///// create bindings for script engine
+    ///// </summary>
+    ///// <param name="invokers"></param>
+    ///// <param name="invocation"></param>
+    ///// <returns></returns>
     //private Bindings createBindings(List<IInvoker> invokers, IInvocation invocation)
     //{
     //    Bindings bindings = engine.createBindings();
@@ -142,8 +169,8 @@ public class ScriptStateRouter<T> : AbstractStateRouter<T>
     //    return bindings;
     //}
 
-    public bool Runtime => this.Url.GetParameter(Constants.RUNTIME_KEY, false);
+    public override bool Runtime => this.Url.GetParameter(Constants.RUNTIME_KEY, false);
 
-    public bool Force => this.Url.GetParameter(Constants.FORCE_KEY, false);
+    public override bool Force => this.Url.GetParameter(Constants.FORCE_KEY, false);
 
 }

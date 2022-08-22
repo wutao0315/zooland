@@ -363,10 +363,10 @@ public sealed class URL
 
     public string GetParameterAndDecoded(string key)
     {
-        return GetParameterAndDecoded(key, null);
+        return GetParameterAndDecoded(key, "");
     }
 
-    public string GetParameterAndDecoded(string key, string? defaultValue)
+    public string GetParameterAndDecoded(string key, string defaultValue)
     {
         return Decode(GetParameter(key, defaultValue));
     }
@@ -389,7 +389,7 @@ public sealed class URL
         return null;
     }
 
-    public string? GetParameter(string key, string? defaultValue)
+    public string GetParameter(string key, string defaultValue)
     {
         string? value = GetParameter(key);
         if (string.IsNullOrWhiteSpace(value))
@@ -399,7 +399,7 @@ public sealed class URL
         return value;
     }
 
-    public string[]? GetParameter(string key, string[]? defaultValue)
+    public string[] GetParameter(string key, string[] defaultValue)
     {
         string? value = GetParameter(key);
         if (string.IsNullOrWhiteSpace(value))
@@ -425,10 +425,8 @@ public sealed class URL
     {
         get
         {
-            if (urls == null) // 允许并发重复创建
-            {
-                urls = new ConcurrentDictionary<string, URL>();
-            }
+            // 允许并发重复创建
+            urls ??= new ConcurrentDictionary<string, URL>();
             return urls;
         }
     }

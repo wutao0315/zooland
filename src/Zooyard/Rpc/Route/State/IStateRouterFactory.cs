@@ -11,5 +11,5 @@ public interface IStateRouterFactory<T>
     /// <param name="interfaceClass"></param>
     /// <param name="url"></param>
     /// <returns></returns>
-    IStateRouter<T> getRouter(Type interfaceClass, URL url);
+    IStateRouter<T> GetRouter(Type interfaceClass, URL url);
 }

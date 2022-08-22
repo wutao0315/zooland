@@ -8,7 +8,7 @@ public class AppStateRouterFactory<T> : IStateRouterFactory<T>
 
     private volatile IStateRouter<T> router;
 
-    public IStateRouter<T> getRouter(Type interfaceClass, URL url)
+    public IStateRouter<T> GetRouter(Type interfaceClass, URL url)
     {
         if (router != null)
         {

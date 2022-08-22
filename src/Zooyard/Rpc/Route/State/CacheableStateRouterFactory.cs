@@ -11,7 +11,7 @@ namespace Zooyard.Rpc.Route.State
     {
         private readonly ConcurrentDictionary<string, IStateRouter<T>> routerMap = new ();
 
-        public IStateRouter<T> getRouter(Type interfaceClass, URL url)
+        public IStateRouter<T> GetRouter(Type interfaceClass, URL url)
         {
             return routerMap.GetOrAdd(url.ServiceKey, createRouter(interfaceClass, url));
             //return routerMap.computeIfAbsent(url.getServiceKey(), k->createRouter(interfaceClass, url));
