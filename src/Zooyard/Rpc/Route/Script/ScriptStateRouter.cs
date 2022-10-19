@@ -1,7 +1,5 @@
-﻿using Microsoft.ClearScript;
-using Microsoft.ClearScript.V8;
+﻿using Microsoft.ClearScript.V8;
 using System.Collections.Concurrent;
-using System.Data;
 using Zooyard.Logging;
 using Zooyard.Rpc.Route.State;
 using Zooyard.Utils;
@@ -14,13 +12,13 @@ public class ScriptStateRouter<T> : AbstractStateRouter<T>
     private const int SCRIPT_ROUTER_DEFAULT_PRIORITY = 0;
     private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ScriptStateRouter<>));
 
-    private static readonly ConcurrentDictionary<string, ScriptEngine> ENGINES = new ();
+    private static readonly ConcurrentDictionary<string, V8ScriptEngine> ENGINES = new ();
 
-    private readonly ScriptEngine _engine;
+    private readonly V8ScriptEngine _engine;
 
     private readonly string _rule;
 
-    private readonly dynamic _function;
+    private readonly V8Script _function;
 
     //private AccessControlContext accessControlContext;
     //{
@@ -41,8 +39,7 @@ public class ScriptStateRouter<T> : AbstractStateRouter<T>
         _rule = GetRule(url);
         try
         {
-            _engine.Execute(_rule);
-            _function =_engine.Script;
+            _function = _engine.Compile(_rule);
             //Compilable compilable = (Compilable)_engine;
             //function = compilable.compile(rule);
         }
@@ -74,14 +71,14 @@ public class ScriptStateRouter<T> : AbstractStateRouter<T>
     /// </summary>
     /// <param name="url"></param>
     /// <returns></returns>
-    private ScriptEngine GetEngine(URL url)
+    private V8ScriptEngine GetEngine(URL url)
     {
         string type = url.GetParameter(Constants.TYPE_KEY, Constants.DEFAULT_SCRIPT_TYPE_KEY);
 
         var result = ENGINES.GetOrAdd(type, (t) => {
 
             // 这边定义一个变量engine  生成一个v8引擎  用来执行js脚本
-            ScriptEngine scriptEngine = new V8ScriptEngine(type, V8ScriptEngineFlags.EnableDebugging | V8ScriptEngineFlags.AwaitDebuggerAndPauseOnStart, 9222);
+            V8ScriptEngine scriptEngine = new V8ScriptEngine(type, V8ScriptEngineFlags.EnableDebugging | V8ScriptEngineFlags.AwaitDebuggerAndPauseOnStart, 9222);
             // 里面的参数9222为调试端口， V8ScriptEngineFlags.EnableDebugging 是否启用调试模式
             // V8ScriptEngineFlags.AwaitDebuggerAndPauseOnStart  异步停止或开始等待调试
             // type  调试引擎模式
@@ -114,6 +111,9 @@ public class ScriptStateRouter<T> : AbstractStateRouter<T>
             }
             return invokers;
         }
+
+
+        _engine.Execute(_function);
 
         //_engine.Invoke();
 

@@ -32,8 +32,8 @@ namespace ZooyardTest
             services.Configure<ZooyardOption>(config.GetSection("zooyard"));
             services.AddLogging();
             //services.AddAkkaClient();
-            services.AddGrpcImpl();
-            services.AddHttpImpl();
+            services.AddZooyardGrpc();
+            services.AddZooyardHttp();
 
 
             //services.AddNettyImpl();

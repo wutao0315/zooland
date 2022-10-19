@@ -19,11 +19,9 @@ class Program
 
         var builder = new ConfigurationBuilder()
             .SetBasePath(basePath)
-            //.AddJsonFile("zooyard.akka.json", false, true)
             .AddJsonFile("zooyard.grpc.json", false, true)
             .AddJsonFile("zooyard.netty.json", false, true)
             .AddJsonFile("zooyard.thrift.json", false, true)
-            //.AddJsonFile("zooyard.wcf.json", false, true)
             .AddJsonFile("zooyard.json", false, true)
             .AddJsonFile("nlog.json", false, true);
 
@@ -31,41 +29,31 @@ class Program
         //ZooyardLogManager.UseConsoleLogging(Zooyard.Logging.LogLevel.Debug);
 
         IServiceCollection services = new ServiceCollection();
-        //services.Configure<AkkaOption>(config.GetSection("akka"));
         services.Configure<GrpcOption>(config.GetSection("grpc"));
         //services.Configure<NettyOption>(config.GetSection("netty"));
         services.Configure<ThriftOption>(config.GetSection("thrift"));
-        //services.Configure<WcfOption>(config.GetSection("wcf"));
         services.Configure<ZooyardOption>(config.GetSection("zooyard"));
         services.AddLogging();
-        //services.AddAkkaClient();
-        services.AddGrpcImpl();
-        services.AddHttpImpl();
+        services.AddZooyardGrpc();
+        services.AddZooyardHttp();
         //services.AddNettyImpl();
 
-        services.AddThriftImpl();
-        //services.AddWcfClient();
+        services.AddZooyardThrift();
         services.AddZoolandClient(config);
 
         using var bsp = services.BuildServiceProvider();
-        var helloServiceThrift = bsp.GetService<RpcContractThrift.IHelloService>();
-        var helloServiceGrpc = bsp.GetService<RpcContractGrpc.IHelloService>();
-        //var helloServiceWcf = bsp.GetService<RpcContractWcf.IHelloService>();
-        var helloServiceHttp = bsp.GetService<RpcContractHttp.IHelloService>();
-        //var helloServiceAkka = bsp.GetService<RpcContractAkka.IHelloService>();
-        var helloServiceNetty = bsp.GetService<RpcContractNetty.IHelloService>();
-        //RpcContractNetty.IHelloService helloServiceNetty = null;
+        var helloServiceThrift = bsp.GetRequiredService<RpcContractThrift.IHelloService>();
+        var helloServiceGrpc = bsp.GetRequiredService<RpcContractGrpc.IHelloService>();
+        var helloServiceHttp = bsp.GetRequiredService<RpcContractHttp.IHelloService>();
+        var helloServiceNetty = bsp.GetRequiredService<RpcContractNetty.IHelloService>();
 
         while (true)
         {
             //Console.WriteLine("请选择:wcf | grpc | thrift | http | akka | netty | all");
             Console.WriteLine("请选择:grpc | thrift | http | netty | all");
-            var mode = Console.ReadLine().ToLower();
+            var mode = Console.ReadLine()?.ToLower()??"all";
             switch (mode)
             {
-                //case "wcf":
-                //    CallWhile((helloword) => { WcfHello(helloServiceWcf, helloword); });
-                //    break;
                 case "grpc":
                     CallWhile(async (helloword) => { await GrpcHello(helloServiceGrpc, helloword); });
                     break;
@@ -75,9 +63,6 @@ class Program
                 case "http":
                     CallWhile(async (helloword) => { await HttpHello(helloServiceHttp, helloword); });
                     break;
-                //case "akka":
-                //    CallWhile((helloword) => { AkkaHello(helloServiceAkka, helloword); });
-                //    break;
                 case "netty":
                     CallWhile(async (helloword) => { await NettyHello(helloServiceNetty, helloword); });
                     break;
@@ -113,9 +98,9 @@ class Program
                             {
                                 await ThriftHello(helloServiceThrift);
                             }
-                            catch (Exception ex)
+                            catch (Exception)
                             {
-                                throw ex;
+                                throw;
                             }
 
                         });

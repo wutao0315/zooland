@@ -1,5 +1,8 @@
-﻿namespace RpcContractNetty;
+﻿using Zooyard.DataAnnotations;
 
+namespace RpcContractNetty;
+
+[NettyProxy("NettyHelloService")]
 public interface IHelloService
 {
     Task<string> CallNameVoidAsync();

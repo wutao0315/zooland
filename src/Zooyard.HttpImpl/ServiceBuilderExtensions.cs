@@ -10,7 +10,7 @@ public class HttpServerOption
 
 public static class ServiceBuilderExtensions
 {
-    public static void AddHttpImpl(this IServiceCollection services)
+    public static void AddZooyardHttp(this IServiceCollection services)
     {
         services.AddSingleton<HttpClientPool>();
     }

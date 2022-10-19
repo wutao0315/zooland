@@ -39,7 +39,7 @@
 
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.ClearScript.V8" Version="7.3.1" />
+    <PackageReference Include="Microsoft.ClearScript.V8" Version="7.3.4" />
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="6.0.0" />
     <PackageReference Include="System.Reflection.Emit" Version="4.7.0" />
     <PackageReference Include="System.Runtime.Caching" Version="6.0.0" />
@@ -56,12 +56,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-      <_Parameter1>Zooyard.Rpc</_Parameter1>
-    </AssemblyAttribute>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-      <_Parameter1>Zooyard.Extensions</_Parameter1>
-    </AssemblyAttribute>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
       <_Parameter1>Zooyard.Extensions</_Parameter1>
     </AssemblyAttribute>

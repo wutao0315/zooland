@@ -1,5 +1,8 @@
-﻿namespace RpcContractGrpc;
+﻿using Zooyard.DataAnnotations;
 
+namespace RpcContractGrpc;
+
+[GrpcProxy("GrpcHelloService", typeof(HelloService.HelloServiceClient))]
 public interface IHelloService
 {
     Task<NameResult> CallNameVoidAsync(Void voidData);

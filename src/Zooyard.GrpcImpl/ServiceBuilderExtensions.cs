@@ -7,14 +7,14 @@ namespace Microsoft.Extensions.Configuration;
 
 public class GrpcOption
 {
-    public IDictionary<string, string> Credentials { get; set; }
-    public IDictionary<string, string> Clients { get; set; }
+    public Dictionary<string, string> Credentials { get; set; } = new();
+    public Dictionary<string, string> Clients { get; set; } = new();
 }
 
 public class GrpcServerOption
 {
-    public IDictionary<string,string> Services { get; set; }
-    public IEnumerable<ServerPortOption> ServerPorts { get; set; }
+    public Dictionary<string,string> Services { get; set; } = new();
+    public List<ServerPortOption> ServerPorts { get; set; } = new();
 }
 public class ServerPortOption
 {
@@ -25,7 +25,7 @@ public class ServerPortOption
 
 public static class ServiceBuilderExtensions
 {
-    public static void AddGrpcImpl(this IServiceCollection services)
+    public static void AddZooyardGrpc(this IServiceCollection services)
     {
         services.AddSingleton((serviceProvder) => 
         {
@@ -40,7 +40,7 @@ public static class ServiceBuilderExtensions
             {
                 foreach (var item in option.Credentials)
                 {
-                    var credential = serviceProvder.GetRequiredService(Type.GetType(item.Value)) as ChannelCredentials;
+                    var credential = (ChannelCredentials)serviceProvder.GetRequiredService(Type.GetType(item.Value)!);
                     credentials.Add(item.Key, credential);
                 }
             }
@@ -48,7 +48,7 @@ public static class ServiceBuilderExtensions
             var grpcClientTypes = new Dictionary<string, Type>();
             foreach (var item in option.Clients)
             {
-                grpcClientTypes.Add(item.Key, Type.GetType(item.Value));
+                grpcClientTypes.Add(item.Key, Type.GetType(item.Value)!);
             }
 
             var interceptors = serviceProvder.GetServices<ClientInterceptor>();

@@ -1,5 +1,8 @@
-﻿namespace RpcContractThrift;
+﻿using Zooyard.DataAnnotations;
 
+namespace RpcContractThrift;
+
+[ThriftProxy("ThriftHelloService", typeof(HelloService.Client))]
 public interface IHelloService
 {
     Task<string> CallNameVoidAsync();

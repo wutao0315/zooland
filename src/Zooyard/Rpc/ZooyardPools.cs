@@ -129,6 +129,7 @@ public class ZooyardPools : IZooyardPools
         _clients = clients;
         _clients.OnChange(OnChanged);
     }
+
     private void OnChanged(ZooyardOption value, string name)
     {
         Logger().LogInformation($"{name} has changed:{ value}");

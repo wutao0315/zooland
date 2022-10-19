@@ -15,10 +15,14 @@ public class LruCache : ICache
         _store = new LruCacheData<object,object>(itemExpiryTimeout, max, memoryRefreshInterval);
     }
 
-    public T Get<T>(object key)
+    public T? Get<T>(object key)
     {
         var result = _store.GetObject(key);
-        return (T)result;
+        if (result is T val) 
+        {
+            return val;
+        }
+        return default;
     }
 
     public void Put(object key, object value)

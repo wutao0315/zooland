@@ -2,9 +2,9 @@
 
 public abstract class AbstractRouter : IRoute
 {
-    public AbstractRouter()
-    {
-    }
+    //public AbstractRouter()
+    //{
+    //}
     //private GovernanceRuleRepository ruleRepository;
     public AbstractRouter(URL url)
     {

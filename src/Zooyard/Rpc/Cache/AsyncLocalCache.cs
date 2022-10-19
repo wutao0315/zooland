@@ -23,7 +23,7 @@ public class AsyncLocalCache : ICache
             _store.Value = new Dictionary<object, object>();
         }
 
-        if (_store.Value.TryGetValue(key, out object value) && value != null)
+        if (_store.Value.TryGetValue(key, out object? value) && value != null)
         {
             return (T)value;
         }

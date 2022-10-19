@@ -15,7 +15,7 @@ public class RpcContext
 {
     public const string ASYNC_KEY = "async";
     public const string RETURN_KEY = "return";
-    private static readonly AsyncLocal<RpcContext> LOCAL = new AsyncLocal<RpcContext>();
+    private static readonly AsyncLocal<RpcContext> LOCAL = new();
     
     //private Task future;
 
@@ -25,9 +25,9 @@ public class RpcContext
 
     private DnsEndPoint? remoteAddress;
 
-    private readonly Dictionary<string, string> attachments = new ();
+    private readonly ConcurrentDictionary<string, string> attachments = new ();
 
-    private readonly Dictionary<string, object> values = new ();
+    private readonly ConcurrentDictionary<string, object> values = new ();
 
     protected internal RpcContext()
     {
@@ -335,7 +335,7 @@ public class RpcContext
     {
         if (value == null)
         {
-            attachments.Remove(key);
+            attachments.TryRemove(key, out _);
         }
         else
         {
@@ -351,7 +351,7 @@ public class RpcContext
     /// <returns> context </returns>
     public virtual RpcContext RemoveAttachment(string key)
     {
-        attachments.Remove(key);
+        attachments.TryRemove(key,out _);
         return this;
     }
 
@@ -406,7 +406,7 @@ public class RpcContext
     {
         if (value == null)
         {
-            values.Remove(key);
+            values.TryRemove(key, out _);
         }
         else
         {
@@ -422,7 +422,7 @@ public class RpcContext
     /// <returns> value </returns>
     public virtual RpcContext Remove(string key)
     {
-        values.Remove(key);
+        values.TryRemove(key, out _);
         return this;
     }
 
@@ -431,9 +431,10 @@ public class RpcContext
     /// </summary>
     /// <param name="key"> </param>
     /// <returns> value </returns>
-    public virtual object Get(string key)
+    public virtual object? Get(string key)
     {
-        return values[key];
+        values.TryGetValue(key, out object? val);
+        return val;
     }
 
     public virtual RpcContext SetInvokers(IList<URL>? invokers)
@@ -523,57 +524,61 @@ public class RpcContext
 }
 
 
-//public class RpcContext
-//{
-//    private ConcurrentDictionary<string, object> contextParameters;
+public class RpcContextData
+{
+    private ConcurrentDictionary<string, object>? contextParameters;
 
-//    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-//    public ConcurrentDictionary<string, object> GetContextParameters()
-//    {
-//        return contextParameters;
-//    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ConcurrentDictionary<string, object>? GetContextParameters()
+    {
+        return contextParameters;
+    }
 
-//    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-//    public void SetAttachment(string key, object value)
-//    {
-//        contextParameters.AddOrUpdate(key, value, (k, v) => value);
-//    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SetAttachment(string key, object value)
+    {
+        contextParameters?.AddOrUpdate(key, value, (k, v) => value);
+    }
 
-//    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-//    public object GetAttachment(string key)
-//    {
-//        contextParameters.TryGetValue(key, out object result);
-//        return result;
-//    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public object? GetAttachment(string key)
+    {
+        if (contextParameters == null) 
+        {
+            return default;
+        }
+        contextParameters.TryGetValue(key, out object? result);
+        return result;
+    }
 
-//    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-//    public void SetContextParameters(ConcurrentDictionary<string, object> contextParameters)
-//    {
-//        this.contextParameters = contextParameters;
-//    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SetContextParameters(ConcurrentDictionary<string, object> contextParameters)
+    {
+        this.contextParameters = contextParameters;
+    }
 
-//    private static AsyncLocal<RpcContext> rpcContextThreadLocal = new AsyncLocal<RpcContext>();
+    private static AsyncLocal<RpcContextData?> rpcContextThreadLocal = new ();
 
-//    public static RpcContext GetContext()
-//    {
-//        var context = rpcContextThreadLocal.Value;
+    public static RpcContextData? GetContext()
+    {
+        var context = rpcContextThreadLocal.Value;
 
-//        if (context == null)
-//        {
-//            context = new RpcContext();
-//            context.SetContextParameters(new ConcurrentDictionary<string, object>());
-//            rpcContextThreadLocal.Value = context;
-//        }
+        if (context == null)
+        {
+            context = new RpcContextData();
+            context.SetContextParameters(new ConcurrentDictionary<string, object>());
+            rpcContextThreadLocal.Value = context;
+        }
 
-//        return rpcContextThreadLocal.Value;
-//    }
+        return rpcContextThreadLocal.Value;
+    }
 
-//    public static void RemoveContext()
-//    {
-//        rpcContextThreadLocal.Value = null;
-//    }
+    public static void RemoveContext()
+    {
+        rpcContextThreadLocal.Value = null;
+    }
 
-//    private RpcContext()
-//    {
-//    }
-//}
+    private RpcContextData()
+    {
+    }
+}

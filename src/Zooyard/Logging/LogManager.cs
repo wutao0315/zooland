@@ -7,12 +7,12 @@ public static class LogManager
 {
     private static LogLevel _minimumLevel;
     private static readonly Action<LogLevel, string, Exception?> Noop = (level, msg, ex) => { };
-    internal static Func<string, Action<LogLevel, string, Exception?>> LogFactory { get; set; } = name => Noop;
-    internal static void SetLevel(LogLevel minimumLevel)
+    public static Func<string, Action<LogLevel, string, Exception?>> LogFactory { get; set; } = name => Noop;
+    public static void SetLevel(LogLevel minimumLevel)
     {
         _minimumLevel = minimumLevel;
     }
-    internal static void UseConsoleLogging(LogLevel minimumLevel = LogLevel.Debug)
+    public static void UseConsoleLogging(LogLevel minimumLevel = LogLevel.Debug)
     {
         SetLevel(minimumLevel);
         LogFactory = name => (level, message, exception) =>
@@ -21,7 +21,7 @@ public static class LogManager
 
             Console.WriteLine(exception == null
                 ? $"{DateTime.Now:HH:mm:ss} [{level}] {message}"
-                : $"{DateTime.Now:HH:mm:ss} [{level}] {message} - {exception.GetDetailMessage()}");
+                : $"{DateTime.Now:HH:mm:ss} [{level}] {message} - {exception.StackTrace}");
         };
     }
     internal static Action<LogLevel, string, Exception?> CreateLogger(Type type)

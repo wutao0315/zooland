@@ -1,36 +1,35 @@
 ﻿using System.ComponentModel;
+using Zooyard.DataAnnotations;
 
 namespace RpcContractHttp;
 
-[Description("/hello")]
+[HttpProxy("HttpHelloService", BaseUrl ="/hello")]
 public interface IHelloService
 {
-    [Description("CallNameVoid|get&_")]
+    [GetMapping("CallNameVoid")]
     Task<string> CallNameVoidAsync();
-    [Description("CallName|get&_")]
+    [GetMapping("CallName")]
     Task CallNameAsync(string name);
 
-    [Description("CallVoid|get&_")]
+    [GetMapping("CallVoid")]
     Task CallVoidAsync();
-    [Description("Hello|get&_")]
+    [GetMapping("Hello/{name}")]
     Task<string> HelloAsync(string name);
-    [Description("SayHello|get&_")]
+    [GetMapping("SayHello")]
     Task<HelloResult> SayHelloAsync(string name);
-    [Description("ShowHello|post&application/json")]
+    [PostMapping("ShowHello",Consumes = "application/json")]
     Task<string> ShowHelloAsync(HelloResult name);
 
-
-
-    [Description("CallNameVoid|get&_")]
+    [GetMapping("CallNameVoid")]
     string CallNameVoid();
-    [Description("CallName|get&_")]
+    [GetMapping("CallName")]
     void CallName(string name);
-    [Description("CallVoid|get&_")]
+    [GetMapping("CallVoid")]
     void CallVoid();
-    [Description("Hello|get&_")]
+    [GetMapping("Hello")]
     string Hello(string name);
-    [Description("SayHello|get&_")]
+    [GetMapping("SayHello/{name}")]
     HelloResult SayHello(string name);
-    [Description("ShowHello|post&application/json")]
+    [PostMapping("ShowHello", Consumes = "application/json")]
     string ShowHello(HelloResult name);
 }

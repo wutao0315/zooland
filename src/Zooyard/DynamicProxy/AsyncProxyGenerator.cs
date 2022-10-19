@@ -32,25 +32,24 @@ public class AsyncProxyGenerator : IDisposable
     }
     /// <summary> 创建代理 </summary>
     /// <param name="interfaceType"></param>
-    /// <param name="proxyProvider"></param>
-    /// <param name="key"></param>
     /// <returns></returns>
     public object CreateProxy(Type interfaceType)
     {
         var proxiedType = GetProxyType(typeof(ProxyExecutor), interfaceType);
-        return Activator.CreateInstance(proxiedType, new ProxyHandler(this));
+        return Activator.CreateInstance(proxiedType, new ProxyHandler(this))!;
     }
 
     /// <summary> 创建代理 </summary>
     /// <param name="interfaceType"></param>
     /// <param name="baseType"></param>
-    /// <param name="proxyProvider"></param>
-    /// <param name="key"></param>
+    /// <param name="zooyardPools"></param>
+    /// <param name="app"></param>
+    /// <param name="version"></param>
     /// <returns></returns>
     public object CreateProxy(Type interfaceType, Type baseType, IZooyardPools zooyardPools, string app, string version)
     {
         var proxiedType = GetProxyType(baseType, interfaceType);
-        return Activator.CreateInstance(proxiedType, new ProxyHandler(this));
+        return Activator.CreateInstance(proxiedType, new ProxyHandler(this))!;
     }
 
     /// <summary> 获取代理类型 </summary>
@@ -117,12 +116,12 @@ public class AsyncProxyGenerator : IDisposable
         return new ProxyMethodResolverContext(packed, method);
     }
 
-    public object Invoke(object[] args)
+    public object? Invoke(object[] args)
     {
         var returnValue = InvokeAsync<object>(args).GetAwaiter().GetResult();
         return returnValue;
     }
-    public T Invoke<T>(object[] args)
+    public T? Invoke<T>(object[] args)
     {
         var returnValue = InvokeAsync<T>(args).GetAwaiter().GetResult();
         return returnValue;
@@ -133,12 +132,12 @@ public class AsyncProxyGenerator : IDisposable
         await InvokeAsync<object>(args);
     }
 
-    public async Task<T> InvokeAsync<T>(object[] args)
+    public async Task<T?> InvokeAsync<T>(object[] args)
     {
         var watch = Stopwatch.StartNew();
         var context = Resolve(args);
 
-        var returnValue = default(T);
+        T? returnValue = default;
         try
         {
             //Debug.Assert(_dispatchProxyInvokeAsyncTMethod != null);
@@ -152,7 +151,7 @@ public class AsyncProxyGenerator : IDisposable
         }
         catch (TargetInvocationException tie)
         {
-            ExceptionDispatchInfo.Capture(tie.InnerException).Throw();
+            ExceptionDispatchInfo.Capture(tie).Throw();
         }
         finally
         {

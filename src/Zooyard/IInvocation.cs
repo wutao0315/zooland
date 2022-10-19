@@ -8,8 +8,8 @@ public interface IInvocation
     string Version { get; }
     Type TargetType { get; }
     MethodInfo MethodInfo { get; }
-    object[] Arguments { get; }
-    Type[] ArgumentTypes { get; }
+    object[]? Arguments { get; }
+    Type[]? ArgumentTypes { get; }
     string AppPoint();
     string PointVersion();
     string getAttachment(string key, string defaultValue=default!) {
@@ -19,7 +19,7 @@ public interface IInvocation
 
 public class RpcInvocation : IInvocation
 {
-    public RpcInvocation(string app, string version, Type targetType, MethodInfo methodInfo, object[] arguments)
+    public RpcInvocation(string app, string version, Type targetType, MethodInfo methodInfo, object[]? arguments)
     {
         App = app;
         Version = version;
@@ -32,8 +32,8 @@ public class RpcInvocation : IInvocation
     public string Version { get;}
     public Type TargetType { get; }
     public MethodInfo MethodInfo { get; }
-    public object[] Arguments { get; }
-    public Type[] ArgumentTypes { get; }
+    public object[]? Arguments { get; }
+    public Type[]? ArgumentTypes { get; }
     public string AppPoint()
     {
         var result = string.IsNullOrWhiteSpace(App) ? "" : $"{App}.";

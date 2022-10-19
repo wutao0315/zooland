@@ -13,7 +13,7 @@ public class ThriftOption
 
 public static class ServiceBuilderExtensions
 {
-    public static void AddThriftImpl(this IServiceCollection services)
+    public static void AddZooyardThrift(this IServiceCollection services)
     {
         services.AddSingleton((serviceProvder) => 
         {
@@ -22,7 +22,7 @@ public static class ServiceBuilderExtensions
             var thriftClientTypes = new Dictionary<string, Type>();
             foreach (var item in option.Clients)
             {
-                thriftClientTypes.Add(item.Key, Type.GetType(item.Value));
+                thriftClientTypes.Add(item.Key, Type.GetType(item.Value)!);
             }
 
             var pool = new ThriftClientPool(clientTypes: thriftClientTypes

@@ -58,6 +58,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThriftContract", "samples\T
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.DotNettyImpl", "src\Zooyard.DotNettyImpl\Zooyard.DotNettyImpl.csproj", "{A55DA158-7776-4554-9007-7A89311642B5}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.DataAnnotations", "src\Zooyard.DataAnnotations\Zooyard.DataAnnotations.csproj", "{13ABA527-0D40-4C1D-ACA1-6B492FE1C4DB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -124,6 +126,10 @@ Global
 		{A55DA158-7776-4554-9007-7A89311642B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A55DA158-7776-4554-9007-7A89311642B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A55DA158-7776-4554-9007-7A89311642B5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{13ABA527-0D40-4C1D-ACA1-6B492FE1C4DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{13ABA527-0D40-4C1D-ACA1-6B492FE1C4DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{13ABA527-0D40-4C1D-ACA1-6B492FE1C4DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{13ABA527-0D40-4C1D-ACA1-6B492FE1C4DB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -144,6 +150,7 @@ Global
 		{2FA300C8-EDD0-4993-9BEE-1496ADDD8234} = {1E4B38C1-0CF2-4E5C-AC4A-30B48CB3F7BA}
 		{D3D678D7-C1F8-4082-92AF-5D016A574435} = {1E4B38C1-0CF2-4E5C-AC4A-30B48CB3F7BA}
 		{A55DA158-7776-4554-9007-7A89311642B5} = {50C4867C-8931-45F0-B773-463C7B953969}
+		{13ABA527-0D40-4C1D-ACA1-6B492FE1C4DB} = {50C4867C-8931-45F0-B773-463C7B953969}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4FBB3247-7E5E-40FB-85B2-67B3E3D57FCB}
