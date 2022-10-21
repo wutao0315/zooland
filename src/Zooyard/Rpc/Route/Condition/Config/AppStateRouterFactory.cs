@@ -6,7 +6,7 @@ public class AppStateRouterFactory<T> : IStateRouterFactory<T>
 {
     public const string NAME = "app";
 
-    private volatile IStateRouter<T> router;
+    private volatile IStateRouter<T>? router;
 
     public IStateRouter<T> GetRouter(Type interfaceClass, URL url)
     {

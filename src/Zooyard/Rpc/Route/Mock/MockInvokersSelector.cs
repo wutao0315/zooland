@@ -1,4 +1,5 @@
-﻿using Zooyard.Rpc.Route.State;
+﻿using System.Collections.Generic;
+using Zooyard.Rpc.Route.State;
 using Zooyard.Utils;
 
 namespace Zooyard.Rpc.Route.Mock;
@@ -7,14 +8,14 @@ public class MockInvokersSelector<T> : AbstractStateRouter<T>
 {
     public const string NAME = "MOCK_ROUTER";
 
-    private volatile BitList<IInvoker> normalInvokers = new();
-    private volatile BitList<IInvoker> mockedInvokers = new();
+    private volatile IList<URL> normalInvokers = new List<URL>();
+    private volatile IList<URL> mockedInvokers = new List<URL>();
 
     public MockInvokersSelector(URL url) : base(url)
     {
     }
 
-    protected override BitList<IInvoker> DoRoute(BitList<IInvoker> invokers, URL url, IInvocation invocation,
+    protected override IList<URL> DoRoute(IList<URL> invokers, URL url, IInvocation invocation,
                                           bool needToPrintMessage, Holder<RouterSnapshotNode<T>> nodeHolder,
                                           Holder<String> messageHolder)
     {
@@ -33,19 +34,22 @@ public class MockInvokersSelector<T> : AbstractStateRouter<T>
             {
                 messageHolder.Value = "ObjectAttachments from invocation are null. Return normal Invokers.";
             }
-            return invokers.and(normalInvokers);
+            return invokers.Intersect(normalInvokers).ToList();
+            //交集
+            //return invokers.and(normalInvokers);
         }
         else
         {
             //string value = (string)invocation.GetObjectAttachmentWithoutConvert(Constants.INVOCATION_NEED_MOCK);
-            string value = (string)invocation.getAttachment(Constants.INVOCATION_NEED_MOCK);
+            string value = (string)invocation.GetAttachment(Constants.INVOCATION_NEED_MOCK);
             if (value == null)
             {
                 if (needToPrintMessage)
                 {
                     messageHolder.Value = "invocation.need.mock not set. Return normal Invokers.";
                 }
-                return invokers.and(normalInvokers);
+                return invokers.Intersect(normalInvokers).ToList();
+                //return invokers.and(normalInvokers);
             }
             else if (bool.TrueString.Equals(value, StringComparison.OrdinalIgnoreCase))
             {
@@ -53,7 +57,8 @@ public class MockInvokersSelector<T> : AbstractStateRouter<T>
                 {
                     messageHolder.Value = "invocation.need.mock is true. Return mocked Invokers.";
                 }
-                return invokers.and(mockedInvokers);
+                return invokers.Intersect(mockedInvokers).ToList();
+                //return invokers.and(mockedInvokers);
             }
         }
         if (needToPrintMessage)
@@ -63,30 +68,30 @@ public class MockInvokersSelector<T> : AbstractStateRouter<T>
         return invokers;
     }
 
-    public void Notify(BitList<IInvoker> invokers)
-    {
-        cacheMockedInvokers(invokers);
-        cacheNormalInvokers(invokers);
-    }
+    //public void Notify(BitList<IInvoker> invokers)
+    //{
+    //    cacheMockedInvokers(invokers);
+    //    cacheNormalInvokers(invokers);
+    //}
 
-    private void cacheMockedInvokers(BitList<IInvoker> invokers)
+    private void cacheMockedInvokers(IList<URL> invokers)
     {
-        BitList<IInvoker> clonedInvokers = invokers;//.clone();
+        IList<URL> clonedInvokers = invokers;//.clone();
         //clonedInvokers.removeIf((invoker) => !invoker.getUrl().getProtocol().equals(Constants.MOCK_PROTOCOL));
         mockedInvokers = clonedInvokers;
     }
 
     //@SuppressWarnings("rawtypes")
-    private void cacheNormalInvokers(BitList<IInvoker> invokers)
+    private void cacheNormalInvokers(IList<URL> invokers)
     {
-        BitList<IInvoker> clonedInvokers = invokers;//.clone();
+        IList<URL> clonedInvokers = invokers;//.clone();
         //clonedInvokers.removeIf((invoker)->invoker.getUrl().getProtocol().Equals(Constants.MOCK_PROTOCOL));
         normalInvokers = clonedInvokers;
     }
 
     protected string doBuildSnapshot()
     {
-        Dictionary<String, BitList<IInvoker>> grouping = new();
+        Dictionary<string, IList<URL>> grouping = new();
         grouping.Add("Mocked", mockedInvokers);
         grouping.Add("Normal", normalInvokers);
         return new RouterGroupingState(this.GetType().Name, mockedInvokers.Count + normalInvokers.Count, grouping).ToString();

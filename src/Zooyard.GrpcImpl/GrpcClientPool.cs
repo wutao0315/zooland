@@ -10,7 +10,6 @@ public class GrpcClientPool : AbstractClientPool
 {
     private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(GrpcClient));
 
-    public const string PROXY_KEY = "proxy";
     public const string TIMEOUT_KEY = "grpc_timeout";
     public const int DEFAULT_TIMEOUT = 5000;
     public const string MAXLENGTH_KEY = "grpc_maxlength";
@@ -20,16 +19,13 @@ public class GrpcClientPool : AbstractClientPool
 
 
     private readonly IDictionary<string, ChannelCredentials> _credentials;
-    private readonly IDictionary<string, Type> _grpcClientTypes;
     private readonly IEnumerable<ClientInterceptor> _interceptors;
 
 
     public GrpcClientPool(IDictionary<string, ChannelCredentials> credentials,
-        IDictionary<string, Type> grpcClientTypes,
         IEnumerable<ClientInterceptor> interceptors)
     {
         _credentials = credentials;
-        _grpcClientTypes = grpcClientTypes;
         _interceptors = interceptors;
     }
 
@@ -39,8 +35,7 @@ public class GrpcClientPool : AbstractClientPool
         //获得transport参数,用于反射实例化
         var timeout = url.GetParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
 
-        var proxyKey = url.GetParameter(PROXY_KEY);
-        if (string.IsNullOrEmpty(proxyKey) || !_grpcClientTypes.ContainsKey(proxyKey))
+        if (base.ProxyType == null) 
         {
             throw new Zooyard.Rpc.RpcException("not find the proxy grpc client");
         }
@@ -73,12 +68,11 @@ public class GrpcClientPool : AbstractClientPool
         {
             var callInvoker = channel.Intercept(_interceptors.ToArray());
             //实例化GrpcClient
-            client = Activator.CreateInstance(_grpcClientTypes[proxyKey], callInvoker);
+            client = Activator.CreateInstance(ProxyType, callInvoker);
         }
         else {
             //实例化GrpcClient
-            client = Activator.CreateInstance(_grpcClientTypes[proxyKey], channel);
-            //return new GrpcClient(channel, client, url, credentials, timeout);
+            client = Activator.CreateInstance(ProxyType, channel);
         }
         if (client == null) 
         {

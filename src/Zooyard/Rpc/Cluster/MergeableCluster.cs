@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using Microsoft.Extensions.Options;
+using System;
+using System.Diagnostics;
 using System.Reflection;
 using Zooyard.Diagnositcs;
 using Zooyard.Logging;
@@ -15,14 +17,31 @@ public class MergeableCluster : AbstractCluster
 
     private readonly IDictionary<Type, IMerger> _defaultMergers;
     private readonly IDictionary<string, IMerger> _mySelfMergers;
-    public MergeableCluster(IDictionary<Type, IMerger> defaultMergers,
-        IDictionary<string, IMerger> mySelfMergers)
+    public MergeableCluster(
+        IOptionsMonitor<ZooyardOption> zooyard,
+        //IEnumerable<ICache> caches,
+        IEnumerable<IMerger> defaultMergers) //: base(caches)
     {
-        _defaultMergers = defaultMergers;
-        _mySelfMergers = mySelfMergers;
+        _defaultMergers = new Dictionary<Type, IMerger>();
+        foreach (var merge in defaultMergers)
+        {
+            _defaultMergers.Add(merge.Type, merge);
+        }
+
+        _mySelfMergers = new Dictionary<string, IMerger>();
+        foreach (var item in zooyard.CurrentValue.Mergers)
+        {
+            var merger = _defaultMergers.Values.FirstOrDefault(w=>w.Name == item);
+            if (merger == null) 
+            {
+                continue;
+            }
+            _mySelfMergers.Add(item, merger);
+        }
+       
     }
 
-    private string getGroupDescFromServiceKey(string key)
+    private string GetGroupDescFromServiceKey(string key)
     {
         int index = key.IndexOf("/");
         if (index > 0)
@@ -31,11 +50,13 @@ public class MergeableCluster : AbstractCluster
         }
         return key;
     }
-    public override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
+    protected override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
     {
         var goodUrls = new List<URL>();
         var badUrls = new List<BadUrl>();
-        var invokers = urls;
+
+        //路由
+        var invokers = base.Route(urls);
 
         var merger = address.GetMethodParameter(invocation.MethodInfo.Name, MERGER_KEY);
         // If a method doesn't have a merger, only invoke one Group
@@ -45,7 +66,7 @@ public class MergeableCluster : AbstractCluster
             {
                 try
                 {
-                    var client =await pool.GetClient(invoker);
+                    var client = await pool.GetClient(invoker);
                     try
                     {
                         var refer = await client.Refer();
@@ -58,7 +79,7 @@ public class MergeableCluster : AbstractCluster
                     }
                     catch (Exception ex)
                     {
-                        _source.WriteConsumerError(invoker,invocation ,ex);
+                        _source.WriteConsumerError(invoker, invocation, ex);
                         await pool.DestoryClient(client).ConfigureAwait(false);
                         throw;
                     }
@@ -123,7 +144,7 @@ public class MergeableCluster : AbstractCluster
                 var r = await entry.Value;
                 if (r.HasException)
                 {
-                    Logger().LogError(r.Exception, $"Invoke {entry.Key} {getGroupDescFromServiceKey(entry.Key)}  failed: {r.Exception?.Message}");
+                    Logger().LogError(r.Exception, $"Invoke {entry.Key} {GetGroupDescFromServiceKey(entry.Key)}  failed: {r.Exception?.Message}");
                     return new ClusterResult<T>(new RpcResult<T>(r.Exception), goodUrls, badUrls, r.Exception, true);
                 }
                 else
@@ -151,14 +172,14 @@ public class MergeableCluster : AbstractCluster
             if (merger.StartsWith("."))
             {
                 merger = merger.Substring(1);
-                MethodInfo method;
+                MethodInfo? method;
                 try
                 {
-                    method = returnType.GetMethod(merger, new[] { returnType });
+                    method = returnType!.GetMethod(merger, new[] { returnType });
                 }
                 catch (Exception e)
                 {
-                    var ex = new RpcException($"Can not merge result because missing method [{merger}] in class [{returnType.Name}]{e.Message}", e);
+                    var ex = new RpcException($"Can not merge result because missing method [{merger}] in class [{returnType!.Name}]{e.Message}", e);
                     return new ClusterResult<T>(new RpcResult<T>(ex), goodUrls, badUrls, ex, true);
                 }
 
@@ -177,18 +198,18 @@ public class MergeableCluster : AbstractCluster
                 try
                 {
                     if (method.ReturnType != typeof(void)
-                            && method.ReturnType.IsAssignableFrom(resultValue.GetType()))
+                            && method.ReturnType.IsAssignableFrom(resultValue!.GetType()))
                     {
                         foreach (var r in resultList)
                         {
-                            resultValue = method.Invoke(resultValue, new object[] { r.Value });
+                            resultValue = method.Invoke(resultValue, new object[] { r.Value! });
                         }
                     }
                     else
                     {
                         foreach (var r in resultList)
                         {
-                            method.Invoke(resultValue, new object[] { r.Value });
+                            method.Invoke(resultValue, new object[] { r.Value! });
                         }
                     }
                 }
@@ -203,7 +224,7 @@ public class MergeableCluster : AbstractCluster
                 IMerger resultMerger;
                 if (merger.ToLower() == "true" || merger.ToLower() == "default")
                 {
-                    resultMerger = MergerFactory.GetMerger(returnType, _defaultMergers);
+                    resultMerger = MergerFactory.GetMerger(returnType!, _defaultMergers);
                 }
                 else
                 {
@@ -215,9 +236,9 @@ public class MergeableCluster : AbstractCluster
                     var rets = new List<object>(resultList.Count);
                     foreach (var r in resultList)
                     {
-                        rets.Add(r.Value);
+                        rets.Add(r.Value!);
                     }
-                    resultValue = resultMerger.GetType().GetMethod("Merge", new Type[] { returnType }).Invoke(resultMerger, new[] { rets });
+                    resultValue = resultMerger.GetType().GetMethod("Merge", new Type[] { returnType! })!.Invoke(resultMerger, new[] { rets });
                 }
                 else
                 {
@@ -225,12 +246,12 @@ public class MergeableCluster : AbstractCluster
                     return new ClusterResult<T>(new RpcResult<T>(ex), goodUrls, badUrls, ex, true);
                 }
             }
-            return new ClusterResult<T>(new RpcResult<T>((T)resultValue.ChangeType(typeof(T)), watch.ElapsedMilliseconds), goodUrls, badUrls, null, false);
+            return new ClusterResult<T>(new RpcResult<T>((T)resultValue.ChangeType(typeof(T))!, watch.ElapsedMilliseconds), goodUrls, badUrls, null, false);
         }
         catch (Exception ex)
         {
             Debug.Print(ex.StackTrace);
-            throw ex;
+            throw;
         }
         finally 
         {

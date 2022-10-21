@@ -1,4 +1,6 @@
-﻿using Zooyard.Diagnositcs;
+﻿using System;
+using System.Security.Policy;
+using Zooyard.Diagnositcs;
 using Zooyard.Logging;
 using Zooyard.Utils;
 
@@ -7,12 +9,12 @@ namespace Zooyard.Rpc.Cluster;
 public class FailfastCluster : AbstractCluster
 {
     private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(FailfastCluster));
-
+    //public FailfastCluster(IEnumerable<ICache> caches) : base(caches) { }
     public override string Name => NAME;
     public const string NAME = "failfast";
 
 
-    public override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
+    protected override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
     {
         var goodUrls = new List<URL>();
         var badUrls = new List<BadUrl>();
@@ -21,11 +23,15 @@ public class FailfastCluster : AbstractCluster
         var isThrow = false;
 
         CheckInvokers(urls, invocation, address);
-        var invoker = base.Select(loadbalance, invocation, urls, null);
+
+        //路由
+        var invokers = base.Route(urls);
+
+        var invoker = base.Select(loadbalance, invocation, invokers, null);
 
         try
         {
-            var client =await pool.GetClient(invoker);
+            var client = await pool.GetClient(invoker);
             try
             {
                 var refer = await client.Refer();
@@ -38,7 +44,7 @@ public class FailfastCluster : AbstractCluster
             catch (Exception ex)
             {
                 await pool.DestoryClient(client);
-                _source.WriteConsumerError(invoker,invocation ,ex);
+                _source.WriteConsumerError(invoker, invocation, ex);
                 throw;
             }
         }

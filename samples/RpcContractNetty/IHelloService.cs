@@ -2,7 +2,7 @@
 
 namespace RpcContractNetty;
 
-[NettyProxy("NettyHelloService")]
+[ZooyardNetty("NettyHelloService", Url = "socket://127.0.0.1:12121?cluster=failfast")]
 public interface IHelloService
 {
     Task<string> CallNameVoidAsync();

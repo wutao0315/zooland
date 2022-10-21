@@ -26,6 +26,7 @@
     <ProjectReference Include="..\..\samples\RpcContractGrpc\RpcContractGrpc.csproj" />
     <ProjectReference Include="..\..\samples\RpcContractHttp\RpcContractHttp.csproj" />
     <ProjectReference Include="..\..\samples\RpcContractNetty\RpcContractNetty.csproj" />
+    <ProjectReference Include="..\..\samples\RpcContractThrift\RpcContractThrift.csproj" />
     <ProjectReference Include="..\..\src\Zooyard\Zooyard.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.GrpcImpl\Zooyard.GrpcImpl.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.HttpImpl\Zooyard.HttpImpl.csproj" />

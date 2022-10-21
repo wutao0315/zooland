@@ -24,43 +24,64 @@
     }
   },
   "zooyard": {
-    "RegisterUrl": "zooyard://localhost",
-    "Clients": {
-      "thrift_helloservice": {
-        "Version": "1.0",
-        "ServiceType": "RpcContractThrift.IHelloService, RpcContractThrift",
-        "PoolType": "Zooyard.ThriftImpl.ThriftClientPool, Zooyard.ThriftImpl",
-        "Urls": [
-          "Binary://127.0.0.1:9090?proxy=HelloService"
-        ]
-      },
-      "grpc_helloservice": {
-        "Version": "1.0",
-        "ServiceType": "RpcContractGrpc.IHelloService, RpcContractGrpc",
-        "PoolType": "Zooyard.GrpcImpl.GrpcClientPool, Zooyard.GrpcImpl",
-        "Urls": [
-          "grpc://127.0.0.1:10008?proxy=HelloService"
-        ]
-      },
-      "http_helloservice": {
-        "Version": "1.0",
-        "ServiceType": "RpcContractHttp.IHelloService, RpcContractHttp",
-        "PoolType": "Zooyard.HttpImpl.HttpClientPool, Zooyard.HttpImpl",
-        "Urls": [
-          "http://localhost:10010?proxy=HelloService"
-        ]
-      },
-      "netty_helloservice": {
-        "Version": "1.0",
-        "ServiceType": "RpcContractNetty.IHelloService, RpcContractNetty",
-        "PoolType": "Zooyard.Rpc.NettyImpl.NettyClientPool, Zooyard.Rpc.NettyImpl",
-        "Urls": [
-          "socket://127.0.0.1:12121?cluster=failfast"
+    "Address": "zooyard://localhost",
+    "Meta": {
+      "Key": "val"
+    },
+    "Services": {
+      "MemberService": {
+        "Meta": {
+          "Ephemeral": "True"
+        },
+        "Instances": [
+          {
+            "Ip": "192.168.2.48",
+            "Port": "9105",
+            "Meta": {
+              "Weight": "1",
+              "Enabled": "true"
+            }
+          }
         ]
       }
     },
     "Mergers": {
       "hash": "Zooyard.Rpc.Merger.ArrayMerger, Zooyard.Rpc"
     }
+    //"Clients": {
+    //  "thrift_helloservice": {
+    //    "Version": "1.0",
+    //    "ServiceType": "RpcContractThrift.IHelloService, RpcContractThrift",
+    //    "PoolType": "Zooyard.ThriftImpl.ThriftClientPool, Zooyard.ThriftImpl",
+    //    "Urls": [
+    //      "Binary://127.0.0.1:9090?proxy=HelloService"
+    //    ]
+    //  },
+    //  "grpc_helloservice": {
+    //    "Version": "1.0",
+    //    "ServiceType": "RpcContractGrpc.IHelloService, RpcContractGrpc",
+    //    "PoolType": "Zooyard.GrpcImpl.GrpcClientPool, Zooyard.GrpcImpl",
+    //    "Urls": [
+    //      "grpc://127.0.0.1:10008?proxy=HelloService"
+    //    ]
+    //  },
+    //  "http_helloservice": {
+    //    "Version": "1.0",
+    //    "ServiceType": "RpcContractHttp.IHelloService, RpcContractHttp",
+    //    "PoolType": "Zooyard.HttpImpl.HttpClientPool, Zooyard.HttpImpl",
+    //    "Urls": [
+    //      "http://localhost:10010?proxy=HelloService"
+    //    ]
+    //  },
+    //  "netty_helloservice": {
+    //    "Version": "1.0",
+    //    "ServiceType": "RpcContractNetty.IHelloService, RpcContractNetty",
+    //    "PoolType": "Zooyard.Rpc.NettyImpl.NettyClientPool, Zooyard.Rpc.NettyImpl",
+    //    "Urls": [
+    //      "socket://127.0.0.1:12121?cluster=failfast"
+    //    ]
+    //  }
+    //},
+
   }
 }

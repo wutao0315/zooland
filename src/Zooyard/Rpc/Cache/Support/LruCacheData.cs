@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using Microsoft.Extensions.Options;
+using System.Diagnostics;
 
 namespace Zooyard.Rpc.Cache.Support;
 
@@ -8,18 +9,23 @@ public class LruCacheData<TKey, TValue>
 {
     private readonly Dictionary<TKey, NodeInfo> cachedNodesDictionary = new ();
     private readonly LinkedList<NodeInfo> lruLinkedList = new ();
-
-    private readonly int maxSize;
-    private readonly TimeSpan timeOut;
-
-    private static readonly ReaderWriterLockSlim rwl = new ();
-
+    private static readonly ReaderWriterLockSlim rwl = new();
     private readonly Timer _cleanupTimer;
 
-    public LruCacheData(int itemExpiryTimeout, int maxCacheSize = 100, int memoryRefreshInterval = 1000)
+    private readonly IOptionsMonitor<ZooyardOption> _zooyard;
+    private int _maxSize => _zooyard.CurrentValue.Meta.GetValue("cache.size", 1000);
+    private TimeSpan _timeOut=> TimeSpan.FromMilliseconds(_zooyard.CurrentValue.Meta.GetValue("cache.timeout", 60000));
+
+    
+
+ 
+    public LruCacheData(IOptionsMonitor<ZooyardOption> zooyard)
     {
-        this.timeOut = TimeSpan.FromMilliseconds(itemExpiryTimeout) ;
-        this.maxSize = maxCacheSize;
+        //int itemExpiryTimeout, int maxCacheSize = 100, int memoryRefreshInterval = 1000
+        _zooyard = zooyard;
+        
+        var memoryRefreshInterval = zooyard.CurrentValue.Meta.GetValue("cache.interval", 1000);
+
         var autoEvent = new AutoResetEvent(false);
         TimerCallback tcb = this.RemoveExpiredElements;
         _cleanupTimer = new Timer(tcb, autoEvent, 0, memoryRefreshInterval);
@@ -29,7 +35,7 @@ public class LruCacheData<TKey, TValue>
     {
         if (key == null)
         {
-            throw new ArgumentNullException("key");
+            throw new ArgumentNullException(nameof(key));
         }
 
         Trace.WriteLine(string.Format("Adding a cache object with key: {0}", key.ToString()));
@@ -41,7 +47,7 @@ public class LruCacheData<TKey, TValue>
                 this.Delete(node);
             }
 
-            this.ShrinkToSize(this.maxSize - 1);
+            this.ShrinkToSize(this._maxSize - 1);
             this.CreateNodeandAddtoList(key, cacheObject);
         }
         finally
@@ -140,7 +146,7 @@ public class LruCacheData<TKey, TValue>
     {
         var node = new NodeInfo(userKey, 
             cacheObject, 
-            (this.timeOut > DateTime.MaxValue.Subtract(DateTime.UtcNow) ? DateTime.MaxValue : DateTime.UtcNow.Add(this.timeOut))
+            (this._timeOut > DateTime.MaxValue.Subtract(DateTime.UtcNow) ? DateTime.MaxValue : DateTime.UtcNow.Add(this._timeOut))
             );
 
         node.LLNode = this.lruLinkedList.AddFirst(node);

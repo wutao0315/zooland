@@ -3,10 +3,8 @@
 public class AsyncLocalCache : ICache
 {
     public const string NAME = "Asynclocal";
+    public string Name => NAME;
     private readonly AsyncLocal<IDictionary<object, object>> _store = new ();
-    public AsyncLocalCache(URL url)
-    {
-    }
     public void Put(object key, object value)
     {
         if (_store.Value == null) 

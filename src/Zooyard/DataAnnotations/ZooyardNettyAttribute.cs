@@ -1,19 +1,17 @@
 ﻿namespace Zooyard.DataAnnotations;
 
-
 /// <summary>
 /// 反向代理GRPC客户端
 /// </summary>
 [AttributeUsage(AttributeTargets.Interface)]
-public class NettyProxyAttribute : Attribute
+public class ZooyardNettyAttribute : ZooyardAttribute
 {
-    public string ServiceName { get; init; }
-    public string Version { get; init; } = "1.0";
+    public const string TYPENAME = "Zooyard.Rpc.NettyImpl.NettyClientPool, Zooyard.Rpc.NettyImpl";
     /// <summary>
     /// 构造函数
     /// </summary>
     /// <param name="serviceName"></param>
-    public NettyProxyAttribute(string serviceName)
+    public ZooyardNettyAttribute(string serviceName) : base(TYPENAME, serviceName)
     {
         ServiceName = serviceName;
     }

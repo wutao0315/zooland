@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Zooyard.DataAnnotations\Zooyard.DataAnnotations.csproj" />
+    <ProjectReference Include="..\..\src\Zooyard\Zooyard.csproj" />
   </ItemGroup>
 
 </Project>

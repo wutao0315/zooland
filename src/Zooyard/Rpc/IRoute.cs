@@ -5,34 +5,34 @@ namespace Zooyard.Rpc;
 public interface IRoute : IComparable<IRoute>
 {
     //int DEFAULT_PRIORITY { get; } = int.MaxValue;
-    /// <summary>
-    /// Get the router url.
-    /// </summary>
-    /// <returns></returns>
-    URL Url { get; }
+    ///// <summary>
+    ///// Get the router url.
+    ///// </summary>
+    ///// <returns></returns>
+    //URL Url { get; }
     /// <summary>
     /// This method can return the state of whether routerChain needed to continue route. **
     /// Filter invokers with current routing rule and only return the invokers that comply with the rule.
     /// </summary>
     /// <param name="invokers"></param>
-    /// <param name="url"></param>
+    /// <param name="address"></param>
     /// <param name="invocation"></param>
     /// <param name="needToPrintMessage"></param>
     /// <returns></returns>
-    RouterResult<IInvoker> Route(List<IInvoker> invokers, URL url, IInvocation invocation, bool needToPrintMessage) 
+    RouterResult<URL> Route(List<URL> invokers, URL address, IInvocation invocation, bool needToPrintMessage) 
     {
-        return new RouterResult<IInvoker>(null);
+        return new RouterResult<URL>(null);
     }
 
-    /// <summary>
-    /// Notify the router the invoker list. Invoker list may change from time to time. This method gives the router a
-    /// chance to prepare before {@link Router#route(List, URL, Invocation)} gets called.
-    /// </summary>
-    /// <param name="invokers">invoker list</param>
-    void Notify(List<IInvoker> invokers)
-    {
+    ///// <summary>
+    ///// Notify the router the invoker list. Invoker list may change from time to time. This method gives the router a
+    ///// chance to prepare before {@link Router#route(List, URL, Invocation)} gets called.
+    ///// </summary>
+    ///// <param name="invokers">invoker list</param>
+    //void Notify(List<IInvoker> invokers)
+    //{
 
-    }
+    //}
     /// <summary>
     /// To decide whether this router need to execute every time an RPC comes or should only execute when addresses or
     /// rule change.

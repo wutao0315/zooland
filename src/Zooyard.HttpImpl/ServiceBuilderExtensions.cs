@@ -12,6 +12,6 @@ public static class ServiceBuilderExtensions
 {
     public static void AddZooyardHttp(this IServiceCollection services)
     {
-        services.AddSingleton<HttpClientPool>();
+        services.AddTransient<HttpClientPool>();
     }
 }

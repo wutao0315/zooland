@@ -33,6 +33,6 @@ internal class PackedArgs
     internal object? ReturnValue
     {
         /*get { return args[ReturnValuePosition]; }*/
-        set => _args[ReturnValuePosition] = value;
+        set => _args[ReturnValuePosition] = value!;
     }
 }

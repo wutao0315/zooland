@@ -3,6 +3,8 @@
 public class DictionaryMerger<key, value> : IMerger<IDictionary<key, value>>
     where key:notnull
 {
+    public string Name => "dictionary";
+    public Type Type => typeof(IDictionary<,>);
     public IDictionary<key, value>? Merge(params IDictionary<key, value>[] items)
     {
         if (items.Length == 0)

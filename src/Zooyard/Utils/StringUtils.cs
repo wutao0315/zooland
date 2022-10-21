@@ -72,7 +72,7 @@ public sealed class StringUtils
                     buf.Append(arg);
                 }
             }
-            buf.Append(",");
+            buf.Append(',');
         }
 
         if (buf.Length > 0)

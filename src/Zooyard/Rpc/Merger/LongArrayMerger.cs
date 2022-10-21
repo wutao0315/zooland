@@ -2,6 +2,8 @@
 
 public class LongArrayMerger : IMerger<long[]>
 {
+    public string Name => "long";
+    public Type Type => typeof(long);
     public long[] Merge(params long[][] items)
     {
         int total = 0;

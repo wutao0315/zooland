@@ -2,6 +2,8 @@
 
 public class FloatArrayMerger : IMerger<float[]>
 {
+    public string Name => "float";
+    public Type Type => typeof(float);
     public float[] Merge(params float[][] items)
     {
         int total = 0;

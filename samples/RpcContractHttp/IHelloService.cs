@@ -3,7 +3,7 @@ using Zooyard.DataAnnotations;
 
 namespace RpcContractHttp;
 
-[HttpProxy("HttpHelloService", BaseUrl ="/hello")]
+[ZooyardHttp("HttpHelloService", Url = "http://127.0.0.1:10010/hello")]
 public interface IHelloService
 {
     [GetMapping("CallNameVoid")]

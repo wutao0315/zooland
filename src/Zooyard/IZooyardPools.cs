@@ -3,12 +3,6 @@
 public interface IZooyardPools
 {
     /// <summary>
-    /// 地址
-    /// 如果是registry开头，就代表是注册中心的地址
-    /// 否则就是直连地址
-    /// </summary>
-    URL Address { get; }
-    /// <summary>
     /// clear all cache
     /// </summary>
     void CacheClear();
@@ -18,5 +12,5 @@ public interface IZooyardPools
     /// <param name="invocation"></param>
     /// <returns></returns>
 
-    Task<IResult<T>> Invoke<T>(IInvocation invocation);
+    Task<IResult<T>?> Invoke<T>(IInvocation invocation);
 }

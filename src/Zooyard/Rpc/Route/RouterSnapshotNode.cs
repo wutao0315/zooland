@@ -10,21 +10,21 @@ public class RouterSnapshotNode<T>
     private int nodeOutputSize;
     private int chainOutputSize;
     private String routerMessage;
-    private readonly IList<IInvoker> inputInvokers;
-    private IList<IInvoker> nodeOutputInvokers;
-    private IList<IInvoker> chainOutputInvokers;
+    private readonly IList<URL> inputInvokers;
+    private IList<URL> nodeOutputInvokers;
+    private IList<URL> chainOutputInvokers;
     private readonly ICollection<RouterSnapshotNode<T>> nextNode = new LinkedList<RouterSnapshotNode<T>>();
     private RouterSnapshotNode<T> parentNode;
 
-    public RouterSnapshotNode(string name, IList<IInvoker> inputInvokers)
+    public RouterSnapshotNode(string name, IList<URL> inputInvokers)
     {
         this.name = name;
         this.beforeSize = inputInvokers.Count();
-        if (inputInvokers is BitList<IInvoker> inputList) {
+        if (inputInvokers is IList<URL> inputList) {
             this.inputInvokers = inputList;
         } else
         {
-            this.inputInvokers = new List<IInvoker>(5);
+            this.inputInvokers = new List<URL>(5);
             for (int i = 0; i < Math.Min(5, beforeSize); i++)
             {
                 this.inputInvokers.Add(inputInvokers[i]);
@@ -58,18 +58,18 @@ public class RouterSnapshotNode<T>
         this.routerMessage = routerMessage;
     }
 
-    public IList<IInvoker> getNodeOutputInvokers()
+    public IList<URL> getNodeOutputInvokers()
     {
         return nodeOutputInvokers;
     }
 
-    public void setNodeOutputInvokers(IList<IInvoker> outputInvokers)
+    public void setNodeOutputInvokers(IList<URL> outputInvokers)
     {
         this.nodeOutputInvokers = outputInvokers;
         this.nodeOutputSize = outputInvokers == null ? 0 : outputInvokers.Count;
     }
 
-    public void setChainOutputInvokers(IList<IInvoker> outputInvokers)
+    public void setChainOutputInvokers(IList<URL> outputInvokers)
     {
         this.chainOutputInvokers = outputInvokers;
         this.chainOutputSize = outputInvokers == null ? 0 : outputInvokers.Count;
@@ -80,7 +80,7 @@ public class RouterSnapshotNode<T>
         return chainOutputSize;
     }
 
-    public IList<IInvoker> getChainOutputInvokers()
+    public IList<URL> getChainOutputInvokers()
     {
         return chainOutputInvokers;
     }

@@ -16,27 +16,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Config\**" />
-    <Compile Remove="Loader\**" />
-    <EmbeddedResource Remove="Config\**" />
-    <EmbeddedResource Remove="Loader\**" />
-    <None Remove="Config\**" />
-    <None Remove="Loader\**" />
+    <Compile Remove="Rpc\Route\State\BitList.cs" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="DynamicProxy\IInterceptor.cs" />
-    <Compile Remove="DynamicProxy\InterfaceProxy.cs" />
-    <Compile Remove="Initialize.cs" />
-    <Compile Remove="IRegistry.cs" />
-    <Compile Remove="IRegistryHealthChecks.cs" />
-    <Compile Remove="IRegistryHost.cs" />
-    <Compile Remove="IRegistryKeyValues.cs" />
-    <Compile Remove="IRegistryService.cs" />
-    <Compile Remove="IRegistryServiceFind.cs" />
-    <Compile Remove="IServer.cs" />
-  </ItemGroup>
-
 
   <ItemGroup>
     <PackageReference Include="Microsoft.ClearScript.V8" Version="7.3.4" />
@@ -48,32 +29,26 @@
   </ItemGroup>
 
 
-  <ItemGroup>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-      <_Parameter1>$(AssemblyName).Tests</_Parameter1>
-      <!-- We use the value of AssemblyName to declare the value of the attribute -->
-    </AssemblyAttribute>
-  </ItemGroup>
-
-  <ItemGroup>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-      <_Parameter1>Zooyard.Extensions</_Parameter1>
-    </AssemblyAttribute>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-      <_Parameter1>Zooyard.GrpcImpl</_Parameter1>
-    </AssemblyAttribute>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-      <_Parameter1>Zooyard.HttpImpl</_Parameter1>
-    </AssemblyAttribute>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-      <_Parameter1>Zooyard.Rpc.NettyImpl</_Parameter1>
-    </AssemblyAttribute>
-	  <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-		  <_Parameter1>Zooyard.DotNettyImpl</_Parameter1>
-	  </AssemblyAttribute>
-	  <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-      <_Parameter1>Zooyard.ThriftImpl</_Parameter1>
-    </AssemblyAttribute>
-  </ItemGroup>
+	<ItemGroup>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+			<_Parameter1>$(AssemblyName).Tests</_Parameter1>
+			<!-- We use the value of AssemblyName to declare the value of the attribute -->
+		</AssemblyAttribute>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+			<_Parameter1>Zooyard.Extensions</_Parameter1>
+		</AssemblyAttribute>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+			<_Parameter1>Zooyard.GrpcImpl</_Parameter1>
+		</AssemblyAttribute>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+			<_Parameter1>Zooyard.HttpImpl</_Parameter1>
+		</AssemblyAttribute>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+			<_Parameter1>Zooyard.DotNettyImpl</_Parameter1>
+		</AssemblyAttribute>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+			<_Parameter1>Zooyard.ThriftImpl</_Parameter1>
+		</AssemblyAttribute>
+	</ItemGroup>
 
 </Project>

@@ -9,7 +9,7 @@ namespace Zooyard.Rpc.Route.State
 {
     public class TailStateRouter<T> : IStateRouter<T>
     {
-        private static readonly TailStateRouter<T> INSTANCE = new TailStateRouter<T>();
+        private static readonly TailStateRouter<T> INSTANCE = new ();
         private TailStateRouter()
         {
 
@@ -26,10 +26,10 @@ namespace Zooyard.Rpc.Route.State
 
         }
 
-        public URL Url => null;
+        //public URL Url => null;
 
 
-        public BitList<IInvoker> Route(BitList<IInvoker> invokers, URL url, IInvocation invocation, bool needToPrintMessage, Holder<RouterSnapshotNode<T>> nodeHolder)
+        public IList<URL> Route(IList<URL> invokers, URL address, IInvocation invocation, bool needToPrintMessage, Holder<RouterSnapshotNode<T>> nodeHolder)
         {
             return invokers;
         }
@@ -37,10 +37,10 @@ namespace Zooyard.Rpc.Route.State
 
         public bool Force => false;
 
-        public void Notify(BitList<IInvoker> invokers)
-        {
+        //public void Notify(IList<URL> invokers)
+        //{
 
-        }
+        //}
 
         public string BuildSnapshot()
         {

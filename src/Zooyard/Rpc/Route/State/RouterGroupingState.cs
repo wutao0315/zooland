@@ -6,9 +6,9 @@ public class RouterGroupingState
 {
     private readonly string routerName;
     private readonly int total;
-    private readonly Dictionary<string, BitList<IInvoker>> grouping;
+    private readonly Dictionary<string, IList<URL>> grouping;
 
-    public RouterGroupingState(String routerName, int total, Dictionary<String, BitList<IInvoker>> grouping)
+    public RouterGroupingState(String routerName, int total, Dictionary<String, IList<URL>> grouping)
     {
         this.routerName = routerName;
         this.total = total;
@@ -25,7 +25,7 @@ public class RouterGroupingState
         return total;
     }
 
-    public Dictionary<String, BitList<IInvoker>> getGrouping()
+    public Dictionary<String, IList<URL>> getGrouping()
     {
         return grouping;
     }
@@ -41,7 +41,7 @@ public class RouterGroupingState
 
         foreach (var entry in grouping)
         {
-            BitList<IInvoker> invokers = entry.Value;
+            IList<URL> invokers = entry.Value;
             stringBuilder.Append("[ ")
                 .Append(entry.Key)
                 .Append(" -> ")

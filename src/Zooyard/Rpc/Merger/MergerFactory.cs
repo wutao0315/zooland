@@ -4,7 +4,7 @@ public class MergerFactory
 {
     public static IMerger GetMerger(Type returnType, IDictionary<Type, IMerger> mergerCache)
     {
-        IMerger result = null;
+        IMerger? result = null;
         if (returnType.IsArray)
         {
             var type=returnType.GetElementType();

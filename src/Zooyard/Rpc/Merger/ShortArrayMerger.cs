@@ -2,6 +2,8 @@
 
 public class ShortArrayMerger : IMerger<short[]>
 {
+    public string Name => "short";
+    public Type Type => typeof(short);
     public short[] Merge(params short[][] items)
     {
         int total = 0;

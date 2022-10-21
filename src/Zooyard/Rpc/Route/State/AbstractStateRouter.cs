@@ -46,10 +46,10 @@ public abstract class AbstractStateRouter<T>: IStateRouter<T>
         this.nextRouter = nextRouter;
     }
 
-    public void Notify(BitList<IInvoker> invokers)
-    {
-        // default empty implement
-    }
+    //public void Notify(BitList<IInvoker> invokers)
+    //{
+    //    // default empty implement
+    //}
     
     /// <summary>
     /// Whether current router's implementation support call
@@ -61,7 +61,7 @@ public abstract class AbstractStateRouter<T>: IStateRouter<T>
     {
         return false;
     }
-    public BitList<IInvoker> Route(BitList<IInvoker> invokers, URL url, IInvocation invocation, bool needToPrintMessage, Holder<RouterSnapshotNode<T>> nodeHolder) 
+    public IList<URL> Route(IList<URL> invokers, URL address, IInvocation invocation, bool needToPrintMessage, Holder<RouterSnapshotNode<T>> nodeHolder) 
     {
         if (needToPrintMessage && (nodeHolder == null || nodeHolder.Value == null))
         {
@@ -89,21 +89,21 @@ public abstract class AbstractStateRouter<T>: IStateRouter<T>
             messageHolder = new Holder<string>();
             nodeHolder.Value = currentNode;
         }
-        BitList<IInvoker> routeResult;
+        IList<URL> routeResult;
 
         // check if router support call continue route by itself
         if (!SupportContinueRoute())
         {
-            routeResult = DoRoute(invokers, url, invocation, needToPrintMessage, nodeHolder, messageHolder);
+            routeResult = DoRoute(invokers, address, invocation, needToPrintMessage, nodeHolder, messageHolder);
             // use current node's result as next node's parameter
             if (!shouldFailFast || routeResult.Count>0)
             {
-                routeResult = continueRoute(routeResult, url, invocation, needToPrintMessage, nodeHolder);
+                routeResult = continueRoute(routeResult, address, invocation, needToPrintMessage, nodeHolder);
             }
         }
         else
         {
-            routeResult = DoRoute(invokers, url, invocation, needToPrintMessage, nodeHolder, messageHolder);
+            routeResult = DoRoute(invokers, address, invocation, needToPrintMessage, nodeHolder, messageHolder);
         }
 
         // post-build current node
@@ -126,13 +126,13 @@ public abstract class AbstractStateRouter<T>: IStateRouter<T>
     /// Filter invokers with current routing rule and only return the invokers that comply with the rule.
     /// </summary>
     /// <param name="invokers">all invokers to be routed</param>
-    /// <param name="url">consumerUrl</param>
+    /// <param name="address">consumerUrl</param>
     /// <param name="invocation">invocation</param>
     /// <param name="needToPrintMessage">should current router print message</param>
     /// <param name="nodeHolder">RouterSnapshotNode In general, router itself no need to care this param, just pass to continueRoute</param>
     /// <param name="messageHolder">message holder when router should current router print message</param>
     /// <returns></returns>
-    protected abstract BitList<IInvoker> DoRoute(BitList<IInvoker> invokers, URL url, IInvocation invocation,
+    protected abstract IList<URL> DoRoute(IList<URL> invokers, URL address, IInvocation invocation,
                                                 bool needToPrintMessage, Holder<RouterSnapshotNode<T>> nodeHolder,
                                                 Holder<string> messageHolder);
 
@@ -145,11 +145,11 @@ public abstract class AbstractStateRouter<T>: IStateRouter<T>
     /// <param name=""></param>
     /// <param name=""></param>
     /// <returns></returns>
-    protected BitList<IInvoker> continueRoute(BitList<IInvoker> invokers, URL url, IInvocation invocation,
+    protected IList<URL> continueRoute(IList<URL> invokers, URL address, IInvocation invocation,
                                                       bool needToPrintMessage, Holder<RouterSnapshotNode<T>> nodeHolder) {
         if (nextRouter != null)
         {
-            return nextRouter.Route(invokers, url, invocation, needToPrintMessage, nodeHolder);
+            return nextRouter.Route(invokers, address, invocation, needToPrintMessage, nodeHolder);
         }
         else
         {

@@ -31,7 +31,7 @@ class Program
         IServiceCollection services = new ServiceCollection();
         services.Configure<GrpcOption>(config.GetSection("grpc"));
         //services.Configure<NettyOption>(config.GetSection("netty"));
-        services.Configure<ThriftOption>(config.GetSection("thrift"));
+        //services.Configure<ThriftOption>(config.GetSection("thrift"));
         services.Configure<ZooyardOption>(config.GetSection("zooyard"));
         services.AddLogging();
         services.AddZooyardGrpc();
@@ -39,7 +39,7 @@ class Program
         //services.AddNettyImpl();
 
         services.AddZooyardThrift();
-        services.AddZoolandClient(config);
+        services.AddZoolandClient();
 
         using var bsp = services.BuildServiceProvider();
         var helloServiceThrift = bsp.GetRequiredService<RpcContractThrift.IHelloService>();

@@ -11,7 +11,11 @@ public abstract class AbstractClientPool: IClientPool, IAsyncDisposable
     /// </summary>
     protected readonly ConcurrentDictionary<URL, ConcurrentBag<IClient>> ClientsPool = new ();
 
+    public string ServiceName { get; set; }
+    public string Version { get; set; }
     public URL Address { get; set; }
+    public URL Url { get; set; }
+    public Type? ProxyType { get; set; }
     public int MaxIdle { protected set; get; } = Environment.ProcessorCount * 2;
 
 

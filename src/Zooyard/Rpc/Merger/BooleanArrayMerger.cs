@@ -2,7 +2,8 @@
 
 public class BooleanArrayMerger : IMerger<bool[]>
 {
-
+    public string Name => "bool";
+    public Type Type => typeof(bool);
     public bool[] Merge(params bool[][] items)
     {
         int totalLen = 0;

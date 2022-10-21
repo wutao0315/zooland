@@ -2,6 +2,9 @@
 
 public class ArrayMerger : IMerger<object[]>
 {
+    public string Name => "array";
+    public Type Type => typeof(Array);
+
     public static ArrayMerger INSTANCE = new ();
     
     public object[]? Merge(params object[][] items)

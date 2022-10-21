@@ -1,16 +1,22 @@
-﻿using System.Runtime.Caching;
+﻿using Microsoft.Extensions.Options;
+using System.Runtime.Caching;
 
 namespace Zooyard.Rpc.Cache;
 
 public class LocalCache : ICache
 {
-    public const string NAME = "local";
+    private readonly IOptionsMonitor<ZooyardOption> _zooyard;
     private readonly MemoryCache _store = MemoryCache.Default;
-    private int Timeout { get; set; }
 
-    public LocalCache(URL url)
+    public const string NAME = "local";
+    public string Name => NAME;
+
+    private int Timeout => _zooyard.CurrentValue.Meta.GetValue("cache.timeout", 60000);
+    
+
+    public LocalCache(IOptionsMonitor<ZooyardOption> zooyard)
     {
-        this.Timeout = url.GetParameter("cache.timeout", 60000);
+        _zooyard = zooyard;
     }
 
     public T Get<T>(object key)

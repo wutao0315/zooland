@@ -2,6 +2,8 @@
 
 public class CharArrayMerger : IMerger<char[]>
 {
+    public string Name => "char";
+    public Type Type => typeof(char);
     public char[] Merge(params char[][] items)
     {
         int total = 0;

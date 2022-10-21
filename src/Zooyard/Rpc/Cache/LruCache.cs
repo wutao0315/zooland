@@ -1,18 +1,17 @@
-﻿using Zooyard.Rpc.Cache.Support;
+﻿using Microsoft.Extensions.Options;
+using Zooyard.Rpc.Cache.Support;
 
 namespace Zooyard.Rpc.Cache;
 
 public class LruCache : ICache
 {
     public const string NAME = "lru";
+    public string Name => NAME;
     private readonly LruCacheData<object, object> _store;
 
-    public LruCache(URL url)
+    public LruCache(IOptionsMonitor<ZooyardOption> zooyard)
     {
-        var max = url.GetParameter("cache.size", 1000);
-        var memoryRefreshInterval = url.GetParameter("cache.interval", 1000);
-        var itemExpiryTimeout = url.GetParameter("cache.timeout", 60000);
-        _store = new LruCacheData<object,object>(itemExpiryTimeout, max, memoryRefreshInterval);
+        _store = new LruCacheData<object,object>(zooyard);
     }
 
     public T? Get<T>(object key)

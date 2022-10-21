@@ -2,7 +2,7 @@
 
 public class TagRuleParser
 {
-    public static TagRouterRule parse(String rawRule)
+    public static TagRouterRule parse(string rawRule)
     {
         //Yaml yaml = new Yaml(new SafeConstructor());
         //Dictionary<String, Object> map = yaml.load(rawRule);

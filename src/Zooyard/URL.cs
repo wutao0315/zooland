@@ -8,9 +8,9 @@ namespace Zooyard;
 
 public sealed class URL
 {
+    public static readonly Regex COMMA_SPLIT_PATTERN = new("\\s*[,]+\\s*", RegexOptions.Compiled);
     public const string BACKUP_KEY = "backup";
     public const string DEFAULT_KEY_PREFIX = "default.";
-    public static readonly Regex COMMA_SPLIT_PATTERN = new("\\s*[,]+\\s*", RegexOptions.Compiled);
     public const string LOCALHOST_KEY = "localhost";
     public const string ANYHOST_KEY = "anyhost";
     public const string ANYHOST_VALUE = "0.0.0.0";
@@ -22,7 +22,6 @@ public sealed class URL
     //private readonly IDictionary<string, string> parameters;
 
     // ==== cache ====
-
     private volatile IDictionary<string, IConvertible>? numbers;//Number to long
     private volatile IDictionary<string, URL>? urls;
     private volatile string? ip;
@@ -33,34 +32,19 @@ public sealed class URL
 
     internal URL()
     {
-        this.Protocol = null;
-        this.Username = null;
-        this.Password = null;
-        this.Host = null;
-        this.Port = 0;
-        this.Path = null;
-        this.Parameters = null;
     }
 
-    public URL(string protocol, string host, int port)
-        : this(protocol, null, null, host, port, null, null) { }
 
-    public URL(string protocol, string host, int port, IDictionary<string, string> parameters)
-        : this(protocol, null, null, host, port, null, parameters) { }
 
-    public URL(string protocol, string host, int port, string path)
-        : this(protocol, null, null, host, port, path, null) { }
+    //public URL(string protocol, string host, int port, IDictionary<string, string> parameters)
+    //    : this(protocol, host, port, "", "", "", parameters) { }
 
-    public URL(string protocol, string host, int port, string path, IDictionary<string, string> parameters)
-        : this(protocol, null, null, host, port, path, parameters) { }
+    //public URL(string protocol, string host, int port, string path, IDictionary<string, string>? parameters = null)
+    //    : this(protocol,host, port, path, "", "", parameters) { }
 
-    public URL(string protocol, string username, string password, string host, int port, string path)
-        : this(protocol, username, password, host, port, path, null) { }
-
-    public URL(string? protocol, string? username, string? password, string? host, int port, string? path, IDictionary<string, string>? parameters)
+    public URL(string protocol, string host, int port, string path = "", string username = "", string password = "", IDictionary<string, string>? parameters = null)
     {
-        if (string.IsNullOrWhiteSpace(username)
-            && !string.IsNullOrWhiteSpace(password))
+        if (string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
         {
             throw new ArgumentException("Invalid url, password without username!");
         }
@@ -70,20 +54,12 @@ public sealed class URL
         this.Host = host;
         this.Port = (port < 0 ? 0 : port);
         // trim the beginning "/"
-        while (path != null && path.StartsWith("/"))
+        while (path.StartsWith("/"))
         {
-            path = path.Substring(1);
+            path = path[1..];
         }
         this.Path = path;
-        if (parameters == null)
-        {
-            parameters = new Dictionary<string, string>();
-        }
-        else
-        {
-            parameters = new Dictionary<string, string>(parameters);
-        }
-        this.Parameters = parameters;// Collections.unmodifiableMap(parameters);
+        this.Parameters = parameters == null ? new Dictionary<string, string>() : new Dictionary<string, string>(parameters);
     }
 
     /// <summary>
@@ -98,13 +74,13 @@ public sealed class URL
         {
             throw new ArgumentException("url == null");
         }
-        string? protocol = null;
-        string? username = null;
-        string? password = null;
-        string? host = null;
+        string protocol = String.Empty;
+        string username = String.Empty;
+        string password = String.Empty;
+        string host = String.Empty;
         int port = 0;
-        string? path = null;
-        IDictionary<string, string>? parameters = null;
+        string path = String.Empty;
+        var parameters = new Dictionary<string, string>();
         int i = url.IndexOf("?"); // seperator between body and parameters
         if (i >= 0)
         {
@@ -180,29 +156,29 @@ public sealed class URL
         {
             host = url;
         }
-        return new URL(protocol, username, password, host, port, path, parameters);
+        return new URL(protocol,  host, port, path, username, password, parameters);
     }
 
-    public string? Protocol { get; private set;}
+    public string Protocol { get; private set; } = String.Empty;
 
-    public string? Username { get; private set; }
+    public string Username { get; private set; } = String.Empty;
 
-    public string? Password { get; private set; }
+    public string Password { get; private set; } = String.Empty;
 
-    public string? Authority
+    public string Authority
     {
         get
         {
             if (string.IsNullOrWhiteSpace(Username) 
                 && string.IsNullOrWhiteSpace(Password))
             {
-                return null;
+                return "";
             }
             return $"{Username ?? ""}:{Password ?? ""}";
         }
     }
 
-    public string? Host { get; private set; }
+    public string Host { get; private set; } = String.Empty;
 
     /// <summary>
     /// 获取IP地址.
@@ -298,7 +274,7 @@ public sealed class URL
         return address;
     }
 
-    public string? Path { get; private set; }
+    public string Path { get; private set; } = String.Empty;
 
     public string? AbsolutePath
     {
@@ -314,17 +290,17 @@ public sealed class URL
 
     public URL SetProtocol(string protocol)
     {
-        return new URL(protocol, Username, Password, Host, Port, Path, Parameters);
+        return new URL(protocol, Host, Port, Path, Username, Password, Parameters);
     }
 
     public URL SetUsername(string username)
     {
-        return new URL(Protocol, username, Password, Host, Port, Path, Parameters);
+        return new URL(Protocol,  Host, Port, Path, username, Password, Parameters);
     }
 
     public URL SetPassword(string password)
     {
-        return new URL(Protocol, Username, password, Host, Port, Path, Parameters);
+        return new URL(Protocol,  Host, Port, Path, Username, password, Parameters);
     }
 
     public URL SetAddress(string address)
@@ -341,25 +317,25 @@ public sealed class URL
         {
             host = address;
         }
-        return new URL(Protocol, Username, Password, host, port, Path, Parameters);
+        return new URL(Protocol, host, port, Path, Username, Password, Parameters);
     }
 
     public URL SetHost(string host)
     {
-        return new URL(Protocol, Username, Password, host, Port, Path, Parameters);
+        return new URL(Protocol,  host, Port, Path, Username, Password, Parameters);
     }
 
     public URL SetPort(int port)
     {
-        return new URL(Protocol, Username, Password, Host, port, Path, Parameters);
+        return new URL(Protocol, Host, port, Path, Username, Password, Parameters);
     }
 
     public URL SetPath(string path)
     {
-        return new URL(Protocol, Username, Password, Host, Port, path, Parameters);
+        return new URL(Protocol, Host, Port, path, Username, Password, Parameters);
     }
 
-    public IDictionary<string, string>? Parameters { get; private set; }
+    public Dictionary<string, string> Parameters { get; private set; } = new ();
 
     public string GetParameterAndDecoded(string key)
     {
@@ -413,10 +389,8 @@ public sealed class URL
     {
         get
         {
-            if (numbers == null) // 允许并发重复创建
-            {
-                numbers = new ConcurrentDictionary<string, IConvertible>();
-            }
+            // 允许并发重复创建
+            numbers ??= new ConcurrentDictionary<string, IConvertible>();
             return numbers;
         }
     }
@@ -463,6 +437,7 @@ public sealed class URL
         Numbers.Add(key, b);
         return b;
     }
+
 
     public T GetPositiveParameter<T>(string key, T defaultValue) 
         where T:IComparable<int>,IConvertible
@@ -735,7 +710,7 @@ public sealed class URL
         {
             [key] = value
         };
-        return new URL(Protocol, Username, Password, Host, Port, Path, map);
+        return new URL(Protocol, Host, Port, Path, Username, Password, map);
     }
 
     public URL AddParameterIfAbsent(string? key, string? value)
@@ -752,7 +727,7 @@ public sealed class URL
         {
             [key] = value
         };
-        return new URL(Protocol, Username, Password, Host, Port, Path, map);
+        return new URL(Protocol, Host, Port, Path, Username, Password, map);
     }
 
     /// <summary>
@@ -786,7 +761,7 @@ public sealed class URL
 
         var map = new Dictionary<string, string>(Parameters??new Dictionary<string,string>());
         map.PutAll(parameters);
-        return new URL(Protocol, Username, Password, Host, Port, Path, map);
+        return new URL(Protocol, Host, Port, Path, Username, Password, map);
     }
 
     public URL AddParametersIfAbsent(IDictionary<string, string> parameters)
@@ -797,7 +772,7 @@ public sealed class URL
         }
         var map = new Dictionary<string, string>(parameters);
         map.PutAll(Parameters);
-        return new URL(Protocol, Username, Password, Host, Port, Path, map);
+        return new URL(Protocol,  Host, Port, Path, Username, Password, map);
     }
 
     public URL AddParameters(params string[] pairs)
@@ -861,12 +836,12 @@ public sealed class URL
         {
             return this;
         }
-        return new URL(Protocol, Username, Password, Host, Port, Path, map);
+        return new URL(Protocol, Host, Port, Path, Username, Password, map);
     }
 
     public URL ClearParameters()
     {
-        return new URL(Protocol, Username, Password, Host, Port, Path, new Dictionary<string, string>());
+        return new URL(Protocol, Host, Port, Path, Username, Password);
     }
 
     public string? GetRawParameter(string key)
@@ -1004,16 +979,16 @@ public sealed class URL
                     {
                         if (concat)
                         {
-                            buf.Append("?");
+                            buf.Append('?');
                         }
                         first = false;
                     }
                     else
                     {
-                        buf.Append("&");
+                        buf.Append('&');
                     }
                     buf.Append(entry.Key);
-                    buf.Append("=");
+                    buf.Append('=');
                     buf.Append(entry.Value == null ? "" : entry.Value.Trim());
                 }
             }
@@ -1057,7 +1032,7 @@ public sealed class URL
             buf.Append(host);
             if (Port > 0)
             {
-                buf.Append(":");
+                buf.Append(':');
                 buf.Append(Port);
             }
         }

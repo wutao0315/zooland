@@ -2,7 +2,7 @@
 
 namespace RpcContractGrpc;
 
-[GrpcProxy("GrpcHelloService", typeof(HelloService.HelloServiceClient))]
+[ZooyardGrpc("GrpcHelloService", typeof(HelloService.HelloServiceClient), Url = "grpc://127.0.0.1:10008")]
 public interface IHelloService
 {
     Task<NameResult> CallNameVoidAsync(Void voidData);

@@ -1,5 +1,4 @@
 ﻿using System.Text.RegularExpressions;
-using Zooyard;
 using Zooyard.Logging;
 using Zooyard.Rpc.Route.State;
 using Zooyard.Utils;
@@ -39,7 +38,7 @@ public class ConditionStateRouter<T> : AbstractStateRouter<T>
         }
     }
 
-    public void init(String rule)
+    public void init(string rule)
     {
         try
         {
@@ -49,10 +48,10 @@ public class ConditionStateRouter<T> : AbstractStateRouter<T>
             }
             rule = rule.Replace("consumer.", "").Replace("provider.", "");
             int i = rule.IndexOf("=>");
-            String whenRule = i < 0 ? null : rule.Substring(0, i).Trim();
-            String thenRule = i < 0 ? rule.Trim() : rule.Substring(i + 2).Trim();
-            Dictionary<String, MatchPair> when = string.IsNullOrWhiteSpace(whenRule) || "true".Equals(whenRule) ? new Dictionary<String, MatchPair>() : parseRule(whenRule);
-            Dictionary<String, MatchPair> then = string.IsNullOrWhiteSpace(thenRule) || "false".Equals(thenRule) ? null : parseRule(thenRule);
+            string whenRule = i < 0 ? null : rule.Substring(0, i).Trim();
+            string thenRule = i < 0 ? rule.Trim() : rule.Substring(i + 2).Trim();
+            Dictionary<string, MatchPair> when = string.IsNullOrWhiteSpace(whenRule) || "true".Equals(whenRule) ? new Dictionary<string, MatchPair>() : parseRule(whenRule);
+            Dictionary<string, MatchPair> then = string.IsNullOrWhiteSpace(thenRule) || "false".Equals(thenRule) ? null : parseRule(thenRule);
             // NOTE: It should be determined on the business level whether the `When condition` can be empty or not.
             this.whenCondition = when;
             this.thenCondition = then;
@@ -63,9 +62,9 @@ public class ConditionStateRouter<T> : AbstractStateRouter<T>
         }
     }
 
-    private static Dictionary<String, MatchPair> parseRule(String rule)
+    private static Dictionary<string, MatchPair> parseRule(string rule)
     {
-        var condition = new Dictionary<String, MatchPair>();
+        var condition = new Dictionary<string, MatchPair>();
         if (string.IsNullOrWhiteSpace(rule))
         {
             return condition;
@@ -73,15 +72,15 @@ public class ConditionStateRouter<T> : AbstractStateRouter<T>
         // Key-Value pair, stores both match and mismatch conditions
         MatchPair pair = null;
         // Multiple values
-        HashSet<String> values = null;
+        HashSet<string> values = null;
 
         var matcher = ROUTE_PATTERN.Match(rule);
 
         while (matcher != null)
         { // Try to match one by one
 
-            String separator = matcher.Groups[1].Value;
-            String content = matcher.Groups[2].Value;
+            string separator = matcher.Groups[1].Value;
+            string content = matcher.Groups[2].Value;
             // Start part of the condition expression.
             if (string.IsNullOrWhiteSpace(separator))
             {
@@ -153,7 +152,7 @@ public class ConditionStateRouter<T> : AbstractStateRouter<T>
         return condition;
     }
 
-    protected override BitList<IInvoker> DoRoute(BitList<IInvoker> invokers, URL url, IInvocation invocation,
+    protected override IList<URL> DoRoute(IList<URL> invokers, URL address, IInvocation invocation,
                                               bool needToPrintMessage, Holder<RouterSnapshotNode<T>> nodeHolder,
                                               Holder<String> messageHolder)
     {
@@ -176,7 +175,7 @@ public class ConditionStateRouter<T> : AbstractStateRouter<T>
         }
         try
         {
-            if (!matchWhen(url, invocation))
+            if (!matchWhen(address, invocation))
             {
                 if (needToPrintMessage)
                 {
@@ -186,14 +185,14 @@ public class ConditionStateRouter<T> : AbstractStateRouter<T>
             }
             if (thenCondition == null)
             {
-                Logger().LogWarning("The current consumer in the service blacklist. consumer: " + NetUtil.LocalHost + ", service: " + url.ServiceKey);
+                Logger().LogWarning("The current consumer in the service blacklist. consumer: " + NetUtil.LocalHost + ", service: " + address.ServiceKey);
                 if (needToPrintMessage)
                 {
                     messageHolder.Value = "Empty return. Reason: ThenCondition is empty.";
                 }
-                return new();
+                return new List<URL>();
             }
-            BitList<IInvoker> result = invokers;//.clone();
+            IList<URL> result = invokers;//.clone();
             //result.removeIf(invoker-> !matchThen(invoker.getUrl(), url));
 
             if (result.Count>0)
@@ -206,7 +205,7 @@ public class ConditionStateRouter<T> : AbstractStateRouter<T>
             }
             else if (this.Force)
             {
-                Logger().LogWarning("The route result is empty and force execute. consumer: " + NetUtil.LocalHost + ", service: " + url.ServiceKey + ", router: " + url.GetParameterAndDecoded(Constants.RULE_KEY));
+                Logger().LogWarning("The route result is empty and force execute. consumer: " + NetUtil.LocalHost + ", service: " + address.ServiceKey + ", router: " + address.GetParameterAndDecoded(Constants.RULE_KEY));
 
                 if (needToPrintMessage)
                 {

@@ -35,7 +35,7 @@ public class RpcResult<T> : IResult<T>
 
 public interface IClusterResult<T>
 {
-    IResult<T> Result { get; }
+    IResult<T>? Result { get; }
     IList<URL> Urls { get; }
     IList<BadUrl> BadUrls { get; }
     Exception? ClusterException { get; }
@@ -44,7 +44,7 @@ public interface IClusterResult<T>
 
 public class ClusterResult<T> : IClusterResult<T>
 {
-    public IResult<T> Result { get; private set; }
+    public IResult<T>? Result { get; private set; }
 
     public IList<URL> Urls { get; private set; }
 
@@ -54,7 +54,7 @@ public class ClusterResult<T> : IClusterResult<T>
 
     public bool IsThrow { get; private set; }
 
-    public ClusterResult(IResult<T> result, IList<URL> urls, IList<BadUrl> badUrls, Exception? clusterException, bool isThrow)
+    public ClusterResult(IResult<T>? result, IList<URL> urls, IList<BadUrl> badUrls, Exception? clusterException, bool isThrow)
     {
         Result = result;
         Urls = urls;

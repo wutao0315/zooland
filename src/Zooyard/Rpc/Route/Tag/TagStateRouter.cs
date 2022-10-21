@@ -43,7 +43,7 @@ public class TagStateRouter<T> : AbstractStateRouter<T>
     //    }
     //}
 
-    protected override BitList<IInvoker> DoRoute(BitList<IInvoker> invokers, URL url, IInvocation invocation, bool needToPrintMessage, Holder<RouterSnapshotNode<T>> nodeHolder, Holder<String> messageHolder)
+    protected override IList<URL> DoRoute(IList<URL> invokers, URL address, IInvocation invocation, bool needToPrintMessage, Holder<RouterSnapshotNode<T>> nodeHolder, Holder<String> messageHolder)
     {
         if (invokers.Count == 0)
         {
@@ -62,11 +62,11 @@ public class TagStateRouter<T> : AbstractStateRouter<T>
             {
                 messageHolder.Value = "Disable Tag Router. Reason: tagRouterRule is invalid or disabled";
             }
-            return filterUsingStaticTag(invokers, url, invocation);
+            return filterUsingStaticTag(invokers, address, invocation);
         }
 
-        BitList<IInvoker> result = invokers;
-        string tag = string.IsNullOrWhiteSpace(invocation.getAttachment(TAG_KEY)) ? url.GetParameter(TAG_KEY) : invocation.getAttachment(TAG_KEY);
+        IList<URL> result = invokers;
+        string tag = string.IsNullOrWhiteSpace(invocation.GetAttachment(TAG_KEY)) ? address.GetParameter(TAG_KEY)! : invocation.GetAttachment(TAG_KEY);
 
         // if we are requesting for a Provider with a specific tag
         if (!string.IsNullOrWhiteSpace(tag))
@@ -145,26 +145,26 @@ public class TagStateRouter<T> : AbstractStateRouter<T>
         return null;
     }
 
-    /**
-     * If there's no dynamic tag rule being set, use static tag in URL.
-     * <p>
-     * A typical scenario is a Consumer using version 2.7.x calls Providers using version 2.6.x or lower,
-     * the Consumer should always respect the tag in provider URL regardless of whether a dynamic tag rule has been set to it or not.
-     * <p>
-     * TODO, to guarantee consistent behavior of interoperability between 2.6- and 2.7+, this method should has the same logic with the TagRouter in 2.6.x.
-     *
-     * @param invokers
-     * @param url
-     * @param invocation
-     * @param <T>
-     * @return
-     */
-    private BitList<IInvoker> filterUsingStaticTag(BitList<IInvoker> invokers, URL url, IInvocation invocation)
+
+    /// <summary>
+    /// 
+    /// If there's no dynamic tag rule being set, use static tag in URL.
+    /// <p>
+    /// A typical scenario is a Consumer using version 2.7.x calls Providers using version 2.6.x or lower,
+    /// the Consumer should always respect the tag in provider URL regardless of whether a dynamic tag rule has been set to it or not.
+    /// <p>
+    /// TODO, to guarantee consistent behavior of interoperability between 2.6- and 2.7+, this method should has the same logic with the TagRouter in 2.6.x.
+    /// 
+    /// </summary>
+    /// <param name="invokers"></param>
+    /// <param name="url"></param>
+    /// <param name="invocation"></param>
+    /// <returns></returns>
+    private IList<URL> filterUsingStaticTag(IList<URL> invokers, URL url, IInvocation invocation)
     {
-        BitList<IInvoker> result = null;
+        IList<URL>? result = null;
         // Dynamic param
-        string tag = string.IsNullOrWhiteSpace(invocation.getAttachment(TAG_KEY)) ? url.GetParameter(TAG_KEY) :
-            invocation.getAttachment(TAG_KEY);
+        string tag = string.IsNullOrWhiteSpace(invocation.GetAttachment(TAG_KEY)) ? url.GetParameter(TAG_KEY)! :invocation.GetAttachment(TAG_KEY);
         // Tag request
         if (!string.IsNullOrWhiteSpace(tag))
         {
@@ -186,17 +186,17 @@ public class TagStateRouter<T> : AbstractStateRouter<T>
 
     private bool isForceUseTag(IInvocation invocation)
     {
-        return bool.Parse(invocation.getAttachment(Constants.FORCE_USE_TAG, this.Url.GetParameter(Constants.FORCE_USE_TAG, "false")));
+        return bool.Parse(invocation.GetAttachment(Constants.FORCE_USE_TAG, this.Url.GetParameter(Constants.FORCE_USE_TAG, "false")));
     }
 
-    private BitList<IInvoker> filterInvoker(BitList<IInvoker> invokers, Predicate<IInvoker> predicate)
+    private IList<URL> filterInvoker(IList<URL> invokers, Predicate<URL> predicate)
     {
         //if (invokers.stream().allMatch(predicate))
         //{
         //    return invokers;
         //}
 
-        BitList<IInvoker> newInvokers = invokers;//.clone();
+        IList<URL> newInvokers = invokers;//.clone();
         //newInvokers.removeIf(invoker-> !predicate.test(invoker));
 
         return newInvokers;
@@ -240,42 +240,42 @@ public class TagStateRouter<T> : AbstractStateRouter<T>
         this.application = app;
     }
 
-    public void Notify(BitList<IInvoker> invokers)
-    {
-        if (invokers.Count == 0)
-        {
-            return;
-        }
-        //IInvoker invoker = invokers[0];
-        //URL url = invoker.Url;
-        //string providerApplication = url.GetRemoteApplication();
+    //public void Notify(BitList<IInvoker> invokers)
+    //{
+    //    if (invokers.Count == 0)
+    //    {
+    //        return;
+    //    }
+    //    //IInvoker invoker = invokers[0];
+    //    //URL url = invoker.Url;
+    //    //string providerApplication = url.GetRemoteApplication();
 
-        //if (string.IsNullOrWhiteSpace(providerApplication))
-        //{
-        //    Logger().LogError("TagRouter must getConfig from or subscribe to a specific application, but the application " +
-        //        "in this TagRouter is not specified.");
-        //    return;
-        //}
+    //    //if (string.IsNullOrWhiteSpace(providerApplication))
+    //    //{
+    //    //    Logger().LogError("TagRouter must getConfig from or subscribe to a specific application, but the application " +
+    //    //        "in this TagRouter is not specified.");
+    //    //    return;
+    //    //}
 
-        //lock (this)
-        //{
-        //    if (!providerApplication.Equals(application))
-        //    {
-        //        if (!string.IsNullOrWhiteSpace(application))
-        //        {
-        //            this.GetRuleRepository().removeListener(application + RULE_SUFFIX, this);
-        //        }
-        //        String key = providerApplication + RULE_SUFFIX;
-        //        this.GetRuleRepository().addListener(key, this);
-        //        application = providerApplication;
-        //        String rawRule = this.getRuleRepository().getRule(key, DynamicConfiguration.DEFAULT_GROUP);
-        //        if (!string.IsNullOrWhiteSpace(rawRule))
-        //        {
-        //            this.process(new ConfigChangedEvent(key, DynamicConfiguration.DEFAULT_GROUP, rawRule));
-        //        }
-        //    }
-        //}
-    }
+    //    //lock (this)
+    //    //{
+    //    //    if (!providerApplication.Equals(application))
+    //    //    {
+    //    //        if (!string.IsNullOrWhiteSpace(application))
+    //    //        {
+    //    //            this.GetRuleRepository().removeListener(application + RULE_SUFFIX, this);
+    //    //        }
+    //    //        String key = providerApplication + RULE_SUFFIX;
+    //    //        this.GetRuleRepository().addListener(key, this);
+    //    //        application = providerApplication;
+    //    //        String rawRule = this.getRuleRepository().getRule(key, DynamicConfiguration.DEFAULT_GROUP);
+    //    //        if (!string.IsNullOrWhiteSpace(rawRule))
+    //    //        {
+    //    //            this.process(new ConfigChangedEvent(key, DynamicConfiguration.DEFAULT_GROUP, rawRule));
+    //    //        }
+    //    //    }
+    //    //}
+    //}
 
     public void Stop()
     {

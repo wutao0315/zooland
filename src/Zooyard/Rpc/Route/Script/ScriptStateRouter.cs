@@ -101,7 +101,7 @@ public class ScriptStateRouter<T> : AbstractStateRouter<T>
         //});
     }
 
-    protected override BitList<IInvoker> DoRoute(BitList<IInvoker> invokers, URL url, IInvocation invocation, bool needToPrintMessage, Holder<RouterSnapshotNode<T>> nodeHolder, Holder<String> messageHolder)
+    protected override IList<URL> DoRoute(IList<URL> invokers, URL url, IInvocation invocation, bool needToPrintMessage, Holder<RouterSnapshotNode<T>> nodeHolder, Holder<String> messageHolder)
     {
         if (_engine == null || _function == null)
         {

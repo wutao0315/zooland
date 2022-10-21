@@ -32,7 +32,7 @@ public static class ServiceBuilderExtensions
 {
     public static void AddZooyardNetty(this IServiceCollection services)
     {
-        services.AddSingleton((serviceProvider) => 
+        services.AddTransient((serviceProvider) => 
         {
             var option = serviceProvider.GetRequiredService<IOptionsMonitor<Zooyard.DotNettyImpl.NettyOption>>();
             var encoder = serviceProvider.GetRequiredService<ITransportMessageEncoder>();

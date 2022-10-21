@@ -15,7 +15,6 @@ namespace Zooyard.ThriftImpl;
 
 public class ThriftClientPool : AbstractClientPool
 {
-    public const string PROXY_KEY = "proxy";
     public const string TIMEOUT_KEY = "timeout";
     public const string MAXFRAMESIZE_KEY = "MaxFrameSize";
     public const string MAXMESSAGESIZE_KEY = "MaxMessageSize";
@@ -26,13 +25,13 @@ public class ThriftClientPool : AbstractClientPool
 
     public const int DEFAULT_TIMEOUT = 5000;
 
-    private readonly IDictionary<string, Type> _clientTypes;
+    //private readonly IDictionary<string, Type> _clientTypes;
     private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ThriftClientPool));
    
-    public ThriftClientPool(IDictionary<string, Type> clientTypes)
-    {
-        _clientTypes = clientTypes;
-    }
+    //public ThriftClientPool(IDictionary<string, Type> clientTypes)
+    //{
+    //    //_clientTypes = clientTypes;
+    //}
 
     protected override async Task<IClient> CreateClient(URL url)
     {
@@ -53,17 +52,16 @@ public class ThriftClientPool : AbstractClientPool
         var mplex = GetMultiplex(url);
         Logger().LogInformation("Multiplex " + (mplex ? "yes" : "no"));
 
-        var proxyKey = url.GetParameter(PROXY_KEY);
-        if (string.IsNullOrEmpty(proxyKey) || !_clientTypes.ContainsKey(proxyKey))
+        if (ProxyType == null)
         {
             throw new RpcException($"not find the proxy thrift client {url.ToFullString()}");
         }
 
         if (mplex)
-            protocol = new TMultiplexedProtocol(protocol, proxyKey);
+            protocol = new TMultiplexedProtocol(protocol, ServiceName);
 
         //instance ThriftClient
-        var client = (TBaseClient)Activator.CreateInstance(_clientTypes[proxyKey], protocol);
+        var client = (TBaseClient)Activator.CreateInstance(ProxyType, protocol)!;
 
         await Task.CompletedTask;
         return new ThriftClient(client, timeout, url);

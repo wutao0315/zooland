@@ -17,4 +17,27 @@ public static class DictionaryExtensions
             value.Add(item.Key, item.Value);
         }
     }
+
+    public static T GetValue<T>(this IDictionary<string, string> meta, string key, T defaultValue = default!) 
+        where T : IConvertible
+    {
+        if (!meta.TryGetValue(key, out string? val) || string.IsNullOrWhiteSpace(val))
+        {
+            return defaultValue;
+        }
+
+        try
+        {
+            var b = val.ChangeType(typeof(T));
+            if (b == null)
+            {
+                return defaultValue;
+            }
+            return (T)b;
+        }
+        catch
+        {
+            return defaultValue;
+        }
+    }
 }

@@ -19,16 +19,18 @@ public class AsyncProxyGenerator : IDisposable
 
 
     private readonly IZooyardPools _zooyardPools;
-    private readonly string _app;
+    private readonly string _serviceName;
     private readonly string _version;
+    private readonly string _url;
 
-    public AsyncProxyGenerator(IZooyardPools zooyardPools, string app, string version)
+    public AsyncProxyGenerator(IZooyardPools zooyardPools, string serviceName, string version, string url)
     {
         _proxyTypeCaches = new ConcurrentDictionary<Type, Dictionary<Type, Type>>();
         _proxyAssembly = new ProxyAssembly();
         _zooyardPools = zooyardPools;
-        _app = app;
+        _serviceName = serviceName;
         _version = version;
+        _url = url;
     }
     /// <summary> 创建代理 </summary>
     /// <param name="interfaceType"></param>
@@ -144,10 +146,13 @@ public class AsyncProxyGenerator : IDisposable
             //var genericmethod = _dispatchProxyInvokeAsyncTMethod.MakeGenericMethod(typeof(T));
             //returnValue = await (Task<T>)genericmethod.Invoke(context.Packed.DispatchProxy,
             //                                                       new object[] { context.Method, context.Packed.Args });
-            var icn = new RpcInvocation(_app, _version, context.Packed.DeclaringType, context.Method, context.Packed.Args);
+            var icn = new RpcInvocation(_serviceName, _version, _url, context.Packed.DeclaringType, context.Method, context.Packed.Args);
             var result = await _zooyardPools.Invoke<T>(icn);
-            returnValue = result.Value;
-            context.Packed.ReturnValue = returnValue;
+            if (result!=null) 
+            {
+                returnValue = result.Value;
+                context.Packed.ReturnValue = returnValue;
+            }
         }
         catch (TargetInvocationException tie)
         {

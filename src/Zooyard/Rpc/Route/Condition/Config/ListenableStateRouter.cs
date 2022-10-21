@@ -11,7 +11,7 @@ public abstract class ListenableStateRouter<T> : AbstractStateRouter<T>
     public const string NAME = "LISTENABLE_ROUTER";
     private const string RULE_SUFFIX = ".condition-router";
     private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ListenableStateRouter<>));
-    private volatile ConditionRouterRule routerRule;
+    private volatile ConditionRouterRule? routerRule;
     private volatile List<ConditionStateRouter<T>> conditionRouters = new();
     private string ruleKey;
 
@@ -43,7 +43,7 @@ public abstract class ListenableStateRouter<T> : AbstractStateRouter<T>
     //    }
     //}
 
-    protected override BitList<IInvoker> DoRoute(BitList<IInvoker> invokers, URL url, IInvocation invocation,
+    protected override IList<URL> DoRoute(IList<URL> invokers, URL address, IInvocation invocation,
                                        bool needToPrintMessage, Holder<RouterSnapshotNode<T>> nodeHolder, Holder<String> messageHolder)
     {
         if (invokers.Count == 0 || conditionRouters.Count == 0)
@@ -63,7 +63,7 @@ public abstract class ListenableStateRouter<T> : AbstractStateRouter<T>
         }
         foreach (AbstractStateRouter<T> router in conditionRouters)
         {
-            invokers = router.Route(invokers, url, invocation, needToPrintMessage, nodeHolder);
+            invokers = router.Route(invokers, address, invocation, needToPrintMessage, nodeHolder);
             if (needToPrintMessage)
             {
                 resultMessage.Append(messageHolder.Value);

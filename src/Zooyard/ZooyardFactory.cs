@@ -11,22 +11,27 @@ public class ZooyardFactory<T>
     /// <summary>
     /// application name
     /// </summary>
-    private readonly string _app;
+    private readonly string _serviceName;
     /// <summary>
     /// api version
     /// </summary>
     private readonly string _version;
+    /// <summary>
+    /// default url
+    /// </summary>
+    private readonly string _url;
 
-    public ZooyardFactory(IZooyardPools pools, string app, string version) 
+    public ZooyardFactory(IZooyardPools pools, string serviceName, string version, string url) 
     {
         _pools = pools;
-        _app = app;
+        _serviceName = serviceName;
         _version = version;
+        _url = url;
     }
 
     public T CreateYard()
     {
-        var proxyGenerator = new AsyncProxyGenerator(_pools, _app, _version);
+        var proxyGenerator = new AsyncProxyGenerator(_pools, _serviceName, _version, _url);
         return (T)proxyGenerator.CreateProxy(typeof(T));
     }
 }

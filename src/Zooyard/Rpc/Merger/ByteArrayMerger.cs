@@ -2,6 +2,8 @@
 
 public class ByteArrayMerger : IMerger<byte[]>
 {
+    public string Name => "byte";
+    public Type Type => typeof(byte);
     public byte[] Merge(params byte[][] items)
     {
         int total = 0;

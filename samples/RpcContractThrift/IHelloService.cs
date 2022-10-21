@@ -2,7 +2,7 @@
 
 namespace RpcContractThrift;
 
-[ThriftProxy("ThriftHelloService", typeof(HelloService.Client))]
+[ZooyardThrift("ThriftHelloService", typeof(HelloService.Client), Url = "Binary://127.0.0.1:9090")]
 public interface IHelloService
 {
     Task<string> CallNameVoidAsync();

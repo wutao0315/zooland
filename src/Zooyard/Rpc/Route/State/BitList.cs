@@ -107,7 +107,7 @@ namespace Zooyard.Rpc.Route.State
 
         //    // Provided by BitList only
         //    public List<E> getOriginList()
-        //    {
+        //    and
         //        return originList;
         //    }
 

@@ -9,7 +9,7 @@ public abstract class AbstractInvoker : IInvoker
     public abstract object Instance { get; }
     public virtual async Task<IResult<T>> Invoke<T>(IInvocation invocation)
     {
-        var message = $"{invocation.App}:{invocation.Version}:{invocation.TargetType.FullName}:{invocation.MethodInfo.Name}";
+        var message = $"{invocation.ServiceName}:{invocation.Version}:{invocation.TargetType.FullName}:{invocation.MethodInfo.Name}";
 #if DEBUG
         var result = await HandleInvoke<T>(invocation);
 #else

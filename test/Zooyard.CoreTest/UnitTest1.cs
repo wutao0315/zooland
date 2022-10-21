@@ -24,11 +24,9 @@ namespace ZooyardTest
             var config = builder.Build();
 
             IServiceCollection services = new ServiceCollection();
-            //services.Configure<AkkaOption>(config.GetSection("akka"));
             services.Configure<GrpcOption>(config.GetSection("grpc"));
             //services.Configure<NettyOption>(config.GetSection("netty"));
             //services.Configure<ThriftOption>(config.GetSection("thrift"));
-            //services.Configure<WcfOption>(config.GetSection("wcf"));
             services.Configure<ZooyardOption>(config.GetSection("zooyard"));
             services.AddLogging();
             //services.AddAkkaClient();
@@ -40,21 +38,17 @@ namespace ZooyardTest
 
             //services.AddThriftClient();
             //services.AddWcfClient();
-            services.AddZoolandClient(config);
+            services.AddZoolandClient();
 
             using var bsp = services.BuildServiceProvider();
-                //var akkaHelloService = bsp.GetService<RpcContractAkka.IHelloService>();
-                //Assert.IsNotNull(akkaHelloService);
-                var tgrpcHelloService = bsp.GetService<RpcContractGrpc.IHelloService>();
-                Assert.IsNotNull(tgrpcHelloService);
-                var httpHelloService = bsp.GetService<RpcContractHttp.IHelloService>();
-                Assert.IsNotNull(httpHelloService);
-                var nettyHelloService = bsp.GetService<RpcContractNetty.IHelloService>();
-                Assert.IsNotNull(nettyHelloService);
-                //var thriftHelloService = bsp.GetService<RpcContractThrift.IHelloService>();
-                //Assert.IsNotNull(thriftHelloService);
-                //var wcfHelloService = bsp.GetService<RpcContractWcf.IHelloService>();
-                //Assert.IsNotNull(wcfHelloService);
+            var tgrpcHelloService = bsp.GetService<RpcContractGrpc.IHelloService>();
+            Assert.IsNotNull(tgrpcHelloService);
+            var httpHelloService = bsp.GetService<RpcContractHttp.IHelloService>();
+            Assert.IsNotNull(httpHelloService);
+            var nettyHelloService = bsp.GetService<RpcContractNetty.IHelloService>();
+            Assert.IsNotNull(nettyHelloService);
+            var thriftHelloService = bsp.GetService<RpcContractThrift.IHelloService>();
+            Assert.IsNotNull(thriftHelloService);
 
         }
     }

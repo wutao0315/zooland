@@ -11,12 +11,13 @@ namespace Zooyard.Rpc.Cluster;
 public class FailbackCluster : AbstractCluster
 {
     private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(FailbackCluster));
+    //public FailbackCluster(IEnumerable<ICache> caches) : base(caches) { }
     public override string Name => NAME;
     public const string NAME = "failback";
     private static readonly long RETRY_FAILED_PERIOD = 5 * 1000;
 
-    private ConcurrentDictionary<IInvocation, URL> failed = new ConcurrentDictionary<IInvocation, URL>();
-    private System.Timers.Timer retryTimer;
+    private ConcurrentDictionary<IInvocation, URL> failed = new ();
+    private System.Timers.Timer? retryTimer;
 
 
     private void AddFailed<T>(IClientPool pool,IInvocation invocation, URL router)
@@ -29,7 +30,7 @@ public class FailbackCluster : AbstractCluster
                 if (retryTimer == null)
                 {
                     retryTimer = new System.Timers.Timer(RETRY_FAILED_PERIOD);
-                    retryTimer.Elapsed += new System.Timers.ElapsedEventHandler(async (object sender, System.Timers.ElapsedEventArgs events) =>
+                    retryTimer.Elapsed += new System.Timers.ElapsedEventHandler(async (object? sender, System.Timers.ElapsedEventArgs events) =>
                     {
                         // 收集统计信息
                         try
@@ -58,36 +59,39 @@ public class FailbackCluster : AbstractCluster
         {
             return;
         }
-        foreach (var entry in failed)
+
+        foreach (var invocation in failed.Keys)
         {
-            IInvocation invocation = entry.Key;
-            var client = await pool.GetClient(entry.Value);
+            var client = await pool.GetClient(failed[invocation]);
             try
             {
                 var refer = await client.Refer();
-                _source.WriteConsumerBefore(refer.Instance, entry.Value, invocation);
+                _source.WriteConsumerBefore(refer.Instance, failed[invocation], invocation);
                 var result = await refer.Invoke<T>(invocation);
-                _source.WriteConsumerAfter(entry.Value, invocation, result);
+                _source.WriteConsumerAfter(failed[invocation], invocation, result);
                 await pool.Recovery(client);
-                failed.TryRemove(invocation ,out URL cluster);
+                failed.TryRemove(invocation, out URL? cluster);
             }
             catch (Exception e)
             {
-                _source.WriteConsumerError(entry.Value, invocation, e);
+                _source.WriteConsumerError(failed[invocation], invocation, e);
                 await pool.DestoryClient(client);
                 Logger().LogError(e, $"Failed retry to invoke method {invocation.MethodInfo.Name}, waiting again.");
             }
         }
     }
 
-    public override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
+    protected override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
     {
         var goodUrls = new List<URL>();
         var badUrls = new List<BadUrl>();
         Exception? exception = null;
 
         CheckInvokers(urls, invocation, address);
-        var invoker = base.Select(loadbalance, invocation, urls, null);
+        //路由
+        var invokers = base.Route(urls);
+
+        var invoker = base.Select(loadbalance, invocation, invokers, null);
 
         IResult<T> result;
         var watch = Stopwatch.StartNew();

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Zooyard.Rpc.Route.Tag.Model;
+﻿namespace Zooyard.Rpc.Route.Tag.Model;
 
 public class Tag
 {

@@ -8,7 +8,7 @@ namespace Microsoft.Extensions.Configuration;
 public class GrpcOption
 {
     public Dictionary<string, string> Credentials { get; set; } = new();
-    public Dictionary<string, string> Clients { get; set; } = new();
+    //public Dictionary<string, string> Clients { get; set; } = new();
 }
 
 public class GrpcServerOption
@@ -27,7 +27,7 @@ public static class ServiceBuilderExtensions
 {
     public static void AddZooyardGrpc(this IServiceCollection services)
     {
-        services.AddSingleton((serviceProvder) => 
+        services.AddTransient((serviceProvder) => 
         {
             var option = serviceProvder.GetRequiredService<IOptionsMonitor<GrpcOption>>().CurrentValue;
 
@@ -45,17 +45,16 @@ public static class ServiceBuilderExtensions
                 }
             }
 
-            var grpcClientTypes = new Dictionary<string, Type>();
-            foreach (var item in option.Clients)
-            {
-                grpcClientTypes.Add(item.Key, Type.GetType(item.Value)!);
-            }
+            //var grpcClientTypes = new Dictionary<string, Type>();
+            //foreach (var item in option.Clients)
+            //{
+            //    grpcClientTypes.Add(item.Key, Type.GetType(item.Value)!);
+            //}
 
             var interceptors = serviceProvder.GetServices<ClientInterceptor>();
 
             var pool = new GrpcClientPool(
                 credentials:credentials,
-                grpcClientTypes:grpcClientTypes, 
                 interceptors: interceptors
             );
 

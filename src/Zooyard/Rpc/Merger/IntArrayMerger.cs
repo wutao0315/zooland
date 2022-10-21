@@ -2,6 +2,8 @@
 
 public class IntArrayMerger : IMerger<int[]>
 {
+    public string Name => "int";
+    public Type Type => typeof(int);
     public int[] Merge(params int[][] items)
     {
         int totalLen = 0;

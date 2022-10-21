@@ -4,39 +4,42 @@ namespace Zooyard;
 
 public interface IInvocation
 {
-    string App { get; }
+    string ServiceName { get; }
     string Version { get; }
+    string Url { get; }
     Type TargetType { get; }
     MethodInfo MethodInfo { get; }
-    object[]? Arguments { get; }
-    Type[]? ArgumentTypes { get; }
-    string AppPoint();
+    object[] Arguments { get; }
+    Type[] ArgumentTypes { get; }
+    string ServiceNamePoint();
     string PointVersion();
-    string getAttachment(string key, string defaultValue=default!) {
+    string GetAttachment(string key, string defaultValue=default!) {
         return "";
     }
 }
 
 public class RpcInvocation : IInvocation
 {
-    public RpcInvocation(string app, string version, Type targetType, MethodInfo methodInfo, object[]? arguments)
+    public RpcInvocation(string serviceName, string version, string url, Type targetType, MethodInfo methodInfo, object[]? arguments)
     {
-        App = app;
+        ServiceName = serviceName;
         Version = version;
+        Url = url;
         TargetType = targetType;
         MethodInfo = methodInfo;
-        Arguments = arguments;
-        ArgumentTypes = arguments == null ? null : (from item in arguments select item.GetType()).ToArray();
+        Arguments = arguments ?? Array.Empty<object>();
+        ArgumentTypes = arguments == null ? Array.Empty<Type>() : (from item in arguments select item.GetType()).ToArray();
     }
-    public string App { get; }
+    public string ServiceName { get; }
     public string Version { get;}
+    public string Url { get; }
     public Type TargetType { get; }
     public MethodInfo MethodInfo { get; }
-    public object[]? Arguments { get; }
-    public Type[]? ArgumentTypes { get; }
-    public string AppPoint()
+    public object[] Arguments { get; }
+    public Type[] ArgumentTypes { get; }
+    public string ServiceNamePoint()
     {
-        var result = string.IsNullOrWhiteSpace(App) ? "" : $"{App}.";
+        var result = string.IsNullOrWhiteSpace(ServiceName) ? "" : $"{ServiceName}.";
         return result;
     }
     public string PointVersion()

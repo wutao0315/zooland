@@ -2,6 +2,8 @@
 
 public class SetMerger<T> : IMerger<ISet<T>>
 {
+    public string Name => "set";
+    public Type Type => typeof(ISet<>);
     public ISet<T> Merge(params ISet<T>[] items)
     {
         var result = new HashSet<T>();

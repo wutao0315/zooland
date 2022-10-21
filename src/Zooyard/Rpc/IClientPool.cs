@@ -2,7 +2,11 @@
 
 public interface IClientPool
 {
-    URL Address { get; set; }
+    string ServiceName { get; set; }
+    //string Version { get; set; }
+    //URL Address { get; set; }
+    //URL Url { get; set; }
+    Type? ProxyType { get; set; }
 
     Task<IClient> GetClient(URL url);
 
