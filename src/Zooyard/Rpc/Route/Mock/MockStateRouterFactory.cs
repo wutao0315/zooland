@@ -2,12 +2,12 @@
 
 namespace Zooyard.Rpc.Route.Mock;
 
-public class MockStateRouterFactory<T> : IStateRouterFactory<T>
+public class MockStateRouterFactory : IStateRouterFactory
 {
     public const string NAME = "mock";
-
-    public IStateRouter<T> GetRouter(Type interfaceClass, URL url)
+    public string Name => NAME;
+    public IStateRouter GetRouter(Type interfaceClass, URL address)
     {
-        return new MockInvokersSelector<T>(url);
+        return new MockStateRouter(address);
     }
 }

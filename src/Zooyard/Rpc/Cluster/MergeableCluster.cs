@@ -50,13 +50,13 @@ public class MergeableCluster : AbstractCluster
         }
         return key;
     }
-    protected override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
+    protected override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> invokers, IInvocation invocation)
     {
         var goodUrls = new List<URL>();
         var badUrls = new List<BadUrl>();
 
-        //路由
-        var invokers = base.Route(urls);
+        ////路由
+        //var invokers = base.Route(urls, address, invocation);
 
         var merger = address.GetMethodParameter(invocation.MethodInfo.Name, MERGER_KEY);
         // If a method doesn't have a merger, only invoke one Group

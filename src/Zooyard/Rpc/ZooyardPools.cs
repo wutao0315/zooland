@@ -1,10 +1,11 @@
 ﻿using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
-using System.Dynamic;
 using Zooyard.Logging;
 using Zooyard.Rpc.Cache;
 using Zooyard.Rpc.Cluster;
 using Zooyard.Rpc.LoadBalance;
+using Zooyard.Rpc.Route.None;
+using Zooyard.Rpc.Route.State;
 using Zooyard.Utils;
 
 namespace Zooyard.Rpc;
@@ -19,6 +20,7 @@ public class ZooyardPools : IZooyardPools
     public const string CACHE_KEY = "cache";
     public const string CLUSTER_KEY = "cluster";
     public const string LOADBANCE_KEY = "loadbance";
+    public const string ROUTE_KEY = "route";
     public const string CYCLE_PERIOD_KEY = "cycle";
     public const int DEFAULT_CYCLE_PERIOD = 60 * 1000;
     public const string OVER_TIME_KEY = "overtime";
@@ -33,12 +35,6 @@ public class ZooyardPools : IZooyardPools
     /// 注册中心的配置
     /// </summary>
     private readonly IOptionsMonitor<ZooyardOption> _zooyard;
-    ///// <summary>
-    ///// address
-    ///// if address's protocol is 'registry', the urls will request register center for all urls
-    ///// other way is connection directly address
-    ///// </summary>
-    //public URL Address { get; init; }
     /// <summary>
     /// good service url list
     /// </summary>
@@ -52,19 +48,20 @@ public class ZooyardPools : IZooyardPools
     /// key ApplicationName,
     /// value diff version of client pool
     /// </summary>
-    public ConcurrentDictionary<string, IClientPool> Pools { get; init; }
+    public ConcurrentDictionary<string, IClientPool> Pools = new();
     /// <summary>
     /// loadbalance
     /// </summary>
-    public ConcurrentDictionary<string, ILoadBalance> LoadBalances { get; init; }
+    private readonly ConcurrentDictionary<string, ILoadBalance> _loadBalances = new();
     /// <summary>
     /// cluster
     /// </summary>
-    public ConcurrentDictionary<string, ICluster> Clusters { get; init; }
+    private readonly ConcurrentDictionary<string, ICluster> _clusters = new();
     /// <summary>
     /// cache
     /// </summary>
-    public ConcurrentDictionary<string, ICache> Caches { get; init; }
+    private readonly ConcurrentDictionary<string, ICache> _caches = new();
+    
     /// <summary>
     /// 计时器用于处理过期的链接和链接池
     /// </summary>
@@ -77,29 +74,45 @@ public class ZooyardPools : IZooyardPools
     /// threed lock
     /// </summary>		
     private readonly SemaphoreSlim _semaphore = new(1, 1);
+    private readonly ConcurrentDictionary<string, IStateRouterFactory> _routeFoctories = new();
+    private readonly ConcurrentDictionary<string, (URL, IList<URL>)> _cacheUrl = new();
+    private readonly ConcurrentDictionary<string, IList<URL>> _cacheRouteUrl = new();
     /// <summary>
     /// 构造函数
     /// </summary>
     /// <param name="pool"></param>
     public ZooyardPools(
         IDictionary<string, IClientPool> pools,
-        IDictionary<string, ILoadBalance> loadbalances,
-        IDictionary<string, ICluster> clusters,
+        IEnumerable<ILoadBalance> loadbalances,
+        IEnumerable<ICluster> clusters,
         IEnumerable<ICache> caches,
+        IEnumerable<IStateRouterFactory> routerFactories,
         IOptionsMonitor<ZooyardOption> zooyard)
     {
         this.Pools = new(pools);
-        this.LoadBalances = new(loadbalances);
-        this.Clusters = new(clusters);
-        this.Caches = new();
-        foreach (var cache in caches)
+
+        foreach (var item in loadbalances)
         {
-            this.Caches.TryAdd(cache.Name, cache);
+            _loadBalances[item.Name] = item;
+        };
+
+        foreach (var item in clusters)
+        {
+            _clusters[item.Name] = item;
         }
 
+        foreach (var cache in caches)
+        {
+           _caches[cache.Name] = cache;
+        }
+        foreach (var item in routerFactories)
+        {
+            _routeFoctories[item.Name] = item;
+        }
         this.Urls = new ConcurrentDictionary<string, List<URL>>();
         this.BadUrls = new ConcurrentDictionary<string, List<BadUrl>>();
         _zooyard = zooyard;
+        _zooyard.OnChange(OnChanged);
         Init();
         // 初始化调用
         void Init()
@@ -191,6 +204,12 @@ public class ZooyardPools : IZooyardPools
                 }
             }
         }
+        // 监听配置或者服务注册变化，清空缓存
+        void OnChanged(ZooyardOption value, string name)
+        {
+            _cacheUrl.Clear();
+            _cacheRouteUrl.Clear();
+        }
     }
 
     /// <summary>
@@ -236,6 +255,14 @@ public class ZooyardPools : IZooyardPools
         // 根据配置获取路径集合
         (URL, IList<URL>) GetUrls()
         {
+            //读取缓存
+            var cacheKey = $"{invocation.ServiceNamePoint()}{invocation.PointVersion()}";
+
+            if (_cacheUrl.TryGetValue(cacheKey, out (URL, IList<URL>) val)) 
+            {
+                return val;
+            }
+
             var url = string.IsNullOrWhiteSpace(_zooyard.CurrentValue.Address) ? URL.ValueOf("zooyard://localhost") : URL.ValueOf(_zooyard.CurrentValue.Address);
 
             url = GetMetaUrl(url, _zooyard.CurrentValue.Meta);
@@ -261,7 +288,8 @@ public class ZooyardPools : IZooyardPools
                 result.Add(url);
             }
 
-            return (url, result);
+            _cacheUrl[cacheKey] = (url, result);
+            return _cacheUrl[cacheKey];
 
             URL GetMetaUrl(URL url, Dictionary<string, string> meta)
             {
@@ -322,7 +350,7 @@ public class ZooyardPools : IZooyardPools
         ICache? GetCache()
         {
             //参数检查
-            if (Caches == null)
+            if (_caches == null || _caches.Count == 0)
             {
                 return null;
             }
@@ -349,19 +377,73 @@ public class ZooyardPools : IZooyardPools
 
             if (key.ToLower() == "true" || key.ToLower() == LruCache.NAME)
             {
-                result = Caches[LruCache.NAME];
+                result = _caches[LruCache.NAME];
             }
 
-            if (Caches.ContainsKey(key) && key != LruCache.NAME)
+            if (_caches.ContainsKey(key) && key != LruCache.NAME)
             {
-                result = Caches[key];
+                result = _caches[key];
             }
 
             return result;
         }
 
+        IList<URL> GetRouteUrls()
+        {
+            var cacheKey = $"{invocation.ServiceNamePoint()}{invocation.PointVersion()}";
+
+            if (_cacheRouteUrl.TryGetValue(cacheKey, out IList<URL>? val) && val != null)
+            {
+                return val;
+            }
+
+            var routerFactory = _routeFoctories[NoneStateRouterFactory.NAME];
+            var invocationTypeName = invocation.TargetType.FullName!;
+            var invocationMethodName = invocation.MethodInfo.Name;
+
+            var key = address.GetMethodParameter($"{invocationTypeName}.{invocationMethodName}", ROUTE_KEY, "");
+
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                key = address.GetInterfaceParameter(invocationTypeName, ROUTE_KEY, "");
+            }
+
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                key = address.GetParameter(ROUTE_KEY, "");
+            }
+
+            if (!string.IsNullOrWhiteSpace(key) && _loadBalances.ContainsKey(key) && key != NoneStateRouterFactory.NAME)
+            {
+                routerFactory = _routeFoctories[key];
+            }
+
+            //执行过滤逻辑
+            var stateRoute = routerFactory.GetRouter(invocation.TargetType, address);
+
+            var needToPrintMessageStr = address.GetParameter($"{invocation.ServiceName}.{invocation.MethodInfo.Name}.needToPrintMessage", "");
+
+            if (string.IsNullOrWhiteSpace(needToPrintMessageStr))
+            {
+                needToPrintMessageStr = address.GetParameter($"{invocation.MethodInfo.Name}.needToPrintMessage", "");
+            }
+            if (string.IsNullOrWhiteSpace(needToPrintMessageStr))
+            {
+                needToPrintMessageStr = address.GetParameter("needToPrintMessage", "");
+            }
+
+            bool.TryParse(needToPrintMessageStr, out bool needToPrintMessage);
+
+            var result = stateRoute.Route(urls, address, invocation, needToPrintMessage);
+
+            _cacheRouteUrl[cacheKey] = result;
+            return result;
+        }
+        // 执行调用
         async Task<IResult<T>?> InvokeInner() 
         {
+            //get cached route urls
+            var routeUrls = GetRouteUrls();
             //get pool
             var pool = GetClientPool(invocation);
             //get load balance
@@ -369,7 +451,7 @@ public class ZooyardPools : IZooyardPools
             //get cluster
             var cluster = GetCluster(address, invocation);
             //invoke
-            var result = await cluster.Invoke<T>(pool, loadbalance, address, urls, invocation);
+            var result = await cluster.Invoke<T>(pool, loadbalance, address, routeUrls, invocation);
 
             try
             {
@@ -456,6 +538,8 @@ public class ZooyardPools : IZooyardPools
             return result.Result;
         }
 
+       
+
         // 获取客户端服务连接
         IClientPool GetClientPool(IInvocation invocation)
         {
@@ -473,7 +557,7 @@ public class ZooyardPools : IZooyardPools
         // 选择负载均衡算法
         ILoadBalance GetLoadBalance(URL address, IInvocation invocation)
         {
-            var result = LoadBalances[RandomLoadBalance.NAME];
+            var result = _loadBalances[RandomLoadBalance.NAME];
             var invocationTypeName = invocation.TargetType.FullName!;
             var invocationMethodName = invocation.MethodInfo.Name;
 
@@ -489,9 +573,9 @@ public class ZooyardPools : IZooyardPools
                 key = address.GetParameter(LOADBANCE_KEY, "");
             }
 
-            if (!string.IsNullOrWhiteSpace(key) && LoadBalances.ContainsKey(key) && key != RandomLoadBalance.NAME)
+            if (!string.IsNullOrWhiteSpace(key) && _loadBalances.ContainsKey(key) && key != RandomLoadBalance.NAME)
             {
-                result = LoadBalances[key];
+                result = _loadBalances[key];
             }
             return result;
         }
@@ -499,7 +583,7 @@ public class ZooyardPools : IZooyardPools
         // 获取集群执行器
         ICluster GetCluster(URL address, IInvocation invocation)
         {
-            var result = Clusters[FailoverCluster.NAME];
+            var result = _clusters[FailoverCluster.NAME];
             var invocationTypeName = invocation.TargetType.FullName!;
             var invocationMethodName = invocation.MethodInfo.Name;
 
@@ -513,9 +597,9 @@ public class ZooyardPools : IZooyardPools
             {
                 key = address.GetParameter(CLUSTER_KEY, "");
             }
-            if (!string.IsNullOrWhiteSpace(key) && Clusters.ContainsKey(key) && key != FailoverCluster.NAME)
+            if (!string.IsNullOrWhiteSpace(key) && _clusters.ContainsKey(key) && key != FailoverCluster.NAME)
             {
-                result = Clusters[key];
+                result = _clusters[key];
             }
 
             return result;
@@ -527,16 +611,15 @@ public class ZooyardPools : IZooyardPools
     /// </summary>
     public void CacheClear()
     {
-        if (Caches == null || Caches.IsEmpty)
+        if (_caches == null || _caches.IsEmpty)
         {
             return;
         }
 
-        foreach (var item in Caches)
+        foreach (var item in _caches)
         {
             item.Value.Clear();
         }
     }
 }
-
 

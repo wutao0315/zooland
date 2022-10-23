@@ -13,15 +13,15 @@ public class FailoverCluster : AbstractCluster
     public const string RETRIES_KEY = "retries";
     public const int DEFAULT_RETRIES = 2;
 
-    protected override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
+    protected override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> invokers, IInvocation invocation)
     {
         var goodUrls = new List<URL>();
         var badUrls = new List<BadUrl>();
 
-        CheckInvokers(urls, invocation, address);
+        CheckInvokers(invokers, invocation, address);
 
-        //路由
-        var invokers = base.Route(urls);
+        ////路由
+        //var invokers = base.Route(urls, address, invocation);
 
         //*getUrl();
         int len = address.GetMethodParameter(invocation.MethodInfo.Name, RETRIES_KEY, DEFAULT_RETRIES) + 1;

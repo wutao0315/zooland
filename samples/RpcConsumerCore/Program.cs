@@ -344,8 +344,8 @@ class Program
             try
             {
                 map(helloword);
-                var mode = Console.ReadLine().ToLower();
-                helloword = mode;
+                var mode = Console.ReadLine();
+                helloword = mode??"hello";
                 if (helloword == "end")
                 {
                     break;

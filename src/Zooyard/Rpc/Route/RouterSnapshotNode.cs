@@ -1,9 +1,8 @@
 ﻿using System.Text;
-using Zooyard.Rpc.Route.State;
 
 namespace Zooyard.Rpc.Route;
 
-public class RouterSnapshotNode<T>
+public class RouterSnapshotNode
 {
     private readonly string name;
     private readonly int beforeSize;
@@ -13,8 +12,8 @@ public class RouterSnapshotNode<T>
     private readonly IList<URL> inputInvokers;
     private IList<URL> nodeOutputInvokers;
     private IList<URL> chainOutputInvokers;
-    private readonly ICollection<RouterSnapshotNode<T>> nextNode = new LinkedList<RouterSnapshotNode<T>>();
-    private RouterSnapshotNode<T> parentNode;
+    private readonly ICollection<RouterSnapshotNode> nextNode = new LinkedList<RouterSnapshotNode>();
+    private RouterSnapshotNode parentNode;
 
     public RouterSnapshotNode(string name, IList<URL> inputInvokers)
     {
@@ -85,17 +84,17 @@ public class RouterSnapshotNode<T>
         return chainOutputInvokers;
     }
 
-    public ICollection<RouterSnapshotNode<T>> getNextNode()
+    public ICollection<RouterSnapshotNode> getNextNode()
     {
         return nextNode;
     }
 
-    public RouterSnapshotNode<T> getParentNode()
+    public RouterSnapshotNode getParentNode()
     {
         return parentNode;
     }
 
-    public void appendNode(RouterSnapshotNode<T> nextNode)
+    public void appendNode(RouterSnapshotNode nextNode)
     {
         this.nextNode.Add(nextNode);
         nextNode.parentNode = this;
@@ -154,7 +153,7 @@ public class RouterSnapshotNode<T>
         {
             stringBuilder.Append("...");
         }
-        foreach (RouterSnapshotNode<T> node in nextNode)
+        foreach (RouterSnapshotNode node in nextNode)
         {
             stringBuilder.Append("\n");
             for (int i = 0; i < level; i++)

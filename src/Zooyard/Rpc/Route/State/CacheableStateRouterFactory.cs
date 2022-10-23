@@ -7,16 +7,15 @@ using System.Threading.Tasks;
 
 namespace Zooyard.Rpc.Route.State
 {
-    public abstract class CacheableStateRouterFactory<T>: IStateRouterFactory<T>
+    public abstract class CacheableStateRouterFactory: IStateRouterFactory
     {
-        private readonly ConcurrentDictionary<string, IStateRouter<T>> routerMap = new ();
+        private readonly ConcurrentDictionary<string, IStateRouter> routerMap = new ();
 
-        public IStateRouter<T> GetRouter(Type interfaceClass, URL url)
+        public IStateRouter GetRouter(Type interfaceClass, URL address)
         {
-            return routerMap.GetOrAdd(url.ServiceKey, createRouter(interfaceClass, url));
-            //return routerMap.computeIfAbsent(url.getServiceKey(), k->createRouter(interfaceClass, url));
+            return routerMap.GetOrAdd(address.ServiceKey, CreateRouter(interfaceClass, address));
         }
-
-        protected abstract IStateRouter<T> createRouter(Type interfaceClass, URL url);
+        public abstract string Name { get;}
+        protected abstract IStateRouter CreateRouter(Type interfaceClass, URL address);
     }
 }

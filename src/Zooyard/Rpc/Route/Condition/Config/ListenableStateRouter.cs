@@ -6,16 +6,16 @@ using Zooyard.Utils;
 
 namespace Zooyard.Rpc.Route.Condition.Config;
 
-public abstract class ListenableStateRouter<T> : AbstractStateRouter<T>
+public abstract class ListenableStateRouter : AbstractStateRouter
 {
     public const string NAME = "LISTENABLE_ROUTER";
     private const string RULE_SUFFIX = ".condition-router";
-    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ListenableStateRouter<>));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ListenableStateRouter));
     private volatile ConditionRouterRule? routerRule;
-    private volatile List<ConditionStateRouter<T>> conditionRouters = new();
+    private volatile List<ConditionStateRouter> conditionRouters = new();
     private string ruleKey;
 
-    public ListenableStateRouter(URL url, string ruleKey):base(url)
+    public ListenableStateRouter(URL address, string ruleKey):base(address)
     {
         this.Force = false;
         this.init(ruleKey);
@@ -44,13 +44,14 @@ public abstract class ListenableStateRouter<T> : AbstractStateRouter<T>
     //}
 
     protected override IList<URL> DoRoute(IList<URL> invokers, URL address, IInvocation invocation,
-                                       bool needToPrintMessage, Holder<RouterSnapshotNode<T>> nodeHolder, Holder<String> messageHolder)
+                                       bool needToPrintMessage)//, Holder<RouterSnapshotNode> nodeHolder, Holder<String> messageHolder)
     {
         if (invokers.Count == 0 || conditionRouters.Count == 0)
         {
             if (needToPrintMessage)
             {
-                messageHolder.Value = "Directly return. Reason: Invokers from previous router is empty or conditionRouters is empty.";
+                Logger().LogInformation("Directly return. Reason: Invokers from previous router is empty or conditionRouters is empty.");
+               // messageHolder.Value = "Directly return. Reason: Invokers from previous router is empty or conditionRouters is empty.";
             }
             return invokers;
         }
@@ -61,18 +62,18 @@ public abstract class ListenableStateRouter<T> : AbstractStateRouter<T>
         {
             resultMessage = new StringBuilder();
         }
-        foreach (AbstractStateRouter<T> router in conditionRouters)
+        foreach (AbstractStateRouter router in conditionRouters)
         {
-            invokers = router.Route(invokers, address, invocation, needToPrintMessage, nodeHolder);
+            invokers = router.Route(invokers, address, invocation, needToPrintMessage);//, nodeHolder);
             if (needToPrintMessage)
             {
-                resultMessage.Append(messageHolder.Value);
+                //resultMessage.Append(messageHolder.Value);
             }
         }
 
         if (needToPrintMessage)
         {
-            messageHolder.Value = resultMessage.ToString();
+            //messageHolder.Value = resultMessage.ToString();
         }
 
         return invokers;
@@ -109,9 +110,9 @@ public abstract class ListenableStateRouter<T> : AbstractStateRouter<T>
         //}
     }
 
-    public void Stop()
-    {
-        //this.getRuleRepository().removeListener(ruleKey + RULE_SUFFIX, this);
-    }
+    //public void Stop()
+    //{
+    //    //this.getRuleRepository().removeListener(ruleKey + RULE_SUFFIX, this);
+    //}
 
 }

@@ -7,24 +7,23 @@ using Zooyard.Utils;
 
 namespace Zooyard.Rpc.Route.State
 {
-    public interface IStateRouter<T>
+    public interface IStateRouter
     {
         ///// <summary>
         ///// Get the router url.
         ///// </summary>
         //URL Url { get; }
-
         /// <summary>
         /// Filter invokers with current routing rule and only return the invokers that comply with the rule.
         /// Caching address lists in BitMap mode improves routing performance.
         /// </summary>
         /// <param name="invokers">invoker bit list</param>
-        /// <param name="address">refer url</param>
+        /// <param name="url">refer url</param>
         /// <param name="invocation">invocation</param>
         /// <param name="needToPrintMessage">whether to print router state. Such as `use router branch a`.</param>
-        /// <param name="nodeHolder"></param>
+        ///// <param name="nodeHolder"></param>
         /// <returns>with route result</returns>
-        IList<URL> Route(IList<URL> invokers, URL address, IInvocation invocation, bool needToPrintMessage, Holder<RouterSnapshotNode<T>> nodeHolder);
+        IList<URL> Route(IList<URL> invokers, URL url, IInvocation invocation, bool needToPrintMessage);//, Holder<RouterSnapshotNode> nodeHolder);
 
         /// <summary>
         /// To decide whether this router need to execute every time an RPC comes or should only execute when addresses or
@@ -49,20 +48,20 @@ namespace Zooyard.Rpc.Route.State
         ///// <param name="invokers">invoker list</param>
         //void Notify(BitList<IInvoker> invokers);
 
-        /// <summary>
-        /// Build Router's Current State Snapshot for QoS
-        /// </summary>
-        /// <returns>Current State</returns>
-        string BuildSnapshot();
+        ///// <summary>
+        ///// Build Router's Current State Snapshot for QoS
+        ///// </summary>
+        ///// <returns>Current State</returns>
+        //string BuildSnapshot();
 
-        void Stop()
-        {
-            //do nothing by default
-        }
-        /// <summary>
-        /// Notify next router node to current router.
-        /// </summary>
-        /// <param name="nextRouter">next router node</param>
-        void SetNextRouter(IStateRouter<T> nextRouter);
+        //void Stop()
+        //{
+        //    //do nothing by default
+        //}
+        ///// <summary>
+        ///// Notify next router node to current router.
+        ///// </summary>
+        ///// <param name="nextRouter">next router node</param>
+        //void SetNextRouter(IStateRouter nextRouter);
     }
 }

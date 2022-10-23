@@ -1,44 +1,46 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Security.Policy;
+using System.Text.RegularExpressions;
 using Zooyard.Logging;
 using Zooyard.Rpc.Route.State;
 using Zooyard.Utils;
 
 namespace Zooyard.Rpc.Route.Condition;
 
-public class ConditionStateRouter<T> : AbstractStateRouter<T>
+public class ConditionStateRouter : AbstractStateRouter
 {
     public static readonly string NAME = "condition";
 
-    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ConditionStateRouter<>));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ConditionStateRouter));
     protected static Regex ROUTE_PATTERN = new("([&!=,]*)\\s*([^&!=,\\s]+)", RegexOptions.Compiled);
     protected static Regex ARGUMENTS_PATTERN = new("arguments\\[([0-9]+)\\]", RegexOptions.Compiled);
-    protected Dictionary<String, MatchPair> whenCondition;
-    protected Dictionary<String, MatchPair> thenCondition;
+    protected Dictionary<String, MatchPair>? whenCondition;
+    protected Dictionary<String, MatchPair>? thenCondition;
 
-    private bool enabled;
-
-    public ConditionStateRouter(URL url, String rule, bool force, bool enabled) : base(url)
+    private readonly bool _enabled;
+    public ConditionStateRouter(URL address)
+        :base(address)
+    {
+        this.Force = address.GetParameter(Constants.FORCE_KEY, false);
+        _enabled = address.GetParameter(Constants.ENABLED_KEY, true);
+        if (_enabled)
+        {
+            Init(address.GetParameterAndDecoded(Constants.RULE_KEY));
+        }
+    }
+    public ConditionStateRouter(URL address, string rule, bool force, bool enabled):this(address)
     {
         this.Force = force;
-        this.enabled = enabled;
+        _enabled = enabled;
         if (enabled)
         {
-            this.init(rule);
+            this.Init(rule);
         }
     }
 
-    public ConditionStateRouter(URL url) : base(url)
-    {
-        this.Url = url;
-        this.Force = url.GetParameter(Constants.FORCE_KEY, false);
-        this.enabled = url.GetParameter(Constants.ENABLED_KEY, true);
-        if (enabled)
-        {
-            init(url.GetParameterAndDecoded(Constants.RULE_KEY));
-        }
-    }
+   
 
-    public void init(string rule)
+    public void Init(string rule)
     {
         try
         {
@@ -48,10 +50,10 @@ public class ConditionStateRouter<T> : AbstractStateRouter<T>
             }
             rule = rule.Replace("consumer.", "").Replace("provider.", "");
             int i = rule.IndexOf("=>");
-            string whenRule = i < 0 ? null : rule.Substring(0, i).Trim();
+            string? whenRule = i < 0 ? null : rule.Substring(0, i).Trim();
             string thenRule = i < 0 ? rule.Trim() : rule.Substring(i + 2).Trim();
-            Dictionary<string, MatchPair> when = string.IsNullOrWhiteSpace(whenRule) || "true".Equals(whenRule) ? new Dictionary<string, MatchPair>() : parseRule(whenRule);
-            Dictionary<string, MatchPair> then = string.IsNullOrWhiteSpace(thenRule) || "false".Equals(thenRule) ? null : parseRule(thenRule);
+            Dictionary<string, MatchPair> when = string.IsNullOrWhiteSpace(whenRule) || "true".Equals(whenRule) ? new Dictionary<string, MatchPair>() : ParseRule(whenRule);
+            Dictionary<string, MatchPair>? then = string.IsNullOrWhiteSpace(thenRule) || "false".Equals(thenRule) ? null : ParseRule(thenRule);
             // NOTE: It should be determined on the business level whether the `When condition` can be empty or not.
             this.whenCondition = when;
             this.thenCondition = then;
@@ -62,7 +64,7 @@ public class ConditionStateRouter<T> : AbstractStateRouter<T>
         }
     }
 
-    private static Dictionary<string, MatchPair> parseRule(string rule)
+    private static Dictionary<string, MatchPair> ParseRule(string rule)
     {
         var condition = new Dictionary<string, MatchPair>();
         if (string.IsNullOrWhiteSpace(rule))
@@ -70,9 +72,9 @@ public class ConditionStateRouter<T> : AbstractStateRouter<T>
             return condition;
         }
         // Key-Value pair, stores both match and mismatch conditions
-        MatchPair pair = null;
+        MatchPair? pair = null;
         // Multiple values
-        HashSet<string> values = null;
+        HashSet<string>? values = null;
 
         var matcher = ROUTE_PATTERN.Match(rule);
 
@@ -152,15 +154,15 @@ public class ConditionStateRouter<T> : AbstractStateRouter<T>
         return condition;
     }
 
-    protected override IList<URL> DoRoute(IList<URL> invokers, URL address, IInvocation invocation,
-                                              bool needToPrintMessage, Holder<RouterSnapshotNode<T>> nodeHolder,
-                                              Holder<String> messageHolder)
+    protected override IList<URL> DoRoute(IList<URL> invokers, URL url, IInvocation invocation,
+                                              bool needToPrintMessage)//, Holder<RouterSnapshotNode<T>> nodeHolder,Holder<String> messageHolder)
     {
-        if (!enabled)
+        if (!_enabled)
         {
             if (needToPrintMessage)
             {
-                messageHolder.Value = "Directly return. Reason: ConditionRouter disabled.";
+                Logger().LogInformation("Directly return. Reason: ConditionRouter disabled.");
+                //messageHolder.Value = "Directly return. Reason: ConditionRouter disabled.";
             }
             return invokers;
         }
@@ -169,77 +171,85 @@ public class ConditionStateRouter<T> : AbstractStateRouter<T>
         {
             if (needToPrintMessage)
             {
-                messageHolder.Value = "Directly return. Reason: Invokers from previous router is empty.";
+                Logger().LogInformation("Directly return. Reason: Invokers from previous router is empty.");
+                //messageHolder.Value = "Directly return. Reason: Invokers from previous router is empty.";
             }
             return invokers;
         }
         try
         {
-            if (!matchWhen(address, invocation))
+            if (!MatchWhen(url, invocation))
             {
                 if (needToPrintMessage)
                 {
-                    messageHolder.Value = "Directly return. Reason: WhenCondition not match.";
+                    Logger().LogInformation("Directly return. Reason: WhenCondition not match.");
+                    //messageHolder.Value = "Directly return. Reason: WhenCondition not match.";
                 }
                 return invokers;
             }
             if (thenCondition == null)
             {
-                Logger().LogWarning("The current consumer in the service blacklist. consumer: " + NetUtil.LocalHost + ", service: " + address.ServiceKey);
+                Logger().LogWarning("The current consumer in the service blacklist. consumer: " + NetUtil.LocalHost + ", service: " + url.ServiceKey);
                 if (needToPrintMessage)
                 {
-                    messageHolder.Value = "Empty return. Reason: ThenCondition is empty.";
+                    Logger().LogInformation("Empty return. Reason: ThenCondition is empty.");
+                    //messageHolder.Value = "Empty return. Reason: ThenCondition is empty.";
                 }
                 return new List<URL>();
             }
-            IList<URL> result = invokers;//.clone();
+            var result = new List<URL>(invokers);
+
+            result.RemoveAll(invoker => !MatchThen(invoker, url));
             //result.removeIf(invoker-> !matchThen(invoker.getUrl(), url));
 
             if (result.Count>0)
             {
                 if (needToPrintMessage)
                 {
-                    messageHolder.Value = "Match return.";
+                    Logger().LogInformation("Match return.");
+                    //messageHolder.Value = "Match return.";
                 }
                 return result;
             }
             else if (this.Force)
             {
-                Logger().LogWarning("The route result is empty and force execute. consumer: " + NetUtil.LocalHost + ", service: " + address.ServiceKey + ", router: " + address.GetParameterAndDecoded(Constants.RULE_KEY));
+                Logger().LogWarning("The route result is empty and force execute. consumer: " + NetUtil.LocalHost + ", service: " + url.ServiceKey + ", router: " + url.GetParameterAndDecoded(Constants.RULE_KEY));
 
                 if (needToPrintMessage)
                 {
-                    messageHolder.Value = "Empty return. Reason: Empty result from condition and condition is force.";
+                    Logger().LogInformation("Empty return. Reason: Empty result from condition and condition is force.");
+                    //messageHolder.Value = "Empty return. Reason: Empty result from condition and condition is force.";
                 }
                 return result;
             }
         }
         catch (Exception t)
         {
-            Logger().LogError(t, "Failed to execute condition router rule: " + Url + ", invokers: " + invokers + ", cause: " + t.Message);
+            Logger().LogError(t, $"Failed to execute condition router rule: {Address}, invokers: {invokers}, cause: {t.Message}");
         }
         if (needToPrintMessage)
         {
-            messageHolder.Value = "Directly return. Reason: Error occurred ( or result is empty ).";
+            Logger().LogInformation("Directly return. Reason: Error occurred ( or result is empty ).");
+            //messageHolder.Value = "Directly return. Reason: Error occurred ( or result is empty ).";
         }
         return invokers;
     }
 
     // We always return true for previously defined Router, that is, old Router doesn't support cache anymore.
     //        return true;
-    public override bool Runtime => this.Url.GetParameter(Constants.RUNTIME_KEY, false);
+    public override bool Runtime => this.Address.GetParameter(Constants.RUNTIME_KEY, false);
 
-    bool matchWhen(URL url, IInvocation invocation)
+    bool MatchWhen(URL url, IInvocation invocation)
     {
-        return whenCondition.Count==0 || matchCondition(whenCondition, url, null, invocation);
+        return whenCondition!.Count==0 || MatchCondition(whenCondition, url, null, invocation);
     }
 
-    private bool matchThen(URL url, URL param)
+    private bool MatchThen(URL url, URL param)
     {
-        return thenCondition.Count>0 && matchCondition(thenCondition, url, param, null);
+        return thenCondition!.Count>0 && MatchCondition(thenCondition, url, param, null);
     }
 
-    private bool matchCondition(Dictionary<String, MatchPair> condition, URL url, URL param, IInvocation invocation)
+    private bool MatchCondition(Dictionary<string, MatchPair> condition, URL url, URL? param, IInvocation? invocation)
     {
         IDictionary<String, String> sample = url.ToMap();
         bool result = false;
@@ -249,7 +259,7 @@ public class ConditionStateRouter<T> : AbstractStateRouter<T>
 
             if (key.StartsWith(Constants.ARGUMENTS))
             {
-                if (!matchArguments(matchPair, invocation))
+                if (!MatchArguments(matchPair, invocation!))
                 {
                     return false;
                 }
@@ -260,7 +270,7 @@ public class ConditionStateRouter<T> : AbstractStateRouter<T>
                 }
             }
 
-            String sampleValue;
+            string? sampleValue;
             //get real invoked method name from invocation
             if (invocation != null && (CommonConstants.METHOD_KEY.Equals(key) || CommonConstants.METHODS_KEY.Equals(key)))
             {
@@ -280,7 +290,7 @@ public class ConditionStateRouter<T> : AbstractStateRouter<T>
             }
             if (sampleValue != null)
             {
-                if (!matchPair.Value.isMatch(sampleValue, param))
+                if (!matchPair.Value.IsMatch(sampleValue, param))
                 {
                     return false;
                 }
@@ -305,23 +315,24 @@ public class ConditionStateRouter<T> : AbstractStateRouter<T>
         return result;
     }
 
-    /**
-     * analysis the arguments in the rule.
-     * Examples would be like this:
-     * "arguments[0]=1", whenCondition is that the first argument is equal to '1'.
-     * "arguments[1]=a", whenCondition is that the second argument is equal to 'a'.
-     * @param matchPair
-     * @param invocation
-     * @return
-     */
-    private bool matchArguments(KeyValuePair<string, MatchPair> matchPair, IInvocation invocation)
+    /// <summary>
+    /// analysis the arguments in the rule.
+    /// Examples would be like this:
+    /// "arguments[0]=1", whenCondition is that the first argument is equal to '1'.
+    /// "arguments[1]=a", whenCondition is that the second argument is equal to 'a'.
+    /// 
+    /// </summary>
+    /// <param name="matchPair"></param>
+    /// <param name="invocation"></param>
+    /// <returns></returns>
+    private bool MatchArguments(KeyValuePair<string, MatchPair> matchPair, IInvocation invocation)
     {
         try
         {
             // split the rule
-            String key = matchPair.Key;
-            String[] expressArray = key.Split("\\.");
-            String argumentExpress = expressArray[0];
+            string key = matchPair.Key;
+            string[] expressArray = key.Split("\\.");
+            string argumentExpress = expressArray[0];
             Match matcher = ARGUMENTS_PATTERN.Match(argumentExpress);
             if (matcher == null)
             {
@@ -338,14 +349,14 @@ public class ConditionStateRouter<T> : AbstractStateRouter<T>
             //extract the argument value
             object obj = invocation.Arguments[index];
 
-            if (matchPair.Value.isMatch(obj.ToString(), null))
+            if (matchPair.Value.IsMatch(obj.ToString(), null))
             {
                 return true;
             }
         }
         catch (Exception e)
         {
-            Logger().LogWarning(e, "Arguments match failed, matchPair[]" + matchPair + "] invocation[" + invocation + "]");
+            Logger().LogWarning(e, $"Arguments match failed, matchPair[]{matchPair}] invocation[{invocation}]");
         }
 
         return false;
@@ -356,13 +367,13 @@ public class ConditionStateRouter<T> : AbstractStateRouter<T>
         internal readonly HashSet<string> matches = new();
         internal readonly HashSet<string> mismatches = new();
 
-        internal bool isMatch(string value, URL param)
+        internal bool IsMatch(string? value, URL? param)
         {
             if (matches.Count > 0 && mismatches.Count > 0)
             {
                 foreach (string match in matches)
                 {
-                    if (UrlUtils.isMatchGlobPattern(match, value, param))
+                    if (UrlUtils.IsMatchGlobPattern(match, value, param))
                     {
                         return true;
                     }
@@ -374,7 +385,7 @@ public class ConditionStateRouter<T> : AbstractStateRouter<T>
             {
                 foreach (string mismatch in mismatches)
                 {
-                    if (UrlUtils.isMatchGlobPattern(mismatch, value, param))
+                    if (UrlUtils.IsMatchGlobPattern(mismatch, value, param))
                     {
                         return false;
                     }
@@ -387,14 +398,14 @@ public class ConditionStateRouter<T> : AbstractStateRouter<T>
                 //when both mismatches and matches contain the same value, then using mismatches first
                 foreach (string mismatch in mismatches)
                 {
-                    if (UrlUtils.isMatchGlobPattern(mismatch, value, param))
+                    if (UrlUtils.IsMatchGlobPattern(mismatch, value, param))
                     {
                         return false;
                     }
                 }
                 foreach (string match in matches)
                 {
-                    if (UrlUtils.isMatchGlobPattern(match, value, param))
+                    if (UrlUtils.IsMatchGlobPattern(match, value, param))
                     {
                         return true;
                     }

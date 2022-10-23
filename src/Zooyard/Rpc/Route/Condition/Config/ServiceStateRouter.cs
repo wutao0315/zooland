@@ -1,10 +1,10 @@
 ﻿namespace Zooyard.Rpc.Route.Condition.Config;
 
-public class ServiceStateRouter<T> : ListenableStateRouter<T>
+public class ServiceStateRouter : ListenableStateRouter
 {
-    public const string NAME = "SERVICE_ROUTER";
+    public new const string NAME = "SERVICE_ROUTER";
 
-    public ServiceStateRouter(URL url):base(url, "")
+    public ServiceStateRouter(URL address):base(address, address.GetParameter("rule","service"))
     {
         //super(url, DynamicConfiguration.getRuleKey(url));
     }

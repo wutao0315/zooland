@@ -4,26 +4,25 @@ using Zooyard.Utils;
 
 namespace Zooyard.Rpc.Route.Mock;
 
-public class MockInvokersSelector<T> : AbstractStateRouter<T>
+public class MockStateRouter : AbstractStateRouter
 {
     public const string NAME = "MOCK_ROUTER";
 
     private volatile IList<URL> normalInvokers = new List<URL>();
     private volatile IList<URL> mockedInvokers = new List<URL>();
 
-    public MockInvokersSelector(URL url) : base(url)
+    public MockStateRouter(URL address) : base(address)
     {
     }
 
     protected override IList<URL> DoRoute(IList<URL> invokers, URL url, IInvocation invocation,
-                                          bool needToPrintMessage, Holder<RouterSnapshotNode<T>> nodeHolder,
-                                          Holder<String> messageHolder)
+                                          bool needToPrintMessage)//, Holder<RouterSnapshotNode> nodeHolder,Holder<String> messageHolder)
     {
         if (invokers.Count == 0)
         {
             if (needToPrintMessage)
             {
-                messageHolder.Value = "Empty invokers. Directly return.";
+                //messageHolder.Value = "Empty invokers. Directly return.";
             }
             return invokers;
         }
@@ -32,7 +31,7 @@ public class MockInvokersSelector<T> : AbstractStateRouter<T>
         {
             if (needToPrintMessage)
             {
-                messageHolder.Value = "ObjectAttachments from invocation are null. Return normal Invokers.";
+                //messageHolder.Value = "ObjectAttachments from invocation are null. Return normal Invokers.";
             }
             return invokers.Intersect(normalInvokers).ToList();
             //交集
@@ -46,7 +45,7 @@ public class MockInvokersSelector<T> : AbstractStateRouter<T>
             {
                 if (needToPrintMessage)
                 {
-                    messageHolder.Value = "invocation.need.mock not set. Return normal Invokers.";
+                    //messageHolder.Value = "invocation.need.mock not set. Return normal Invokers.";
                 }
                 return invokers.Intersect(normalInvokers).ToList();
                 //return invokers.and(normalInvokers);
@@ -55,7 +54,7 @@ public class MockInvokersSelector<T> : AbstractStateRouter<T>
             {
                 if (needToPrintMessage)
                 {
-                    messageHolder.Value = "invocation.need.mock is true. Return mocked Invokers.";
+                    //messageHolder.Value = "invocation.need.mock is true. Return mocked Invokers.";
                 }
                 return invokers.Intersect(mockedInvokers).ToList();
                 //return invokers.and(mockedInvokers);
@@ -63,7 +62,7 @@ public class MockInvokersSelector<T> : AbstractStateRouter<T>
         }
         if (needToPrintMessage)
         {
-            messageHolder.Value = "Directly Return. Reason: invocation.need.mock is set but not match true";
+            //messageHolder.Value = "Directly Return. Reason: invocation.need.mock is set but not match true";
         }
         return invokers;
     }

@@ -2,12 +2,12 @@
 
 namespace Zooyard.Rpc.Route.Script;
 
-public class ScriptStateRouterFactory<T>: IStateRouterFactory<T>
+public class ScriptStateRouterFactory: IStateRouterFactory
 {
     public const string NAME = "script";
-
-    public IStateRouter<T> GetRouter(Type interfaceClass, URL url)
+    public string Name => NAME;
+    public IStateRouter GetRouter(Type interfaceClass, URL address)
     {
-        return new ScriptStateRouter<T>(url);
+        return new ScriptStateRouter(address);
     }
 }

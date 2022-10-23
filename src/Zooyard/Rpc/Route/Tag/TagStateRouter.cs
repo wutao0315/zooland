@@ -5,17 +5,17 @@ using Zooyard.Utils;
 
 namespace Zooyard.Rpc.Route.Tag;
 
-public class TagStateRouter<T> : AbstractStateRouter<T>
+public class TagStateRouter : AbstractStateRouter
 {
     public const string NAME = "TAG_ROUTER";
     private const string TAG_KEY = "tag";
-    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(TagStateRouter<>));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(TagStateRouter));
     private static readonly string RULE_SUFFIX = ".tag-router";
 
     private TagRouterRule tagRouterRule;
     private string application;
 
-    public TagStateRouter(URL url) : base(url)
+    public TagStateRouter(URL address) : base(address)
     {
     }
 
@@ -43,13 +43,13 @@ public class TagStateRouter<T> : AbstractStateRouter<T>
     //    }
     //}
 
-    protected override IList<URL> DoRoute(IList<URL> invokers, URL address, IInvocation invocation, bool needToPrintMessage, Holder<RouterSnapshotNode<T>> nodeHolder, Holder<String> messageHolder)
+    protected override IList<URL> DoRoute(IList<URL> invokers, URL address, IInvocation invocation, bool needToPrintMessage)//, Holder<RouterSnapshotNode> nodeHolder, Holder<string> messageHolder)
     {
         if (invokers.Count == 0)
         {
             if (needToPrintMessage)
             {
-                messageHolder.Value = "Directly Return. Reason: Invokers from previous router is empty.";
+                //messageHolder.Value = "Directly Return. Reason: Invokers from previous router is empty.";
             }
             return invokers;
         }
@@ -60,7 +60,7 @@ public class TagStateRouter<T> : AbstractStateRouter<T>
         {
             if (needToPrintMessage)
             {
-                messageHolder.Value = "Disable Tag Router. Reason: tagRouterRule is invalid or disabled";
+               // messageHolder.Value = "Disable Tag Router. Reason: tagRouterRule is invalid or disabled";
             }
             return filterUsingStaticTag(invokers, address, invocation);
         }
@@ -81,7 +81,7 @@ public class TagStateRouter<T> : AbstractStateRouter<T>
                 {
                     if (needToPrintMessage)
                     {
-                        messageHolder.Value = "Use tag " + tag + " to route. Reason: result is not null OR it's null but force=true";
+                       // messageHolder.Value = "Use tag " + tag + " to route. Reason: result is not null OR it's null but force=true";
                     }
                     return result;
                 }
@@ -98,7 +98,7 @@ public class TagStateRouter<T> : AbstractStateRouter<T>
             {
                 if (needToPrintMessage)
                 {
-                    messageHolder.Value = "Use tag " + tag + " to route. Reason: result is not empty or ForceUseTag key is true in invocation";
+                   // messageHolder.Value = "Use tag " + tag + " to route. Reason: result is not empty or ForceUseTag key is true in invocation";
                 }
                 return result;
             }
@@ -127,7 +127,7 @@ public class TagStateRouter<T> : AbstractStateRouter<T>
                 {
                     if (needToPrintMessage)
                     {
-                        messageHolder.Value = "all addresses are in dynamic tag group, return empty list";
+                        //messageHolder.Value = "all addresses are in dynamic tag group, return empty list";
                     }
                     return result;
                 }
@@ -136,7 +136,7 @@ public class TagStateRouter<T> : AbstractStateRouter<T>
             }
             if (needToPrintMessage)
             {
-                messageHolder.Value = "filter using the static tag group";
+                //messageHolder.Value = "filter using the static tag group";
             }
             //return filterInvoker(result, invoker-> { string localTag = invoker.getUrl().getParameter(TAG_KEY);
             //    return string.IsNullOrWhiteSpace(localTag) || !tagRouterRuleCopy.getTagNames().contains(localTag);
@@ -186,7 +186,7 @@ public class TagStateRouter<T> : AbstractStateRouter<T>
 
     private bool isForceUseTag(IInvocation invocation)
     {
-        return bool.Parse(invocation.GetAttachment(Constants.FORCE_USE_TAG, this.Url.GetParameter(Constants.FORCE_USE_TAG, "false")));
+        return bool.Parse(invocation.GetAttachment(Constants.FORCE_USE_TAG, this.Address.GetParameter(Constants.FORCE_USE_TAG, "false")));
     }
 
     private IList<URL> filterInvoker(IList<URL> invokers, Predicate<URL> predicate)

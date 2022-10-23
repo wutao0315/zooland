@@ -4,16 +4,16 @@ namespace Zooyard.Utils;
 
 public class UrlUtils
 {
-    public static bool isMatchGlobPattern(String pattern, String value, URL param)
+    public static bool IsMatchGlobPattern(string pattern, string? value, URL? param)
     {
         if (param != null && pattern.StartsWith("$"))
         {
-            pattern = param.GetRawParameter(pattern.Substring(1));
+            pattern = param.GetRawParameter(pattern.Substring(1))!;
         }
-        return isMatchGlobPattern(pattern, value);
+        return IsMatchGlobPattern(pattern, value);
     }
 
-    public static bool isMatchGlobPattern(String pattern, String value)
+    public static bool IsMatchGlobPattern(string? pattern, string? value)
     {
         if ("*".Equals(pattern))
         {

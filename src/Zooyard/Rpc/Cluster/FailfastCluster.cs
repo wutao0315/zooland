@@ -14,7 +14,7 @@ public class FailfastCluster : AbstractCluster
     public const string NAME = "failfast";
 
 
-    protected override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
+    protected override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> invokers, IInvocation invocation)
     {
         var goodUrls = new List<URL>();
         var badUrls = new List<BadUrl>();
@@ -22,12 +22,12 @@ public class FailfastCluster : AbstractCluster
         Exception? exception = null;
         var isThrow = false;
 
-        CheckInvokers(urls, invocation, address);
+        CheckInvokers(invokers, invocation, address);
 
-        //路由
-        var invokers = base.Route(urls);
+        ////路由
+        //var invokers = base.Route(urls, address, invocation);
 
-        var invoker = base.Select(loadbalance, invocation, invokers, null);
+        var invoker = base.Select(loadbalance, invocation, invokers);
 
         try
         {
@@ -62,7 +62,7 @@ public class FailfastCluster : AbstractCluster
 
                 exception = new RpcException(e is RpcException eRpc ? eRpc.Code : 0, "Failfast invoke providers "
                 + invoker + " " + loadbalance.GetType().Name
-                + " select from all providers " + string.Join(",", urls)
+                + " select from all providers " + string.Join(",", invokers)
                 + " for service " + invocation.TargetType.FullName
                 + " method " + invocation.MethodInfo.Name
                 + " on consumer " + Local.HostName

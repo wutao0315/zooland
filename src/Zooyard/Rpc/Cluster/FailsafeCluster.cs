@@ -11,15 +11,15 @@ public class FailsafeCluster : AbstractCluster
     public const string NAME = "failsafe";
 
 
-    protected override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
+    protected override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> invokers, IInvocation invocation)
     {
         var goodUrls = new List<URL>();
         var badUrls = new List<BadUrl>();
         Exception? exception = null;
-        CheckInvokers(urls, invocation, address);
+        CheckInvokers(invokers, invocation, address);
 
-        //路由
-        var invokers = base.Route(urls);
+        ////路由
+        //var invokers = base.Route(urls, address, invocation);
 
         var invoker = base.Select(loadbalance, invocation, invokers, null);
         try
@@ -41,8 +41,6 @@ public class FailsafeCluster : AbstractCluster
                 _source.WriteConsumerError(invoker, invocation, ex);
                 throw;
             }
-            
-
         }
         catch (Exception e)
         {

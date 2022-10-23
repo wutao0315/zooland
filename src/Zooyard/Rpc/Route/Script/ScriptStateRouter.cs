@@ -6,11 +6,11 @@ using Zooyard.Utils;
 
 namespace Zooyard.Rpc.Route.Script;
 
-public class ScriptStateRouter<T> : AbstractStateRouter<T>
+public class ScriptStateRouter : AbstractStateRouter
 {
     public const string NAME = "SCRIPT_ROUTER";
     private const int SCRIPT_ROUTER_DEFAULT_PRIORITY = 0;
-    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ScriptStateRouter<>));
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ScriptStateRouter));
 
     private static readonly ConcurrentDictionary<string, V8ScriptEngine> ENGINES = new ();
 
@@ -31,12 +31,12 @@ public class ScriptStateRouter<T> : AbstractStateRouter<T>
     //});
     //}
 
-    public ScriptStateRouter(URL url) : base(url)
+    public ScriptStateRouter(URL address) : base(address)
     {
-        this.Url = url;
+        //this.Url = url;
 
-        _engine = GetEngine(url);
-        _rule = GetRule(url);
+        _engine = GetEngine(address);
+        _rule = GetRule(address);
         try
         {
             _function = _engine.Compile(_rule);
@@ -69,16 +69,16 @@ public class ScriptStateRouter<T> : AbstractStateRouter<T>
     /// <summary>
     /// create ScriptEngine instance by type from url parameters, then cache it
     /// </summary>
-    /// <param name="url"></param>
+    /// <param name="address"></param>
     /// <returns></returns>
-    private V8ScriptEngine GetEngine(URL url)
+    private V8ScriptEngine GetEngine(URL address)
     {
-        string type = url.GetParameter(Constants.TYPE_KEY, Constants.DEFAULT_SCRIPT_TYPE_KEY);
+        string type = address.GetParameter(Constants.TYPE_KEY, Constants.DEFAULT_SCRIPT_TYPE_KEY);
 
-        var result = ENGINES.GetOrAdd(type, (t) => {
+        var result = ENGINES.GetOrAdd(Constants.DEFAULT_SCRIPT_TYPE_KEY, (t) => {
 
             // 这边定义一个变量engine  生成一个v8引擎  用来执行js脚本
-            V8ScriptEngine scriptEngine = new V8ScriptEngine(type, V8ScriptEngineFlags.EnableDebugging | V8ScriptEngineFlags.AwaitDebuggerAndPauseOnStart, 9222);
+            V8ScriptEngine scriptEngine = new V8ScriptEngine(Constants.DEFAULT_SCRIPT_TYPE_KEY, V8ScriptEngineFlags.EnableDebugging | V8ScriptEngineFlags.AwaitDebuggerAndPauseOnStart, 9222);
             // 里面的参数9222为调试端口， V8ScriptEngineFlags.EnableDebugging 是否启用调试模式
             // V8ScriptEngineFlags.AwaitDebuggerAndPauseOnStart  异步停止或开始等待调试
             // type  调试引擎模式
@@ -101,13 +101,13 @@ public class ScriptStateRouter<T> : AbstractStateRouter<T>
         //});
     }
 
-    protected override IList<URL> DoRoute(IList<URL> invokers, URL url, IInvocation invocation, bool needToPrintMessage, Holder<RouterSnapshotNode<T>> nodeHolder, Holder<String> messageHolder)
+    protected override IList<URL> DoRoute(IList<URL> invokers, URL url, IInvocation invocation, bool needToPrintMessage) //, Holder<RouterSnapshotNode> nodeHolder, Holder<String> messageHolder)
     {
         if (_engine == null || _function == null)
         {
             if (needToPrintMessage)
             {
-                messageHolder.Value = "Directly Return. Reason: engine or function is null";
+                //messageHolder.Value = "Directly Return. Reason: engine or function is null";
             }
             return invokers;
         }
@@ -169,8 +169,8 @@ public class ScriptStateRouter<T> : AbstractStateRouter<T>
     //    return bindings;
     //}
 
-    public override bool Runtime => this.Url.GetParameter(Constants.RUNTIME_KEY, false);
+    public override bool Runtime => this.Address.GetParameter(Constants.RUNTIME_KEY, false);
 
-    public override bool Force => this.Url.GetParameter(Constants.FORCE_KEY, false);
+    public override bool Force => this.Address.GetParameter(Constants.FORCE_KEY, false);
 
 }

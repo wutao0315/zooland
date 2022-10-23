@@ -8,6 +8,13 @@ using Zooyard.Rpc.Cache;
 using Zooyard.Rpc.Cluster;
 using Zooyard.Rpc.LoadBalance;
 using Zooyard.Rpc.Merger;
+using Zooyard.Rpc.Route.Condition;
+using Zooyard.Rpc.Route.Condition.Config;
+using Zooyard.Rpc.Route.File;
+using Zooyard.Rpc.Route.Mock;
+using Zooyard.Rpc.Route.Script;
+using Zooyard.Rpc.Route.State;
+using Zooyard.Rpc.Route.Tag;
 
 namespace Zooyard;
 
@@ -51,6 +58,16 @@ public static class ServiceBuilderExtensions
         services.AddSingleton<ICache, ThreadLocalCache>();
         services.AddSingleton<ICache, AsyncLocalCache>();
 
+
+        services.AddSingleton<IStateRouterFactory, ConditionStateRouterFactory>();
+        services.AddSingleton<IStateRouterFactory, AppStateRouterFactory>();
+        services.AddSingleton<IStateRouterFactory, ServiceStateRouterFactory>();
+        services.AddSingleton<IStateRouterFactory, MockStateRouterFactory>();
+        services.AddSingleton<IStateRouterFactory, TagStateRouterFactory>();
+        services.AddSingleton<IStateRouterFactory, ScriptStateRouterFactory>();
+        services.AddSingleton<IStateRouterFactory, FileStateRouterFactory>();
+
+
         services.AddSingleton<IZooyardPools>((serviceProvder) =>
         {
             var option = serviceProvder.GetRequiredService<IOptionsMonitor<ZooyardOption>>();
@@ -70,21 +87,12 @@ public static class ServiceBuilderExtensions
                 clientPools.Add(serviceType.FullName!, pool);
             }
 
-            var loadbalanceList = serviceProvder.GetServices<ILoadBalance>();
-            var loadBalances = new Dictionary<string, ILoadBalance>();
-            foreach (var item in loadbalanceList)
-            {
-                loadBalances.Add(item.Name, item);
-            };
+            var loadBalances = serviceProvder.GetServices<ILoadBalance>();
+            var clusters = serviceProvder.GetServices<ICluster>();
+            var caches = serviceProvder.GetServices<ICache>();
+            var routeFactories = serviceProvder.GetServices<IStateRouterFactory>();
 
-            var clusterList = serviceProvder.GetServices<ICluster>();
-            var clusters = new Dictionary<string, ICluster>();
-            foreach (var item in clusterList)
-            {
-                clusters.Add(item.Name, item);
-            }
-
-            var zooyardPools = new ZooyardPools(clientPools, loadBalances, clusters, option);
+            var zooyardPools = new ZooyardPools(clientPools, loadBalances, clusters, caches, routeFactories, option);
             return zooyardPools;
         });
 

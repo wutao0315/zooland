@@ -1,7 +1,9 @@
-﻿using System.Diagnostics;
+﻿using Microsoft.Extensions.Options;
+using System.Diagnostics;
 using Zooyard.Diagnositcs;
 using Zooyard.Logging;
 using Zooyard.Rpc.Cache;
+using Zooyard.Rpc.Route.State;
 using Zooyard.Utils;
 
 namespace Zooyard.Rpc.Cluster;
@@ -28,20 +30,34 @@ public abstract class AbstractCluster : ICluster
 
     public abstract string Name { get; }
 
-    //private readonly Dictionary<string, ICache> _caches;
-    //public AbstractCluster(IEnumerable<ICache> caches) 
+    //private readonly IStateRouterFactory _stateRouterFactory;
+
+    //public AbstractCluster(IStateRouterFactory stateRouterFactory)
     //{
-    //    _caches = new();
-    //    foreach (var item in caches)
-    //    {
-    //        _caches.Add(item.Name, item);
-    //    }
+    //    _stateRouterFactory = stateRouterFactory;
     //}
 
-    protected IList<URL> Route(IList<URL> invokers) 
-    {
-        return invokers;
-    }
+    //protected IList<URL> Route(IList<URL> invokers, URL address, IInvocation invocation)
+    //{
+    //    var stateRoute = _stateRouterFactory.GetRouter(invocation.TargetType, address);
+
+    //    var needToPrintMessageStr = address.GetParameter($"{invocation.ServiceName}.{invocation.MethodInfo.Name}.needToPrintMessage", "");
+
+    //    if (string.IsNullOrWhiteSpace(needToPrintMessageStr)) 
+    //    {
+    //        needToPrintMessageStr = address.GetParameter($"{invocation.MethodInfo.Name}.needToPrintMessage", "");
+    //    }
+    //    if (string.IsNullOrWhiteSpace(needToPrintMessageStr))
+    //    {
+    //        needToPrintMessageStr = address.GetParameter("needToPrintMessage", "");
+    //    }
+
+    //    bool.TryParse(needToPrintMessageStr, out bool needToPrintMessage);
+
+    //    var result = stateRoute.Route(invokers, address, invocation, needToPrintMessage);
+
+    //    return result;
+    //}
 
     /// <summary>
     /// 使用loadbalance选择invoker.</br>
@@ -53,7 +69,7 @@ public abstract class AbstractCluster : ICluster
     /// <param name="invokers"></param>
     /// <param name="selected"> 已选过的invoker.注意：输入保证不重复</param>
     /// <returns></returns>
-    protected URL Select(ILoadBalance loadbalance, IInvocation invocation, IList<URL> invokers, IList<URL> selected)
+    protected URL? Select(ILoadBalance loadbalance, IInvocation invocation, IList<URL>? invokers, IList<URL>? selected = null)
     {
         if (invokers == null || invokers.Count == 0)
             return null;
@@ -82,7 +98,7 @@ public abstract class AbstractCluster : ICluster
         }
         return invoker;
 
-        URL DoSelect(ILoadBalance loadbalance, IInvocation invocation, IList<URL> invokers, IList<URL> selected)
+        URL? DoSelect(ILoadBalance loadbalance, IInvocation invocation, IList<URL>? invokers, IList<URL>? selected)
         {
             if (invokers == null || invokers.Count == 0)
                 return null;
@@ -95,48 +111,57 @@ public abstract class AbstractCluster : ICluster
             }
             var invoker = loadbalance.Select(invokers, invocation);
 
-            //如果 selected中包含（优先判断） 或者 不可用&&availablecheck=true 则重试.
-            if ((selected != null && selected.Contains(invoker)) || availablecheck)
+            if (invoker == null)
             {
-                try
+                return null;
+            }
+
+            if ((selected == null || !selected.Contains(invoker)) && !availablecheck) 
+            {
+                return invoker;
+            }
+
+            //如果 selected中包含（优先判断） 或者 不可用&&availablecheck=true 则重试.
+            try
+            {
+                var rinvoker = ReSelect(loadbalance, invocation, invokers, selected, availablecheck);
+                if (rinvoker != null)
                 {
-                    var rinvoker = ReSelect(loadbalance, invocation, invokers, selected, availablecheck);
-                    if (rinvoker != null)
-                    {
-                        invoker = rinvoker;
-                    }
-                    else
-                    {
-                        //看下第一次选的位置，如果不是最后，选+1位置.
-                        int index = invokers.IndexOf(invoker);
-                        try
-                        {
-                            //最后在避免碰撞
-                            invoker = index < invokers.Count - 1 ? invokers[index + 1] : invoker;
-                        }
-                        catch (Exception e)
-                        {
-                            Logger().LogWarning(e, e.Message + " may because invokers list dynamic change, ignore.");
-                        }
-                    }
+                    invoker = rinvoker;
                 }
-                catch (Exception t)
+                else
                 {
-                    Logger().LogError(t, $"clustor relselect fail reason is :{t.Message} if can not slove ,you can set cluster.availablecheck=false in url");
+                    //看下第一次选的位置，如果不是最后，选+1位置.
+                    int index = invokers.IndexOf(invoker);
+                    try
+                    {
+                        //最后在避免碰撞
+                        invoker = index < invokers.Count - 1 ? invokers[index + 1] : invoker;
+                    }
+                    catch (Exception e)
+                    {
+                        Logger().LogWarning(e, e.Message + " may because invokers list dynamic change, ignore.");
+                    }
                 }
             }
+            catch (Exception t)
+            {
+                Logger().LogError(t, $"clustor relselect fail reason is :{t.Message} if can not slove ,you can set cluster.availablecheck=false in url");
+            }
+
             return invoker;
         }
 
         // 重选，先从非selected的列表中选择，没有在从selected列表中选择.
-        URL? ReSelect(ILoadBalance loadbalance, IInvocation invocation, IList<URL> invokers, IList<URL> selected, bool availablecheck)
+        URL? ReSelect(ILoadBalance loadbalance, IInvocation invocation, IList<URL> invokers, IList<URL>? selected, bool availablecheck)
         {
             //预先分配一个，这个列表是一定会用到的.
             var reselectInvokers = new List<URL>(invokers.Count > 1 ? (invokers.Count - 1) : invokers.Count);
 
             //先从非select中选
             if (availablecheck)
-            { //选isAvailable 的非select
+            { 
+                //选isAvailable 的非select
                 foreach (var invoker in invokers)
                 {
                     if (selected == null || !selected.Contains(invoker))
@@ -150,7 +175,8 @@ public abstract class AbstractCluster : ICluster
                 }
             }
             else
-            { //选全部非select
+            { 
+                //选全部非select
                 foreach (var invoker in invokers)
                 {
                     if (selected == null || !selected.Contains(invoker))
@@ -164,21 +190,19 @@ public abstract class AbstractCluster : ICluster
                 }
             }
             //最后从select中选可用的. 
+            if (selected != null)
             {
-                if (selected != null)
+                foreach (var invoker in selected)
                 {
-                    foreach (var invoker in selected)
+                    if (!reselectInvokers.Contains(invoker))
                     {
-                        if (!reselectInvokers.Contains(invoker))
-                        {
-                            reselectInvokers.Add(invoker);
-                        }
+                        reselectInvokers.Add(invoker);
                     }
                 }
-                if (reselectInvokers.Count > 0)
-                {
-                    return loadbalance.Select(reselectInvokers, invocation);
-                }
+            }
+            if (reselectInvokers.Count > 0)
+            {
+                return loadbalance.Select(reselectInvokers, invocation);
             }
             return null;
         }

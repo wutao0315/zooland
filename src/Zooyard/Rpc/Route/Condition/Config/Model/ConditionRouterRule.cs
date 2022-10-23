@@ -5,7 +5,7 @@ public class ConditionRouterRule: AbstractRouterRule
 
     public static ConditionRouterRule parseFromMap(Dictionary<string, object> map)
     {
-        ConditionRouterRule conditionRouterRule = new ConditionRouterRule();
+        var conditionRouterRule = new ConditionRouterRule();
         conditionRouterRule.parseFromMap0(map);
 
         if (map.TryGetValue(Constants.CONDITIONS_KEY, out object? conditions) &&  conditions is List<string> cds) 
@@ -24,5 +24,5 @@ public class ConditionRouterRule: AbstractRouterRule
 
 
 
-    public List<String> Conditions{get;set;}
+    public List<string> Conditions{get;set;}
 }

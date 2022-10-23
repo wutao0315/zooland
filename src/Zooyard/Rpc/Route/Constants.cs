@@ -94,7 +94,7 @@ public class Constants
     //The key of shortestResponseSlidePeriod
     public const string SHORTEST_RESPONSE_SLIDE_PERIOD = "shortestResponseSlidePeriod";
 
-    public const string SHOULD_FAIL_FAST_KEY = "dubbo.router.should-fail-fast";
+    public const string SHOULD_FAIL_FAST_KEY = "zooyard.router.should-fail-fast";
 
     public const string FORCE_USE_TAG = "force.use.tag";
 }

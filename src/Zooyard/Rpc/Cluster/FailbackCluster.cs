@@ -81,17 +81,15 @@ public class FailbackCluster : AbstractCluster
         }
     }
 
-    protected override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
+    protected override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> invokers, IInvocation invocation)
     {
         var goodUrls = new List<URL>();
         var badUrls = new List<BadUrl>();
         Exception? exception = null;
 
-        CheckInvokers(urls, invocation, address);
-        //路由
-        var invokers = base.Route(urls);
+        CheckInvokers(invokers, invocation, address);
 
-        var invoker = base.Select(loadbalance, invocation, invokers, null);
+        var invoker = base.Select(loadbalance, invocation, invokers);
 
         IResult<T> result;
         var watch = Stopwatch.StartNew();

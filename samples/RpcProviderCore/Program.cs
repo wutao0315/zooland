@@ -897,12 +897,12 @@ public class ThriftServer
         TServerTransport serverTransport = transport switch
         {
             Transport.Tcp => new TServerSocketTransport(port, configuration),
-            Transport.NamedPipe => new TNamedPipeServerTransport(".test", configuration),//, NamedPipeClientFlags.None),
+            Transport.NamedPipe => new TNamedPipeServerTransport(".test", configuration, NamedPipeClientFlags.None),
             Transport.TcpTls => new TTlsServerSocketTransport(9090, configuration, GetCertificate(), ClientCertValidator, LocalCertificateSelectionCallback),
             _ => throw new ArgumentException("unsupported value $transport", nameof(transport)),
         };
 
-        TTransportFactory transportFactory = buffering switch
+        TTransportFactory? transportFactory = buffering switch
         {
             Buffering.Buffered => new TBufferedTransport.Factory(),
             Buffering.Framed => new TFramedTransport.Factory(),
@@ -1003,14 +1003,14 @@ public class ThriftServer
     }
 
     private X509Certificate LocalCertificateSelectionCallback(object sender,
-        string targetHost, X509CertificateCollection localCertificates,
-        X509Certificate remoteCertificate, string[] acceptableIssuers)
+        string targetHost, X509CertificateCollection? localCertificates,
+        X509Certificate? remoteCertificate, string[] acceptableIssuers)
     {
         return GetCertificate();
     }
 
-    private bool ClientCertValidator(object sender, X509Certificate certificate,
-        X509Chain chain, SslPolicyErrors sslPolicyErrors)
+    private bool ClientCertValidator(object sender, X509Certificate? certificate,
+        X509Chain? chain, SslPolicyErrors sslPolicyErrors)
     {
         return true;
     }

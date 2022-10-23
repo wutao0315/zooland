@@ -2,12 +2,12 @@
 
 namespace Zooyard.Rpc.Route.Condition;
 
-internal class ConditionStateRouterFactory<T> : CacheableStateRouterFactory<T>
+internal class ConditionStateRouterFactory : CacheableStateRouterFactory
 {
     public const string NAME = "condition";
-
-    protected override IStateRouter<T> createRouter(Type interfaceClass, URL url)
+    public override string Name => NAME;
+    protected override IStateRouter CreateRouter(Type interfaceClass, URL address)
     {
-        return new ConditionStateRouter<T>(url);
+        return new ConditionStateRouter(address);
     }
 }

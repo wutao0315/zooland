@@ -7,21 +7,21 @@ using Zooyard.Utils;
 
 namespace Zooyard.Rpc.Route.State
 {
-    public class TailStateRouter<T> : IStateRouter<T>
+    public class TailStateRouter : IStateRouter
     {
-        private static readonly TailStateRouter<T> INSTANCE = new ();
+        private static readonly TailStateRouter INSTANCE = new ();
         private TailStateRouter()
         {
 
         }
-        public static TailStateRouter<T> getInstance()
+        public static TailStateRouter getInstance()
         {
             return INSTANCE;
         }
 
 
 
-        public void SetNextRouter(IStateRouter<T> nextRouter)
+        public void SetNextRouter(IStateRouter nextRouter)
         {
 
         }
@@ -29,7 +29,7 @@ namespace Zooyard.Rpc.Route.State
         //public URL Url => null;
 
 
-        public IList<URL> Route(IList<URL> invokers, URL address, IInvocation invocation, bool needToPrintMessage, Holder<RouterSnapshotNode<T>> nodeHolder)
+        public IList<URL> Route(IList<URL> invokers, URL address, IInvocation invocation, bool needToPrintMessage)//, Holder<RouterSnapshotNode> nodeHolder)
         {
             return invokers;
         }

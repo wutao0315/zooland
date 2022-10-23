@@ -2,13 +2,13 @@
 
 namespace Zooyard.Rpc.Route.Tag;
 
-public class TagStateRouterFactory<T> : CacheableStateRouterFactory<T>
+public class TagStateRouterFactory : CacheableStateRouterFactory
 {
     public const string NAME = "tag";
-
-protected override IStateRouter<T> createRouter(Type interfaceClass, URL url)
+    public override string Name => NAME;
+    protected override IStateRouter CreateRouter(Type interfaceClass, URL address)
     {
-        return new TagStateRouter<T>(url);
+        return new TagStateRouter(address);
     }
-  
+
 }

@@ -9,12 +9,9 @@ public class BroadcastCluster : AbstractCluster
     //public BroadcastCluster(IEnumerable<ICache> caches):base(caches) { }
     public override string Name => NAME;
     public const string NAME = "broadcast";
-    protected override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
+    protected override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> invokers, IInvocation invocation)
     {
-        CheckInvokers(urls, invocation, address);
-
-        //路由
-        var invokers = base.Route(urls);
+        CheckInvokers(invokers, invocation, address);
 
         RpcContext.GetContext().SetInvokers(invokers);
         Exception? exception = null;

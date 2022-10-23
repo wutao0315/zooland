@@ -16,6 +16,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Rpc\IRoute.cs" />
+    <Compile Remove="Rpc\Route\AbstractRouter.cs" />
+    <Compile Remove="Rpc\Route\NoneRouter.cs" />
+    <Compile Remove="Rpc\Route\RouterSnapshotNode.cs" />
     <Compile Remove="Rpc\Route\State\BitList.cs" />
   </ItemGroup>
 

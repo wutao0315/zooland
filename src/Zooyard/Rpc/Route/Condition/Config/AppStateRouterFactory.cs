@@ -2,13 +2,15 @@
 
 namespace Zooyard.Rpc.Route.Condition.Config;
 
-public class AppStateRouterFactory<T> : IStateRouterFactory<T>
+public class AppStateRouterFactory : IStateRouterFactory
 {
     public const string NAME = "app";
 
-    private volatile IStateRouter<T>? router;
+    public string Name => NAME;
 
-    public IStateRouter<T> GetRouter(Type interfaceClass, URL url)
+    private volatile IStateRouter? router;
+
+    public IStateRouter GetRouter(Type interfaceClass, URL address)
     {
         if (router != null)
         {
@@ -16,16 +18,13 @@ public class AppStateRouterFactory<T> : IStateRouterFactory<T>
         }
         lock (this)
         {
-            if (router == null)
-            {
-                router = createRouter(url);
-            }
+            router ??= CreateRouter(address);
         }
         return router;
     }
 
-    private IStateRouter<T> createRouter(URL url)
+    private IStateRouter CreateRouter(URL address)
     {
-        return new AppStateRouter<T>(url);
+        return new AppStateRouter(address, address.GetParameter("rule", "application"));
     }
 }

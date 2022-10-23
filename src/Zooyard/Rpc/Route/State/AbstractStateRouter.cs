@@ -2,26 +2,28 @@
 
 namespace Zooyard.Rpc.Route.State;
 
-public abstract class AbstractStateRouter<T>: IStateRouter<T>
+public abstract class AbstractStateRouter: IStateRouter
 {
     private volatile bool force = false;
-    private volatile URL url;
-    private volatile IStateRouter<T>? nextRouter = null;
+    private volatile URL address;
+    private volatile IStateRouter? nextRouter = null;
 
-    //    private final GovernanceRuleRepository ruleRepository;
+    //private final GovernanceRuleRepository ruleRepository;
 
     //Should continue route if current router's result is empty
-    private readonly bool shouldFailFast;
+    private readonly bool _shouldFailFast;
 
-    public AbstractStateRouter(URL url)
+    public AbstractStateRouter(URL address)
     {
+        this.address = address;
+        _shouldFailFast = address.GetParameter(Constants.SHOULD_FAIL_FAST_KEY, true);
+
         //ModuleModel moduleModel = url.GetOrDefaultModuleModel();
         //this.ruleRepository = moduleModel.getExtensionLoader(GovernanceRuleRepository.class).getDefaultExtension();
-        this.url = url;
-        //this.shouldFailFast = Boolean.parseBoolean(ConfigurationUtils.getProperty(moduleModel, Constants.SHOULD_FAIL_FAST_KEY, "true"));
+        //_shouldFailFast = Boolean.parseBoolean(ConfigurationUtils.getProperty(moduleModel, Constants.SHOULD_FAIL_FAST_KEY, "true"));
     }
+    public virtual URL Address { get; set; }
 
-    public virtual URL Url { get; set; }
     public virtual bool Runtime => true;
     public virtual bool Force { get; set; } = false;
 
@@ -31,26 +33,29 @@ public abstract class AbstractStateRouter<T>: IStateRouter<T>
     //    return this.ruleRepository;
     //}
 
-    public IStateRouter<T> getNextRouter()
-    {
-        return nextRouter;
-    }
-    /// <summary>
-    /// Next Router node state is maintained by AbstractStateRouter and this method is not allow to override.
-    /// If a specified router wants to control the behaviour of continue route or not,
-    /// please override {@link AbstractStateRouter#supportContinueRoute()}
-    /// </summary>
-    /// <param name="nextRouter"></param>
-    public void SetNextRouter(IStateRouter<T> nextRouter)
-    {
-        this.nextRouter = nextRouter;
-    }
+    //public IStateRouter getNextRouter()
+    //{
+    //    return nextRouter;
+    //}
+    ///// <summary>
+    ///// Next Router node state is maintained by AbstractStateRouter and this method is not allow to override.
+    ///// If a specified router wants to control the behaviour of continue route or not,
+    ///// please override {@link AbstractStateRouter#supportContinueRoute()}
+    ///// </summary>
+    ///// <param name="nextRouter"></param>
+    //public void SetNextRouter(IStateRouter nextRouter)
+    //{
+    //    this.nextRouter = nextRouter;
+    //}
+
+    public IStateRouter? NextRouter { get=> nextRouter; set=> nextRouter = value; }
 
     //public void Notify(BitList<IInvoker> invokers)
     //{
     //    // default empty implement
     //}
-    
+
+
     /// <summary>
     /// Whether current router's implementation support call
     /// {@link AbstractStateRouter#continueRoute(BitList, URL, Invocation, boolean, Holder)}
@@ -61,64 +66,65 @@ public abstract class AbstractStateRouter<T>: IStateRouter<T>
     {
         return false;
     }
-    public IList<URL> Route(IList<URL> invokers, URL address, IInvocation invocation, bool needToPrintMessage, Holder<RouterSnapshotNode<T>> nodeHolder) 
+    public IList<URL> Route(IList<URL> invokers, URL address, IInvocation invocation, bool needToPrintMessage)//, Holder<RouterSnapshotNode> nodeHolder) 
     {
-        if (needToPrintMessage && (nodeHolder == null || nodeHolder.Value == null))
-        {
-            needToPrintMessage = false;
-        }
+        //if (needToPrintMessage && (nodeHolder == null || nodeHolder.Value == null))
+        //{
+        //    needToPrintMessage = false;
+        //}
 
-        RouterSnapshotNode<T>? currentNode = null;
-        RouterSnapshotNode<T>? parentNode = null;
-        Holder<string>? messageHolder = null;
+        //RouterSnapshotNode? currentNode = null;
+        //RouterSnapshotNode? parentNode = null;
+        //Holder<string>? messageHolder = null;
 
-        // pre-build current node
-        if (needToPrintMessage)
-        {
-            parentNode = nodeHolder.Value;
-            currentNode = new RouterSnapshotNode<T>(this.GetType().Name, invokers);//.Clone());
-            parentNode.appendNode(currentNode);
+        //// pre-build current node
+        //if (needToPrintMessage)
+        //{
+        //    parentNode = nodeHolder.Value;
+        //    currentNode = new RouterSnapshotNode(this.GetType().Name, invokers);//.Clone());
+        //    parentNode.appendNode(currentNode);
 
-            // set parent node's output size in the first child invoke
-            // initial node output size is zero, first child will override it
-            if (parentNode.getNodeOutputSize() < invokers.Count)
-            {
-                parentNode.setNodeOutputInvokers(invokers);//.clone());
-            }
+        //    // set parent node's output size in the first child invoke
+        //    // initial node output size is zero, first child will override it
+        //    if (parentNode.getNodeOutputSize() < invokers.Count)
+        //    {
+        //        parentNode.setNodeOutputInvokers(invokers);//.clone());
+        //    }
 
-            messageHolder = new Holder<string>();
-            nodeHolder.Value = currentNode;
-        }
+        //    messageHolder = new Holder<string>();
+        //    nodeHolder.Value = currentNode;
+        //}
         IList<URL> routeResult;
 
         // check if router support call continue route by itself
         if (!SupportContinueRoute())
         {
-            routeResult = DoRoute(invokers, address, invocation, needToPrintMessage, nodeHolder, messageHolder);
+            routeResult = DoRoute(invokers, address, invocation, needToPrintMessage);//, nodeHolder, messageHolder);
+            var shouldFailFast = address.GetParameter(Constants.SHOULD_FAIL_FAST_KEY, true);//  Boolean.parseBoolean(ConfigurationUtils.getProperty(moduleModel, Constants.SHOULD_FAIL_FAST_KEY, "true"));
             // use current node's result as next node's parameter
             if (!shouldFailFast || routeResult.Count>0)
             {
-                routeResult = continueRoute(routeResult, address, invocation, needToPrintMessage, nodeHolder);
+                routeResult = ContinueRoute(routeResult, address, invocation, needToPrintMessage); //, nodeHolder);
             }
         }
         else
         {
-            routeResult = DoRoute(invokers, address, invocation, needToPrintMessage, nodeHolder, messageHolder);
+            routeResult = DoRoute(invokers, address, invocation, needToPrintMessage);//, nodeHolder, messageHolder);
         }
 
-        // post-build current node
-        if (needToPrintMessage)
-        {
-            currentNode.setRouterMessage(messageHolder.Value);
-            if (currentNode.getNodeOutputSize() == 0)
-            {
-                // no child call
-                currentNode.setNodeOutputInvokers(routeResult);//.clone());
-            }
-            currentNode.setChainOutputInvokers(routeResult);//.clone());
-            //set
-            nodeHolder.Value = parentNode;
-        }
+        //// post-build current node
+        //if (needToPrintMessage)
+        //{
+        //    currentNode.setRouterMessage(messageHolder.Value);
+        //    if (currentNode.getNodeOutputSize() == 0)
+        //    {
+        //        // no child call
+        //        currentNode.setNodeOutputInvokers(routeResult);//.clone());
+        //    }
+        //    currentNode.setChainOutputInvokers(routeResult);//.clone());
+        //    //set
+        //    nodeHolder.Value = parentNode;
+        //}
         return routeResult;
     }
 
@@ -129,12 +135,11 @@ public abstract class AbstractStateRouter<T>: IStateRouter<T>
     /// <param name="address">consumerUrl</param>
     /// <param name="invocation">invocation</param>
     /// <param name="needToPrintMessage">should current router print message</param>
-    /// <param name="nodeHolder">RouterSnapshotNode In general, router itself no need to care this param, just pass to continueRoute</param>
-    /// <param name="messageHolder">message holder when router should current router print message</param>
+    ///// <param name="nodeHolder">RouterSnapshotNode In general, router itself no need to care this param, just pass to continueRoute</param>
+    ///// <param name="messageHolder">message holder when router should current router print message</param>
     /// <returns></returns>
     protected abstract IList<URL> DoRoute(IList<URL> invokers, URL address, IInvocation invocation,
-                                                bool needToPrintMessage, Holder<RouterSnapshotNode<T>> nodeHolder,
-                                                Holder<string> messageHolder);
+                                                bool needToPrintMessage);//, Holder<RouterSnapshotNode> nodeHolder, Holder<string> messageHolder);
 
 
     /// <summary>
@@ -145,11 +150,12 @@ public abstract class AbstractStateRouter<T>: IStateRouter<T>
     /// <param name=""></param>
     /// <param name=""></param>
     /// <returns></returns>
-    protected IList<URL> continueRoute(IList<URL> invokers, URL address, IInvocation invocation,
-                                                      bool needToPrintMessage, Holder<RouterSnapshotNode<T>> nodeHolder) {
+    protected IList<URL> ContinueRoute(IList<URL> invokers, URL address, IInvocation invocation,
+                                                      bool needToPrintMessage)//, Holder<RouterSnapshotNode> nodeHolder) 
+    {
         if (nextRouter != null)
         {
-            return nextRouter.Route(invokers, address, invocation, needToPrintMessage, nodeHolder);
+            return nextRouter.Route(invokers, address, invocation, needToPrintMessage);//, nodeHolder);
         }
         else
         {
@@ -157,15 +163,15 @@ public abstract class AbstractStateRouter<T>: IStateRouter<T>
         }
     }
 
-    public string BuildSnapshot()
-    {
-        return DoBuildSnapshot() +
-            "            ↓ \n" +
-            nextRouter.BuildSnapshot();
-    }
+    ////public string BuildSnapshot()
+    ////{
+    ////    return DoBuildSnapshot() +
+    ////        "            ↓ \n" +
+    ////        nextRouter.BuildSnapshot();
+    ////}
 
-    protected String DoBuildSnapshot()
-    {
-        return this.GetType().Name+ " not support\n";
-    }
+    //protected String DoBuildSnapshot()
+    //{
+    //    return this.GetType().Name+ " not support\n";
+    //}
 }

@@ -1,10 +1,10 @@
 ﻿namespace Zooyard.Rpc.Route.Condition.Config;
 
-public class AppStateRouter<T>: ListenableStateRouter<T>
+public class AppStateRouter: ListenableStateRouter
 {
-    public const string NAME = "APP_ROUTER";
+    public new const string NAME = "APP_ROUTER";
 
-    public AppStateRouter(URL url):base(url, url.Application)
+    public AppStateRouter(URL address,string application):base(address, application)
     {
     }
 }

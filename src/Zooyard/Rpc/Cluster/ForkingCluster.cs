@@ -16,16 +16,16 @@ public class ForkingCluster : AbstractCluster
     public const string FORKS_KEY = "forks";
     public const int DEFAULT_FORKS = 2;
 
-    protected override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation)
+    protected override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> invokers, IInvocation invocation)
     {
         //IResult result = null;
         var goodUrls = new List<URL>();
         var badUrls = new List<BadUrl>();
 
-        CheckInvokers(urls, invocation, address);
+        CheckInvokers(invokers, invocation, address);
 
-        //路由
-        var invokers = base.Route(urls);
+        ////路由
+        //var invokers = base.Route(invokers, address, invocation);
 
         IList<URL> selected;
 
