@@ -34,7 +34,10 @@ public class NettyClientPool : AbstractClientPool
     public const string TIMEOUT_KEY = "http_timeout";
     public const int DEFAULT_TIMEOUT = 5000;
 
-    public NettyClientPool(ITransportMessageEncoder encoder, ITransportMessageDecoder decoder, IOptionsMonitor<NettyOption> nettyOption, ILogger<NettyClientPool> logger)
+    public NettyClientPool(ITransportMessageEncoder encoder,
+        ITransportMessageDecoder decoder, 
+        IOptionsMonitor<NettyOption> nettyOption, 
+        ILogger<NettyClientPool> logger)
     {
         _transportMessageEncoder = encoder;
         _transportMessageDecoder = decoder;

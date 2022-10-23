@@ -1,7 +1,7 @@
 ﻿{
   "thrift": {
-    "Clients": {
-      "HelloService": "RpcContractThrift.HelloService+Client, RpcContractThrift"
-    }
+    //"Clients": {
+    //  "HelloService": "RpcContractThrift.HelloService+Client, RpcContractThrift"
+    //}
   }
 }

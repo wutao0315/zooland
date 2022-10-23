@@ -1,8 +1,5 @@
 ﻿{
   "grpc": {
-    "Clients": {
-      "HelloService": "RpcContractGrpc.HelloService+HelloServiceClient, RpcContractGrpc"
-    },
     "Credentials": {}
   }
 }

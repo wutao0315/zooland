@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Zooyard;
+using Zooyard.DotNettyImpl;
 //using Zooyard.Extensions;
 //using Zooyard.Rpc.AkkaImpl.Extensions;
 //using Zooyard.GrpcImpl.Extensions;
@@ -36,16 +37,20 @@ class Program
         services.AddLogging();
         services.AddZooyardGrpc();
         services.AddZooyardHttp();
-        //services.AddNettyImpl();
-
+        //services.AddZooyardNetty();
         services.AddZooyardThrift();
-        services.AddZoolandClient();
+
+        services.AddZoolandClient(typeof(RpcContractThrift.IHelloService)
+            , typeof(RpcContractGrpc.IHelloService)
+            , typeof(RpcContractHttp.IHelloService)
+            //, typeof(RpcContractNetty.IHelloService)
+            );
 
         using var bsp = services.BuildServiceProvider();
         var helloServiceThrift = bsp.GetRequiredService<RpcContractThrift.IHelloService>();
         var helloServiceGrpc = bsp.GetRequiredService<RpcContractGrpc.IHelloService>();
         var helloServiceHttp = bsp.GetRequiredService<RpcContractHttp.IHelloService>();
-        var helloServiceNetty = bsp.GetRequiredService<RpcContractNetty.IHelloService>();
+        //var helloServiceNetty = bsp.GetRequiredService<RpcContractNetty.IHelloService>();
 
         while (true)
         {
@@ -63,8 +68,8 @@ class Program
                 case "http":
                     CallWhile(async (helloword) => { await HttpHello(helloServiceHttp, helloword); });
                     break;
-                case "netty":
-                    CallWhile(async (helloword) => { await NettyHello(helloServiceNetty, helloword); });
+                //case "netty":
+                //    CallWhile(async (helloword) => { await NettyHello(helloServiceNetty, helloword); });
                     break;
                 case "all":
                     for (int i = 0; i < 3; i++)
@@ -130,19 +135,20 @@ class Program
                         //        throw ex;
                         //    }
                         //});
-                        Task.Run(async () =>
-                        {
 
-                            try
-                            {
-                                await NettyHello(helloServiceNetty);
-                            }
-                            catch
-                            {
+                        //Task.Run(async () =>
+                        //{
 
-                                throw;
-                            }
-                        });
+                        //    try
+                        //    {
+                        //        await NettyHello(helloServiceNetty);
+                        //    }
+                        //    catch
+                        //    {
+
+                        //        throw;
+                        //    }
+                        //});
                     }
                     break;
             }

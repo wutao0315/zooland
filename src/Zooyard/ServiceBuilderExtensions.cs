@@ -12,6 +12,7 @@ using Zooyard.Rpc.Route.Condition;
 using Zooyard.Rpc.Route.Condition.Config;
 using Zooyard.Rpc.Route.File;
 using Zooyard.Rpc.Route.Mock;
+using Zooyard.Rpc.Route.None;
 using Zooyard.Rpc.Route.Script;
 using Zooyard.Rpc.Route.State;
 using Zooyard.Rpc.Route.Tag;
@@ -47,9 +48,10 @@ public static class ServiceBuilderExtensions
         services.AddSingleton<IMerger, ShortArrayMerger>();
         services.AddSingleton<IMerger, IntArrayMerger>();
         services.AddSingleton<IMerger, LongArrayMerger>();
-        services.AddSingleton(typeof(IMerger), typeof(ListMerger<>));
-        services.AddSingleton(typeof(IMerger), typeof(DictionaryMerger<,>));
-        services.AddSingleton(typeof(IMerger), typeof(SetMerger<>));
+
+        //services.AddSingleton(typeof(IMerger), typeof(ListMerger<>));
+        //services.AddSingleton(typeof(IMerger), typeof(DictionaryMerger<,>));
+        //services.AddSingleton(typeof(IMerger), typeof(SetMerger<>));
 
         services.AddSingleton<ICluster, MergeableCluster>();
 
@@ -66,6 +68,7 @@ public static class ServiceBuilderExtensions
         services.AddSingleton<IStateRouterFactory, TagStateRouterFactory>();
         services.AddSingleton<IStateRouterFactory, ScriptStateRouterFactory>();
         services.AddSingleton<IStateRouterFactory, FileStateRouterFactory>();
+        services.AddSingleton<IStateRouterFactory, NoneStateRouterFactory>();
 
 
         services.AddSingleton<IZooyardPools>((serviceProvder) =>
@@ -81,7 +84,9 @@ public static class ServiceBuilderExtensions
                     throw new Exception($"{nameof(ZooyardAttribute)} is not exists");
                 }
 
-                var pool = (IClientPool)serviceProvder.GetRequiredService(Type.GetType(zooyard.TypeName)!);
+                var poolType = Type.GetType(zooyard.TypeName)!;
+
+                var pool = (IClientPool)serviceProvder.GetRequiredService(poolType);
                 pool.ServiceName = zooyard.ServiceName;
                 pool.ProxyType = zooyard.ProxyType;
                 clientPools.Add(serviceType.FullName!, pool);

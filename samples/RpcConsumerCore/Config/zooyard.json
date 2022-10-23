@@ -1,53 +1,51 @@
 ﻿{
-  "test": {
-    "RpcContractThrift.IHelloService, RpcContractThrift": {
-      "ServiceName": "ThriftHelloService",
-      "Version": "1.0",
-      "PoolType": "Zooyard.ThriftImpl.ThriftClientPool, Zooyard.ThriftImpl",
-      "ProxyType": "RpcContractThrift.HelloService+Client, RpcContractThrift"
-    },
-    "RpcContractGrpc.IHelloService, RpcContractGrpc": {
-      "ServiceName": "GrpcHelloService",
-      "Version": "1.0",
-      "PoolType": "Zooyard.GrpcImpl.GrpcClientPool, Zooyard.GrpcImpl",
-      "ProxyType": "RpcContractGrpc.HelloService+HelloServiceClient, RpcContractGrpc"
-    },
-    "RpcContractNetty.IHelloService, RpcContractNetty": {
-      "ServiceName": "NettyHelloService",
-      "Version": "1.0",
-      "PoolType": "Zooyard.Rpc.NettyImpl.NettyClientPool, Zooyard.Rpc.NettyImpl"
-    },
-    "RpcContractHttp.IHelloService, RpcContractHttp": {
-      "ServiceName": "HttpHelloService",
-      "Version": "1.0",
-      "PoolType": "Zooyard.HttpImpl.HttpClientPool, Zooyard.HttpImpl"
-    }
-  },
+  //"test": {
+  //  "RpcContractThrift.IHelloService, RpcContractThrift": {
+  //    "ServiceName": "ThriftHelloService",
+  //    "Version": "1.0",
+  //    "PoolType": "Zooyard.ThriftImpl.ThriftClientPool, Zooyard.ThriftImpl",
+  //    "ProxyType": "RpcContractThrift.HelloService+Client, RpcContractThrift"
+  //  },
+  //  "RpcContractGrpc.IHelloService, RpcContractGrpc": {
+  //    "ServiceName": "GrpcHelloService",
+  //    "Version": "1.0",
+  //    "PoolType": "Zooyard.GrpcImpl.GrpcClientPool, Zooyard.GrpcImpl",
+  //    "ProxyType": "RpcContractGrpc.HelloService+HelloServiceClient, RpcContractGrpc"
+  //  },
+  //  "RpcContractNetty.IHelloService, RpcContractNetty": {
+  //    "ServiceName": "NettyHelloService",
+  //    "Version": "1.0",
+  //    "PoolType": "Zooyard.Rpc.NettyImpl.NettyClientPool, Zooyard.Rpc.NettyImpl"
+  //  },
+  //  "RpcContractHttp.IHelloService, RpcContractHttp": {
+  //    "ServiceName": "HttpHelloService",
+  //    "Version": "1.0",
+  //    "PoolType": "Zooyard.HttpImpl.HttpClientPool, Zooyard.HttpImpl"
+  //  }
+  //},
   "zooyard": {
     "Address": "zooyard://localhost",
-    "Meta": {
-      "Key": "val"
-    },
-    "Services": {
-      "MemberService": {
-        "Meta": {
-          "Ephemeral": "True"
-        },
-        "Instances": [
-          {
-            "Ip": "192.168.2.48",
-            "Port": "9105",
-            "Meta": {
-              "Weight": "1",
-              "Enabled": "true"
-            }
-          }
-        ]
-      }
-    },
-    "Mergers": {
-      "hash": "Zooyard.Rpc.Merger.ArrayMerger, Zooyard.Rpc"
-    }
+    //"Meta": {
+    //  "Key": "val"
+    //},
+    //"Services": {
+    //  "MemberService": {
+    //    "Meta": {
+    //      "Ephemeral": "True"
+    //    },
+    //    "Instances": [
+    //      {
+    //        "Ip": "192.168.2.48",
+    //        "Port": "9105",
+    //        "Meta": {
+    //          "Weight": "1",
+    //          "Enabled": "true"
+    //        }
+    //      }
+    //    ]
+    //  }
+    //},
+    "Mergers": [ "array" ]
     //"Clients": {
     //  "thrift_helloservice": {
     //    "Version": "1.0",

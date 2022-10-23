@@ -74,7 +74,7 @@ public class Program
             services.Configure<GrpcServerOption>(config.GetSection("grpc"));
             //services.Configure<NettyServerOption>(config.GetSection("netty"));
             //services.Configure<ThriftServerOption>(config.GetSection("thrift"));
-            services.Configure<HttpServerOption>(config.GetSection("http"));
+            //services.Configure<HttpServerOption>(config.GetSection("http"));
             services.AddLogging();
 
             ////实现注册接口代码
@@ -91,9 +91,8 @@ public class Program
 
 
             services.AddTransient<RpcContractGrpc.HelloService.HelloServiceBase, HelloServiceGrpcImpl>();
-            services.AddGrpcServer();
-           
 
+            services.AddGrpcServer();
 
             services.AddSingleton<IEventLoopGroup>((serviceProvider) =>
             {
@@ -122,26 +121,26 @@ public class Program
             //services.AddSingleton<TTransportFactory>(new TBufferedTransport.Factory());
 
 
-            //services.AddSingleton<TServer>(serviceProvider =>
-            //{
-            //    var processor = serviceProvider.GetService<ITAsyncProcessor>();
-            //    var serverTransport = serviceProvider.GetService<TServerTransport>();
-            //    var transportFactory = serviceProvider.GetService<TTransportFactory>();
-            //    var protocolFactory = serviceProvider.GetService<TProtocolFactory>();
-            //    var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+            services.AddSingleton<TServer>(serviceProvider =>
+            {
+                var processor = serviceProvider.GetService<ITAsyncProcessor>();
+                var serverTransport = serviceProvider.GetService<TServerTransport>();
+                var transportFactory = serviceProvider.GetService<TTransportFactory>();
+                var protocolFactory = serviceProvider.GetService<TProtocolFactory>();
+                var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
 
-            //    var threadConfig = new TThreadPoolAsyncServer.Configuration();
-            //    var server = new TThreadPoolAsyncServer(
-            //         processorFactory: new TSingletonProcessorFactory(processor),
-            //         serverTransport: serverTransport,
-            //         inputTransportFactory: transportFactory,
-            //         outputTransportFactory: transportFactory,
-            //         inputProtocolFactory: protocolFactory,
-            //         outputProtocolFactory: protocolFactory,
-            //         threadConfig: threadConfig,
-            //         logger: loggerFactory.CreateLogger<TThreadPoolAsyncServer>());
-            //    return server;
-            //});
+                var threadConfig = new TThreadPoolAsyncServer.Configuration();
+                var server = new TThreadPoolAsyncServer(
+                     processorFactory: new TSingletonProcessorFactory(processor),
+                     serverTransport: serverTransport,
+                     inputTransportFactory: transportFactory,
+                     outputTransportFactory: transportFactory,
+                     inputProtocolFactory: protocolFactory,
+                     outputProtocolFactory: protocolFactory,
+                     threadConfig: threadConfig,
+                     logger: loggerFactory.CreateLogger<TThreadPoolAsyncServer>());
+                return server;
+            });
 
             //services.AddSingleton<TServer>(serviceProvider =>
             //{
@@ -164,11 +163,8 @@ public class Program
 
             services.AddHttpServer<Startup>(args);
 
-            //services.AddTransient<IHelloServiceWcf, HelloServiceWcfImpl>();
-
-
             //services.AddZoolandServer();
-            //services.AddHostedService<ZoolandHostedService>();
+            services.AddHostedService<ZoolandHostedService>();
 
         })
         .ConfigureWebHostDefaults(webBuilder =>
@@ -285,12 +281,14 @@ public class ServerGrpcInterceptor : ServerInterceptor
         }
     }
 }
+
 //public class ThriftServerOption
 //{
 //    public int Port { get; set; }
 //    public TConfiguration Configuration { get; set; } = new TConfiguration();
 //    public int ClientTimeOut { get; set; }
 //}
+
 public static class ServiceBuilderExtensions 
 {
     public static void AddGrpcServer(this IServiceCollection services)
@@ -302,11 +300,11 @@ public static class ServiceBuilderExtensions
 
             foreach (var item in option.Services)
             {
-                var contractType = Type.GetType(item.Key);
-                var implType = Type.GetType(item.Value);
+                var contractType = Type.GetType(item.Key)!;
+                var implType = Type.GetType(item.Value)!;
                 var implValue = serviceProvder.GetService(implType);
-                var definition = contractType.GetMethod("BindService", new[] { implType })
-                .Invoke(null, new[] { implValue }) as ServerServiceDefinition;
+                var definition = (ServerServiceDefinition)contractType.GetMethod("BindService", new[] { implType })!
+                .Invoke(null, new[] { implValue })!;
                 result.Add(definition);
             }
 
@@ -357,13 +355,12 @@ public static class ServiceBuilderExtensions
     {
         services.AddSingleton((serviceProvider) =>
         {
-            var option = serviceProvider.GetRequiredService<IOptionsMonitor<HttpServerOption>>().CurrentValue;
             var host = new WebHostBuilder()
             .UseKestrel()
             .UseContentRoot(Directory.GetCurrentDirectory())
             .UseIISIntegration()
             .UseStartup<Startup>()
-            .UseUrls(option.Urls.ToArray())
+            .UseUrls("http://0.0.0.0:10010/")
             .Build();
 
             return host;

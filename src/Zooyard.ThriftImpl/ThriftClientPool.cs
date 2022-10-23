@@ -25,13 +25,8 @@ public class ThriftClientPool : AbstractClientPool
 
     public const int DEFAULT_TIMEOUT = 5000;
 
-    //private readonly IDictionary<string, Type> _clientTypes;
     private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ThriftClientPool));
    
-    //public ThriftClientPool(IDictionary<string, Type> clientTypes)
-    //{
-    //    //_clientTypes = clientTypes;
-    //}
 
     protected override async Task<IClient> CreateClient(URL url)
     {

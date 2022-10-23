@@ -6,7 +6,7 @@
 [AttributeUsage(AttributeTargets.Interface)]
 public class ZooyardNettyAttribute : ZooyardAttribute
 {
-    public const string TYPENAME = "Zooyard.Rpc.NettyImpl.NettyClientPool, Zooyard.Rpc.NettyImpl";
+    public const string TYPENAME = "Zooyard.DotNettyImpl.NettyClientPool, Zooyard.DotNettyImpl";
     /// <summary>
     /// 构造函数
     /// </summary>

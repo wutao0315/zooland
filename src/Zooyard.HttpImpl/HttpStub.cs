@@ -45,18 +45,45 @@ public class HttpStub
 
     
 
-    public async Task<Stream?> Request(string methodName, string parameterType, string method, ParameterInfo[] parameterInfos, object[] paras)
+    public async Task<Stream?> Request(IList<string> path, string contentType, string method, ParameterInfo[] parameters, object[] paras)
     {
         try
         {
+            var (paraItems, fileItems) = GetDic(parameters, paras);
+
+            var paraDic = new Dictionary<string, string>(paraItems);
+
+            var pathList = new List<string>();
+            foreach (var item in path)
+            {
+                var pathItem = item;
+                if (!item.Contains('{') || !item.Contains('}'))
+                {
+                    pathList.Add(pathItem);
+                    continue;
+                }
+
+                foreach (var dic in paraItems)
+                {
+                    if ($"{{{dic.Key}}}" == item)
+                    {
+                        paraDic.Remove(dic.Key);
+                        pathItem = dic.Value;
+                        break;
+                    }
+                }
+                pathList.Add(pathItem);
+            }
+            string requestUri = $"/{string.Join('/', pathList)}";
+
             var httpMethod = new HttpMethod(method);
-            var relatedUrl = methodName;
+            var relatedUrl = requestUri;
             if (httpMethod == HttpMethod.Get) 
             {
-                var (paraDic,_) = GetDic(parameterInfos, paras);
-                relatedUrl = $"{methodName}?{string.Join("&", paraDic.Select(para => para.Key + "=" + WebUtility.UrlEncode(para.Value)))}";
+                relatedUrl = $"{requestUri}?{string.Join("&", paraDic.Select(para => para.Key + "=" + WebUtility.UrlEncode(para.Value)))}";
             }
-            using HttpContent content = GetContent(parameterType, parameterInfos, paras);
+
+            using HttpContent? content = GetContent(contentType, parameters, paras, paraItems, fileItems);
             var request = new HttpRequestMessage(httpMethod, relatedUrl) { Content = content };
 
             //request.Headers.Add("","");
@@ -83,18 +110,20 @@ public class HttpStub
         }
     }
 
-    private HttpContent GetContent(string parameterType, ParameterInfo[] parameterInfos, object[] paras) 
+    private HttpContent? GetContent(string contentType, 
+        ParameterInfo[] parameters, 
+        object[] paras, 
+        IDictionary<string, string> paraItems, 
+        IDictionary<string, byte[]> fileItems) 
     {
-        HttpContent content = null;
-        switch (parameterType)
+        HttpContent? content = null;
+        switch (contentType)
         {
             case "application/x-www-form-urlencoded":
-                var (paraDic,_) = GetDic(parameterInfos, paras);
-                content = new FormUrlEncodedContent(paraDic);
+                content = new FormUrlEncodedContent(paraItems);
                 break;
             case "multipart/form-data":
                 var multipartFormDataContent = new MultipartFormDataContent();
-                var (paraItems, fileItems) = GetDic(parameterInfos, paras);
                 foreach (var item in paraItems)
                 {
                     multipartFormDataContent.Add(new StringContent(item.Value), string.Format("\"{0}\"", item.Key));
@@ -108,7 +137,7 @@ public class HttpStub
                 content = multipartFormDataContent;
                 break;
             case "application/json":
-                var json = GetJson(parameterInfos, paras);
+                var json = GetJson(parameters, paras);
                 content = new StringContent(json, Encoding.UTF8, "application/json");
                 break;
         }
@@ -124,6 +153,11 @@ public class HttpStub
             var para = paras[i];
             var paraType = para.GetType();
             var paraInfo = parameterInfos[i];
+
+            if (string.IsNullOrWhiteSpace(paraInfo.Name)) 
+            {
+                continue;
+            }
 
             if (paraType.IsValueTypeOrString())
             {
@@ -150,6 +184,11 @@ public class HttpStub
             var para = paras[i];
             var paraType = para.GetType();
             var paraInfo = parameterInfos[i];
+
+            if (string.IsNullOrWhiteSpace(paraInfo.Name))
+            {
+                continue;
+            }
 
             if (para is byte[] paraBytes)
             {
@@ -215,8 +254,8 @@ public class ObjectUtil
     private static (Dictionary<string, string>,Dictionary<string, byte[]> dictionaryBytes) ExecuteInternal(
         object obj,
         string prefix = "",
-        Dictionary<string, string> dictionary = default,
-        Dictionary<string, byte[]> dictionaryBytes = default)
+        Dictionary<string, string> dictionary = default!,
+        Dictionary<string, byte[]> dictionaryBytes = default!)
     {
         dictionary ??= new Dictionary<string, string>();
         dictionaryBytes ??= new Dictionary<string, byte[]>();
@@ -361,7 +400,7 @@ public class ObjectUtil
         // This is the type that we will pass to the delegate (object)
         var objectParameter = Expression.Parameter(objectType);
         // Casts the passed in object to the properties type
-        var castExpression = Expression.TypeAs(objectParameter, property.DeclaringType);
+        var castExpression = Expression.TypeAs(objectParameter, property.DeclaringType!);
         // Gets the value from the property and converts it to object
         var convertExpression = Expression.Convert(
             Expression.Property(castExpression, property),
@@ -386,7 +425,7 @@ internal static class Extensions
         {
             DateTime dateTime => dateTime.ToString("o"),
             bool boolean => boolean.ToStringLowerCase(),
-            _ => value.ToString()
+            _ => value.ToString()!
         };
     }
 
