@@ -42,18 +42,26 @@ public class HttpInvoker : AbstractInvoker
         
 
         var targetDescription = invocation.TargetType.GetCustomAttribute<RequestMappingAttribute>();
-        if (targetDescription != null && !string.IsNullOrWhiteSpace(targetDescription.Value)) 
+        if (targetDescription != null) 
         {
-            pathUrl.AddRange(targetDescription.Value.Split('/', StringSplitOptions.RemoveEmptyEntries));
+            header = targetDescription.Headers;
+            if (!string.IsNullOrWhiteSpace(targetDescription.Value))
+                pathUrl.AddRange(targetDescription.Value.Split('/', StringSplitOptions.RemoveEmptyEntries));
         }
         var methodDescription = invocation.MethodInfo.GetCustomAttribute<RequestMappingAttribute>();
-        if (methodDescription != null && !string.IsNullOrWhiteSpace(methodDescription.Value))
+        if (methodDescription != null)
         {
-            var methodNames = methodDescription.Value.Split('/', StringSplitOptions.RemoveEmptyEntries);
-            pathUrl.AddRange(methodNames);
+            if (!string.IsNullOrWhiteSpace(methodDescription.Value))
+            {
+                var methodNames = methodDescription.Value.Split('/', StringSplitOptions.RemoveEmptyEntries);
+                pathUrl.AddRange(methodNames);
+            }
             method = methodDescription.Method.ToString();
             contentType = methodDescription.Consumes;
-            header = methodDescription.Headers;
+            foreach (var item in methodDescription.Headers)
+            {
+                header[item.Key] = item.Value;
+            }
         }
         else 
         {

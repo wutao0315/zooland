@@ -1,7 +1,10 @@
 ﻿using Grpc.Core;
 using System.Diagnostics;
+using System.Net.Mime;
 using System.Reflection;
+using Zooyard.DataAnnotations;
 using Zooyard.Logging;
+using Zooyard.Rpc;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.GrpcImpl;
@@ -47,6 +50,27 @@ public class GrpcInvoker : AbstractInvoker
             {
                 throw new Exception($"method {invocation.MethodInfo.Name} not exits");
             }
+
+            var header = new Dictionary<string, string>();
+            var targetDescription = invocation.TargetType.GetCustomAttribute<RequestMappingAttribute>();
+            if (targetDescription != null)
+            {
+                header = targetDescription.Headers;
+            }
+            var methodDescription = invocation.MethodInfo.GetCustomAttribute<RequestMappingAttribute>();
+            if (methodDescription != null)
+            {
+                foreach (var item in methodDescription.Headers)
+                {
+                    header[item.Key] = item.Value;
+                }
+            }
+
+            foreach (var item in header)
+            {
+                RpcContext.GetContext().SetAttachment(item.Key, item.Value);
+            }
+
             var taskResult = method.Invoke(_instance, parasPlus);
             if (taskResult == null) 
             {

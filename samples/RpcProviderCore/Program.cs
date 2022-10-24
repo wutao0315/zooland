@@ -194,6 +194,10 @@ public class ClientGrpcInterceptor : ClientInterceptor
 
     }
 }
+
+public abstract class ServerInterceptor : Interceptor
+{
+}
 public class ServerGrpcInterceptor : ServerInterceptor
 {
     public override TResponse BlockingUnaryCall<TRequest, TResponse>(TRequest request, ClientInterceptorContext<TRequest, TResponse> context, BlockingUnaryCallContinuation<TRequest, TResponse> continuation)

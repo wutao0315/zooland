@@ -14,6 +14,8 @@ public static class ServiceBuilderExtensions
 {
     public static void AddZooyardGrpc(this IServiceCollection services)
     {
+        services.AddSingleton<ClientInterceptor, ClientGrpcHeaderInterceptor>();
+        
         services.AddTransient((serviceProvder) => 
         {
             var option = serviceProvder.GetRequiredService<IOptionsMonitor<GrpcOption>>().CurrentValue;
