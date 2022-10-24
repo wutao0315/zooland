@@ -30,6 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Zooyard.DotNettyImpl\Zooyard.DotNettyImpl.csproj" />
     <ProjectReference Include="..\..\src\Zooyard\Zooyard.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.GrpcImpl\Zooyard.GrpcImpl.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.HttpImpl\Zooyard.HttpImpl.csproj" />

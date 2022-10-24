@@ -44,6 +44,7 @@ public static class ObjectExtensions
         var result = Encoding.UTF8.GetBytes(content);
         return result;
     }
+    
     /// <summary>
     /// Convert an object to a JSON string with camelCase formatting
     /// </summary>
@@ -58,6 +59,13 @@ public static class ObjectExtensions
 
         var result = JsonSerializer.Serialize(obj, _option);
 
+        return result;
+    }
+
+    public static T Desrialize<T>(this byte[] bytes, T defaultValue = default!) 
+    {
+        var data = Encoding.UTF8.GetString(bytes);
+        var result = data.DeserializeJson<T>(defaultValue);
         return result;
     }
     /// <summary>

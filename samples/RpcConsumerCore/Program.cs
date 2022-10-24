@@ -39,7 +39,7 @@ class Program
         services.AddZooyardHttp();
         //services.AddZooyardNetty();
         services.AddZooyardThrift();
-
+        services.AddMemoryCache();
         services.AddZoolandClient(typeof(RpcContractThrift.IHelloService)
             , typeof(RpcContractGrpc.IHelloService)
             , typeof(RpcContractHttp.IHelloService)

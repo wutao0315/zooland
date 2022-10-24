@@ -17,7 +17,7 @@ public class MessageListener : IMessageListener
     /// <param name="sender">消息发送者。</param>
     /// <param name="message">接收到的消息。</param>
     /// <returns>一个任务。</returns>
-    public async Task OnReceived(IMessageSender sender, TransportMessage message)
+    public async Task OnReceived(IMessageSender sender, TransportMessage? message)
     {
         if (Received == null)
             return;

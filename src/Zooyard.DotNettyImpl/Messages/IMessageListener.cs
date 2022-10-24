@@ -12,7 +12,7 @@ namespace Zooyard.DotNettyImpl.Messages;
 /// </summary>
 /// <param name="sender">消息发送者。</param>
 /// <param name="message">接收到的消息。</param>
-public delegate Task ReceivedDelegate(IMessageSender sender, TransportMessage message);
+public delegate Task ReceivedDelegate(IMessageSender sender, TransportMessage? message);
 
 /// <summary>
 /// 一个抽象的消息监听者。
@@ -30,5 +30,5 @@ public interface IMessageListener
     /// <param name="sender">消息发送者。</param>
     /// <param name="message">接收到的消息。</param>
     /// <returns>一个任务。</returns>
-    Task OnReceived(IMessageSender sender, TransportMessage message);
+    Task OnReceived(IMessageSender sender, TransportMessage? message);
 }

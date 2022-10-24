@@ -91,8 +91,9 @@ public class NettyClientPool : AbstractClientPool
         }
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
+        base.Dispose();
         foreach (var client in _clients.Values)
         {
             (client as IDisposable)?.Dispose();
