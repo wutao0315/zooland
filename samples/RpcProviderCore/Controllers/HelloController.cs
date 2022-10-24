@@ -29,14 +29,14 @@ public class HelloController : ControllerBase
         Console.WriteLine($"call CallVoid![{ServiceName}]");
     }
     [HttpGet]
-    [Route("hello")]
+    [Route("hello/{name}")]
     public string Hello(string name)
     {
         Console.WriteLine($"{name} call Hello![{ServiceName}]");
         return $"hello {name};From[{ServiceName}]";
     }
     [HttpGet]
-    [Route("sayhello")]
+    [Route("sayhello/{name}")]
     public HelloDTO.HelloModel SayHello(string name)
     {
         Console.WriteLine($"{name} call SayHello![{ServiceName}]");

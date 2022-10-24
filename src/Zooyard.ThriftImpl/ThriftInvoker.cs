@@ -33,17 +33,22 @@ public class ThriftInvoker : AbstractInvoker
         };
 
         var methodName = invocation.MethodInfo.Name;
-        if (!invocation.MethodInfo.Name.EndsWith("Async", StringComparison.OrdinalIgnoreCase))
-        {
-            methodName += "Async";
-        }
+        //if (!invocation.MethodInfo.Name.EndsWith("Async", StringComparison.OrdinalIgnoreCase))
+        //{
+        //    methodName += "Async";
+        //}
 
         var method = _instance.GetType().GetMethod(methodName, argumentTypes.ToArray());
+
+        if (method == null) 
+        {
+            throw new Exception($"{_instance.GetType().FullName} not contians method {methodName} {argumentTypes}");
+        }
 
         var watch = Stopwatch.StartNew();
         try
         {
-            var taskInvoke = method.Invoke(_instance, arguments.ToArray());
+            var taskInvoke = method.Invoke(_instance, arguments.ToArray())!;
             if (invocation.MethodInfo.ReturnType == typeof(void) || invocation.MethodInfo.ReturnType == typeof(Task))
             {
                 await (Task)taskInvoke;
@@ -57,7 +62,7 @@ public class ThriftInvoker : AbstractInvoker
         catch (Exception ex)
         {
             Debug.Print(ex.StackTrace);
-            throw ex;
+            throw;
         }
         finally
         {

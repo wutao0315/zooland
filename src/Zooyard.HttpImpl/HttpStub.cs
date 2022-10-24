@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Linq.Expressions;
 using System.Net;
+using System.Net.Http;
 using System.Reflection;
 using System.Text;
 using Zooyard.Logging;
@@ -17,35 +18,20 @@ public class HttpStub
     /// <summary>
     /// http客户端
     /// </summary>
-    protected readonly IHttpClientFactory _httpClientFactory;
-
-    /// <summary>
-    /// http客户端状态标识
-    /// </summary>
-    protected readonly bool[] _openFlag;
-
-    protected readonly int _timeout;
+    private readonly HttpClient _httpClient;
 
     /// <summary>
     /// 初始化
     /// </summary>
-    /// <param name="client">http长连接客户端</param>
-    /// <param name="isOpen">http客户端状态标识</param>
-    public HttpStub(IHttpClientFactory httpClientFactory, bool[] isOpen, int timeout)
+    /// <param name="httpClient">http长连接客户端</param>
+    /// <param name="timeout">超时时长</param>
+    public HttpStub(HttpClient httpClient, int timeout)
     {
-        _httpClientFactory = httpClientFactory;
-        _openFlag = isOpen;
-        _timeout = timeout;
+        _httpClient = httpClient;
+        _httpClient.Timeout = TimeSpan.FromMilliseconds(timeout);
     }
 
-    ///// <summary>
-    ///// Http头
-    ///// </summary>
-    //public HttpRequestHeaders Headers { get=> client.DefaultRequestHeaders; }
-
-    
-
-    public async Task<Stream?> Request(IList<string> path, string contentType, string method, ParameterInfo[] parameters, object[] paras)
+    public async Task<Stream?> Request(IList<string> path, string contentType, string method, ParameterInfo[] parameters, object[] paras, Dictionary<string, string> headers)
     {
         try
         {
@@ -86,11 +72,12 @@ public class HttpStub
             using HttpContent? content = GetContent(contentType, parameters, paras, paraItems, fileItems);
             var request = new HttpRequestMessage(httpMethod, relatedUrl) { Content = content };
 
-            //request.Headers.Add("","");
-            var client = _httpClientFactory.CreateClient();
-            client.Timeout = TimeSpan.FromMilliseconds(_timeout);
+            foreach (var item in headers)
+            {
+                request.Headers.TryAddWithoutValidation(item.Key, item.Value);
+            }
 
-            var response = await client.SendAsync(request);
+            var response = await _httpClient.SendAsync(request);
             var data = await response.Content.ReadAsStreamAsync();
 
             if (!response.IsSuccessStatusCode)
@@ -104,7 +91,6 @@ public class HttpStub
         }
         catch(Exception ex)
         {
-            _openFlag[0] = false;
             Logger().LogError(ex);
             throw;
         }

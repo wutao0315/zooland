@@ -16,17 +16,12 @@ public class HttpInvoker : AbstractInvoker
     private readonly URL _url;
     private readonly IHttpClientFactory _instance;
     private readonly int _clientTimeout;
-    /// <summary>
-    /// 开启标志
-    /// </summary>
-    protected bool[] isOpen = new bool[] { false };
 
-    public HttpInvoker(IHttpClientFactory instance, int clientTimeout, URL url, bool[] isOpen)
+    public HttpInvoker(IHttpClientFactory instance, int clientTimeout, URL url)
     {
         _instance = instance;
         _clientTimeout = clientTimeout;
         _url = url;
-        this.isOpen = isOpen;
     }
     public override object Instance =>_instance;
     public override int ClientTimeout => _clientTimeout;
@@ -43,6 +38,7 @@ public class HttpInvoker : AbstractInvoker
         var method = DEFAULT_METHODTYPE;
         var contentType = DEFAULT_CONTENTTYPE;
         var parameters = invocation.MethodInfo.GetParameters();
+        var header = new Dictionary<string, string>();
         
 
         var targetDescription = invocation.TargetType.GetCustomAttribute<RequestMappingAttribute>();
@@ -57,19 +53,22 @@ public class HttpInvoker : AbstractInvoker
             pathUrl.AddRange(methodNames);
             method = methodDescription.Method.ToString();
             contentType = methodDescription.Consumes;
+            header = methodDescription.Headers;
         }
         else 
         {
             pathUrl.Add(methodName);
         }
 
-        
-        var stub = new HttpStub(_instance, isOpen, _clientTimeout);
+        var client = _instance.CreateClient();
+        client.BaseAddress = new Uri($"{_url.Protocol}://{_url.Host}:{_url.Port}");
+
+        var stub = new HttpStub(client, _clientTimeout);
         var watch = Stopwatch.StartNew();
         string? value = null;
         try
         {
-            using var stream = await stub.Request(pathUrl, contentType, method, parameters, invocation.Arguments);
+            using var stream = await stub.Request(pathUrl, contentType, method, parameters, invocation.Arguments, header);
             if (stream == null)
             {
                 throw new Exception($"{nameof(stream)} is null");

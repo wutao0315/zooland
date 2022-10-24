@@ -3,7 +3,7 @@ using Zooyard.Logging;
 
 namespace Zooyard.Rpc.Support;
 
-public abstract class AbstractClientPool: IClientPool, IAsyncDisposable
+public abstract class AbstractClientPool: IClientPool
 {
     private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(AbstractClientPool));
     /// <summary>
@@ -80,6 +80,11 @@ public abstract class AbstractClientPool: IClientPool, IAsyncDisposable
         await client.Close();
         await client.DisposeAsync();
         Logger().LogInformation($"DestoryClient :[{client.Version}:{client.Url}]");
+    }
+
+    public virtual void Dispose() 
+    {
+        DisposeAsync().GetAwaiter().GetResult();
     }
 
     public virtual async ValueTask DisposeAsync()

@@ -53,7 +53,7 @@ public class GrpcClient : AbstractClient
 
     public override async Task Close()
     {
-        if (_channel != null)
+        if (_channel != null && _channel.State != ChannelState.Shutdown)
         {
             await _channel.ShutdownAsync();
         }

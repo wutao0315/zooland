@@ -14,14 +14,6 @@ public class HttpClientImpl : AbstractClient
         _transport = transport;
         _clientTimeout = clientTimeout;
     }
-    
-    
-
-    /// <summary>
-    /// 开启标志
-    /// </summary>
-    protected bool[] isOpen = new bool[] { false };
-
 
     public override async Task<IInvoker> Refer()
     {
@@ -33,9 +25,8 @@ public class HttpClientImpl : AbstractClient
         });
 
         result.EnsureSuccessStatusCode();
-        isOpen[0] = true;
 
-        return new HttpInvoker(_transport, _clientTimeout, Url, isOpen);
+        return new HttpInvoker(_transport, _clientTimeout, Url);
     }
     public override async Task Open()
     {

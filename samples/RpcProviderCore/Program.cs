@@ -70,20 +70,14 @@ public class Program
 
             //ZooyardLogManager.UseConsoleLogging(Zooyard.Logging.LogLevel.Debug);
 
-            //services.Configure<AkkaServerOption>(config.GetSection("akka"));
             services.Configure<GrpcServerOption>(config.GetSection("grpc"));
             //services.Configure<NettyServerOption>(config.GetSection("netty"));
-            //services.Configure<ThriftServerOption>(config.GetSection("thrift"));
+            services.Configure<ThriftServerOption>(config.GetSection("thrift"));
             //services.Configure<HttpServerOption>(config.GetSection("http"));
             services.AddLogging();
 
-            ////实现注册接口代码
-            //services.AddSingleton<IRegistryService>((provider)=> {
-            //    return default;
-            //});
 
             services.AddTransient((serviceProvider) => "A");
-            //services.AddAkkaServer();
 
             //services.AddSingleton<ClientInterceptor, ClientGrpcInterceptor>();
             services.AddSingleton<ServerInterceptor, ServerGrpcInterceptor>();
@@ -123,11 +117,11 @@ public class Program
 
             services.AddSingleton<TServer>(serviceProvider =>
             {
-                var processor = serviceProvider.GetService<ITAsyncProcessor>();
-                var serverTransport = serviceProvider.GetService<TServerTransport>();
-                var transportFactory = serviceProvider.GetService<TTransportFactory>();
-                var protocolFactory = serviceProvider.GetService<TProtocolFactory>();
-                var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+                var processor = serviceProvider.GetRequiredService<ITAsyncProcessor>();
+                var serverTransport = serviceProvider.GetRequiredService<TServerTransport>();
+                var transportFactory = serviceProvider.GetRequiredService<TTransportFactory>();
+                var protocolFactory = serviceProvider.GetRequiredService<TProtocolFactory>();
+                var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
 
                 var threadConfig = new TThreadPoolAsyncServer.Configuration();
                 var server = new TThreadPoolAsyncServer(
@@ -144,11 +138,11 @@ public class Program
 
             //services.AddSingleton<TServer>(serviceProvider =>
             //{
-            //    var processor = serviceProvider.GetService<ITAsyncProcessor>();
-            //    var serverTransport = serviceProvider.GetService<TServerTransport>();
-            //    var transportFactory = serviceProvider.GetService<TTransportFactory>();
-            //    var protocolFactory = serviceProvider.GetService<TProtocolFactory>();
-            //    var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+            //    var processor = serviceProvider.GetRequiredService<ITAsyncProcessor>();
+            //    var serverTransport = serviceProvider.GetRequiredService<TServerTransport>();
+            //    var transportFactory = serviceProvider.GetRequiredService<TTransportFactory>();
+            //    var protocolFactory = serviceProvider.GetRequiredService<TProtocolFactory>();
+            //    var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
             //    return new TSimpleAsyncServer(
             //        itProcessorFactory: new TSingletonProcessorFactory(processor),
             //        serverTransport: serverTransport,
@@ -159,9 +153,9 @@ public class Program
             //        logger: loggerFactory.CreateLogger<TSimpleAsyncServer>());
             //});
 
-            services.AddThriftServer();
-
             services.AddHttpServer<Startup>(args);
+
+            services.AddThriftServer();
 
             //services.AddZoolandServer();
             services.AddHostedService<ZoolandHostedService>();
@@ -355,14 +349,15 @@ public static class ServiceBuilderExtensions
     {
         services.AddSingleton((serviceProvider) =>
         {
+            var urls = "http://0.0.0.0:10010/";
             var host = new WebHostBuilder()
             .UseKestrel()
             .UseContentRoot(Directory.GetCurrentDirectory())
             .UseIISIntegration()
             .UseStartup<Startup>()
-            .UseUrls("http://0.0.0.0:10010/")
+            .UseUrls(urls)
             .Build();
-
+            Console.WriteLine(urls);
             return host;
         });
 
@@ -769,7 +764,7 @@ public class GrpcServer
 
 public class ThriftServer
 {
-    private TServer _server;
+    private TServer? _server;
     private readonly IOptionsMonitor<ThriftServerOption> _thriftServerOption;
     private readonly Microsoft.Extensions.Logging.ILogger _logger;
     private readonly ILoggerFactory _loggerFactory;
@@ -793,21 +788,20 @@ public class ThriftServer
 
         //run the server
 
-        //Task.Run(async () =>
-        //{
-        //    try
-        //    {
-        //        await _server.ServeAsync(cancellationToken);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Logger().LogError(ex);
-        //        throw ex;
-        //    }
-        //});
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await RunAsync(cancellationToken);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }, cancellationToken);
 
         //await _server.ServeAsync(cancellationToken);
-        await RunAsync(cancellationToken);
+        
         _logger.LogInformation("Started the thrift server ...");
         Console.WriteLine("Started the thrift server ...");
     }
@@ -816,7 +810,7 @@ public class ThriftServer
     {
         //unregiste from register center
         await Task.CompletedTask;
-        _server.Stop();
+        _server?.Stop();
         _logger.LogInformation("stoped the thrift server ...");
     }
 
@@ -946,25 +940,25 @@ public class ThriftServer
                     ));
 
 
-            _server = new TSimpleAsyncServer(
-                itProcessorFactory: new TSingletonProcessorFactory(processor),
-                serverTransport: serverTransport,
-                inputTransportFactory: transportFactory,
-                outputTransportFactory: transportFactory,
-                inputProtocolFactory: protocolFactory,
-                outputProtocolFactory: protocolFactory,
-                logger: _loggerFactory.CreateLogger<TSimpleAsyncServer>());
+            //_server = new TSimpleAsyncServer(
+            //    itProcessorFactory: new TSingletonProcessorFactory(processor),
+            //    serverTransport: serverTransport,
+            //    inputTransportFactory: transportFactory,
+            //    outputTransportFactory: transportFactory,
+            //    inputProtocolFactory: protocolFactory,
+            //    outputProtocolFactory: protocolFactory,
+            //    logger: _loggerFactory.CreateLogger<TSimpleAsyncServer>());
 
-            //var threadConfig = new TThreadPoolAsyncServer.Configuration();
-            //var server = new TThreadPoolAsyncServer(
-            //     processorFactory: new TSingletonProcessorFactory(processor),
-            //     serverTransport: serverTransport,
-            //     inputTransportFactory: transportFactory,
-            //     outputTransportFactory: transportFactory,
-            //     inputProtocolFactory: protocolFactory,
-            //     outputProtocolFactory: protocolFactory,
-            //     threadConfig: threadConfig,
-            //     logger: loggerFactory.CreateLogger<TThreadPoolAsyncServer>());
+            var threadConfig = new TThreadPoolAsyncServer.Configuration();
+            _server = new TThreadPoolAsyncServer(
+                 processorFactory: new TSingletonProcessorFactory(processor),
+                 serverTransport: serverTransport,
+                 inputTransportFactory: transportFactory,
+                 outputTransportFactory: transportFactory,
+                 inputProtocolFactory: protocolFactory,
+                 outputProtocolFactory: protocolFactory,
+                 threadConfig: threadConfig,
+                 logger: _loggerFactory.CreateLogger<TThreadPoolAsyncServer>());
 
             _logger.LogInformation("Starting the server...");
 
@@ -1108,9 +1102,9 @@ public class ThriftServer
 
 public class ThriftServerOption
 {
-    public string Transport { get; set; }
-    public string Buffering { get; set; }
-    public string Protocol { get; set; }
+    public string Transport { get; set; } = String.Empty;
+    public string Buffering { get; set; } = String.Empty;
+    public string Protocol { get; set; } = String.Empty;
     public bool Multiplex { get; set; } = false;
     public int Port { get; set; }
     public TConfiguration Configuration { get; set; } = new TConfiguration();
@@ -1132,7 +1126,7 @@ public class HttpServer
         {
             await _server.RunAsync(cancellationToken);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
         }
 

@@ -1,6 +1,6 @@
 ﻿namespace Zooyard.Rpc;
 
-public interface IClientPool
+public interface IClientPool: IDisposable,IAsyncDisposable
 {
     string ServiceName { get; set; }
     //string Version { get; set; }

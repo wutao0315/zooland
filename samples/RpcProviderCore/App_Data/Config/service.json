@@ -2,8 +2,6 @@
   "zooyard": {
     "RegisterUrl": "zooyard://localhost?interface=MemberThrift.ISessionService&MemberThrift.ISessionService.cluster=failfast",
     "ClientUrls": [
-      //"http://127.0.0.1:30000/Hello/HelloServiceWcfImpl?proxy=HelloService&interface=RpcContractWcf.IHelloService&binding=wshttp",
-      //"akka.tcp://localhost:10011/user?proxy=HelloService&interface=RpcContractAkka.IHelloService&cluster=failfast",
       "grpc://127.0.0.1:10008?proxy=HelloService&interface=RpcContractGrpc.IHelloService",
       "http://localhost:10010/hello?proxy=HelloService&interface=RpcContractHttp.IHelloService&CallNameVoid.parametertype=url&CallNameVoid.methodtype=get&CallName.parametertype=url&CallName.methodtype=get&CallVoid.parametertype=url&CallVoid.methodtype=get&Hello.parametertype=url&Hello.methodtype=get&SayHello.parametertype=url&SayHello.methodtype=get&ShowHello.methodtype=post",
       "socket://127.0.0.1:12121?interface=RpcContractNetty.IHelloService&cluster=failfast",

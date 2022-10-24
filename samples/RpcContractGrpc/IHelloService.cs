@@ -12,10 +12,10 @@ public interface IHelloService
     Task<HelloResult> SayHelloAsync(NameResult name);
     Task<NameResult> ShowHelloAsync(HelloResult name);
 
-    NameResult CallNameVoid(Void voidData);
-    Void CallName(NameResult name);
-    Void CallVoid(Void voidData);
-    NameResult Hello(NameResult name);
-    HelloResult SayHello(NameResult name);
-    NameResult ShowHello(HelloResult name);
+    //NameResult CallNameVoid(Void voidData);
+    //Void CallName(NameResult name);
+    //Void CallVoid(Void voidData);
+    //NameResult Hello(NameResult name);
+    //HelloResult SayHello(NameResult name);
+    //NameResult ShowHello(HelloResult name);
 }
