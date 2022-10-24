@@ -283,6 +283,18 @@ public class ServerGrpcInterceptor : ServerInterceptor
 //    public TConfiguration Configuration { get; set; } = new TConfiguration();
 //    public int ClientTimeOut { get; set; }
 //}
+public class GrpcServerOption
+{
+    public Dictionary<string, string> Services { get; set; } = new();
+    public List<GrpcServerPortOption> ServerPorts { get; set; } = new();
+}
+public class GrpcServerPortOption
+{
+    public string Host { get; set; } = string.Empty;
+    public int Port { get; set; }
+    public string Credentials { get; set; } = string.Empty;
+}
+
 public class NettyServerOption 
 {
     public string ServiceType { get; set; } = string.Empty;
