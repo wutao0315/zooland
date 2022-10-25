@@ -8,6 +8,10 @@ public class AppStateRouterFactory : IStateRouterFactory
 
     public string Name => NAME;
 
+    public void ClearCache()
+    {
+    }
+
     private volatile IStateRouter? router;
 
     public IStateRouter GetRouter(Type interfaceClass, URL address)

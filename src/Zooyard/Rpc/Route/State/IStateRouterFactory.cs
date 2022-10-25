@@ -3,7 +3,6 @@
 public interface IStateRouterFactory
 {
     string Name { get; }
-    //Adaptive("protocol")
     /// <summary>
     /// Create state router.
     /// </summary>
@@ -12,4 +11,5 @@ public interface IStateRouterFactory
     /// <param name="address"></param>
     /// <returns></returns>
     IStateRouter GetRouter(Type interfaceClass, URL address);
+    void ClearCache();
 }

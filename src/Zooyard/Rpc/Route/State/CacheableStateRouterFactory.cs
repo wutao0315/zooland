@@ -15,6 +15,10 @@ namespace Zooyard.Rpc.Route.State
         {
             return routerMap.GetOrAdd(address.ServiceKey, CreateRouter(interfaceClass, address));
         }
+        public void ClearCache() 
+        {
+            routerMap.Clear();
+        }
         public abstract string Name { get;}
         protected abstract IStateRouter CreateRouter(Type interfaceClass, URL address);
     }

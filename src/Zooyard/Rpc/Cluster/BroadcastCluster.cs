@@ -6,7 +6,6 @@ namespace Zooyard.Rpc.Cluster;
 public class BroadcastCluster : AbstractCluster
 {
     private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(BroadcastCluster));
-    //public BroadcastCluster(IEnumerable<ICache> caches):base(caches) { }
     public override string Name => NAME;
     public const string NAME = "broadcast";
     protected override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> invokers, IInvocation invocation)

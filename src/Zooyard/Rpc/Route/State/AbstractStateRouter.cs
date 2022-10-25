@@ -25,27 +25,12 @@ public abstract class AbstractStateRouter: IStateRouter
     public virtual URL Address { get; set; }
 
     public virtual bool Runtime => true;
-    public virtual bool Force { get; set; } = false;
+    public virtual bool Force { get => force; set => force = value; }
 
 
     //public GovernanceRuleRepository getRuleRepository()
     //{
     //    return this.ruleRepository;
-    //}
-
-    //public IStateRouter getNextRouter()
-    //{
-    //    return nextRouter;
-    //}
-    ///// <summary>
-    ///// Next Router node state is maintained by AbstractStateRouter and this method is not allow to override.
-    ///// If a specified router wants to control the behaviour of continue route or not,
-    ///// please override {@link AbstractStateRouter#supportContinueRoute()}
-    ///// </summary>
-    ///// <param name="nextRouter"></param>
-    //public void SetNextRouter(IStateRouter nextRouter)
-    //{
-    //    this.nextRouter = nextRouter;
     //}
 
     public IStateRouter? NextRouter { get=> nextRouter; set=> nextRouter = value; }
@@ -66,7 +51,7 @@ public abstract class AbstractStateRouter: IStateRouter
     {
         return false;
     }
-    public IList<URL> Route(IList<URL> invokers, URL address, IInvocation invocation, bool needToPrintMessage)//, Holder<RouterSnapshotNode> nodeHolder) 
+    public IList<URL> Route(IList<URL> invokers, URL address, IInvocation invocation, bool needToPrintMessage) 
     {
         //if (needToPrintMessage && (nodeHolder == null || nodeHolder.Value == null))
         //{
@@ -109,7 +94,7 @@ public abstract class AbstractStateRouter: IStateRouter
         }
         else
         {
-            routeResult = DoRoute(invokers, address, invocation, needToPrintMessage);//, nodeHolder, messageHolder);
+            routeResult = DoRoute(invokers, address, invocation, needToPrintMessage);
         }
 
         //// post-build current node
@@ -135,11 +120,9 @@ public abstract class AbstractStateRouter: IStateRouter
     /// <param name="address">consumerUrl</param>
     /// <param name="invocation">invocation</param>
     /// <param name="needToPrintMessage">should current router print message</param>
-    ///// <param name="nodeHolder">RouterSnapshotNode In general, router itself no need to care this param, just pass to continueRoute</param>
-    ///// <param name="messageHolder">message holder when router should current router print message</param>
     /// <returns></returns>
     protected abstract IList<URL> DoRoute(IList<URL> invokers, URL address, IInvocation invocation,
-                                                bool needToPrintMessage);//, Holder<RouterSnapshotNode> nodeHolder, Holder<string> messageHolder);
+                                                bool needToPrintMessage);
 
 
     /// <summary>
@@ -151,11 +134,11 @@ public abstract class AbstractStateRouter: IStateRouter
     /// <param name=""></param>
     /// <returns></returns>
     protected IList<URL> ContinueRoute(IList<URL> invokers, URL address, IInvocation invocation,
-                                                      bool needToPrintMessage)//, Holder<RouterSnapshotNode> nodeHolder) 
+                                                      bool needToPrintMessage)
     {
         if (nextRouter != null)
         {
-            return nextRouter.Route(invokers, address, invocation, needToPrintMessage);//, nodeHolder);
+            return nextRouter.Route(invokers, address, invocation, needToPrintMessage);
         }
         else
         {

@@ -31,7 +31,7 @@ public class HttpStub
         _httpClient.Timeout = TimeSpan.FromMilliseconds(timeout);
     }
 
-    public async Task<Stream?> Request(IList<string> path, string contentType, string method, ParameterInfo[] parameters, object[] paras, Dictionary<string, string> headers)
+    public async Task<Stream?> Request(IList<string> path, string contentType, string method, ParameterInfo[] parameters, object[] paras, IDictionary<string, string> headers)
     {
         try
         {

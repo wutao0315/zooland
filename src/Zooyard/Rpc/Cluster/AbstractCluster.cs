@@ -30,35 +30,6 @@ public abstract class AbstractCluster : ICluster
 
     public abstract string Name { get; }
 
-    //private readonly IStateRouterFactory _stateRouterFactory;
-
-    //public AbstractCluster(IStateRouterFactory stateRouterFactory)
-    //{
-    //    _stateRouterFactory = stateRouterFactory;
-    //}
-
-    //protected IList<URL> Route(IList<URL> invokers, URL address, IInvocation invocation)
-    //{
-    //    var stateRoute = _stateRouterFactory.GetRouter(invocation.TargetType, address);
-
-    //    var needToPrintMessageStr = address.GetParameter($"{invocation.ServiceName}.{invocation.MethodInfo.Name}.needToPrintMessage", "");
-
-    //    if (string.IsNullOrWhiteSpace(needToPrintMessageStr)) 
-    //    {
-    //        needToPrintMessageStr = address.GetParameter($"{invocation.MethodInfo.Name}.needToPrintMessage", "");
-    //    }
-    //    if (string.IsNullOrWhiteSpace(needToPrintMessageStr))
-    //    {
-    //        needToPrintMessageStr = address.GetParameter("needToPrintMessage", "");
-    //    }
-
-    //    bool.TryParse(needToPrintMessageStr, out bool needToPrintMessage);
-
-    //    var result = stateRoute.Route(invokers, address, invocation, needToPrintMessage);
-
-    //    return result;
-    //}
-
     /// <summary>
     /// 使用loadbalance选择invoker.</br>
     /// a)先lb选择，如果在selected列表中 或者 不可用且做检验时，进入下一步(重选),否则直接返回</br>
@@ -69,10 +40,10 @@ public abstract class AbstractCluster : ICluster
     /// <param name="invokers"></param>
     /// <param name="selected"> 已选过的invoker.注意：输入保证不重复</param>
     /// <returns></returns>
-    protected URL? Select(ILoadBalance loadbalance, IInvocation invocation, IList<URL>? invokers, IList<URL>? selected = null)
+    protected URL Select(ILoadBalance loadbalance, IInvocation invocation, IList<URL>? invokers, IList<URL>? selected = null)
     {
         if (invokers == null || invokers.Count == 0)
-            return null;
+            throw new Exception("invokers is null or empty");
 
         string methodName = invocation.MethodInfo.Name;
 
@@ -92,10 +63,16 @@ public abstract class AbstractCluster : ICluster
         }
         var invoker = DoSelect(loadbalance, invocation, invokers, selected);
 
+        if (invoker == null) 
+            throw new Exception("invoker is null load balance err");
+
         if (sticky)
         {
             stickyInvoker = invoker;
         }
+
+        RpcContext.GetContext().SetInvoker(invoker);
+
         return invoker;
 
         URL? DoSelect(ILoadBalance loadbalance, IInvocation invocation, IList<URL>? invokers, IList<URL>? selected)
@@ -222,89 +199,6 @@ public abstract class AbstractCluster : ICluster
                     + ". Please check if the providers have been started and registered.");
         }
     }
-    ///// <summary>
-    ///// 获取客户端缓存
-    ///// </summary>
-    ///// <param name="invocation">服务路径</param>
-    ///// <returns>客户端服务连接</returns>
-    //private ICache? GetCache(URL url, IInvocation invocation)
-    //{
-    //    //参数检查
-    //    if (_caches == null || _caches.Count == 0)
-    //    {
-    //        return null;
-    //    }
-
-    //    var invocationTypeName = invocation.TargetType.FullName!;
-    //    var invocationMethodName = invocation.MethodInfo.Name;
-    //    ICache? result = null;
-    //    var key = url.GetParameter($"{invocationTypeName}.{invocationMethodName}{invocation.PointVersion()}.{CACHE_KEY}", "");
-    //    //interface
-    //    if (string.IsNullOrWhiteSpace(key))
-    //    {
-    //        key = url.GetParameter($"{invocationTypeName}.{invocationMethodName}.{CACHE_KEY}", "");
-    //    }
-    //    //key
-    //    if (string.IsNullOrWhiteSpace(key))
-    //    {
-    //        key = url.GetParameter(CACHE_KEY, "");
-    //    }
-
-    //    if (string.IsNullOrWhiteSpace(key))
-    //    {
-    //        return result;
-    //    }
-
-    //    if (key.Equals("true", StringComparison.OrdinalIgnoreCase) 
-    //        || key.Equals(LruCache.NAME, StringComparison.OrdinalIgnoreCase))
-    //    {
-    //        result = _caches[LruCache.NAME];
-    //    }
-
-    //    if (_caches.ContainsKey(key) && key != LruCache.NAME)
-    //    {
-    //        result = _caches[key];
-    //    }
-
-    //    return result;
-    //}
-
-    //protected async Task<IResult<T>?> CacheInvoke<T>(URL url,
-    //    IInvocation invocation, 
-    //    Func<Task<IResult<T>?>> map)
-    //{
-    //    var cache = GetCache(url, invocation);
-
-    //    if (cache == null)
-    //    {
-    //        var result = await map();
-    //        return result;
-            
-    //    }
-
-    //    var invocationTypeName = invocation.TargetType.FullName!;
-    //    var invocationMethodName = invocation.MethodInfo.Name;
-    //    var parameters = invocation.MethodInfo.GetParameters();
-    //    var key = $"{invocation.ServiceNamePoint()}{invocationTypeName}.{invocationMethodName}@{StringUtils.Md5(StringUtils.ToArgumentString(parameters, invocation.Arguments))}{invocation.PointVersion()}";
-
-    //    var value = cache.Get<RpcResult<T>>(key);
-    //    if (value != null)
-    //    {
-    //        Logger().LogInformation($"call from cache({cache.GetType().FullName}):{key}");
-    //        return value;
-    //    }
-    //    var resultInner = await map();
-
-    //    if (resultInner != null
-    //        && resultInner.HasException
-    //        && resultInner.Exception == null
-    //        && resultInner.Value != null)
-    //    {
-    //        cache.Put(key, resultInner);
-    //    }
-    //    return resultInner;
-    //}
-
     public virtual async Task<IClusterResult<T>> Invoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation) 
     {
         var result = await this.DoInvoke<T>(pool, loadbalance, address, urls, invocation);

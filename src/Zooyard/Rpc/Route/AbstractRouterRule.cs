@@ -2,7 +2,7 @@
 
 public class AbstractRouterRule
 {
-    protected void parseFromMap0(Dictionary<string, object> map)
+    protected void ParseFromMapInner(Dictionary<string, object> map)
     {
         if (map.TryGetValue(Constants.RAW_RULE_KEY, out object? rawRuleObj))
         {

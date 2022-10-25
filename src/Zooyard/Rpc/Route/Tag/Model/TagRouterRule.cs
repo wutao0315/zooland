@@ -3,17 +3,16 @@
 public class TagRouterRule: AbstractRouterRule
 {
     private List<Tag> tags;
-    private readonly Dictionary<String, List<String>> addressToTagnames = new();
-    private readonly Dictionary<String, List<String>> tagnameToAddresses = new();
+    private readonly Dictionary<string, List<string>> addressToTagnames = new();
+    private readonly Dictionary<string, List<string>> tagnameToAddresses = new();
 
-    public static TagRouterRule parseFromMap(Dictionary<String, Object> map)
+    public static TagRouterRule parseFromMap(Dictionary<string, object> map)
     {
-        TagRouterRule tagRouterRule = new TagRouterRule();
-        //tagRouterRule.parseFromMap0(map);
+        var tagRouterRule = new TagRouterRule();
+        tagRouterRule.ParseFromMapInner(map);
 
         if (map.TryGetValue(Constants.TAGS_KEY, out object? tags) && tags != null)
         {
-
             //tagRouterRule.Tags
         }
         //if (tags != null && List.class.isAssignableFrom(tags.getClass())) 
@@ -41,7 +40,7 @@ public class TagRouterRule: AbstractRouterRule
         //}
     }
 
-    public List<String> Addresses
+    public List<string> Addresses
     {
         get => null;
         //return tags.stream()
@@ -50,19 +49,19 @@ public class TagRouterRule: AbstractRouterRule
         //        .collect(Collectors.toList());
     }
 
-    public List<String> getTagNames()
+    public List<string> getTagNames()
     {
         return null;
         //return tags.stream().map(Tag::getName).collect(Collectors.toList());
     }
 
-    public Dictionary<String, List<String>> getAddressToTagnames()
+    public Dictionary<string, List<string>> getAddressToTagnames()
     {
         return addressToTagnames;
     }
 
 
-    public Dictionary<String, List<String>> getTagnameToAddresses()
+    public Dictionary<string, List<string>> getTagnameToAddresses()
     {
         return tagnameToAddresses;
     }

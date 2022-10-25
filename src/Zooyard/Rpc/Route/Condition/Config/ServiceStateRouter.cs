@@ -6,6 +6,5 @@ public class ServiceStateRouter : ListenableStateRouter
 
     public ServiceStateRouter(URL address):base(address, address.GetParameter("rule","service"))
     {
-        //super(url, DynamicConfiguration.getRuleKey(url));
     }
 }

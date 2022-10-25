@@ -13,8 +13,8 @@ namespace Zooyard.Rpc;
 /// </summary>
 public class RpcContext
 {
-    public const string ASYNC_KEY = "async";
-    public const string RETURN_KEY = "return";
+    //public const string ASYNC_KEY = "async";
+    //public const string RETURN_KEY = "return";
     private static readonly AsyncLocal<RpcContext> LOCAL = new();
     
     //private Task future;
@@ -85,12 +85,12 @@ public class RpcContext
         }
     }
 
-    /// <summary>
-    /// get future.
-    /// </summary>
-    /// @param <T> </param>
-    /// <returns> future </returns>
-    public virtual Task? Future { get; set; }
+    ///// <summary>
+    ///// get future.
+    ///// </summary>
+    ///// @param <T> </param>
+    ///// <returns> future </returns>
+    //public virtual Task? Future { get; set; }
 
 
     public virtual IList<URL>? Urls
@@ -447,7 +447,7 @@ public class RpcContext
         return this;
     }
 
-    public virtual RpcContext SetInvoker<T>(URL invoker)
+    public virtual RpcContext SetInvoker(URL invoker)//<T>
     {
         //this.invoker = invoker;
         if (invoker != null)
@@ -457,7 +457,7 @@ public class RpcContext
         return this;
     }
 
-    public virtual RpcContext SetInvocation<T>(IInvocation invocation)
+    public virtual RpcContext SetInvocation(IInvocation invocation)//<T>
     {
         //this.invocation = invocation;
         if (invocation != null)
@@ -469,116 +469,116 @@ public class RpcContext
         return this;
     }
 
-    /// <summary>
-    /// 异步调用 ，需要返回值，即使步调用Future.get方法，也会处理调用超时问题.
-    /// </summary>
-    /// <param name="callable"> </param>
-    /// <returns> 通过future.get()获取返回结果. </returns>
-    public virtual async Task<T> AsyncCall<T>(Func<T> callable)
-    {
-        try
-        {
-            try
-            {
-                SetAttachment(ASYNC_KEY, true.ToString());
+    ///// <summary>
+    ///// 异步调用 ，需要返回值，即使步调用Future.get方法，也会处理调用超时问题.
+    ///// </summary>
+    ///// <param name="callable"> </param>
+    ///// <returns> 通过future.get()获取返回结果. </returns>
+    //public virtual async Task<T> AsyncCall<T>(Func<T> callable)
+    //{
+    //    try
+    //    {
+    //        try
+    //        {
+    //            SetAttachment(ASYNC_KEY, true.ToString());
 
-                var result = await Task.Run<T>(callable);
-                return result;
-            }
-            catch (Exception e)
-            {
-                throw new RpcException(e);
-            }
-            finally
-            {
-                RemoveAttachment(ASYNC_KEY);
-            }
-        }
-        catch (RpcException e)
-        {
-            throw e;
-        }
-    }
+    //            var result = await Task.Run<T>(callable);
+    //            return result;
+    //        }
+    //        catch (Exception e)
+    //        {
+    //            throw new RpcException(e);
+    //        }
+    //        finally
+    //        {
+    //            RemoveAttachment(ASYNC_KEY);
+    //        }
+    //    }
+    //    catch (RpcException e)
+    //    {
+    //        throw e;
+    //    }
+    //}
     
-    /// <summary>
-    /// oneway调用，只发送请求，不接收返回结果.
-    /// </summary>
-    /// <param name="callable"> </param>
-    public virtual void AsyncCall(Task runable)
-    {
-        try
-        {
-            SetAttachment(RETURN_KEY, false.ToString());
-            runable.Start();
-        }
-        catch (Exception e)
-        {
-            //FIXME 异常是否应该放在future中？
-            throw new RpcException("oneway call error ." + e.Message, e);
-        }
-        finally
-        {
-            RemoveAttachment(RETURN_KEY);
-        }
-    }
+    ///// <summary>
+    ///// oneway调用，只发送请求，不接收返回结果.
+    ///// </summary>
+    ///// <param name="callable"> </param>
+    //public virtual void AsyncCall(Task runable)
+    //{
+    //    try
+    //    {
+    //        SetAttachment(RETURN_KEY, false.ToString());
+    //        runable.Start();
+    //    }
+    //    catch (Exception e)
+    //    {
+    //        //FIXME 异常是否应该放在future中？
+    //        throw new RpcException("oneway call error ." + e.Message, e);
+    //    }
+    //    finally
+    //    {
+    //        RemoveAttachment(RETURN_KEY);
+    //    }
+    //}
 }
 
 
-public class RpcContextData
-{
-    private ConcurrentDictionary<string, object>? contextParameters;
+//public class RpcContextData
+//{
+//    private ConcurrentDictionary<string, object>? contextParameters;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ConcurrentDictionary<string, object>? GetContextParameters()
-    {
-        return contextParameters;
-    }
+//    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+//    public ConcurrentDictionary<string, object>? GetContextParameters()
+//    {
+//        return contextParameters;
+//    }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetAttachment(string key, object value)
-    {
-        contextParameters?.AddOrUpdate(key, value, (k, v) => value);
-    }
+//    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+//    public void SetAttachment(string key, object value)
+//    {
+//        contextParameters?.AddOrUpdate(key, value, (k, v) => value);
+//    }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public object? GetAttachment(string key)
-    {
-        if (contextParameters == null) 
-        {
-            return default;
-        }
-        contextParameters.TryGetValue(key, out object? result);
-        return result;
-    }
+//    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+//    public object? GetAttachment(string key)
+//    {
+//        if (contextParameters == null) 
+//        {
+//            return default;
+//        }
+//        contextParameters.TryGetValue(key, out object? result);
+//        return result;
+//    }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetContextParameters(ConcurrentDictionary<string, object> contextParameters)
-    {
-        this.contextParameters = contextParameters;
-    }
+//    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+//    public void SetContextParameters(ConcurrentDictionary<string, object> contextParameters)
+//    {
+//        this.contextParameters = contextParameters;
+//    }
 
-    private static AsyncLocal<RpcContextData?> rpcContextThreadLocal = new ();
+//    private static AsyncLocal<RpcContextData?> rpcContextThreadLocal = new ();
 
-    public static RpcContextData? GetContext()
-    {
-        var context = rpcContextThreadLocal.Value;
+//    public static RpcContextData? GetContext()
+//    {
+//        var context = rpcContextThreadLocal.Value;
 
-        if (context == null)
-        {
-            context = new RpcContextData();
-            context.SetContextParameters(new ConcurrentDictionary<string, object>());
-            rpcContextThreadLocal.Value = context;
-        }
+//        if (context == null)
+//        {
+//            context = new RpcContextData();
+//            context.SetContextParameters(new ConcurrentDictionary<string, object>());
+//            rpcContextThreadLocal.Value = context;
+//        }
 
-        return rpcContextThreadLocal.Value;
-    }
+//        return rpcContextThreadLocal.Value;
+//    }
 
-    public static void RemoveContext()
-    {
-        rpcContextThreadLocal.Value = null;
-    }
+//    public static void RemoveContext()
+//    {
+//        rpcContextThreadLocal.Value = null;
+//    }
 
-    private RpcContextData()
-    {
-    }
-}
+//    private RpcContextData()
+//    {
+//    }
+//}

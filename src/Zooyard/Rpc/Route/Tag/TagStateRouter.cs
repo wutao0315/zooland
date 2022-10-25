@@ -1,4 +1,5 @@
-﻿using Zooyard.Logging;
+﻿using System.Linq;
+using Zooyard.Logging;
 using Zooyard.Rpc.Route.State;
 using Zooyard.Rpc.Route.Tag.Model;
 using Zooyard.Utils;
@@ -43,12 +44,13 @@ public class TagStateRouter : AbstractStateRouter
     //    }
     //}
 
-    protected override IList<URL> DoRoute(IList<URL> invokers, URL address, IInvocation invocation, bool needToPrintMessage)//, Holder<RouterSnapshotNode> nodeHolder, Holder<string> messageHolder)
+    protected override IList<URL> DoRoute(IList<URL> invokers, URL address, IInvocation invocation, bool needToPrintMessage)
     {
         if (invokers.Count == 0)
         {
             if (needToPrintMessage)
             {
+                Logger().LogInformation("Directly Return. Reason: Invokers from previous router is empty.");
                 //messageHolder.Value = "Directly Return. Reason: Invokers from previous router is empty.";
             }
             return invokers;
@@ -60,6 +62,7 @@ public class TagStateRouter : AbstractStateRouter
         {
             if (needToPrintMessage)
             {
+                Logger().LogInformation("Disable Tag Router. Reason: tagRouterRule is invalid or disabled");
                // messageHolder.Value = "Disable Tag Router. Reason: tagRouterRule is invalid or disabled";
             }
             return filterUsingStaticTag(invokers, address, invocation);
@@ -75,13 +78,14 @@ public class TagStateRouter : AbstractStateRouter
             // filter by dynamic tag group first
             if (addresses!= null && addresses.Count > 0)
             {
-                //result = filterInvoker(invokers, invoker->addressMatches(invoker.getUrl(), addresses));
+                result = filterInvoker(invokers, invoker=>addressMatches(invoker, addresses));
                 // if result is not null OR it's null but force=true, return result directly
                 if (result.Count > 0 || tagRouterRuleCopy.Force)
                 {
                     if (needToPrintMessage)
                     {
-                       // messageHolder.Value = "Use tag " + tag + " to route. Reason: result is not null OR it's null but force=true";
+                        Logger().LogInformation("Use tag " + tag + " to route. Reason: result is not null OR it's null but force=true");
+                        // messageHolder.Value = "Use tag " + tag + " to route. Reason: result is not null OR it's null but force=true";
                     }
                     return result;
                 }
@@ -90,7 +94,7 @@ public class TagStateRouter : AbstractStateRouter
             {
                 // dynamic tag group doesn't have any item about the requested app OR it's null after filtered by
                 // dynamic tag group but force=false. check static tag
-                //result = filterInvoker(invokers, invoker->tag.equals(invoker.getUrl().getParameter(TAG_KEY)));
+                result = filterInvoker(invokers, invoker=>tag.Equals(invoker.GetParameter(TAG_KEY)));
             }
             // If there's no tagged providers that can match the current tagged request. force.tag is set by default
             // to false, which means it will invoke any providers without a tag unless it's explicitly disallowed.
@@ -98,35 +102,38 @@ public class TagStateRouter : AbstractStateRouter
             {
                 if (needToPrintMessage)
                 {
-                   // messageHolder.Value = "Use tag " + tag + " to route. Reason: result is not empty or ForceUseTag key is true in invocation";
+                    Logger().LogInformation("Use tag " + tag + " to route. Reason: result is not empty or ForceUseTag key is true in invocation");
+                    // messageHolder.Value = "Use tag " + tag + " to route. Reason: result is not empty or ForceUseTag key is true in invocation";
                 }
                 return result;
             }
             // FAILOVER: return all Providers without any tags.
             else
             {
-                //BitList<IInvoker> tmp = filterInvoker(invokers, invoker->addressNotMatches(invoker.getUrl(),
-                //    tagRouterRuleCopy.Addresses));
-                //if (needToPrintMessage)
-                //{
-                //    messageHolder.Value = "FAILOVER: return all Providers without any tags";
-                //}
-                //return filterInvoker(tmp, invoker->StringUtils.isEmpty(invoker.getUrl().getParameter(TAG_KEY)));
+                var tmp = filterInvoker(invokers, invoker=>addressNotMatches(invoker,
+                    tagRouterRuleCopy.Addresses));
+                if (needToPrintMessage)
+                {
+                    Logger().LogInformation("FAILOVER: return all Providers without any tags");
+                    //messageHolder.Value = "FAILOVER: return all Providers without any tags";
+                }
+                return filterInvoker(tmp, invoker=>string.IsNullOrWhiteSpace(invoker.GetParameter(TAG_KEY)));
             }
         }
         else
         {
             // List<String> addresses = tagRouterRule.filter(providerApp);
             // return all addresses in dynamic tag group.
-            List<String> addresses = tagRouterRuleCopy.Addresses;
+            List<string> addresses = tagRouterRuleCopy.Addresses;
             if (addresses?.Count > 0)
             {
-                //result = filterInvoker(invokers, invoker->addressNotMatches(invoker.Url, addresses));
+                result = filterInvoker(invokers, invoker=>addressNotMatches(invoker, addresses));
                 // 1. all addresses are in dynamic tag group, return empty list.
                 if (result.Count == 0)
                 {
                     if (needToPrintMessage)
                     {
+                        Logger().LogInformation("all addresses are in dynamic tag group, return empty list");
                         //messageHolder.Value = "all addresses are in dynamic tag group, return empty list";
                     }
                     return result;
@@ -136,13 +143,15 @@ public class TagStateRouter : AbstractStateRouter
             }
             if (needToPrintMessage)
             {
+                Logger().LogInformation("filter using the static tag group");
                 //messageHolder.Value = "filter using the static tag group";
             }
-            //return filterInvoker(result, invoker-> { string localTag = invoker.getUrl().getParameter(TAG_KEY);
-            //    return string.IsNullOrWhiteSpace(localTag) || !tagRouterRuleCopy.getTagNames().contains(localTag);
-            //});
+            return filterInvoker(result, invoker=> 
+            {
+                string? localTag = invoker.GetParameter(TAG_KEY);
+                return string.IsNullOrWhiteSpace(localTag) || !tagRouterRuleCopy.getTagNames().Contains(localTag);
+            });
         }
-        return null;
     }
 
 
@@ -168,38 +177,40 @@ public class TagStateRouter : AbstractStateRouter
         // Tag request
         if (!string.IsNullOrWhiteSpace(tag))
         {
-            //result = filterInvoker(invokers, invoker->tag.equals(invoker.getUrl().getParameter(TAG_KEY)));
-            //if (result.Count == 0 && !isForceUseTag(invocation))
-            //{
-            //    result = filterInvoker(invokers, invoker->StringUtils.isEmpty(invoker.getUrl().getParameter(TAG_KEY)));
-            //}
+            result = filterInvoker(invokers, invoker => tag.Equals(invoker.GetParameter(TAG_KEY)));
+            if (result.Count == 0 && !isForceUseTag(invocation))
+            {
+                result = filterInvoker(invokers, invoker=>string.IsNullOrWhiteSpace(invoker.GetParameter(TAG_KEY)));
+            }
         }
         else
         {
-            //result = filterInvoker(invokers, invoker->StringUtils.isEmpty(invoker.getUrl().getParameter(TAG_KEY)));
+            result = filterInvoker(invokers, invoker => string.IsNullOrWhiteSpace(invoker.GetParameter(TAG_KEY)));
         }
         return result;
     }
 
-    public bool Runtime => tagRouterRule != null && tagRouterRule.Runtime;
-    public bool Force() => tagRouterRule != null && tagRouterRule.Force;
+    public override bool Runtime => tagRouterRule != null && tagRouterRule.Runtime;
+    public override bool Force => tagRouterRule != null && tagRouterRule.Force;
 
     private bool isForceUseTag(IInvocation invocation)
     {
         return bool.Parse(invocation.GetAttachment(Constants.FORCE_USE_TAG, this.Address.GetParameter(Constants.FORCE_USE_TAG, "false")));
     }
 
-    private IList<URL> filterInvoker(IList<URL> invokers, Predicate<URL> predicate)
+    private IList<URL> filterInvoker(IList<URL> invokers, Func<URL, bool> predicate)
     {
+        var result = invokers.Where(predicate).ToList();
+        return result;
         //if (invokers.stream().allMatch(predicate))
         //{
         //    return invokers;
         //}
 
-        IList<URL> newInvokers = invokers;//.clone();
+        //IList<URL> newInvokers = invokers;//.clone();
         //newInvokers.removeIf(invoker-> !predicate.test(invoker));
 
-        return newInvokers;
+        //return newInvokers;
     }
 
     private bool addressMatches(URL url, List<String> addresses)
@@ -218,14 +229,14 @@ public class TagStateRouter : AbstractStateRouter
         {
             try
             {
-                //if (NetUtils.matchIpExpression(address, host, port))
-                //{
-                //    return true;
-                //}
-                //if ((ANYHOST_VALUE + ":" + port).equals(address))
-                //{
-                //    return true;
-                //}
+                if (NetUtil.matchIpExpression(address, host, port))
+                {
+                    return true;
+                }
+                if ((NetUtil.ANYHOST + ":" + port).Equals(address))
+                {
+                    return true;
+                }
             }
             catch (Exception e)
             {
@@ -235,7 +246,7 @@ public class TagStateRouter : AbstractStateRouter
         return false;
     }
 
-    public void setApplication(String app)
+    public void setApplication(string app)
     {
         this.application = app;
     }
@@ -277,11 +288,11 @@ public class TagStateRouter : AbstractStateRouter
     //    //}
     //}
 
-    public void Stop()
-    {
-        if (!string.IsNullOrWhiteSpace(application))
-        {
-            //this.getRuleRepository().removeListener(application + RULE_SUFFIX, this);
-        }
-    }
+    //public void Stop()
+    //{
+    //    if (!string.IsNullOrWhiteSpace(application))
+    //    {
+    //        //this.getRuleRepository().removeListener(application + RULE_SUFFIX, this);
+    //    }
+    //}
 }

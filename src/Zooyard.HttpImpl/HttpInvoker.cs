@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Reflection;
 using Zooyard.DataAnnotations;
 using Zooyard.Logging;
+using Zooyard.Rpc;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.HttpImpl;
@@ -38,13 +39,10 @@ public class HttpInvoker : AbstractInvoker
         var method = DEFAULT_METHODTYPE;
         var contentType = DEFAULT_CONTENTTYPE;
         var parameters = invocation.MethodInfo.GetParameters();
-        var header = new Dictionary<string, string>();
         
-
         var targetDescription = invocation.TargetType.GetCustomAttribute<RequestMappingAttribute>();
         if (targetDescription != null) 
         {
-            header = targetDescription.Headers;
             if (!string.IsNullOrWhiteSpace(targetDescription.Value))
                 pathUrl.AddRange(targetDescription.Value.Split('/', StringSplitOptions.RemoveEmptyEntries));
         }
@@ -58,10 +56,6 @@ public class HttpInvoker : AbstractInvoker
             }
             method = methodDescription.Method.ToString();
             contentType = methodDescription.Consumes;
-            foreach (var item in methodDescription.Headers)
-            {
-                header[item.Key] = item.Value;
-            }
         }
         else 
         {
@@ -76,7 +70,7 @@ public class HttpInvoker : AbstractInvoker
         string? value = null;
         try
         {
-            using var stream = await stub.Request(pathUrl, contentType, method, parameters, invocation.Arguments, header);
+            using var stream = await stub.Request(pathUrl, contentType, method, parameters, invocation.Arguments, RpcContext.GetContext().Attachments);
             if (stream == null)
             {
                 throw new Exception($"{nameof(stream)} is null");

@@ -9,6 +9,11 @@ public class FileStateRouterFactory: IStateRouterFactory
 
     private IStateRouterFactory? routerFactory;
 
+    public void ClearCache()
+    {
+        routerFactory?.ClearCache();
+    }
+
     public string Name => NAME;
 
     public void SetRouterFactory(IStateRouterFactory routerFactory)

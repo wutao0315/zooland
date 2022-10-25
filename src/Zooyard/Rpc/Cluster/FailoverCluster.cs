@@ -20,9 +20,6 @@ public class FailoverCluster : AbstractCluster
 
         CheckInvokers(invokers, invocation, address);
 
-        ////路由
-        //var invokers = base.Route(urls, address, invocation);
-
         //*getUrl();
         int len = address.GetMethodParameter(invocation.MethodInfo.Name, RETRIES_KEY, DEFAULT_RETRIES) + 1;
         if (len <= 0)

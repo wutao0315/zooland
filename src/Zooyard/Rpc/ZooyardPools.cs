@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
+using System.Reflection;
+using Zooyard.DataAnnotations;
 using Zooyard.Logging;
 using Zooyard.Rpc.Cache;
 using Zooyard.Rpc.Cluster;
@@ -209,6 +211,10 @@ public class ZooyardPools : IZooyardPools
         {
             _cacheUrl.Clear();
             _cacheRouteUrl.Clear();
+            foreach (var item in _routeFoctories)
+            {
+                item.Value.ClearCache();
+            }
         }
     }
 
@@ -219,11 +225,13 @@ public class ZooyardPools : IZooyardPools
     /// <returns></returns>
     public async Task<IResult<T>?> Invoke<T>(IInvocation invocation)
     {
+        RpcContext.GetContext().SetInvocation(invocation);
+
         var (address, urls) = GetUrls();
 
         //cache
         var cache = GetCache();
-        
+
         if (cache == null)
         {
             var result = await InvokeInner();
@@ -444,6 +452,28 @@ public class ZooyardPools : IZooyardPools
         {
             //get cached route urls
             var routeUrls = GetRouteUrls();
+
+            RpcContext.GetContext().SetInvokers(routeUrls);
+
+            var header = new Dictionary<string, string>();
+            var targetDescription = invocation.TargetType.GetCustomAttribute<RequestMappingAttribute>();
+            if (targetDescription != null)
+            {
+                foreach (var item in targetDescription.Headers)
+                {
+                    RpcContext.GetContext().SetAttachment(item.Key, item.Value);
+                }
+            }
+            var methodDescription = invocation.MethodInfo.GetCustomAttribute<RequestMappingAttribute>();
+            if (methodDescription != null)
+            {
+                foreach (var item in methodDescription.Headers)
+                {
+                    RpcContext.GetContext().SetAttachment(item.Key, item.Value);
+                }
+            }
+
+
             //get pool
             var pool = GetClientPool(invocation);
             //get load balance

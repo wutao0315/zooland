@@ -8,7 +8,7 @@ public class TagRuleParser
     {
         //Yaml yaml = new Yaml(new SafeConstructor());
         //Dictionary<String, Object> map = yaml.load(rawRule);
-        var map = JsonSerializer.Deserialize<Dictionary<string, Object>>(rawRule);
+        var map = JsonSerializer.Deserialize<Dictionary<string, object>>(rawRule)!;
         //Dictionary<String, Object> map = new();
         TagRouterRule rule = TagRouterRule.parseFromMap(map);
         rule.RawRule= rawRule;

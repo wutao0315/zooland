@@ -19,8 +19,7 @@ public class MergeableCluster : AbstractCluster
     private readonly IDictionary<string, IMerger> _mySelfMergers;
     public MergeableCluster(
         IOptionsMonitor<ZooyardOption> zooyard,
-        //IEnumerable<ICache> caches,
-        IEnumerable<IMerger> defaultMergers) //: base(caches)
+        IEnumerable<IMerger> defaultMergers)
     {
         _defaultMergers = new Dictionary<Type, IMerger>();
         foreach (var merge in defaultMergers)
@@ -54,9 +53,6 @@ public class MergeableCluster : AbstractCluster
     {
         var goodUrls = new List<URL>();
         var badUrls = new List<BadUrl>();
-
-        ////路由
-        //var invokers = base.Route(urls, address, invocation);
 
         var merger = address.GetMethodParameter(invocation.MethodInfo.Name, MERGER_KEY);
         // If a method doesn't have a merger, only invoke one Group

@@ -24,9 +24,6 @@ public class ForkingCluster : AbstractCluster
 
         CheckInvokers(invokers, invocation, address);
 
-        ////路由
-        //var invokers = base.Route(invokers, address, invocation);
-
         IList<URL> selected;
 
         int forks = address.GetParameter(FORKS_KEY, DEFAULT_FORKS);

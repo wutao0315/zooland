@@ -4,7 +4,7 @@ public class Tag
 {
     public static Tag parseFromMap(Dictionary<string, object> map)
     {
-        Tag tag = new Tag();
+        var tag = new Tag();
         if (map.TryGetValue("name", out object? nameObj))
         {
             tag.Name = nameObj.ToString();

@@ -43,8 +43,7 @@ public abstract class ListenableStateRouter : AbstractStateRouter
     //    }
     //}
 
-    protected override IList<URL> DoRoute(IList<URL> invokers, URL address, IInvocation invocation,
-                                       bool needToPrintMessage)//, Holder<RouterSnapshotNode> nodeHolder, Holder<String> messageHolder)
+    protected override IList<URL> DoRoute(IList<URL> invokers, URL address, IInvocation invocation, bool needToPrintMessage)
     {
         if (invokers.Count == 0 || conditionRouters.Count == 0)
         {
@@ -57,7 +56,7 @@ public abstract class ListenableStateRouter : AbstractStateRouter
         }
 
         // We will check enabled status inside each router.
-        StringBuilder? resultMessage = null;
+        StringBuilder? resultMessage;
         if (needToPrintMessage)
         {
             resultMessage = new StringBuilder();
@@ -65,16 +64,16 @@ public abstract class ListenableStateRouter : AbstractStateRouter
         foreach (AbstractStateRouter router in conditionRouters)
         {
             invokers = router.Route(invokers, address, invocation, needToPrintMessage);//, nodeHolder);
-            if (needToPrintMessage)
-            {
-                //resultMessage.Append(messageHolder.Value);
-            }
+            //if (needToPrintMessage)
+            //{
+            //    resultMessage.Append(messageHolder.Value);
+            //}
         }
 
-        if (needToPrintMessage)
-        {
-            //messageHolder.Value = resultMessage.ToString();
-        }
+        //if (needToPrintMessage)
+        //{
+        //    //messageHolder.Value = resultMessage.ToString();
+        //}
 
         return invokers;
     }
@@ -83,17 +82,19 @@ public abstract class ListenableStateRouter : AbstractStateRouter
 
     private bool RuleRuntime=> routerRule != null && routerRule.Valid && routerRule.Runtime;
 
-    //private void generateConditions(ConditionRouterRule rule) {
-    //    if (rule != null && rule.isValid()) {
-    //        this.conditionRouters = rule.getConditions()
-    //                .stream()
-    //                .map(condition -> new ConditionStateRouter<T>(getUrl(), condition, rule.isForce(), rule.isEnabled()))
-    //                .collect(Collectors.toList());
-    //        for (ConditionStateRouter<T> conditionRouter : this.conditionRouters) {
-    //            conditionRouter.setNextRouter(TailStateRouter.getInstance());
-    //        }
-    //    }
-    //}
+    private void generateConditions(ConditionRouterRule rule)
+    {
+        if (rule != null && rule.Valid)
+        {
+            this.conditionRouters = (from a in rule.Conditions
+                                     select new ConditionStateRouter(Address, a, rule.Force, rule.Enabled)).ToList();
+
+            foreach (var conditionRouter in this.conditionRouters)
+            {
+                conditionRouter.NextRouter = TailStateRouter.getInstance();
+            }
+        }
+    }
 
     private void init(string? ruleKey)
     {

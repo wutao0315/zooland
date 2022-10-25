@@ -24,9 +24,6 @@ public class FailfastCluster : AbstractCluster
 
         CheckInvokers(invokers, invocation, address);
 
-        ////路由
-        //var invokers = base.Route(urls, address, invocation);
-
         var invoker = base.Select(loadbalance, invocation, invokers);
 
         try
