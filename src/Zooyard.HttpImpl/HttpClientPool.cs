@@ -7,7 +7,7 @@ namespace Zooyard.HttpImpl;
 public class HttpClientPool : AbstractClientPool
 {
     public const string TIMEOUT_KEY = "http_timeout";
-    public const int DEFAULT_TIMEOUT = 5000;
+    public const int DEFAULT_TIMEOUT = 10000;
 
     private readonly IHttpClientFactory _httpClientFactory;
     public HttpClientPool(IHttpClientFactory httpClientFactory) 

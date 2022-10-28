@@ -10,11 +10,11 @@ public class GrpcClientPool : AbstractClientPool
 {
     private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(GrpcClient));
 
-    public const string TIMEOUT_KEY = "grpc_timeout";
-    public const int DEFAULT_TIMEOUT = 5000;
-    public const string MAXLENGTH_KEY = "grpc_maxlength";
+    public const string TIMEOUT_KEY = "timeout";
+    public const int DEFAULT_TIMEOUT = 10000;
+    public const string MAXLENGTH_KEY = "maxlength";
     public const int DEFAULT_MAXLENGTH = int.MaxValue;
-    public const string CREDENTIALS_KEY = "protocol";
+    public const string CREDENTIALS_KEY = "credentials";
     public const string DEFAULT_CREDENTIALS = "Insecure";
 
 

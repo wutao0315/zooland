@@ -90,7 +90,7 @@ public class GrpcInvoker : AbstractInvoker
             {
                 watch.Stop();
 
-                var result = new RpcResult<T>((T)taskResult.ChangeType(typeof(T)), watch.ElapsedMilliseconds);
+                var result = new RpcResult<T>((T)taskResult.ChangeType(typeof(T))!, watch.ElapsedMilliseconds);
                 return result;
             }
         }

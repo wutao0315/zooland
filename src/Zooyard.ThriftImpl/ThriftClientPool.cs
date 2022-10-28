@@ -23,7 +23,7 @@ public class ThriftClientPool : AbstractClientPool
     public const string TRANSPORT_KEY = "tr";
     public const string BUFFERING_KEY = "bf";
 
-    public const int DEFAULT_TIMEOUT = 5000;
+    public const int DEFAULT_TIMEOUT = 10000;
 
     private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ThriftClientPool));
    
