@@ -83,8 +83,8 @@ public class FailbackCluster : AbstractCluster
 
     protected override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> invokers, IInvocation invocation)
     {
-        var goodUrls = new List<URL>();
-        var badUrls = new List<BadUrl>();
+        //var goodUrls = new List<URL>();
+        //var badUrls = new List<BadUrl>();
         Exception? exception = null;
 
         CheckInvokers(invokers, invocation, address);
@@ -103,7 +103,7 @@ public class FailbackCluster : AbstractCluster
                 result = await refer.Invoke<T>(invocation);
                 _source.WriteConsumerAfter(invoker, invocation, result);
                 await pool.Recovery(client);
-                goodUrls.Add(invoker);
+                //goodUrls.Add(invoker);
             }
             catch (Exception ex)
             {
@@ -119,7 +119,7 @@ public class FailbackCluster : AbstractCluster
             watch.Stop();
             result = new RpcResult<T>(watch.ElapsedMilliseconds); // ignore
             exception = e;
-            badUrls.Add(new BadUrl { Url = invoker, BadTime = DateTime.Now, CurrentException = exception });
+            //badUrls.Add(new BadUrl { Url = invoker, BadTime = DateTime.Now, CurrentException = exception });
         }
         finally 
         {
@@ -127,6 +127,8 @@ public class FailbackCluster : AbstractCluster
                 watch.Stop();
         }
 
-        return new ClusterResult<T>(result, goodUrls, badUrls, exception, false);
+        return new ClusterResult<T>(result, 
+            //goodUrls, badUrls, 
+            exception, false);
     }
 }

@@ -19,8 +19,8 @@ public class ForkingCluster : AbstractCluster
     protected override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> invokers, IInvocation invocation)
     {
         //IResult result = null;
-        var goodUrls = new List<URL>();
-        var badUrls = new List<BadUrl>();
+        //var goodUrls = new List<URL>();
+        //var badUrls = new List<BadUrl>();
 
         CheckInvokers(invokers, invocation, address);
 
@@ -64,7 +64,7 @@ public class ForkingCluster : AbstractCluster
                         var resultInner = await refer.Invoke<T>(invocation);
                         _source.WriteConsumerAfter(invoker, invocation, resultInner);
                         await pool.Recovery(client);
-                        goodUrls.Add(invoker);
+                        //goodUrls.Add(invoker);
                         return resultInner;
                     }
                     catch (Exception ex)
@@ -76,7 +76,7 @@ public class ForkingCluster : AbstractCluster
                 }
                 catch (Exception e)
                 {
-                    badUrls.Add(new BadUrl { Url = invoker, BadTime = DateTime.Now, CurrentException = e });
+                    //badUrls.Add(new BadUrl { Url = invoker, BadTime = DateTime.Now, CurrentException = e });
                     int value = count.IncrementAndGet();
                     if (value >= selected.Count)
                     {
@@ -97,12 +97,16 @@ public class ForkingCluster : AbstractCluster
                 Exception? e = ret?.Exception;
                 throw new RpcException(e is RpcException exception ? exception.Code : 0, "Failed to forking invoke provider " + selected + ", but no luck to perform the invocation. Last error is: " + e?.Message, e?.InnerException != null ? e.InnerException : e);
             }
-            return new ClusterResult<T>(ret, goodUrls, badUrls, null,false);
+            return new ClusterResult<T>(ret, 
+                //goodUrls, badUrls,
+                null,false);
         }
         catch (Exception e)
         {
             var exception = new RpcException("Failed to forking invoke provider " + selected + ", but no luck to perform the invocation. Last error is: " + e.Message, e);
-            return new ClusterResult<T>(new RpcResult<T>(exception), goodUrls, badUrls, exception, true);
+            return new ClusterResult<T>(new RpcResult<T>(exception), 
+                //goodUrls, badUrls,
+                exception, true);
         }
     }
 }

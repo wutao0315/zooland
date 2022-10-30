@@ -117,7 +117,7 @@ public class ThriftClientPool : AbstractClientPool
             ipaddress = IPAddress.Parse(url.Host);
         }
         // construct endpoint transport
-        TTransport transport = null;
+        TTransport? transport = null;
         Transport selectedTransport = GetTransport(url);
         {
             switch (selectedTransport)
@@ -193,13 +193,13 @@ public class ThriftClientPool : AbstractClientPool
 
     private X509Certificate LocalCertificateSelectionCallback(object sender,
         string targetHost, X509CertificateCollection localCertificates,
-        X509Certificate remoteCertificate, string[] acceptableIssuers)
+        X509Certificate? remoteCertificate, string[] acceptableIssuers)
     {
         return GetCertificate();
     }
 
-    private static bool CertValidator(object sender, X509Certificate certificate,
-        X509Chain chain, SslPolicyErrors sslPolicyErrors)
+    private static bool CertValidator(object sender, X509Certificate? certificate,
+        X509Chain? chain, SslPolicyErrors sslPolicyErrors)
     {
         return true;
     }

@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Options;
-using System;
 using System.Diagnostics;
 using System.Reflection;
 using Zooyard.Diagnositcs;
@@ -51,8 +50,8 @@ public class MergeableCluster : AbstractCluster
     }
     protected override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> invokers, IInvocation invocation)
     {
-        var goodUrls = new List<URL>();
-        var badUrls = new List<BadUrl>();
+        //var goodUrls = new List<URL>();
+        //var badUrls = new List<BadUrl>();
 
         var merger = address.GetMethodParameter(invocation.MethodInfo.Name, MERGER_KEY);
         // If a method doesn't have a merger, only invoke one Group
@@ -70,8 +69,10 @@ public class MergeableCluster : AbstractCluster
                         var invokeResult = await refer.Invoke<T>(invocation);
                         _source.WriteConsumerAfter(invoker, invocation, invokeResult);
                         await pool.Recovery(client);
-                        goodUrls.Add(invoker);
-                        return new ClusterResult<T>(invokeResult, goodUrls, badUrls, null, false);
+                        //goodUrls.Add(invoker);
+                        return new ClusterResult<T>(invokeResult, 
+                            //goodUrls, badUrls,
+                            null, false);
                     }
                     catch (Exception ex)
                     {
@@ -82,13 +83,17 @@ public class MergeableCluster : AbstractCluster
                 }
                 catch (Exception e)
                 {
-                    badUrls.Add(new BadUrl { Url = invoker, BadTime = DateTime.Now, CurrentException = e });
-                    return new ClusterResult<T>(new RpcResult<T>(e), goodUrls, badUrls, e, true);
+                    //badUrls.Add(new BadUrl { Url = invoker, BadTime = DateTime.Now, CurrentException = e });
+                    return new ClusterResult<T>(new RpcResult<T>(e), 
+                        //goodUrls, badUrls, 
+                        e, true);
                 }
             }
 
             var exMerger = new Exception($"merger: {merger} is null and the invokers is empty");
-            return new ClusterResult<T>(new RpcResult<T>(exMerger), goodUrls, badUrls, exMerger, true);
+            return new ClusterResult<T>(new RpcResult<T>(exMerger), 
+                //goodUrls, badUrls, 
+                exMerger, true);
         }
 
         Type? returnType = invocation.TargetType.GetMethod(invocation.MethodInfo.Name, invocation.ArgumentTypes)?.ReturnType;
@@ -112,7 +117,7 @@ public class MergeableCluster : AbstractCluster
                             var invokeResult = await refer.Invoke<T>(invocation);
                             _source.WriteConsumerAfter(invoker, invocation, invokeResult);
                             await pool.Recovery(client);
-                            goodUrls.Add(invoker);
+                            //goodUrls.Add(invoker);
                             return invokeResult;
                         }
                         catch (Exception ex)
@@ -124,7 +129,7 @@ public class MergeableCluster : AbstractCluster
                     }
                     catch (Exception e)
                     {
-                        badUrls.Add(new BadUrl { Url = invoker, BadTime = DateTime.Now, CurrentException = e });
+                        //badUrls.Add(new BadUrl { Url = invoker, BadTime = DateTime.Now, CurrentException = e });
                         return new RpcResult<T>(e);
                     }
                 });
@@ -141,7 +146,9 @@ public class MergeableCluster : AbstractCluster
                 if (r.HasException)
                 {
                     Logger().LogError(r.Exception, $"Invoke {entry.Key} {GetGroupDescFromServiceKey(entry.Key)}  failed: {r.Exception?.Message}");
-                    return new ClusterResult<T>(new RpcResult<T>(r.Exception), goodUrls, badUrls, r.Exception, true);
+                    return new ClusterResult<T>(new RpcResult<T>(r.Exception), 
+                        //goodUrls, badUrls, 
+                        r.Exception, true);
                 }
                 else
                 {
@@ -153,16 +160,22 @@ public class MergeableCluster : AbstractCluster
 
             if (resultList.Count == 0)
             {
-                return new ClusterResult<T>(new RpcResult<T>(watch.ElapsedMilliseconds), goodUrls, badUrls, null, false);
+                return new ClusterResult<T>(new RpcResult<T>(watch.ElapsedMilliseconds), 
+                    //goodUrls, badUrls,
+                    null, false);
             }
             else if (resultList.Count == 1)
             {
-                return new ClusterResult<T>(resultList[0], goodUrls, badUrls, null, false);
+                return new ClusterResult<T>(resultList[0], 
+                    //goodUrls, badUrls,
+                    null, false);
             }
 
             if (returnType == typeof(void))
             {
-                return new ClusterResult<T>(new RpcResult<T>(watch.ElapsedMilliseconds), goodUrls, badUrls, null, false);
+                return new ClusterResult<T>(new RpcResult<T>(watch.ElapsedMilliseconds), 
+                    //goodUrls, badUrls, 
+                    null, false);
             }
 
             if (merger.StartsWith("."))
@@ -176,13 +189,17 @@ public class MergeableCluster : AbstractCluster
                 catch (Exception e)
                 {
                     var ex = new RpcException($"Can not merge result because missing method [{merger}] in class [{returnType!.Name}]{e.Message}", e);
-                    return new ClusterResult<T>(new RpcResult<T>(ex), goodUrls, badUrls, ex, true);
+                    return new ClusterResult<T>(new RpcResult<T>(ex), 
+                        //goodUrls, badUrls,
+                        ex, true);
                 }
 
                 if (method == null)
                 {
                     var ex = new RpcException($"Can not merge result because missing method [ {merger} ] in class [ {returnType.Name} ]");
-                    return new ClusterResult<T>(new RpcResult<T>(ex), goodUrls, badUrls, ex, true);
+                    return new ClusterResult<T>(new RpcResult<T>(ex), 
+                        //goodUrls, badUrls,
+                        ex, true);
                 }
 
                 //if (!method.IsPublic)
@@ -212,13 +229,16 @@ public class MergeableCluster : AbstractCluster
                 catch (Exception e)
                 {
                     var ex = new RpcException($"Can not merge result: {e.Message}", e);
-                    return new ClusterResult<T>(new RpcResult<T>(ex), goodUrls, badUrls, ex, true);
+                    return new ClusterResult<T>(new RpcResult<T>(ex), 
+                        //goodUrls, badUrls,
+                        ex, true);
                 }
             }
             else
             {
                 IMerger resultMerger;
-                if (merger.ToLower() == "true" || merger.ToLower() == "default")
+                if (bool.TrueString.Equals(merger, StringComparison.OrdinalIgnoreCase) 
+                    || "default".Equals(merger, StringComparison.OrdinalIgnoreCase))
                 {
                     resultMerger = MergerFactory.GetMerger(returnType!, _defaultMergers);
                 }
@@ -239,10 +259,14 @@ public class MergeableCluster : AbstractCluster
                 else
                 {
                     var ex = new RpcException("There is no merger to merge result.");
-                    return new ClusterResult<T>(new RpcResult<T>(ex), goodUrls, badUrls, ex, true);
+                    return new ClusterResult<T>(new RpcResult<T>(ex), 
+                        //goodUrls, badUrls, 
+                        ex, true);
                 }
             }
-            return new ClusterResult<T>(new RpcResult<T>((T)resultValue.ChangeType(typeof(T))!, watch.ElapsedMilliseconds), goodUrls, badUrls, null, false);
+            return new ClusterResult<T>(new RpcResult<T>((T)resultValue.ChangeType(typeof(T))!, watch.ElapsedMilliseconds), 
+                //goodUrls, badUrls,
+                null, false);
         }
         catch (Exception ex)
         {

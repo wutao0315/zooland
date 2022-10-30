@@ -14,8 +14,8 @@ public class BroadcastCluster : AbstractCluster
 
         RpcContext.GetContext().SetInvokers(invokers);
         Exception? exception = null;
-        var goodUrls = new List<URL>();
-        var badUrls = new List<BadUrl>();
+        //var goodUrls = new List<URL>();
+        //var badUrls = new List<BadUrl>();
         var isThrow = false;
         IResult<T>? result = null;
         foreach (var invoker in invokers)
@@ -30,7 +30,7 @@ public class BroadcastCluster : AbstractCluster
                     result = await refer.Invoke<T>(invocation);
                     _source.WriteConsumerAfter(invoker, invocation, result);
                     await pool.Recovery(client);
-                    goodUrls.Add(invoker);
+                    //goodUrls.Add(invoker);
                 }
                 catch (Exception ex)
                 {
@@ -42,7 +42,7 @@ public class BroadcastCluster : AbstractCluster
             catch (Exception e)
             {
                 exception = e;
-                badUrls.Add(new BadUrl { Url = invoker, BadTime = DateTime.Now, CurrentException = exception });
+                //badUrls.Add(new BadUrl { Url = invoker, BadTime = DateTime.Now, CurrentException = exception });
                 Logger().LogWarning(e, e.Message);
             }
         }
@@ -50,7 +50,9 @@ public class BroadcastCluster : AbstractCluster
         {
             isThrow = true;
         }
-        var clusterResult = new ClusterResult<T>(result, goodUrls, badUrls, exception, isThrow);
+        var clusterResult = new ClusterResult<T>(result, 
+            //goodUrls, badUrls,
+            exception, isThrow);
         return clusterResult;
     }
 }

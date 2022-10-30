@@ -15,8 +15,8 @@ public class FailoverCluster : AbstractCluster
 
     protected override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> invokers, IInvocation invocation)
     {
-        var goodUrls = new List<URL>();
-        var badUrls = new List<BadUrl>();
+        //var goodUrls = new List<URL>();
+        //var badUrls = new List<BadUrl>();
 
         CheckInvokers(invokers, invocation, address);
 
@@ -68,9 +68,11 @@ public class FailoverCluster : AbstractCluster
                                 + " using the service version " + invocation.Version
                                 + ". Last error is: " + le.Message);
                     }
-                    goodUrls.Add(url);
+                    //goodUrls.Add(url);
 
-                    return new ClusterResult<T>(result, goodUrls, badUrls, le, false);
+                    return new ClusterResult<T>(result,
+                        //goodUrls, badUrls,
+                        le, false);
                 }
                 catch (Exception ex)
                 {
@@ -94,12 +96,12 @@ public class FailoverCluster : AbstractCluster
             {
                 le = new RpcException(e.Message, e);
 
-                var badUrl = badUrls.FirstOrDefault(w => w.Url == url);
-                if (badUrl != null)
-                {
-                    badUrls.Remove(badUrl);
-                }
-                badUrls.Add(new BadUrl { Url = url, BadTime = DateTime.Now, CurrentException = le });
+                //var badUrl = badUrls.FirstOrDefault(w => w.Url == url);
+                //if (badUrl != null)
+                //{
+                //    badUrls.Remove(badUrl);
+                //}
+                //badUrls.Add(new BadUrl { Url = url, BadTime = DateTime.Now, CurrentException = le });
                 
             }
             finally
@@ -118,7 +120,9 @@ public class FailoverCluster : AbstractCluster
                + ". Last error is: "
                + (le != null ? le.Message : ""), le != null && le.InnerException != null ? le.InnerException : le);
 
-        return new ClusterResult<T>(new RpcResult<T>(re), goodUrls, badUrls, re, true);
+        return new ClusterResult<T>(new RpcResult<T>(re), 
+            //goodUrls, badUrls, 
+            re, true);
        
     }
 }

@@ -16,8 +16,8 @@ public class FailfastCluster : AbstractCluster
 
     protected override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> invokers, IInvocation invocation)
     {
-        var goodUrls = new List<URL>();
-        var badUrls = new List<BadUrl>();
+        //var goodUrls = new List<URL>();
+        //var badUrls = new List<BadUrl>();
         IResult<T>? result = null;
         Exception? exception = null;
         var isThrow = false;
@@ -36,7 +36,7 @@ public class FailfastCluster : AbstractCluster
                 result = await refer.Invoke<T>(invocation);
                 _source.WriteConsumerAfter(invoker, invocation, result);
                 await pool.Recovery(client);
-                goodUrls.Add(invoker);
+                //goodUrls.Add(invoker);
             }
             catch (Exception ex)
             {
@@ -67,10 +67,12 @@ public class FailfastCluster : AbstractCluster
                 + ", but no luck to perform the invocation. Last error is: " + e.Message, e.InnerException ?? e);
             }
             Logger().LogError(exception, exception.Message);
-            badUrls.Add(new BadUrl { Url = invoker, BadTime = DateTime.Now, CurrentException = exception });
+            //badUrls.Add(new BadUrl { Url = invoker, BadTime = DateTime.Now, CurrentException = exception });
         }
 
-        return new ClusterResult<T>(result, goodUrls, badUrls, exception, isThrow);
+        return new ClusterResult<T>(result, 
+            //goodUrls, badUrls,
+            exception, isThrow);
 
     }
 }

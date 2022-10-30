@@ -37,14 +37,14 @@ public class ZooyardPools : IZooyardPools
     /// 注册中心的配置
     /// </summary>
     private readonly IOptionsMonitor<ZooyardOption> _zooyard;
-    /// <summary>
-    /// good service url list
-    /// </summary>
-    public ConcurrentDictionary<string, List<URL>> Urls { get; init; }
-    /// <summary>
-    /// bad service url list
-    /// </summary>
-    public ConcurrentDictionary<string, List<BadUrl>> BadUrls { get; init; }
+    ///// <summary>
+    ///// good service url list
+    ///// </summary>
+    //public ConcurrentDictionary<string, List<URL>> Urls { get; init; }
+    ///// <summary>
+    ///// bad service url list
+    ///// </summary>
+    //public ConcurrentDictionary<string, List<BadUrl>> BadUrls { get; init; }
     /// <summary>
     /// the service pools
     /// key ApplicationName,
@@ -68,10 +68,10 @@ public class ZooyardPools : IZooyardPools
     /// 计时器用于处理过期的链接和链接池
     /// </summary>
     private System.Timers.Timer? cycleTimer;
-    /// <summary>
-    /// 计时器用于处理隔离区域自动恢复到正常区域
-    /// </summary>
-    private System.Timers.Timer? recoveryTimer;
+    ///// <summary>
+    ///// 计时器用于处理隔离区域自动恢复到正常区域
+    ///// </summary>
+    //private System.Timers.Timer? recoveryTimer;
     /// <summary>
     /// threed lock
     /// </summary>		
@@ -111,8 +111,8 @@ public class ZooyardPools : IZooyardPools
         {
             _routeFoctories[item.Name] = item;
         }
-        this.Urls = new ConcurrentDictionary<string, List<URL>>();
-        this.BadUrls = new ConcurrentDictionary<string, List<BadUrl>>();
+        //this.Urls = new ConcurrentDictionary<string, List<URL>>();
+        //this.BadUrls = new ConcurrentDictionary<string, List<BadUrl>>();
         _zooyard = zooyard;
         _zooyard.OnChange(OnChanged);
         Init();
@@ -141,21 +141,21 @@ public class ZooyardPools : IZooyardPools
             // 定时或者在接收到推送的消息后  主动-维护Pools集合
             var internalRecovery = _zooyard.CurrentValue.Meta.GetValue(RECOVERY_PERIOD_KEY, DEFAULT_RECOVERY_PERIOD);
 
-            recoveryTimer = new System.Timers.Timer(internalRecovery);
-            recoveryTimer.Elapsed += new System.Timers.ElapsedEventHandler(async (object? sender, System.Timers.ElapsedEventArgs events) =>
-            {
-                // 定时循环恢复隔离区到正常区
-                try
-                {
-                    await RecoveryProcess();
-                }
-                catch (Exception t)
-                {   // 防御性容错
-                    Logger().LogError(t, "Unexpected error occur at collect statistic");
-                }
-            });
-            recoveryTimer.AutoReset = true;
-            recoveryTimer.Enabled = true;
+            //recoveryTimer = new System.Timers.Timer(internalRecovery);
+            //recoveryTimer.Elapsed += new System.Timers.ElapsedEventHandler(async (object? sender, System.Timers.ElapsedEventArgs events) =>
+            //{
+            //    // 定时循环恢复隔离区到正常区
+            //    try
+            //    {
+            //        await RecoveryProcess();
+            //    }
+            //    catch (Exception t)
+            //    {   // 防御性容错
+            //        Logger().LogError(t, "Unexpected error occur at collect statistic");
+            //    }
+            //});
+            //recoveryTimer.AutoReset = true;
+            //recoveryTimer.Enabled = true;
 
             // 定时循环处理过期链接
             void CycleProcess()
@@ -168,43 +168,43 @@ public class ZooyardPools : IZooyardPools
                 }
             }
 
-            // 定时循环恢复隔离区到正常区
-            async Task RecoveryProcess()
-            {
-                var recoverytime = _zooyard.CurrentValue.Meta.GetValue(RECOVERY_TIME_KEY, DEFAULT_RECOVERY_TIME);
-                var recoverytimeDate = DateTime.Now.AddMinutes(-recoverytime);
+            //// 定时循环恢复隔离区到正常区
+            //async Task RecoveryProcess()
+            //{
+            //    var recoverytime = _zooyard.CurrentValue.Meta.GetValue(RECOVERY_TIME_KEY, DEFAULT_RECOVERY_TIME);
+            //    var recoverytimeDate = DateTime.Now.AddMinutes(-recoverytime);
 
-                try
-                {
-                    await _semaphore.WaitAsync(100);
-                    foreach (var badUrls in this.BadUrls)
-                    {
-                        var list = new List<BadUrl>();
-                        foreach (var badUrl in badUrls.Value)
-                        {
-                            if (badUrl.BadTime < recoverytimeDate)
-                            {
-                                this.Urls[badUrls.Key].Add(badUrl.Url);
-                                list.Add(badUrl);
-                                Console.WriteLine($"auto timer recovery url {badUrl.Url}");
-                                Logger().LogInformation($"recovery:{badUrl.Url.ToString()}");
-                            }
-                        }
-                        foreach (var item in list)
-                        {
-                            badUrls.Value.Remove(item);
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Logger().LogError(ex, ex.Message);
-                }
-                finally
-                {
-                    _semaphore.Release();
-                }
-            }
+            //    try
+            //    {
+            //        await _semaphore.WaitAsync();
+            //        foreach (var badUrls in this.BadUrls)
+            //        {
+            //            var list = new List<BadUrl>();
+            //            foreach (var badUrl in badUrls.Value)
+            //            {
+            //                if (badUrl.BadTime < recoverytimeDate)
+            //                {
+            //                    this.Urls[badUrls.Key].Add(badUrl.Url);
+            //                    list.Add(badUrl);
+            //                    Console.WriteLine($"auto timer recovery url {badUrl.Url}");
+            //                    Logger().LogInformation($"recovery:{badUrl.Url.ToString()}");
+            //                }
+            //            }
+            //            foreach (var item in list)
+            //            {
+            //                badUrls.Value.Remove(item);
+            //            }
+            //        }
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        Logger().LogError(ex, ex.Message);
+            //    }
+            //    finally
+            //    {
+            //        _semaphore.Release();
+            //    }
+            //}
         }
         // 监听配置或者服务注册变化，清空缓存
         void OnChanged(ZooyardOption value, string name)
@@ -383,7 +383,8 @@ public class ZooyardPools : IZooyardPools
                 return result;
             }
 
-            if (key.ToLower() == "true" || key.ToLower() == LruCache.NAME)
+            if (bool.TrueString.Equals(key, StringComparison.OrdinalIgnoreCase) 
+                || LruCache.NAME.Equals(key, StringComparison.OrdinalIgnoreCase))
             {
                 result = _caches[LruCache.NAME];
             }
@@ -483,81 +484,81 @@ public class ZooyardPools : IZooyardPools
             //invoke
             var result = await cluster.Invoke<T>(pool, loadbalance, address, routeUrls, invocation);
 
-            try
-            {
-                await _semaphore.WaitAsync(100);
+            //try
+            //{
+            //    await _semaphore.WaitAsync();
 
-                var goodUrls = new List<URL>();
-                // insulate the exception rpc url address 
-                var badUrls = new List<BadUrl>();
+            //    var goodUrls = new List<URL>();
+            //    // insulate the exception rpc url address 
+            //    var badUrls = new List<BadUrl>();
 
-                if (this.Urls.ContainsKey(invocation.TargetType.FullName!))
-                {
-                    goodUrls = this.Urls[invocation.TargetType.FullName!];
-                }
+            //    if (this.Urls.ContainsKey(invocation.TargetType.FullName!))
+            //    {
+            //        goodUrls = this.Urls[invocation.TargetType.FullName!];
+            //    }
 
-                if (this.BadUrls.ContainsKey(invocation.TargetType.FullName!))
-                {
-                    badUrls = this.BadUrls[invocation.TargetType.FullName!];
-                }
+            //    if (this.BadUrls.ContainsKey(invocation.TargetType.FullName!))
+            //    {
+            //        badUrls = this.BadUrls[invocation.TargetType.FullName!];
+            //    }
 
-                //get all bad url, insulate from good url
-                foreach (var item in result.BadUrls)
-                {
-                    var goodUrl = goodUrls.FirstOrDefault(w => w == item.Url);
-                    //remove from good urls ,add to bad urls
-                    if (goodUrl == null)
-                    {
-                        continue;
-                    }
+            //    //get all bad url, insulate from good url
+            //    foreach (var item in result.BadUrls)
+            //    {
+            //        var goodUrl = goodUrls.FirstOrDefault(w => w == item.Url);
+            //        //remove from good urls ,add to bad urls
+            //        if (goodUrl == null)
+            //        {
+            //            continue;
+            //        }
 
-                    goodUrls.Remove(goodUrl);
+            //        goodUrls.Remove(goodUrl);
 
-                    //refresh badurl timer
-                    var badUrl = badUrls.FirstOrDefault(w => w.Url == goodUrl);
-                    if (badUrl != null)
-                    {
-                        badUrls.Remove(badUrl);
-                    }
+            //        //refresh badurl timer
+            //        var badUrl = badUrls.FirstOrDefault(w => w.Url == goodUrl);
+            //        if (badUrl != null)
+            //        {
+            //            badUrls.Remove(badUrl);
+            //        }
 
-                    Logger().LogInformation(item.CurrentException, $"isolation url {item}");
-                    badUrls.Add(item);
-                }
+            //        Logger().LogInformation(item.CurrentException, $"isolation url {item}");
+            //        badUrls.Add(item);
+            //    }
 
-                //扫描所有正常调用的地址，将隔离区的自动恢复到正常区域
-                foreach (var item in result.Urls)
-                {
-                    var badUrl = badUrls.FirstOrDefault(w => w.Url == item);
-                    //从隔离区删除,添加到正常区域
-                    if (badUrl == null)
-                    {
-                        continue;
-                    }
+            //    //扫描所有正常调用的地址，将隔离区的自动恢复到正常区域
+            //    foreach (var item in result.Urls)
+            //    {
+            //        var badUrl = badUrls.FirstOrDefault(w => w.Url == item);
+            //        //从隔离区删除,添加到正常区域
+            //        if (badUrl == null)
+            //        {
+            //            continue;
+            //        }
 
-                    badUrls.Remove(badUrl);
+            //        badUrls.Remove(badUrl);
 
-                    if (!goodUrls.Contains(badUrl.Url))
-                    {
-                        goodUrls.Add(badUrl.Url);
-                        Logger().LogInformation($"recovery url {badUrl}");
-                    }
-                }
+            //        if (!goodUrls.Contains(badUrl.Url))
+            //        {
+            //            goodUrls.Add(badUrl.Url);
+            //            Logger().LogInformation($"recovery url {badUrl}");
+            //        }
+            //    }
 
-                if (!this.BadUrls.ContainsKey(invocation.TargetType.FullName!)
-                    && badUrls.Count() > 0)
-                {
-                    this.BadUrls.TryAdd(invocation.TargetType.FullName!, badUrls);
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger().LogError(ex, ex.Message);
-                throw;
-            }
-            finally
-            {
-                _semaphore.Release();
-            }
+            //    if (!this.BadUrls.ContainsKey(invocation.TargetType.FullName!)
+            //        && badUrls.Count() > 0)
+            //    {
+            //        this.BadUrls.TryAdd(invocation.TargetType.FullName!, badUrls);
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    Logger().LogError(ex, ex.Message);
+            //    throw;
+            //}
+            //finally
+            //{
+            //    _semaphore.Release();
+            //}
 
             //是否有异常，并抛出异常
             if (result.IsThrow && result.ClusterException != null)
