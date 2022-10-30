@@ -28,23 +28,23 @@
     //"Meta": {
     //  "Key": "val"
     //},
-    //"Services": {
-    //  "MemberService": {
-    //    "Meta": {
-    //      "Ephemeral": "True"
-    //    },
-    //    "Instances": [
-    //      {
-    //        "Ip": "192.168.2.48",
-    //        "Port": "9105",
-    //        "Meta": {
-    //          "Weight": "1",
-    //          "Enabled": "true"
-    //        }
-    //      }
-    //    ]
-    //  }
-    //},
+    "Services": {
+      "GrpcHelloService": {
+        "Meta": {
+          "Ephemeral": "True"
+        },
+        "Instances": [
+          {
+            "Host": "localhost",
+            "Port": "10008",
+            "Meta": {
+              "Weight": "1",
+              "Enabled": "true"
+            }
+          }
+        ]
+      }
+    },
     "Mergers": [ "array" ]
     //"Clients": {
     //  "thrift_helloservice": {

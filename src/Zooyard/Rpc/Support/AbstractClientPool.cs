@@ -11,8 +11,8 @@ public abstract class AbstractClientPool: IClientPool
     /// </summary>
     protected readonly ConcurrentDictionary<URL, ConcurrentBag<IClient>> ClientsPool = new ();
 
-    public string ServiceName { get; set; }
-    public string Version { get; set; }
+    public string ServiceName { get; set; } = String.Empty;
+    public string Version { get; set; } = String.Empty;
     public URL Address { get; set; }
     public URL Url { get; set; }
     public Type? ProxyType { get; set; }
@@ -149,8 +149,19 @@ public abstract class AbstractClientPool: IClientPool
     {
         try
         {
-            await client.Open();
+            using var cts = new CancellationTokenSource(client.ClientTimeout);
+            await Timeout(client.Open(cts.Token), client.ClientTimeout, cts, "open");
             return true;
+
+            async Task Timeout(Task task, int millisecondsDelay, CancellationTokenSource cts, string message)
+            {
+                if (await Task.WhenAny(task, Task.Delay(millisecondsDelay, cts.Token)).ConfigureAwait(false) == task)
+                    return;
+
+                cts.Cancel();
+
+                throw new TimeoutException($"time out {millisecondsDelay} when invoke {message}");
+            }
         }
         catch (Exception e)
         {

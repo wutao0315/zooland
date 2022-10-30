@@ -16,7 +16,7 @@ public abstract class AbstractInvoker : IInvoker
         using var cts = new CancellationTokenSource(ClientTimeout);
         var result = await Timeout(HandleInvoke<T>(invocation), ClientTimeout, cts, message);
 
-        static async Task<T> Timeout<T>(Task<T> task, int millisecondsDelay, CancellationTokenSource cts, string message)
+        static async Task<TT> Timeout<TT>(Task<TT> task, int millisecondsDelay, CancellationTokenSource cts, string message)
         {
             if (await Task.WhenAny(task, Task.Delay(millisecondsDelay, cts.Token)).ConfigureAwait(false) == task)
                 return task.Result;

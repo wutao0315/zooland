@@ -20,26 +20,26 @@ public class NettyClient : AbstractClient
     //public const int DEFAULT_TIMEOUT = 5000;
 
     public override URL Url { get; }
-
-    private readonly int _clientTimeout;
+    public override int ClientTimeout { get; }
+    
     private readonly ITransportClient _transportClient;
 
     public NettyClient(ITransportClient transportClient, int clientTimeout, URL url)
     {
         _transportClient = transportClient;
-        _clientTimeout = clientTimeout;
+        this.ClientTimeout = clientTimeout;
         this.Url = url;
     }
 
 
-    public override async Task<IInvoker> Refer()
+    public override async Task<IInvoker> Refer(CancellationToken cancellationToken = default)
     {
-        await this.Open();
+        await this.Open(cancellationToken);
 
-        return new NettyInvoker(_transportClient, _clientTimeout);
+        return new NettyInvoker(_transportClient, this.ClientTimeout);
     }
 
-    public override async Task Open()
+    public override async Task Open(CancellationToken cancellationToken = default)
     {
         await Task.CompletedTask;
         //if (!_channel.Open || !_channel.Active)
@@ -49,7 +49,7 @@ public class NettyClient : AbstractClient
         //}
     }
 
-    public override async Task Close()
+    public override async Task Close(CancellationToken cancellationToken = default)
     {
         await Task.CompletedTask;
         //if (_channel.Active || _channel.Open)

@@ -17,7 +17,7 @@ public class ZooyardServiceOption
 }
 public class ZooyardInstanceOption
 {
-    public string Ip { get; set; } = String.Empty;
+    public string Host { get; set; } = String.Empty;
     public int Port { get; set; }
     public Dictionary<string, string> Meta { get; set; } = new ();
 }

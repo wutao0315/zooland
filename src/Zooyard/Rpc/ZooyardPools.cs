@@ -284,8 +284,8 @@ public class ZooyardPools : IZooyardPools
 
                 foreach (var item in service.Instances)
                 {
-                    var itemUrl = url.SetHost(item.Ip);
-                    itemUrl = url.SetPort(item.Port);
+                    var itemUrl = url.SetHost(item.Host);
+                    itemUrl = itemUrl.SetPort(item.Port);
                     itemUrl = GetMetaUrl(itemUrl, item.Meta);
                     result.Add(itemUrl);
                 }
@@ -441,7 +441,7 @@ public class ZooyardPools : IZooyardPools
                 needToPrintMessageStr = address.GetParameter("needToPrintMessage", "");
             }
 
-            bool.TryParse(needToPrintMessageStr, out bool needToPrintMessage);
+            _ = bool.TryParse(needToPrintMessageStr, out bool needToPrintMessage);
 
             var result = stateRoute.Route(urls, address, invocation, needToPrintMessage);
 

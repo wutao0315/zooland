@@ -3,11 +3,12 @@
 public interface IClient : IDisposable, IAsyncDisposable
 {
     URL Url { get; }
-    Task<IInvoker> Refer();
+    Task<IInvoker> Refer(CancellationToken cancellationToken = default);
     string Version { get; }
+    int ClientTimeout{get;}
     DateTime ActiveTime { get; set; }
-    Task Open();
-    Task Close();
+    Task Open(CancellationToken cancellationToken = default);
+    Task Close(CancellationToken cancellationToken = default);
     void Reset();
 
 }

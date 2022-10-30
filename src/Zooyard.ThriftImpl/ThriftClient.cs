@@ -8,39 +8,39 @@ public class ThriftClient : AbstractClient
 {
     private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ThriftClient));
     public override URL Url { get; }
+    public override int ClientTimeout { get; }
     private readonly TBaseClient _thriftclient;
-    private readonly int _clientTimeout;
 
     public ThriftClient(TBaseClient thriftclient, int clientTimeout, URL url)
     {
         _thriftclient = thriftclient;
-        _clientTimeout = clientTimeout;
+        this.ClientTimeout = clientTimeout;
         this.Url = url;
     }
 
 
-    public override async Task<IInvoker> Refer()
+    public override async Task<IInvoker> Refer(CancellationToken cancellationToken = default)
     {
-        await this.Open();
+        await this.Open(cancellationToken);
         //thrift client service
-        return new ThriftInvoker(_thriftclient, _clientTimeout);
+        return new ThriftInvoker(_thriftclient, this.ClientTimeout);
     }
 
-    public override async Task Open()
+    public override async Task Open(CancellationToken cancellationToken = default)
     {
         if (!_thriftclient.OutputProtocol.Transport.IsOpen)
         {
-            await _thriftclient.OutputProtocol.Transport.OpenAsync();
+            await _thriftclient.OutputProtocol.Transport.OpenAsync(cancellationToken);
         }
         if (!_thriftclient.InputProtocol.Transport.IsOpen)
         {
-            await _thriftclient.InputProtocol.Transport.OpenAsync();
+            await _thriftclient.InputProtocol.Transport.OpenAsync(cancellationToken);
         }
         Logger().LogInformation("open");
     }
 
 
-    public override async Task Close()
+    public override async Task Close(CancellationToken cancellationToken = default)
     {
         if (_thriftclient.OutputProtocol.Transport.IsOpen) 
         {

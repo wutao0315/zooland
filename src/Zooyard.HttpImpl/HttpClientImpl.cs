@@ -5,35 +5,35 @@ namespace Zooyard.HttpImpl;
 public class HttpClientImpl : AbstractClient
 {
     public override URL Url { get; }
+    public override int ClientTimeout { get; }
     private readonly IHttpClientFactory _transport;
-    private readonly int _clientTimeout;
     
     public HttpClientImpl(IHttpClientFactory transport,URL url,int clientTimeout)
     {
         this.Url = url;
+        this.ClientTimeout = clientTimeout;
         _transport = transport;
-        _clientTimeout = clientTimeout;
     }
 
-    public override async Task<IInvoker> Refer()
+    public override async Task<IInvoker> Refer(CancellationToken cancellationToken = default)
     {
         var client = _transport.CreateClient();
         var result = await client.SendAsync(new HttpRequestMessage
         {
             Method = new HttpMethod("GET"),
             RequestUri = new Uri($"{this.Url.Protocol}://{this.Url.Host}:{this.Url.Port}/health"),
-        });
+        }, cancellationToken);
 
         result.EnsureSuccessStatusCode();
 
-        return new HttpInvoker(_transport, _clientTimeout, Url);
+        return new HttpInvoker(_transport, ClientTimeout, Url);
     }
-    public override async Task Open()
+    public override async Task Open(CancellationToken cancellationToken = default)
     {
         await Task.CompletedTask;
     }
 
-    public override async Task Close()
+    public override async Task Close(CancellationToken cancellationToken = default)
     {
         await Task.CompletedTask;
     }
