@@ -44,7 +44,7 @@ public class GrpcClient : AbstractClient
     {
         if (_channel.State != ChannelState.Ready)
         {
-            await _channel.ConnectAsync(DateTime.Now.AddMilliseconds(this.ClientTimeout));//.Wait(_clientTimeout / 2);
+            await _channel.ConnectAsync(DateTime.UtcNow.AddMilliseconds(this.ClientTimeout));//.Wait(_clientTimeout / 2);
         }
         if (_channel.State != ChannelState.Ready)
         {

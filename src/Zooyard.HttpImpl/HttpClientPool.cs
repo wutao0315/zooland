@@ -1,5 +1,4 @@
-﻿using System.Net;
-using Zooyard.Rpc;
+﻿using Zooyard.Rpc;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.HttpImpl;

@@ -6,7 +6,7 @@ using Zooyard.Utils;
 
 namespace Zooyard;
 
-public sealed class URL
+public sealed record URL
 {
     public static readonly Regex COMMA_SPLIT_PATTERN = new("\\s*[,]+\\s*", RegexOptions.Compiled);
     public const string BACKUP_KEY = "backup";
@@ -14,10 +14,17 @@ public sealed class URL
     public const string LOCALHOST_KEY = "localhost";
     public const string ANYHOST_KEY = "anyhost";
     public const string ANYHOST_VALUE = "0.0.0.0";
+
     public const string GROUP_KEY = "group";
     public const string VERSION_KEY = "version";
     public const string INTERFACE_KEY = "interface";
     public const string APP_KEY = "app";
+    public const string PROTOCOL_KEY = "protocol";
+    public const string USERNAME_KEY = "username";
+    public const string PASSWORD_KEY = "password";
+    public const string HOST_KEY = "host";
+    public const string PORT_KEY = "port";
+    public const string PATH_KEY = "path";
 
     //private readonly IDictionary<string, string> parameters;
 
@@ -33,14 +40,6 @@ public sealed class URL
     internal URL()
     {
     }
-
-
-
-    //public URL(string protocol, string host, int port, IDictionary<string, string> parameters)
-    //    : this(protocol, host, port, "", "", "", parameters) { }
-
-    //public URL(string protocol, string host, int port, string path, IDictionary<string, string>? parameters = null)
-    //    : this(protocol,host, port, path, "", "", parameters) { }
 
     public URL(string protocol, string host, int port, string path = "", string username = "", string password = "", IDictionary<string, string>? parameters = null)
     {
@@ -159,11 +158,11 @@ public sealed class URL
         return new URL(protocol,  host, port, path, username, password, parameters);
     }
 
-    public string Protocol { get; private set; } = String.Empty;
+    public string Protocol { get; init; } = String.Empty;
 
-    public string Username { get; private set; } = String.Empty;
+    public string Username { get; init; } = String.Empty;
 
-    public string Password { get; private set; } = String.Empty;
+    public string Password { get; init; } = String.Empty;
 
     public string Authority
     {
@@ -202,7 +201,7 @@ public sealed class URL
         }
     }
 
-    public int Port { get; private set; }
+    public int Port { get; init; }
 
     public int GetPort(int defaultPort)
     {
@@ -274,7 +273,7 @@ public sealed class URL
         return address;
     }
 
-    public string Path { get; private set; } = String.Empty;
+    public string Path { get; init; } = String.Empty;
 
     public string? AbsolutePath
     {
@@ -290,17 +289,20 @@ public sealed class URL
 
     public URL SetProtocol(string protocol)
     {
-        return new URL(protocol, Host, Port, Path, Username, Password, Parameters);
+        return this with { Protocol = protocol };
+        //return new URL(protocol, Host, Port, Path, Username, Password, Parameters);
     }
 
     public URL SetUsername(string username)
     {
-        return new URL(Protocol,  Host, Port, Path, username, Password, Parameters);
+        return this with { Username = username };
+        //return new URL(Protocol,  Host, Port, Path, username, Password, Parameters);
     }
 
     public URL SetPassword(string password)
     {
-        return new URL(Protocol,  Host, Port, Path, Username, password, Parameters);
+        return this with { Password = password };
+        //return new URL(Protocol,  Host, Port, Path, Username, password, Parameters);
     }
 
     public URL SetAddress(string address)
@@ -317,25 +319,29 @@ public sealed class URL
         {
             host = address;
         }
-        return new URL(Protocol, host, port, Path, Username, Password, Parameters);
+        return this with { Host = host, Port = port };
+       // return new URL(Protocol, host, port, Path, Username, Password, Parameters);
     }
 
     public URL SetHost(string host)
     {
-        return new URL(Protocol,  host, Port, Path, Username, Password, Parameters);
+        return this with { Host = host };
+        //return new URL(Protocol,  host, Port, Path, Username, Password, Parameters);
     }
 
     public URL SetPort(int port)
     {
-        return new URL(Protocol, Host, port, Path, Username, Password, Parameters);
+        return this with { Port = port };
+        //return new URL(Protocol, Host, port, Path, Username, Password, Parameters);
     }
 
     public URL SetPath(string path)
     {
-        return new URL(Protocol, Host, Port, path, Username, Password, Parameters);
+        return this with { Path = path };
+        //return new URL(Protocol, Host, Port, path, Username, Password, Parameters);
     }
 
-    public Dictionary<string, string> Parameters { get; private set; } = new ();
+    public Dictionary<string, string> Parameters { get; init; } = new ();
 
     public string GetParameterAndDecoded(string key)
     {
@@ -710,7 +716,8 @@ public sealed class URL
         {
             [key] = value
         };
-        return new URL(Protocol, Host, Port, Path, Username, Password, map);
+        return this with { Parameters = map };
+        //return new URL(Protocol, Host, Port, Path, Username, Password, map);
     }
 
     public URL AddParameterIfAbsent(string? key, string? value)
@@ -727,7 +734,9 @@ public sealed class URL
         {
             [key] = value
         };
-        return new URL(Protocol, Host, Port, Path, Username, Password, map);
+
+        return this with { Parameters = map };
+        //return new URL(Protocol, Host, Port, Path, Username, Password, map);
     }
 
     /// <summary>
@@ -761,7 +770,9 @@ public sealed class URL
 
         var map = new Dictionary<string, string>(Parameters??new Dictionary<string,string>());
         map.PutAll(parameters);
-        return new URL(Protocol, Host, Port, Path, Username, Password, map);
+
+        return this with { Parameters = map };
+        //return new URL(Protocol, Host, Port, Path, Username, Password, map);
     }
 
     public URL AddParametersIfAbsent(IDictionary<string, string> parameters)
@@ -772,7 +783,10 @@ public sealed class URL
         }
         var map = new Dictionary<string, string>(parameters);
         map.PutAll(Parameters);
-        return new URL(Protocol,  Host, Port, Path, Username, Password, map);
+
+
+        return this with { Parameters = map };
+        //return new URL(Protocol,  Host, Port, Path, Username, Password, map);
     }
 
     public URL AddParameters(params string[] pairs)
@@ -836,37 +850,43 @@ public sealed class URL
         {
             return this;
         }
-        return new URL(Protocol, Host, Port, Path, Username, Password, map);
+
+
+        return this with { Parameters = map };
+        //return new URL(Protocol, Host, Port, Path, Username, Password, map);
     }
 
     public URL ClearParameters()
     {
-        return new URL(Protocol, Host, Port, Path, Username, Password);
+        return this with { Parameters = new() };
+        //return new URL(Protocol, Host, Port, Path, Username, Password);
     }
+
+    
 
     public string? GetRawParameter(string key)
     {
-        if ("protocol".Equals(key, StringComparison.OrdinalIgnoreCase))
+        if (PROTOCOL_KEY.Equals(key, StringComparison.OrdinalIgnoreCase))
         {
             return Protocol;
         }
-        if ("username".Equals(key, StringComparison.OrdinalIgnoreCase))
+        if (USERNAME_KEY.Equals(key, StringComparison.OrdinalIgnoreCase))
         {
             return Username;
         }
-        if ("password".Equals(key, StringComparison.OrdinalIgnoreCase))
+        if (PASSWORD_KEY.Equals(key, StringComparison.OrdinalIgnoreCase))
         {
             return Password;
         }
-        if ("host".Equals(key, StringComparison.OrdinalIgnoreCase))
+        if (HOST_KEY.Equals(key, StringComparison.OrdinalIgnoreCase))
         {
             return Host;
         }
-        if ("port".Equals(key, StringComparison.OrdinalIgnoreCase))
+        if (PORT_KEY.Equals(key, StringComparison.OrdinalIgnoreCase))
         {
             return Convert.ToString(Port);
         }
-        if ("path".Equals(key, StringComparison.OrdinalIgnoreCase))
+        if (PATH_KEY.Equals(key, StringComparison.OrdinalIgnoreCase))
         {
             return Path;
         }
@@ -878,27 +898,27 @@ public sealed class URL
         var map = new Dictionary<string, string>(this.Parameters??new Dictionary<string,string>());
         if (Protocol != null)
         {
-            map["protocol"] = Protocol;
+            map[PROTOCOL_KEY] = Protocol;
         }
         if (Username != null)
         {
-            map["username"] = Username;
+            map[USERNAME_KEY] = Username;
         }
         if (Password != null)
         {
-            map["password"] = Password;
+            map[PASSWORD_KEY] = Password;
         }
         if (Host != null)
         {
-            map["host"] = Host;
+            map[HOST_KEY] = Host;
         }
         if (Port > 0)
         {
-            map["port"] = Convert.ToString(Port);
+            map[PORT_KEY] = Convert.ToString(Port);
         }
         if (Path != null)
         {
-            map["path"] = Path;
+            map[PATH_KEY] = Path;
         }
         return map;
     }
@@ -965,33 +985,36 @@ public sealed class URL
         return buf.ToString();
     }
 
-    private void BuildParameters(StringBuilder buf, bool concat, string[] parameters)
+    private void BuildParameters(StringBuilder buf, bool concat, params string[] parameters)
     {
-        if (Parameters?.Count > 0)
+        if (Parameters.Count <= 0)
         {
-            IList<string>? includes = (parameters == null || parameters.Length == 0 ? null : new List<string>(parameters));
-            bool first = true;
-            foreach (var entry in Parameters)
+            return;
+        }
+
+        bool first = true;
+        foreach (var entry in Parameters)
+        {
+            if (string.IsNullOrWhiteSpace(entry.Key) || !parameters.Contains(entry.Key))
             {
-                if (entry.Key != null && entry.Key.Length > 0 && (includes == null || includes.Contains(entry.Key)))
-                {
-                    if (first)
-                    {
-                        if (concat)
-                        {
-                            buf.Append('?');
-                        }
-                        first = false;
-                    }
-                    else
-                    {
-                        buf.Append('&');
-                    }
-                    buf.Append(entry.Key);
-                    buf.Append('=');
-                    buf.Append(entry.Value == null ? "" : entry.Value.Trim());
-                }
+                continue; 
             }
+
+            if (first)
+            {
+                if (concat)
+                {
+                    buf.Append('?');
+                }
+                first = false;
+            }
+            else
+            {
+                buf.Append('&');
+            }
+            buf.Append(entry.Key);
+            buf.Append('=');
+            buf.Append(entry.Value == null ? "" : entry.Value.Trim());
         }
     }
 
@@ -1159,105 +1182,105 @@ public sealed class URL
         }
     }
 
-    public override int GetHashCode()
-    {
-        const int prime = 31;
-        int result = 1;
-        result = prime * result + ((Host == null) ? 0 : Host.GetHashCode());
-        result = prime * result + ((this.Parameters == null) ? 0 : this.Parameters.GetHashCode());
-        result = prime * result + ((Password == null) ? 0 : Password.GetHashCode());
-        result = prime * result + ((Path == null) ? 0 : Path.GetHashCode());
-        result = prime * result + Port;
-        result = prime * result + ((Protocol == null) ? 0 : Protocol.GetHashCode());
-        result = prime * result + ((Username == null) ? 0 : Username.GetHashCode());
-        return result;
-    }
+    //public override int GetHashCode()
+    //{
+    //    const int prime = 31;
+    //    int result = 1;
+    //    result = prime * result + ((Host == null) ? 0 : Host.GetHashCode());
+    //    result = prime * result + ((this.Parameters == null) ? 0 : this.Parameters.GetHashCode());
+    //    result = prime * result + ((Password == null) ? 0 : Password.GetHashCode());
+    //    result = prime * result + ((Path == null) ? 0 : Path.GetHashCode());
+    //    result = prime * result + Port;
+    //    result = prime * result + ((Protocol == null) ? 0 : Protocol.GetHashCode());
+    //    result = prime * result + ((Username == null) ? 0 : Username.GetHashCode());
+    //    return result;
+    //}
 
-    public override bool Equals(object? obj)
-    {
-        if (this == obj)
-        {
-            return true;
-        }
-        if (obj == null)
-        {
-            return false;
-        }
-        if (this.GetType() != obj.GetType())
-        {
-            return false;
-        }
-        URL other = (URL)obj;
-        if (Host == null)
-        {
-            if (other.Host != null)
-            {
-                return false;
-            }
-        }
-        else if (!Host.Equals(other.Host))
-        {
-            return false;
-        }
-        if (this.Parameters == null)
-        {
-            if (other.Parameters != null)
-            {
-                return false;
-            }
-        }
-        else if (!this.Parameters.Equals(other.Parameters))
-        {
-            return false;
-        }
-        if (Password == null)
-        {
-            if (other.Password != null)
-            {
-                return false;
-            }
-        }
-        else if (!Password.Equals(other.Password))
-        {
-            return false;
-        }
-        if (Path == null)
-        {
-            if (other.Path != null)
-            {
-                return false;
-            }
-        }
-        else if (!Path.Equals(other.Path))
-        {
-            return false;
-        }
-        if (Port != other.Port)
-        {
-            return false;
-        }
-        if (Protocol == null)
-        {
-            if (other.Protocol != null)
-            {
-                return false;
-            }
-        }
-        else if (!Protocol.Equals(other.Protocol))
-        {
-            return false;
-        }
-        if (Username == null)
-        {
-            if (other.Username != null)
-            {
-                return false;
-            }
-        }
-        else if (!Username.Equals(other.Username))
-        {
-            return false;
-        }
-        return true;
-    }
+    //public override bool Equals(object? obj)
+    //{
+    //    if (this == obj)
+    //    {
+    //        return true;
+    //    }
+    //    if (obj == null)
+    //    {
+    //        return false;
+    //    }
+    //    if (this.GetType() != obj.GetType())
+    //    {
+    //        return false;
+    //    }
+    //    URL other = (URL)obj;
+    //    if (Host == null)
+    //    {
+    //        if (other.Host != null)
+    //        {
+    //            return false;
+    //        }
+    //    }
+    //    else if (!Host.Equals(other.Host))
+    //    {
+    //        return false;
+    //    }
+    //    if (this.Parameters == null)
+    //    {
+    //        if (other.Parameters != null)
+    //        {
+    //            return false;
+    //        }
+    //    }
+    //    else if (!this.Parameters.Equals(other.Parameters))
+    //    {
+    //        return false;
+    //    }
+    //    if (Password == null)
+    //    {
+    //        if (other.Password != null)
+    //        {
+    //            return false;
+    //        }
+    //    }
+    //    else if (!Password.Equals(other.Password))
+    //    {
+    //        return false;
+    //    }
+    //    if (Path == null)
+    //    {
+    //        if (other.Path != null)
+    //        {
+    //            return false;
+    //        }
+    //    }
+    //    else if (!Path.Equals(other.Path))
+    //    {
+    //        return false;
+    //    }
+    //    if (Port != other.Port)
+    //    {
+    //        return false;
+    //    }
+    //    if (Protocol == null)
+    //    {
+    //        if (other.Protocol != null)
+    //        {
+    //            return false;
+    //        }
+    //    }
+    //    else if (!Protocol.Equals(other.Protocol))
+    //    {
+    //        return false;
+    //    }
+    //    if (Username == null)
+    //    {
+    //        if (other.Username != null)
+    //        {
+    //            return false;
+    //        }
+    //    }
+    //    else if (!Username.Equals(other.Username))
+    //    {
+    //        return false;
+    //    }
+    //    return true;
+    //}
 }

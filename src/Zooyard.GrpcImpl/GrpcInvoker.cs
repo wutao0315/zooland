@@ -37,7 +37,7 @@ public class GrpcInvoker : AbstractInvoker
         var callOption = new CallOptions();
         if (_clientTimeout > 0)
         {
-            callOption.WithDeadline(DateTime.Now.AddMilliseconds(_clientTimeout));
+            callOption.WithDeadline(DateTime.UtcNow.AddMilliseconds(_clientTimeout));
         }
         parasPlus[invocation.Arguments.Length] = callOption;
 

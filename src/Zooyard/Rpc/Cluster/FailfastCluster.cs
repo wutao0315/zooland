@@ -64,7 +64,7 @@ public class FailfastCluster : AbstractCluster
                 + " method " + invocation.MethodInfo.Name
                 + " on consumer " + Local.HostName
                 + " use service version " + invocation.Version
-                + ", but no luck to perform the invocation. Last error is: " + e.Message, e.InnerException ?? e);
+                + ", but no luck to perform the invocation. Last error is: " + e.Message+e.StackTrace, e.InnerException ?? e);
             }
             Logger().LogError(exception, exception.Message);
             //badUrls.Add(new BadUrl { Url = invoker, BadTime = DateTime.Now, CurrentException = exception });
