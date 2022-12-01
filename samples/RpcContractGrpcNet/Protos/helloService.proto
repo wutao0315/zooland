@@ -1,0 +1,32 @@
+﻿syntax = "proto3";
+
+package RpcContractGrpcNet;
+
+
+
+// The hello service definition.
+service HelloService {
+  rpc CallNameVoid (Void) returns(NameResult) {}
+  rpc CallName (NameResult) returns(Void) {}
+  rpc CallVoid (Void) returns(Void) {}
+  // Hello
+  rpc Hello (NameResult) returns (NameResult) {}
+  // SayHello
+  rpc SayHello (NameResult) returns (HelloResult) {}
+  // ShowHello
+  rpc ShowHello (HelloResult) returns (NameResult) {}
+}
+
+// The NameResult message.
+message NameResult {
+  string Name = 1;
+}
+
+// The HelloResult message.
+message HelloResult {
+  string Name = 1;
+  string Gender = 2;
+  string Head = 3;
+}
+message Void {
+}

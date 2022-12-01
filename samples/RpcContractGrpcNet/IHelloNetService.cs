@@ -1,9 +1,9 @@
 ﻿using Zooyard.DataAnnotations;
 
-namespace RpcContractGrpc;
+namespace RpcContractGrpcNet;
 
-[ZooyardGrpc("GrpcHelloService", typeof(HelloService.HelloServiceClient), Url = "grpc://127.0.0.1:10008")]
-public interface IHelloService
+[ZooyardGrpcNet("GrpcNetHelloService", typeof(HelloService.HelloServiceClient), Url = "http://127.0.0.1:10011")]
+public interface IHelloNetService
 {
     Task<NameResult> CallNameVoid(Void voidData);
     Task<Void> CallName(NameResult name);

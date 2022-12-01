@@ -52,6 +52,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcContractThrift", "sample
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.DotNettyImpl", "src\Zooyard.DotNettyImpl\Zooyard.DotNettyImpl.csproj", "{A55DA158-7776-4554-9007-7A89311642B5}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.GrpcNetImpl", "src\Zooyard.GrpcNetImpl\Zooyard.GrpcNetImpl.csproj", "{D411F8ED-C5BC-4AC8-922D-342699B7DDDB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcContractGrpcNet", "samples\RpcContractGrpcNet\RpcContractGrpcNet.csproj", "{AFC26A63-6D48-41A2-A9A4-A11FB2057ED5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -106,6 +110,14 @@ Global
 		{A55DA158-7776-4554-9007-7A89311642B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A55DA158-7776-4554-9007-7A89311642B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A55DA158-7776-4554-9007-7A89311642B5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D411F8ED-C5BC-4AC8-922D-342699B7DDDB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D411F8ED-C5BC-4AC8-922D-342699B7DDDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D411F8ED-C5BC-4AC8-922D-342699B7DDDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D411F8ED-C5BC-4AC8-922D-342699B7DDDB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AFC26A63-6D48-41A2-A9A4-A11FB2057ED5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AFC26A63-6D48-41A2-A9A4-A11FB2057ED5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AFC26A63-6D48-41A2-A9A4-A11FB2057ED5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AFC26A63-6D48-41A2-A9A4-A11FB2057ED5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -123,6 +135,8 @@ Global
 		{4CBC00FE-6951-4AD7-8056-4AE4585452B0} = {50C4867C-8931-45F0-B773-463C7B953969}
 		{D06193DB-1327-41BB-8563-8DCCFD2E2792} = {1E4B38C1-0CF2-4E5C-AC4A-30B48CB3F7BA}
 		{A55DA158-7776-4554-9007-7A89311642B5} = {50C4867C-8931-45F0-B773-463C7B953969}
+		{D411F8ED-C5BC-4AC8-922D-342699B7DDDB} = {50C4867C-8931-45F0-B773-463C7B953969}
+		{AFC26A63-6D48-41A2-A9A4-A11FB2057ED5} = {1E4B38C1-0CF2-4E5C-AC4A-30B48CB3F7BA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4FBB3247-7E5E-40FB-85B2-67B3E3D57FCB}

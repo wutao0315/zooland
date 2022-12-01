@@ -7,6 +7,9 @@ using Grpc.Core;
 using Grpc.Core.Interceptors;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -157,6 +160,8 @@ public class Program
             services.AddHttpServer<Startup>(args);
 
             services.AddThriftServer();
+
+            services.AddSingleton((p) => new GrpcNetServer(args));
 
             //services.AddZoolandServer();
             services.AddHostedService<ZoolandHostedService>();
@@ -395,16 +400,19 @@ public class ZoolandHostedService : IHostedService
     private readonly ThriftServer _thriftServer;
     private readonly NettyServer _nettyServer;
     private readonly HttpServer _httpServer;
+    private readonly GrpcNetServer _grpcNetServer;
 
     public ZoolandHostedService(GrpcServer grpcServer,
         ThriftServer thriftServer, 
         NettyServer nettyServer, 
-        HttpServer httpServer)
+        HttpServer httpServer,
+        GrpcNetServer grpcNetServer)
     {
         _grpcServer = grpcServer;
         _thriftServer = thriftServer;
         _nettyServer = nettyServer;
         _httpServer = httpServer;
+        _grpcNetServer = grpcNetServer;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -416,6 +424,7 @@ public class ZoolandHostedService : IHostedService
             await _thriftServer.Start(cancellationToken).ConfigureAwait(false);
             //await _nettyServer.Start(cancellationToken).ConfigureAwait(false);
             await _httpServer.Start(cancellationToken).ConfigureAwait(false);
+            await _grpcNetServer.Start(cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -428,10 +437,11 @@ public class ZoolandHostedService : IHostedService
         Console.WriteLine("Zooland stopped...");
         try
         {
-            await _grpcServer.Stop().ConfigureAwait(false);
-            await _thriftServer.Stop().ConfigureAwait(false);
+            await _grpcServer.Stop(cancellationToken).ConfigureAwait(false);
+            await _thriftServer.Stop(cancellationToken).ConfigureAwait(false);
             //await _nettyServer.Stop().ConfigureAwait(false);
-            await _httpServer.Stop().ConfigureAwait(false);
+            await _httpServer.Stop(cancellationToken).ConfigureAwait(false);
+            await _grpcNetServer.Stop(cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -472,7 +482,7 @@ public class GrpcServer
         Console.WriteLine($"Started the grpc server on{string.Join(",", ports)} ...");
     }
 
-    public async Task Stop()
+    public async Task Stop(CancellationToken cancellationToken)
     {
         try
         {
@@ -617,7 +627,7 @@ public class NettyServer
 
     }
 
-    public async Task Stop()
+    public async Task Stop(CancellationToken cancellationToken)
     {
         try
         {
@@ -847,7 +857,7 @@ public class ThriftServer
         Console.WriteLine("Started the thrift server ...");
     }
 
-    public async Task Stop()
+    public async Task Stop(CancellationToken cancellationToken)
     {
         //unregiste from register center
         await Task.CompletedTask;
@@ -1163,19 +1173,63 @@ public class HttpServer
 
     public async Task Start(CancellationToken cancellationToken)
     {
-        try
+        _ = Task.Run(async () =>
         {
-            await _server.RunAsync(cancellationToken);
-        }
-        catch (Exception)
-        {
-        }
+            try
+            {
+                await _server.RunAsync(cancellationToken);
+            }
+            catch (Exception)
+            {
+            }
+        }, cancellationToken);
 
     }
 
-    public async Task Stop()
+    public async Task Stop(CancellationToken cancellationToken)
     {
-        await _server.StopAsync();
+        await _server.StopAsync(cancellationToken);
         _server.Dispose();
+    }
+}
+
+public class GrpcNetServer
+{
+    private readonly WebApplication _app;
+    public GrpcNetServer(string[] args) 
+    {
+        var builder = WebApplication.CreateBuilder(args);
+        builder.WebHost.ConfigureKestrel(options =>
+        {
+            Console.WriteLine("grpc:10011");
+            options.Listen(IPAddress.Any, 10011, listenOptions =>
+            {
+                listenOptions.Protocols = HttpProtocols.Http2;
+            });
+        });
+        builder.Services.AddScoped<IHelloRepository, HelloRepository>();
+        builder.Services.AddGrpc();
+        _app = builder.Build();
+        _app.MapGrpcService<HelloServiceGrpcNetImpl>();
+    }
+    
+
+    public async Task Start(CancellationToken cancellationToken)
+    {
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await _app.RunAsync(cancellationToken);
+            }
+            catch (Exception)
+            {
+            }
+        }, cancellationToken);
+    }
+
+    public async Task Stop(CancellationToken cancellationToken)
+    {
+        await _app.StopAsync(cancellationToken);
     }
 }

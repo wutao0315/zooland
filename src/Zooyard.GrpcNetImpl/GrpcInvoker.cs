@@ -7,7 +7,7 @@ using Zooyard.Logging;
 using Zooyard.Rpc;
 using Zooyard.Rpc.Support;
 
-namespace Zooyard.GrpcImpl;
+namespace Zooyard.GrpcNetImpl;
 
 public class GrpcInvoker : AbstractInvoker
 {
@@ -80,6 +80,7 @@ public class GrpcInvoker : AbstractInvoker
             }
 
             var taskResult = method.Invoke(_instance, parasPlus);
+
             if (taskResult == null) 
             {
                 var result = new RpcResult<T>(default!, watch.ElapsedMilliseconds);

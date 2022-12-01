@@ -35,7 +35,7 @@ public sealed record URL
     private volatile string? full;
     private volatile string? identity;
     private volatile string? parameter;
-    private volatile string? @string;
+    //private volatile string? @string;
 
     internal URL()
     {
@@ -925,12 +925,12 @@ public sealed record URL
 
     public override string ToString()
     {
-        if (@string != null)
-        {
-            return @string;
-        }
+        //if (@string != null)
+        //{
+        //    return @string;
+        //}
         // no show username and password
-        return @string = BuildString(false, true); 
+        return BuildString(false, true); 
     }
 
     public string ToString(params string[] parameters)

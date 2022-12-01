@@ -67,6 +67,7 @@ public class Startup
         {
             endpoints.MapControllers();
             endpoints.MapHealthChecks("/health");
+         
         });
     }
 }
