@@ -17,7 +17,7 @@ public class AtomicReference<T> where T : class
     /// </summary>
     public AtomicReference()
     {
-        this.atomicValue = default(T);
+        this.atomicValue = default!;
     }
 
     /// <summary>

@@ -56,12 +56,12 @@ public abstract class AbstractClientPool: IClientPool
     /// <param name="client">连接</param>
     public virtual async Task Recovery(IClient client)
     {
-        if (!ClientsPool.TryGetValue(client.Url, out ConcurrentBag<IClient>? clientBag) || clientBag.Count <= MaxIdle)
+        if (!ClientsPool.TryGetValue(client.Url, out var clientBag) || clientBag.Count <= MaxIdle)
         {
             //更新最近触发时间
             client.ActiveTime = DateTime.Now;
             //连接回归连接池
-            clientBag ??= new ConcurrentBag<IClient>();
+            clientBag ??= new();
             clientBag.Add(client);
             ClientsPool[client.Url] = clientBag;
             Logger().LogInformation($"recovery to update:[{clientBag.Count}][{client.Version}:{client.Url}]");
