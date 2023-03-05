@@ -7,11 +7,6 @@ public static class ServiceBuilderExtensions
 {
     public static void AddZooyardThrift(this IServiceCollection services)
     {
-        services.AddTransient((serviceProvder) => 
-        {
-            var pool = new ThriftClientPool();
-
-            return pool;
-        });
+        services.AddTransient<ThriftClientPool>();
     }
 }
