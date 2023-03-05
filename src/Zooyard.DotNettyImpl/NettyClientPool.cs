@@ -9,8 +9,11 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 using System.Net;
+using System.Text;
+using System.Threading.Channels;
 using Zooyard.DotNettyImpl.Adapter;
-using Zooyard.DotNettyImpl.Codec;
+//using Zooyard.DotNettyImpl.Adapter;
+//using Zooyard.DotNettyImpl.Codec;
 using Zooyard.DotNettyImpl.Messages;
 using Zooyard.DotNettyImpl.Transport;
 using Zooyard.Rpc;
@@ -20,73 +23,72 @@ namespace Zooyard.DotNettyImpl;
 
 public class NettyClientPool : AbstractClientPool
 {
+    
+    private readonly ILogger _logger;
+    private readonly ILoggerFactory _loggerFactory;
     private readonly ITransportMessageEncoder _transportMessageEncoder;
     private readonly ITransportMessageDecoder _transportMessageDecoder;
-    private readonly ILogger _logger;
-    private readonly Bootstrap _bootstrap;
-    private readonly IOptionsMonitor<NettyOption> _nettyOption;
+    private readonly ConcurrentDictionary<EndPoint, Lazy<Task<ITransportClient>>> _clients = new ();
 
     private static readonly AttributeKey<IMessageSender> messageSenderKey = AttributeKey<IMessageSender>.ValueOf(typeof(NettyClientPool), nameof(IMessageSender));
     private static readonly AttributeKey<IMessageListener> messageListenerKey = AttributeKey<IMessageListener>.ValueOf(typeof(NettyClientPool), nameof(IMessageListener));
     private static readonly AttributeKey<EndPoint> origEndPointKey = AttributeKey<EndPoint>.ValueOf(typeof(NettyClientPool), nameof(EndPoint));
-    private readonly ConcurrentDictionary<EndPoint, Lazy<Task<ITransportClient>>> _clients = new();
 
     public const string TIMEOUT_KEY = "http_timeout";
     public const int DEFAULT_TIMEOUT = 5000;
 
-    public NettyClientPool(ITransportMessageEncoder encoder,
-        ITransportMessageDecoder decoder, 
-        IOptionsMonitor<NettyOption> nettyOption, 
-        ILogger<NettyClientPool> logger)
+    public NettyClientPool(
+        ILogger<NettyClientPool> logger,
+        ILoggerFactory loggerFactory,
+        ITransportMessageCodecFactory transportMessageCodecFactory)
     {
-        _transportMessageEncoder = encoder;
-        _transportMessageDecoder = decoder;
+        _transportMessageEncoder = transportMessageCodecFactory.GetEncoder();
+        _transportMessageDecoder = transportMessageCodecFactory.GetDecoder();
         _logger = logger;
-        _nettyOption = nettyOption;
-        _bootstrap = GetBootstrap(nettyOption);
-        _bootstrap.Handler(new ActionChannelInitializer<ISocketChannel>(c =>
-        {
-            var pipeline = c.Pipeline;
-            pipeline.AddLast(new LengthFieldPrepender(4));
-            pipeline.AddLast(new LengthFieldBasedFrameDecoder(int.MaxValue, 0, 4, 0, 4));
-            pipeline.AddLast(new TransportMessageChannelHandlerAdapter(_transportMessageDecoder));
-            pipeline.AddLast(new DefaultChannelHandler(this));
-        }));
+        _loggerFactory = loggerFactory;
     }
 
     protected override async Task<IClient> CreateClient(URL url)
     {
-        var key = new IPEndPoint(IPAddress.Parse(url.Host), url.Port);
+        var isDns = url.GetParameter("dns", false);
+        EndPoint key = isDns ? new DnsEndPoint(url.Host, url.Port) : new IPEndPoint(IPAddress.Parse(url.Host), url.Port);
         if (_logger.IsEnabled(LogLevel.Debug))
             _logger.LogDebug($"准备为服务端地址：{key}创建客户端。");
         try
         {
-            var transportClient = await _clients.GetOrAdd(key, k => new Lazy<Task<ITransportClient>>(async () =>
-            {
-                //客户端对象
-                var bootstrap = _bootstrap;
-                //异步连接返回channel
-                var channel = await bootstrap.ConnectAsync(k);
-                var messageListener = new MessageListener();
-                //设置监听
-                channel.GetAttribute(messageListenerKey).Set(messageListener);
-                //实例化发送者
-                var messageSender = new DotNettyMessageClientSender(_transportMessageEncoder, channel);
-                //设置channel属性
-                channel.GetAttribute(messageSenderKey).Set(messageSender);
-                channel.GetAttribute(origEndPointKey).Set(k);
-                //创建客户端
-                var client = new TransportClient(messageSender, messageListener, _logger);
-                return client;
-            }
-                )).Value;
+            var transportClient = await _clients.GetOrAdd(key
+                , k => new Lazy<Task<ITransportClient>>(async () =>
+                {
+                    //客户端对象
+                    var bootstrap = GetBootstrap(url);
+                    //异步连接返回channel
+                    var channel = await bootstrap.ConnectAsync(k);
+                    var messageListener = new MessageListener();
+                    //设置监听
+                    channel.GetAttribute(messageListenerKey).Set(messageListener);
+                    //实例化发送者
+                    var messageSender = new DotNettyMessageClientSender(
+                        _transportMessageEncoder,
+                        channel);
+                    //设置channel属性
+                    channel.GetAttribute(messageSenderKey).Set(messageSender);
+                    channel.GetAttribute(origEndPointKey).Set(k);
+                    //创建客户端
+                    var client = new TransportClient(_loggerFactory.CreateLogger<TransportClient>(), messageSender, messageListener);
+                    return client;
+                }
+                )).Value;//返回实例
             var timeout = url.GetParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
             return new NettyClient(transportClient, timeout, url);
         }
         catch
         {
             //移除
-            _clients.TryRemove(key, out var value);
+            _clients.TryRemove(key, out _);
+            //var ipEndPoint = endPoint as IPEndPoint;
+            ////标记这个地址是失败的请求
+            //if (ipEndPoint != null)
+            //    await _healthCheckService.MarkFailure(new IpAddressModel(ipEndPoint.Address.ToString(), ipEndPoint.Port));
             throw;
         }
     }
@@ -100,12 +102,50 @@ public class NettyClientPool : AbstractClientPool
         }
     }
 
-    private static Bootstrap GetBootstrap(IOptionsMonitor<NettyOption> nettyOption)
+    //private async Task<(IChannel, IPEndPoint)> GetChannel(URL url)
+    //{
+    //    IEventLoopGroup group;
+    //    var libuv = url.GetParameter("libuv", false);
+
+    //    var bootstrap = new Bootstrap();
+    //    if (libuv)
+    //    {
+    //        group = new EventLoopGroup();
+    //        bootstrap.Channel<TcpChannel>();
+    //    }
+    //    else
+    //    {
+    //        group = new MultithreadEventLoopGroup();
+    //        bootstrap.Channel<TcpSocketChannel>();
+    //    }
+
+    //    bootstrap
+    //        .Group(group)
+    //        .Option(ChannelOption.TcpNodelay, true)
+    //        .Option(ChannelOption.Allocator, PooledByteBufferAllocator.Default)
+    //        .Handler(new ActionChannelInitializer<ISocketChannel>(c =>
+    //        {
+    //            var pipeline = c.Pipeline;
+    //            pipeline.AddLast(new LengthFieldPrepender(4));
+    //            pipeline.AddLast(new LengthFieldBasedFrameDecoder(int.MaxValue, 0, 4, 0, 4));
+    //            //pipeline.AddLast(new StringEncoder(Encoding.UTF8));
+    //            //pipeline.AddLast(new StringDecoder(Encoding.UTF8));
+    //            pipeline.AddLast(new DefaultChannelHandler(this));
+    //        }));
+
+    //    var host = new IPEndPoint(IPAddress.Parse(url.Host), url.Port);
+    //    var channel = await bootstrap.ConnectAsync(host);
+    //    return (channel,host);
+    //}
+
+
+    private Bootstrap GetBootstrap(URL url)
     {
         IEventLoopGroup group;
 
         var bootstrap = new Bootstrap();
-        if (nettyOption.CurrentValue.Libuv)
+        var libuv = url.GetParameter("Libuv", false);
+        if (libuv)
         {
             group = new EventLoopGroup();
             bootstrap.Channel<TcpServerChannel>();
@@ -115,12 +155,23 @@ public class NettyClientPool : AbstractClientPool
             group = new MultithreadEventLoopGroup();
             bootstrap.Channel<TcpServerSocketChannel>();
         }
+
         bootstrap
             .Channel<TcpSocketChannel>()
             .Option(ChannelOption.TcpNodelay, true)
             .Option(ChannelOption.Allocator, PooledByteBufferAllocator.Default)
             .Group(group);
 
+        bootstrap.Handler(new ActionChannelInitializer<ISocketChannel>(c =>
+        {
+            var pipeline = c.Pipeline;
+            pipeline.AddLast(new LengthFieldPrepender(4));
+            pipeline.AddLast(new LengthFieldBasedFrameDecoder(int.MaxValue, 0, 4, 0, 4));
+            pipeline.AddLast(new TransportMessageChannelHandlerAdapter(
+                _transportMessageDecoder
+                ));
+            pipeline.AddLast(new DefaultChannelHandler(this));
+        }));
         return bootstrap;
     }
 
@@ -146,12 +197,6 @@ public class NettyClientPool : AbstractClientPool
             var messageSender = context.Channel.GetAttribute(messageSenderKey).Get();
             messageListener.OnReceived(messageSender, transportMessage);
         }
-
     }
-}
-
-public class NettyOption
-{
-    public bool Libuv { get; set; } = false;
 }
 

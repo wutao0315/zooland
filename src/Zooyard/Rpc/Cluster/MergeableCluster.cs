@@ -236,7 +236,7 @@ public class MergeableCluster : AbstractCluster
             }
             else
             {
-                IMerger resultMerger;
+                IMerger? resultMerger;
                 if (bool.TrueString.Equals(merger, StringComparison.OrdinalIgnoreCase) 
                     || "default".Equals(merger, StringComparison.OrdinalIgnoreCase))
                 {

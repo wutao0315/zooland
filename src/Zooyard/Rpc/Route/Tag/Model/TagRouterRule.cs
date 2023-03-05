@@ -2,7 +2,7 @@
 
 public class TagRouterRule: AbstractRouterRule
 {
-    private List<Tag> tags;
+    //private List<Tag> tags;
     private readonly Dictionary<string, List<string>> addressToTagnames = new();
     private readonly Dictionary<string, List<string>> tagnameToAddresses = new();
 
@@ -42,7 +42,7 @@ public class TagRouterRule: AbstractRouterRule
 
     public List<string> Addresses
     {
-        get => null;
+        get => null!;
         //return tags.stream()
         //        .filter(tag->CollectionUtils.isNotEmpty(tag.getAddresses()))
         //        .flatMap(tag->tag.getAddresses().stream())
@@ -51,7 +51,7 @@ public class TagRouterRule: AbstractRouterRule
 
     public List<string> getTagNames()
     {
-        return null;
+        return null!;
         //return tags.stream().map(Tag::getName).collect(Collectors.toList());
     }
 
@@ -66,5 +66,5 @@ public class TagRouterRule: AbstractRouterRule
         return tagnameToAddresses;
     }
 
-    public List<Tag> Tags { get; set; }
+    public List<Tag> Tags { get; set; } = new();
 }

@@ -207,7 +207,7 @@ public class ZooyardPools : IZooyardPools
             //}
         }
         // 监听配置或者服务注册变化，清空缓存
-        void OnChanged(ZooyardOption value, string name)
+        void OnChanged(ZooyardOption value, string? name)
         {
             _cacheUrl.Clear();
             _cacheRouteUrl.Clear();

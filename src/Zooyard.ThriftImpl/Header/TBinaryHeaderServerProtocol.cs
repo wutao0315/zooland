@@ -49,14 +49,17 @@ public class TBinaryHeaderServerProtocol : TBinaryProtocol
                 {
                     return;
                 }
-                var inputStream = (Stream)tioInputStream.GetValue(stream);
-                inputStream.Position = 0;
+
+                if (tioInputStream.GetValue(stream) is Stream inputStream) 
+                {
+                    inputStream.Position = 0;
+                };
             }
         }
-        catch (Exception e)
+        catch
         {
 
-            throw e;
+            throw;
         }
 
         //try
@@ -91,9 +94,10 @@ public class TBinaryHeaderServerProtocol : TBinaryProtocol
                 {
                     return;
                 }
-                var inputStream = (Stream)tioInputStream.GetValue(stream);
-
-                inputStream.Seek(inputStream.Position, SeekOrigin.Begin);
+                if (tioInputStream.GetValue(stream) is Stream inputStream) 
+                {
+                    inputStream.Seek(inputStream.Position, SeekOrigin.Begin);
+                }
             }
 
             //TField tioInputStream = TIOStreamTransportFieldsCache.getInstance().getTIOInputStream();
@@ -104,23 +108,23 @@ public class TBinaryHeaderServerProtocol : TBinaryProtocol
             //BufferedInputStream inputStream = (BufferedInputStream)tioInputStream.get(protocol.getTransport());
             //inputStream.reset();
         }
-        catch (Exception e)
+        catch
         {
-            throw e;
+            throw;
             //e.printStackTrace();
         }
     }
 
     private class TStreamTransportFieldsCache
     {
-        private static TStreamTransportFieldsCache instance;
+        private static TStreamTransportFieldsCache? instance;
         private FieldInfo inputStream_;
         private string TStreamTransport_inputStream_ = "_inputStream";
 
         private TStreamTransportFieldsCache()
         {
 
-            inputStream_ = typeof(TStreamTransport).GetField(TStreamTransport_inputStream_);
+            inputStream_ = typeof(TStreamTransport).GetField(TStreamTransport_inputStream_)!;
             //inputStream_ = TIOStreamTransport.class.getDeclaredField(TIOStreamTransport_inputStream_);
             //inputStream_.SetAccessible(true);
         }

@@ -1,11 +1,13 @@
 ﻿using DotNetty.Buffers;
 using DotNetty.Common.Utilities;
 using DotNetty.Transport.Channels;
-using Zooyard.DotNettyImpl.Codec;
+using Zooyard.DotNettyImpl.Messages;
+using Zooyard.DotNettyImpl.Transport;
+using Zooyard.DotNettyImpl.Transport.Codec;
 
 namespace Zooyard.DotNettyImpl.Adapter;
 
-class TransportMessageChannelHandlerAdapter : ChannelHandlerAdapter
+public class TransportMessageChannelHandlerAdapter : ChannelHandlerAdapter
 {
     private readonly ITransportMessageDecoder _transportMessageDecoder;
 
@@ -20,7 +22,9 @@ class TransportMessageChannelHandlerAdapter : ChannelHandlerAdapter
         var data = new byte[buffer.ReadableBytes];
         buffer.ReadBytes(data);
         var transportMessage = _transportMessageDecoder.Decode(data);
+        //var transportMessage = data.Desrialize<TransportMessage>();
         context.FireChannelRead(transportMessage);
         ReferenceCountUtil.Release(buffer);
     }
 }
+

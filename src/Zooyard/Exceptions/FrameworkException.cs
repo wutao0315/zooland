@@ -9,27 +9,21 @@ namespace Zooyard.Exceptions;
 public class FrameworkException : Exception
 {
 	private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(FrameworkException));
-	private readonly FrameworkErrorCode errcode;
+	private readonly int _errcode;
 	/// <summary>
 	/// Instantiates a new Framework exception.
 	/// </summary>
-	public FrameworkException() : this(FrameworkErrorCode.UnknownAppError)
+	public FrameworkException() : this("unkonwn error",500)
 	{
 	}
 
-	/// <summary>
-	/// Instantiates a new Framework exception.
-	/// </summary>
-	/// <param name="err"> the err </param>
-	public FrameworkException(FrameworkErrorCode err) : this(err.GetErrMessage(), err)
-	{
-	}
+
 
 	/// <summary>
 	/// Instantiates a new Framework exception.
 	/// </summary>
 	/// <param name="msg"> the msg </param>
-	public FrameworkException(string msg) : this(msg, FrameworkErrorCode.UnknownAppError)
+	public FrameworkException(string msg) : this(msg, 500)
 	{
 	}
 
@@ -38,7 +32,7 @@ public class FrameworkException : Exception
 	/// </summary>
 	/// <param name="msg">     the msg </param>
 	/// <param name="errCode"> the err code </param>
-	public FrameworkException(string msg, FrameworkErrorCode errCode) : this(null, msg, errCode)
+	public FrameworkException(string msg, int errCode) : this(null, msg, errCode)
 	{
 	}
 
@@ -48,9 +42,9 @@ public class FrameworkException : Exception
 	/// <param name="cause">   the cause </param>
 	/// <param name="msg">     the msg </param>
 	/// <param name="errCode"> the err code </param>
-	public FrameworkException(Exception cause, string msg, FrameworkErrorCode errCode) : base(msg, cause)
+	public FrameworkException(Exception? cause, string msg, int errCode) : base(msg, cause)
 	{
-		this.errcode = errCode;
+		_errcode = errCode;
 	}
 
 	/// <summary>
@@ -66,7 +60,7 @@ public class FrameworkException : Exception
 	/// </summary>
 	/// <param name="th">  the th </param>
 	/// <param name="msg"> the msg </param>
-	public FrameworkException(Exception th, string msg) : this(th, msg, FrameworkErrorCode.UnknownAppError)
+	public FrameworkException(Exception th, string msg) : this(th, msg, 500)
 	{
 	}
 
@@ -74,20 +68,14 @@ public class FrameworkException : Exception
 	/// Gets errcode.
 	/// </summary>
 	/// <returns> the errcode </returns>
-	public virtual FrameworkErrorCode Errcode
-	{
-		get
-		{
-			return errcode;
-		}
-	}
+	public virtual int Errcode => _errcode;
 
-	/// <summary>
-	/// Nested exception framework exception.
-	/// </summary>
-	/// <param name="e"> the e </param>
-	/// <returns> the framework exception </returns>
-	public static FrameworkException NestedException(Exception e)
+    /// <summary>
+    /// Nested exception framework exception.
+    /// </summary>
+    /// <param name="e"> the e </param>
+    /// <returns> the framework exception </returns>
+    public static FrameworkException NestedException(Exception e)
 	{
 		return NestedException("", e);
 	}

@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-	  <PackageReference Include="ApacheThrift" Version="0.17.0" />
+	  <PackageReference Include="ApacheThrift" Version="0.18.1" />
   </ItemGroup>
 
   <ItemGroup>

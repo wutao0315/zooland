@@ -7,7 +7,7 @@ public class Tag
         var tag = new Tag();
         if (map.TryGetValue("name", out object? nameObj))
         {
-            tag.Name = nameObj.ToString();
+            tag.Name = nameObj.ToString()!;
         }
 
         if (map.TryGetValue("addresses", out object? addressesObj) && addressesObj is List<string> addresses)

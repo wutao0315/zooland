@@ -3,16 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Zooyard.DotNettyImpl.Transport;
+using Zooyard.DotNettyImpl.Messages;
 
-namespace Zooyard.DotNettyImpl.Messages;
+namespace Zooyard.DotNettyImpl.Transport;
 
-/// <summary>
-/// 接受到消息的委托。
-/// </summary>
-/// <param name="sender">消息发送者。</param>
-/// <param name="message">接收到的消息。</param>
-public delegate Task ReceivedDelegate(IMessageSender sender, TransportMessage? message);
+
 
 /// <summary>
 /// 一个抽象的消息监听者。

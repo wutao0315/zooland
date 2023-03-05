@@ -38,7 +38,7 @@ class Program
         services.AddLogging();
         services.AddZooyardGrpc();
         services.AddZooyardHttp();
-        //services.AddZooyardNetty();
+        services.AddZooyardNetty();
         services.AddZooyardThrift();
 
         services.AddZooyardGrpcNet();
@@ -48,7 +48,7 @@ class Program
             , typeof(RpcContractGrpc.IHelloService)
             , typeof(RpcContractGrpcNet.IHelloNetService)
             , typeof(RpcContractHttp.IHelloService)
-            //, typeof(RpcContractNetty.IHelloService)
+            , typeof(RpcContractNetty.IHelloService)
             );
 
         using var bsp = services.BuildServiceProvider();
@@ -56,7 +56,7 @@ class Program
         var helloServiceGrpc = bsp.GetRequiredService<RpcContractGrpc.IHelloService>();
         var helloServiceGrpcNet = bsp.GetRequiredService<RpcContractGrpcNet.IHelloNetService>();
         var helloServiceHttp = bsp.GetRequiredService<RpcContractHttp.IHelloService>();
-        //var helloServiceNetty = bsp.GetRequiredService<RpcContractNetty.IHelloService>();
+        var helloServiceNetty = bsp.GetRequiredService<RpcContractNetty.IHelloService>();
 
         while (true)
         {
@@ -77,9 +77,9 @@ class Program
                 case "http":
                     CallWhile(async (helloword) => { await HttpHello(helloServiceHttp, helloword); });
                     break;
-                //case "netty":
-                //    CallWhile(async (helloword) => { await NettyHello(helloServiceNetty, helloword); });
-                    //break;
+                case "netty":
+                    CallWhile(async (helloword) => { await NettyHello(helloServiceNetty, helloword); });
+                    break;
                 case "all":
                     for (int i = 0; i < 3; i++)
                     {
@@ -157,19 +157,18 @@ class Program
                         //    }
                         //});
 
-                        //Task.Run(async () =>
-                        //{
+                        Task.Run(async () =>
+                        {
+                            try
+                            {
+                                await NettyHello(helloServiceNetty);
+                            }
+                            catch
+                            {
 
-                        //    try
-                        //    {
-                        //        await NettyHello(helloServiceNetty);
-                        //    }
-                        //    catch
-                        //    {
-
-                        //        throw;
-                        //    }
-                        //});
+                                throw;
+                            }
+                        });
                     }
                     break;
             }

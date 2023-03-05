@@ -11,10 +11,10 @@ public class TagStateRouter : AbstractStateRouter
     public const string NAME = "TAG_ROUTER";
     private const string TAG_KEY = "tag";
     private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(TagStateRouter));
-    private static readonly string RULE_SUFFIX = ".tag-router";
+    //private static readonly string RULE_SUFFIX = ".tag-router";
 
-    private TagRouterRule tagRouterRule;
-    private string application;
+    private TagRouterRule? tagRouterRule;
+    private string? application;
 
     public TagStateRouter(URL address) : base(address)
     {
@@ -57,7 +57,7 @@ public class TagStateRouter : AbstractStateRouter
         }
 
         // since the rule can be changed by config center, we should copy one to use.
-        TagRouterRule tagRouterRuleCopy = tagRouterRule;
+        TagRouterRule? tagRouterRuleCopy = tagRouterRule;
         if (tagRouterRuleCopy == null || !tagRouterRuleCopy.Valid || !tagRouterRuleCopy.Enabled)
         {
             if (needToPrintMessage)

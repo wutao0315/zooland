@@ -453,9 +453,9 @@ public class CidrIpAddress
 
     const string FormatExceptionMessage = "cidrAddressString is not a valid CIDR address";
 
-    public IPAddress IpAddress { get; protected set; }
-    public IPAddress SubnetIp { get; protected set; }
-    private byte[] SubnetIpMask { get; set; }
+    public IPAddress IpAddress { get; protected set; } = IPAddress.None;
+    public IPAddress SubnetIp { get; protected set; } = IPAddress.None;
+    private byte[] SubnetIpMask { get; set; } = Array.Empty<byte>();
     private int SubnetBitLengthMask { get; set; }
 
     #region [ constructors ]

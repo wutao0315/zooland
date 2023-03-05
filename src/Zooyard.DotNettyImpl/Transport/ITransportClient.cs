@@ -5,8 +5,9 @@ namespace Zooyard.DotNettyImpl.Transport;
 /// <summary>
 /// 一个抽象的传输客户端。
 /// </summary>
-public interface ITransportClient
+public interface ITransportClient: IDisposable
 {
+    Task Open(URL url);
     /// <summary>
     /// 发送消息。
     /// </summary>

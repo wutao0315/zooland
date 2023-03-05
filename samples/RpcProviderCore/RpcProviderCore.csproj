@@ -20,13 +20,13 @@
     <PackageReference Include="DotNetty.Transport" Version="0.7.5" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.0" />
-    <PackageReference Include="NLog" Version="5.1.1" />
-    <PackageReference Include="NLog.Extensions.Hosting" Version="5.2.1" />
-    <PackageReference Include="NLog.Extensions.Logging" Version="5.2.1" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
+    <PackageReference Include="NLog" Version="5.1.2" />
+    <PackageReference Include="NLog.Extensions.Hosting" Version="5.2.2" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="5.2.2" />
     <PackageReference Include="SoapCore" Version="1.1.0.36" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="7.0.0" />
-    <PackageReference Include="ApacheThrift" Version="0.17.0" />
+    <PackageReference Include="ApacheThrift" Version="0.18.1" />
 	  <PackageReference Include="Grpc.AspNetCore" Version="2.51.0" />
   </ItemGroup>
 

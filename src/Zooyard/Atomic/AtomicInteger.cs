@@ -45,7 +45,7 @@ public sealed class AtomicInteger
     {
         Interlocked.Add(ref atomicValue, value);
     }
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         switch (obj)
         {

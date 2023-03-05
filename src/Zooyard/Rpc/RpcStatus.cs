@@ -6,23 +6,23 @@ namespace Zooyard.Rpc;
 public class RpcStatus
 {
     private static readonly ConcurrentDictionary<string, RpcStatus> SERVICE_STATUS_MAP = new();
-    private readonly static ConcurrentDictionary<string, RpcStatus> SERVICE_STATISTICS = new ConcurrentDictionary<string, RpcStatus>();
-    private readonly static ConcurrentDictionary<string, ConcurrentDictionary<string, RpcStatus>> METHOD_STATISTICS = new ConcurrentDictionary<string, ConcurrentDictionary<string, RpcStatus>>();
-    
-    private readonly ConcurrentDictionary<string, object> values = new ConcurrentDictionary<string, object>();
-    private readonly AtomicInteger active = new AtomicInteger();
-    private readonly AtomicLong total = new AtomicLong();
-    private readonly AtomicInteger failed = new AtomicInteger();
-    private readonly AtomicLong totalElapsed = new AtomicLong();
-    private readonly AtomicLong failedElapsed = new AtomicLong();
-    private readonly AtomicLong maxElapsed = new AtomicLong();
-    private readonly AtomicLong failedMaxElapsed = new AtomicLong();
-    private readonly AtomicLong succeededMaxElapsed = new AtomicLong();
+    private readonly static ConcurrentDictionary<string, RpcStatus> SERVICE_STATISTICS = new();
+    private readonly static ConcurrentDictionary<string, ConcurrentDictionary<string, RpcStatus>> METHOD_STATISTICS = new();
+
+    private readonly ConcurrentDictionary<string, object> values = new();
+    private readonly AtomicInteger active = new();
+    private readonly AtomicLong total = new();
+    private readonly AtomicInteger failed = new();
+    private readonly AtomicLong totalElapsed = new();
+    private readonly AtomicLong failedElapsed = new();
+    private readonly AtomicLong maxElapsed = new();
+    private readonly AtomicLong failedMaxElapsed = new();
+    private readonly AtomicLong succeededMaxElapsed = new();
 
     /// <summary>
     /// 用来实现executes属性的并发限制（即控制能使用的线程数）
     /// </summary>
-    private volatile Semaphore executesLimit;
+    private volatile Semaphore? executesLimit;
     private volatile int executesPermits;
 
     private RpcStatus() { }
@@ -87,10 +87,9 @@ public class RpcStatus
     public static void RemoveStatus(URL url, string methodName)
     {
         var uri = url.ToIdentityString();
-        if (!METHOD_STATISTICS.ContainsKey(uri))
+        if (METHOD_STATISTICS.TryGetValue(uri, out var map))
         {
-            var map = METHOD_STATISTICS[uri];
-            map.TryRemove(methodName, out RpcStatus _);
+            map.TryRemove(methodName, out _);
         }
     }
 
@@ -360,7 +359,7 @@ public class RpcStatus
     /// </summary>
     /// <param name="maxThreadNum"></param>
     /// <returns></returns>
-    public Semaphore GetSemaphore(int maxThreadNum)
+    public Semaphore? GetSemaphore(int maxThreadNum)
     {
         if (maxThreadNum <= 0)
         {

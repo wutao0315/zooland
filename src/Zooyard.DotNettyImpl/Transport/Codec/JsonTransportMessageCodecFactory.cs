@@ -1,12 +1,33 @@
-﻿using System.Text;
-using System.Text.Encodings.Web;
+﻿using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Zooyard.DotNettyImpl.Codec;
 
-namespace Zooyard.DotNettyImpl.Codec;
+namespace Zooyard.DotNettyImpl.Transport.Codec;
 
-public static class ObjectExtensions
+public class JsonTransportMessageCodecFactory: ITransportMessageCodecFactory
 {
+    private readonly ITransportMessageEncoder _transportMessageEncoder = new JsonTransportMessageEncoder();
+    private readonly ITransportMessageDecoder _transportMessageDecoder = new JsonTransportMessageDecoder();
+
+    /// <summary>
+    /// 获取编码器。
+    /// </summary>
+    /// <returns>编码器实例。</returns>
+    public ITransportMessageEncoder GetEncoder()
+    {
+        return _transportMessageEncoder;
+    }
+
+    /// <summary>
+    /// 获取解码器。
+    /// </summary>
+    /// <returns>解码器实例。</returns>
+    public ITransportMessageDecoder GetDecoder()
+    {
+        return _transportMessageDecoder;
+    }
+
     public readonly static JsonSerializerOptions _option = new()
     {
         // 解决中文序列化被编码的问题
@@ -28,103 +49,6 @@ public static class ObjectExtensions
             new DictionaryLongStringJsonConverter()
         }
     };
-    /// <summary>
-    /// Convert an object to a JSON string with camelCase formatting
-    /// </summary>
-    /// <param name="obj"></param>
-    /// <returns></returns>
-    public static byte[] ToJsonBytes(this object obj, string empty = "")
-    {
-        if (obj == null)
-        {
-            return Array.Empty<byte>();
-        }
-
-        var content = JsonSerializer.Serialize(obj, _option);
-        var result = Encoding.UTF8.GetBytes(content);
-        return result;
-    }
-    
-    /// <summary>
-    /// Convert an object to a JSON string with camelCase formatting
-    /// </summary>
-    /// <param name="obj"></param>
-    /// <returns></returns>
-    public static string ToJsonString(this object obj, string empty = "")
-    {
-        if (obj == null)
-        {
-            return empty;
-        }
-
-        var result = JsonSerializer.Serialize(obj, _option);
-
-        return result;
-    }
-
-    public static T Desrialize<T>(this byte[] bytes, T defaultValue = default!) 
-    {
-        var data = Encoding.UTF8.GetString(bytes);
-        var result = data.DeserializeJson<T>(defaultValue);
-        return result;
-    }
-    /// <summary>
-    /// Deserializes the json.
-    /// </summary>
-    /// <param name="str">The STR.</param>
-    /// <returns></returns>
-    public static T DeserializeJson<T>(this string str, T defaultValue = default!)
-    {
-        if (string.IsNullOrEmpty(str))
-        {
-            return defaultValue;
-        }
-
-        try
-        {
-            var result = JsonSerializer.Deserialize<T>(str, _option);
-            return result!;
-        }
-        catch (Exception)
-        {
-            return defaultValue;
-        }
-    }
-
-    /// <summary>
-    /// Deserializes the json.
-    /// </summary>
-    /// <param name="str">The STR.</param>
-    /// <returns></returns>
-    public static object DeserializeJson(this string str, Type returnType)
-    {
-        if (!string.IsNullOrEmpty(str))
-        {
-            return default!;
-        }
-        
-        try
-        {
-            var result = JsonSerializer.Deserialize(str, returnType, _option);
-            return result!;
-        }
-        catch (Exception)
-        {
-            return default!;
-        }
-    }
-
-    public static async Task<T> DeserializeJsonAsync<T>(this Stream utf8stream, CancellationToken cancellationToken)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-
-        if (utf8stream == null)
-        {
-            throw new Exception(" utf8stream is null");
-        }
-        var result = await JsonSerializer.DeserializeAsync<T>(utf8stream, _option, cancellationToken);
-        return result!;
-    }
 }
 
 public class BoolConverter : JsonConverter<bool>
@@ -393,7 +317,7 @@ public class DateTimeConverter : JsonConverter<DateTime>
     {
         if (reader.TokenType == JsonTokenType.String)
         {
-            var tokenValue = reader.GetString();
+            var tokenValue = reader.GetString()!;
             return DateTime.Parse(tokenValue);
         }
 
@@ -519,7 +443,7 @@ public class DictionaryLongStringJsonConverter : JsonConverter<Dictionary<long, 
 
             reader.Read();
             var key = long.Parse(propertyName);
-            var value = reader.GetString();
+            var value = reader.GetString()!;
             dictionary.Add(key, value);
         }
 

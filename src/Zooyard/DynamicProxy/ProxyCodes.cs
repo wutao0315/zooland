@@ -51,7 +51,7 @@ internal static class ProxyCodes
         if (source.IsByRef)
         {
             Debug.Assert(!isAddress);
-            var argType = source.GetElementType();
+            var argType = source.GetElementType()!;
             Ldind(il, argType);
             Convert(il, argType, target, false);
             return;

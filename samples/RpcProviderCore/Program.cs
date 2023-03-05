@@ -1,20 +1,24 @@
 ﻿using DotNetty.Buffers;
-using DotNetty.Common.Utilities;
+using DotNetty.Codecs;
 using DotNetty.Transport.Bootstrapping;
 using DotNetty.Transport.Channels;
 using DotNetty.Transport.Channels.Sockets;
+using DotNetty.Transport.Libuv;
+using Google.Protobuf;
+using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Grpc.Core.Interceptors;
+using Grpc.Core.Logging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NLog;
 using NLog.Extensions.Hosting;
 using NLog.Extensions.Logging;
@@ -22,6 +26,9 @@ using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
+using System.ServiceModel.Channels;
+using System.Text;
+using System.Threading.Channels;
 using Thrift;
 using Thrift.Processor;
 using Thrift.Protocol;
@@ -29,10 +36,12 @@ using Thrift.Server;
 using Thrift.Transport;
 using Thrift.Transport.Server;
 using Zooyard;
-using Zooyard.DotNettyImpl.Codec;
+using Zooyard.DotNettyImpl.Adapter;
 using Zooyard.DotNettyImpl.Messages;
+using Zooyard.DotNettyImpl.Transport;
+using Zooyard.DotNettyImpl.Transport.Codec;
 using Zooyard.GrpcImpl;
-using Zooyard.ThriftImpl;
+using Zooyard.HttpImpl;
 using Zooyard.ThriftImpl.Header;
 
 namespace RpcProviderCore;
@@ -178,8 +187,10 @@ public class ClientGrpcInterceptor : ClientInterceptor
 
     public override TResponse BlockingUnaryCall<TRequest, TResponse>(TRequest request, ClientInterceptorContext<TRequest, TResponse> context, BlockingUnaryCallContinuation<TRequest, TResponse> continuation)
     {
-        var metadata = new Metadata();
-        metadata.Add(new Metadata.Entry("test", "test"));
+        var metadata = new Metadata
+        {
+            new Metadata.Entry("test", "test")
+        };
         var options = context.Options.WithHeaders(metadata);
         context = new ClientInterceptorContext<TRequest, TResponse>(context.Method, context.Host, options);
         var response = continuation(request, context);
@@ -188,8 +199,10 @@ public class ClientGrpcInterceptor : ClientInterceptor
 
     public override AsyncUnaryCall<TResponse> AsyncUnaryCall<TRequest, TResponse>(TRequest request, ClientInterceptorContext<TRequest, TResponse> context, AsyncUnaryCallContinuation<TRequest, TResponse> continuation)
     {
-        var metadata = new Metadata();
-        metadata.Add(new Metadata.Entry("test", "test"));
+        var metadata = new Metadata
+        {
+            new Metadata.Entry("test", "test")
+        };
         var options = context.Options.WithHeaders(metadata);
         context = new ClientInterceptorContext<TRequest, TResponse>(context.Method, context.Host, options);
         var response = continuation(request, context);
@@ -207,8 +220,10 @@ public class ServerGrpcInterceptor : ServerInterceptor
 {
     public override TResponse BlockingUnaryCall<TRequest, TResponse>(TRequest request, ClientInterceptorContext<TRequest, TResponse> context, BlockingUnaryCallContinuation<TRequest, TResponse> continuation)
     {
-        var metadata = new Metadata();
-        metadata.Add(new Metadata.Entry("test", "test"));
+        var metadata = new Metadata
+        {
+            new Metadata.Entry("test", "test")
+        };
         var options = context.Options.WithHeaders(metadata);
         context = new ClientInterceptorContext<TRequest, TResponse>(context.Method, context.Host, options);
         var response = continuation(request, context);
@@ -217,8 +232,10 @@ public class ServerGrpcInterceptor : ServerInterceptor
 
     public override AsyncUnaryCall<TResponse> AsyncUnaryCall<TRequest, TResponse>(TRequest request, ClientInterceptorContext<TRequest, TResponse> context, AsyncUnaryCallContinuation<TRequest, TResponse> continuation)
     {
-        var metadata = new Metadata();
-        metadata.Add(new Metadata.Entry("test", "test"));
+        var metadata = new Metadata
+        {
+            new Metadata.Entry("test", "test")
+        };
         var options = context.Options.WithHeaders(metadata);
         context = new ClientInterceptorContext<TRequest, TResponse>(context.Method, context.Host, options);
         var response = continuation(request, context);
@@ -229,14 +246,13 @@ public class ServerGrpcInterceptor : ServerInterceptor
     }
     public override AsyncServerStreamingCall<TResponse> AsyncServerStreamingCall<TRequest, TResponse>(TRequest request, ClientInterceptorContext<TRequest, TResponse> context, AsyncServerStreamingCallContinuation<TRequest, TResponse> continuation)
     {
-        context.Options.Headers.Add(new Metadata.Entry("test", "test"));
+        context.Options.Headers?.Add(new Metadata.Entry("test", "test"));
         return base.AsyncServerStreamingCall(request, context, continuation);
     }
     public override async Task<TResponse> UnaryServerHandler<TRequest, TResponse>(TRequest request, ServerCallContext context, UnaryServerMethod<TRequest, TResponse> continuation)
     {
         try
         {
-            
             var response = await continuation(request, context);
             return response;
         }
@@ -308,9 +324,6 @@ public class NettyServerOption
 {
     public string ServiceType { get; set; } = string.Empty;
     public string Url { get; set; } = string.Empty;
-    //public bool IsSsl { get; set; } = false;
-    //public string Pfx { get; set; } = string.Empty;
-    //public string Pwd { get; set; } = string.Empty;
 }
 
 public static class ServiceBuilderExtensions 
@@ -324,8 +337,8 @@ public static class ServiceBuilderExtensions
 
             foreach (var item in option.Services)
             {
-                var contractType = Type.GetType(item.Key)!;
-                var implType = Type.GetType(item.Value)!;
+                var contractType = System.Type.GetType(item.Key)!;
+                var implType = System.Type.GetType(item.Value)!;
                 var implValue = serviceProvder.GetService(implType);
                 var definition = (ServerServiceDefinition)contractType.GetMethod("BindService", new[] { implType })!
                 .Invoke(null, new[] { implValue })!;
@@ -347,7 +360,7 @@ public static class ServiceBuilderExtensions
                 && item.Credentials != "Insecure"
                 )
                 {
-                    var credentialType = Type.GetType(item.Credentials);
+                    var credentialType = System.Type.GetType(item.Credentials)!;
                     defaultCredential = serviceProvder.GetService(credentialType) as ServerCredentials;
                 }
                 var port = new ServerPort(item.Host, item.Port, defaultCredential);
@@ -360,15 +373,9 @@ public static class ServiceBuilderExtensions
     }
     public static void AddNettyServer(this IServiceCollection services)
     {
-        services.AddTransient<NettyServer>((serviceProvider) =>
-        {
-            var option = serviceProvider.GetRequiredService<IOptionsMonitor<NettyServerOption>>().CurrentValue;
-            var url = URL.ValueOf(option.Url);
-
-            var service = serviceProvider.GetService(Type.GetType(option.ServiceType));
-
-            return new NettyServer(url, service);
-        });
+        services.AddSingleton<ITransportMessageCodecFactory, JsonTransportMessageCodecFactory>(); 
+        services.AddSingleton<DotNettyServerMessageListener>();
+        services.AddSingleton<NettyServer>();
     }
     public static void AddThriftServer(this IServiceCollection services)
     {
@@ -422,7 +429,7 @@ public class ZoolandHostedService : IHostedService
         {
             await _grpcServer.Start(cancellationToken).ConfigureAwait(false);
             await _thriftServer.Start(cancellationToken).ConfigureAwait(false);
-            //await _nettyServer.Start(cancellationToken).ConfigureAwait(false);
+            await _nettyServer.Start(cancellationToken).ConfigureAwait(false);
             await _httpServer.Start(cancellationToken).ConfigureAwait(false);
             await _grpcNetServer.Start(cancellationToken).ConfigureAwait(false);
         }
@@ -439,7 +446,7 @@ public class ZoolandHostedService : IHostedService
         {
             await _grpcServer.Stop(cancellationToken).ConfigureAwait(false);
             await _thriftServer.Stop(cancellationToken).ConfigureAwait(false);
-            //await _nettyServer.Stop().ConfigureAwait(false);
+            await _nettyServer.Stop(cancellationToken).ConfigureAwait(false);
             await _httpServer.Stop(cancellationToken).ConfigureAwait(false);
             await _grpcNetServer.Stop(cancellationToken).ConfigureAwait(false);
         }
@@ -495,284 +502,128 @@ public class GrpcServer
     }
 }
 
+
 public class NettyServer
 {
-    private readonly object _service;
-    //private readonly bool _isSsl = false;
-    private readonly string _pfx = "dotnetty.com";
-    private readonly string _pwd = "password";
-
-    private readonly IEventLoopGroup _serverEventLoopGroup;
-    protected internal volatile IChannel ServerChannel;
-    internal readonly ISet<IChannel> ConnectionGroup;
-
-    public NettyServer(URL url,
-        object service
-        //bool isSsl,
-        //string pfx,
-        //string pwd
-        )
+    private readonly IOptionsMonitor<NettyServerOption> _nettyServerOption;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly ILoggerFactory _loggerFactory;
+    private readonly DotNettyServerMessageListener _dotNettyServerMessageListener;
+    public NettyServer(
+        ILoggerFactory loggerFactory,
+        IServiceScopeFactory serviceScopeFactory,
+        DotNettyServerMessageListener dotNettyServerMessageListener,
+        IOptionsMonitor<NettyServerOption> nettyServerOption)
     {
-        Settings = url;
-        ConnectionGroup = new HashSet<IChannel>();
-
-        var serverSocketWorkerPoolSize = url.GetParameter("ServerSocketWorkerPoolSize", 1);
-        _serverEventLoopGroup = new MultithreadEventLoopGroup(serverSocketWorkerPoolSize);
-
-        _service = service;
-        //_isSsl = isSsl;
-        //_pfx = pfx;
-        //_pwd = pwd;
+        _loggerFactory = loggerFactory;
+        _serviceScopeFactory = serviceScopeFactory;
+        _dotNettyServerMessageListener = dotNettyServerMessageListener;
+        _nettyServerOption = nettyServerOption;
     }
-    internal URL Settings { get; }
-
-
-    private ServerBootstrap ServerFactory()
-    {
-        //X509Certificate2? tlsCertificate = null;
-        //if (_isSsl)
-        //{
-        //    tlsCertificate = new X509Certificate2(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{_pfx}.pfx"), _pwd);
-        //}
-
-        var enforceIpFamily = Settings.GetParameter("EnforceIpFamily", false);
-        var dnsUseIpv6 = Settings.GetParameter("DnsUseIpv6", false);
-        var addressFamily = dnsUseIpv6 ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork;
-
-        var tcpReuseAddr = Settings.GetParameter("TcpReuseAddr", false);
-        var tcpKeepAlive = Settings.GetParameter("TcpKeepAlive", false);
-        var tcpNoDelay = Settings.GetParameter("TcpNoDelay", false);
-        var backlog = Settings.GetParameter("Backlog", 1024);
-        var enableBufferPooling = Settings.GetParameter("EnableBufferPooling", false);
-
-        var server = new ServerBootstrap()
-            .Group(_serverEventLoopGroup)
-            .Option(DotNetty.Transport.Channels.ChannelOption.SoReuseaddr, tcpReuseAddr)
-            .Option(DotNetty.Transport.Channels.ChannelOption.SoKeepalive, tcpKeepAlive)
-            .Option(DotNetty.Transport.Channels.ChannelOption.TcpNodelay, tcpNoDelay)
-            .Option(DotNetty.Transport.Channels.ChannelOption.AutoRead, true)
-            .Option(DotNetty.Transport.Channels.ChannelOption.SoBacklog, backlog)
-            .Option(DotNetty.Transport.Channels.ChannelOption.Allocator, enableBufferPooling ? (IByteBufferAllocator)PooledByteBufferAllocator.Default : UnpooledByteBufferAllocator.Default)
-            .ChannelFactory(() => enforceIpFamily
-                ? new TcpServerSocketChannel(addressFamily)
-                : new TcpServerSocketChannel())
-            .ChildHandler(new ActionChannelInitializer<TcpSocketChannel>((channel =>
-            {
-                var pipeline = channel.Pipeline;
-
-                //if (tlsCertificate != null)
-                //{
-                //    pipeline.AddLast("tls", TlsHandler.Server(tlsCertificate));
-                //}
-
-                //pipeline.AddLast(new DotNetty.Handlers.Logging.LoggingHandler("SRV-CONN"));
-                //pipeline.AddLast(new LengthFieldPrepender(4));
-                //pipeline.AddLast(new LengthFieldBasedFrameDecoder(int.MaxValue, 0, 4, 0, 4));
-                pipeline.AddLast(new NettyLoggingHandler());
-                SetInitialChannelPipeline(channel);
-                //pipeline.AddLast(_channelHandlers?.ToArray());
-                pipeline.AddLast(new ServerHandler(this, _service));
-
-            })));
-
-        var receiveBufferSize = Settings.GetParameter("ReceiveBufferSize", -1);
-        var sendBufferSize = Settings.GetParameter("SendBufferSize", -1);
-        var writeBufferHighWaterMark = Settings.GetParameter("WriteBufferHighWaterMark", -1);
-        var writeBufferLowWaterMark = Settings.GetParameter("WriteBufferLowWaterMark", -1);
-
-        if (receiveBufferSize>=0) server.Option(DotNetty.Transport.Channels.ChannelOption.SoRcvbuf, receiveBufferSize);
-        if (sendBufferSize>=0) server.Option(DotNetty.Transport.Channels.ChannelOption.SoSndbuf, sendBufferSize);
-        if (writeBufferHighWaterMark>0) server.Option(DotNetty.Transport.Channels.ChannelOption.WriteBufferHighWaterMark, writeBufferHighWaterMark);
-        if (writeBufferLowWaterMark>0) server.Option(DotNetty.Transport.Channels.ChannelOption.WriteBufferLowWaterMark, writeBufferLowWaterMark);
-
-        return server;
-    }
-
-    private void SetInitialChannelPipeline(IChannel channel)
-    {
-        var pipeline = channel.Pipeline;
-
-        var logTransport = Settings.GetParameter("LogTransport", false);
-        if (logTransport)
-        {
-            pipeline.AddLast("Logger", new NettyLoggingHandler());
-        }
-
-        //pipeline.AddLast("FrameDecoder", new LengthFieldBasedFrameDecoder(Settings.ByteOrder, Settings.MaxFrameSize, 0, 4, 0, 4, true));
-        //if (Settings.BackwardsCompatibilityModeEnabled)
-        //{
-        //    pipeline.AddLast("FrameEncoder", new HeliosBackwardsCompatabilityLengthFramePrepender(4, false));
-        //}
-        //else
-        //{
-        //    pipeline.AddLast("FrameEncoder", new LengthFieldPrepender(Settings.ByteOrder, 4, 0, false));
-        //}
-    }
+    
     public async Task Start(CancellationToken cancellationToken)
     {
-        //Logger().LogDebug($"ready to start the server on port:{Settings.Port}.");
+        _dotNettyServerMessageListener.Received += async (sender, request) => 
+        {
+            if (request == null) 
+            {
+                throw new Exception("request invoke message is null");
+            }
+            var rpc = request.GetContent<RemoteInvokeMessage>();
 
-        var newServerChannel = await ServerFactory().BindAsync(IPAddress.Any, Settings.Port);
+            var methodName = rpc.Method;
+            
+            var types = rpc.ArgumentTypes;
 
-        // Block reads until a handler actor is registered
-        // no incoming connections will be accepted until this value is reset
-        // it's possible that the first incoming association might come in though
+            var arguments = new object[rpc.Arguments.Length];
+            for (int i = 0; i < rpc.Arguments.Length; i++)
+            {
+                if (rpc.ArgumentTypes[i].IsValueType || rpc.ArgumentTypes[i] == typeof(string))
+                {
+                    arguments[i] = rpc.Arguments[i];
+                }
+                else 
+                {
+                    var arg = JsonConvert.SerializeObject(rpc.Arguments[i]);
+                    arguments[i] = JsonConvert.DeserializeObject(arg, rpc.ArgumentTypes[i])!;
+                }
+            }
+            //var types = (from item in arguments select item.GetType()).ToArray();
+            var remoteInvoker = new RemoteInvokeResultMessage
+            {
+                Msg = "ok",
+                Code = 0
+            };
+            try
+            {
+                using var scope = _serviceScopeFactory.CreateScope();
+                var service = scope.ServiceProvider.GetRequiredService(System.Type.GetType(_nettyServerOption.CurrentValue.ServiceType)!);
+                var method = service.GetType().GetMethod(methodName, types);
+                if (method == null)
+                {
+                    throw new Exception($"method {methodName} not exits");
+                }
+                var result = method.Invoke(service, arguments);
 
-        //newServerChannel.Configuration.AutoRead = false;
-        ConnectionGroup.Add(newServerChannel);
-        ServerChannel = newServerChannel;
+                if (method.ReturnType == typeof(Task) && result != null)
+                {
+                    await (Task)result;
+                    remoteInvoker.Data = null;
+                }
+                else if (method.ReturnType.IsGenericType && method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>) && result != null)
+                {
+                    var awaiter = result.GetType().GetMethod("GetAwaiter")!.Invoke(result, Array.Empty<object>())!;
+                    var value = awaiter.GetType().GetMethod("GetResult")!.Invoke(awaiter, Array.Empty<object>())!;
+                    remoteInvoker.Data = value;
+                }
+                else
+                {
+                    remoteInvoker.Data = result;
+                }
+            }
+            catch (Exception ex)
+            {
+                remoteInvoker.Msg = ex.Message;
+                remoteInvoker.Code = 500;
+                //Logger().LogError(ex, ex.Message);
+            }
+            var response = TransportMessageExtensions.CreateInvokeResultMessage(request.Id, remoteInvoker);
+            await sender.SendAndFlushAsync(response);
+        };
 
-        //Logger().LogInformation($"Started the netty server ...");
-        Console.WriteLine($"Started the netty server ...");
-
+        var url = URL.ValueOf(_nettyServerOption.CurrentValue.Url);
+        await _dotNettyServerMessageListener.StartAsync(url);
     }
 
     public async Task Stop(CancellationToken cancellationToken)
     {
         try
         {
-            foreach (var channel in ConnectionGroup)
-            {
-                await channel.CloseAsync();
-            }
-            await ServerChannel?.CloseAsync();
-
-            //var tasks = new List<Task>();
-            //foreach (var channel in ConnectionGroup)
-            //{
-            //    tasks.Add(channel.CloseAsync());
-            //}
-            //var all = Task.WhenAll(tasks);
-            //all.ConfigureAwait(false).GetAwaiter().GetResult();
-
-            //var server = ServerChannel?.CloseAsync() ?? Task.CompletedTask;
-            //server.ConfigureAwait(false).GetAwaiter().GetResult();
-
+            _dotNettyServerMessageListener.CloseAsync();
+            _dotNettyServerMessageListener.Dispose();
+            await Task.CompletedTask;
         }
         finally
         {
-            // free all of the connection objects we were holding onto
-            ConnectionGroup.Clear();
-            // shutting down the worker groups can take up to 10 seconds each. Let that happen asnychronously.
-            await _serverEventLoopGroup.ShutdownGracefullyAsync();
         }
-
     }
 
-    internal abstract class ServerCommonHandlers : ChannelHandlerAdapter
+    private class ServerHandler : ChannelHandlerAdapter
     {
-        //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ServerCommonHandlers));
-        protected readonly NettyServer Server;
+        private readonly Action<IChannelHandlerContext, TransportMessage> _readAction;
+        private readonly Microsoft.Extensions.Logging.ILogger _logger;
 
-
-        protected ServerCommonHandlers(NettyServer server)
+        public ServerHandler(Action<IChannelHandlerContext, TransportMessage> readAction, Microsoft.Extensions.Logging.ILogger logger)
         {
-            Server = server;
+            _readAction = readAction;
+            _logger = logger;
         }
 
-
-        public override void ChannelActive(IChannelHandlerContext context)
-        {
-            base.ChannelActive(context);
-            if (!Server.ConnectionGroup.Add(context.Channel))
-            {
-                //Logger().LogWarning($"Unable to ADD channel [{context.Channel.LocalAddress}->{context.Channel.RemoteAddress}](Id={context.Channel.Id}) to connection group. May not shut down cleanly.");
-            }
-        }
-
-        public override void ChannelInactive(IChannelHandlerContext context)
-        {
-            base.ChannelInactive(context);
-            if (!Server.ConnectionGroup.Remove(context.Channel))
-            {
-                //Logger().LogWarning($"Unable to REMOVE channel [{context.Channel.LocalAddress}->{context.Channel.RemoteAddress}](Id={context.Channel.Id}) from connection group. May not shut down cleanly.");
-            }
-        }
-
-        public override void ExceptionCaught(IChannelHandlerContext context, Exception exception)
-        {
-            base.ExceptionCaught(context, exception);
-            //Logger().LogError(exception, $"Error caught channel [{context.Channel.LocalAddress}->{context.Channel.RemoteAddress}](Id={context.Channel.Id})");
-        }
-
-    }
-    internal class ServerHandler : ServerCommonHandlers
-    {
-        private readonly object _service;
-        //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ServerHandler));
-
-        public ServerHandler(NettyServer server, object service) : base(server)
-        {
-            _service = service;
-        }
-
-        #region Overrides of ChannelHandlerAdapter
-        public override void ChannelActive(IChannelHandlerContext context)
-        {
-            base.ChannelActive(context);
-        }
-
-        public override void ChannelInactive(IChannelHandlerContext context)
-        {
-            base.ChannelInactive(context);
-        }
 
         public override void ChannelRead(IChannelHandlerContext context, object message)
         {
-            //接收到消息
-            //调用服务器端接口
-            //将返回值编码
-            //将返回值发送到客户端
-            if (message is IByteBuffer buffer)
-            {
-                var bytes = new byte[buffer.ReadableBytes];
-                buffer.ReadBytes(bytes);
-                var transportMessage = bytes.Desrialize<TransportMessage>();
-                context.FireChannelRead(transportMessage);
-                ReferenceCountUtil.SafeRelease(buffer);
-
-                var rpc = transportMessage.GetContent<RemoteInvokeMessage>();
-
-                var methodName = rpc.Method;
-                var arguments = rpc.Arguments;
-                var types = (from item in arguments select item.GetType()).ToArray();
-                var remoteInvoker = new RemoteInvokeResultMessage
-                {
-                    ExceptionMessage = "",
-                    StatusCode = 200
-                };
-                try
-                {
-                    var method = _service.GetType().GetMethod(methodName, types);
-                    var result = method.Invoke(_service, arguments);
-
-                    if (method.ReturnType == typeof(Task))
-                    {
-                        remoteInvoker.Result = null;
-                    }
-                    else if (method.ReturnType.IsGenericType && method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
-                    {
-                        var awaiter = result.GetType().GetMethod("GetAwaiter").Invoke(result, new object[] { });
-                        var value = awaiter.GetType().GetMethod("GetResult").Invoke(awaiter, new object[] { });
-                        remoteInvoker.Result = value;
-                    }
-                    else
-                    {
-                        remoteInvoker.Result = result;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    remoteInvoker.ExceptionMessage = ex.Message;
-                    remoteInvoker.StatusCode = 500;
-                    //Logger().LogError(ex, ex.Message);
-                }
-                var resultData = TransportMessage.CreateInvokeResultMessage(transportMessage.Id, remoteInvoker);
-                var sendByte = resultData.ToJsonBytes();
-                var sendBuffer = Unpooled.WrappedBuffer(sendByte);
-                context.WriteAndFlushAsync(sendBuffer).GetAwaiter().GetResult();
-            }
-            ReferenceCountUtil.SafeRelease(message);
+            var transportMessage = (TransportMessage)message;
+            _readAction(context, transportMessage);
         }
 
         public override void ChannelReadComplete(IChannelHandlerContext context)
@@ -780,35 +631,156 @@ public class NettyServer
             context.Flush();
         }
 
-        /// <summary>
-        /// TBD
-        /// </summary>
-        /// <param name="context">TBD</param>
-        /// <param name="exception">TBD</param>
         public override void ExceptionCaught(IChannelHandlerContext context, Exception exception)
         {
-            var se = exception as SocketException;
+            context.CloseAsync();//客户端主动断开需要应答，否则socket变成CLOSE_WAIT状态导致socket资源耗尽
+            if (_logger.IsEnabled(Microsoft.Extensions.Logging.LogLevel.Error))
+                _logger.LogError(exception, $"与服务器：{context.Channel.RemoteAddress}通信时发送了错误。");
+        }
+    }
+}
 
-            if (se?.SocketErrorCode == SocketError.OperationAborted)
-            {
-                //Logger().LogInformation($"Socket read operation aborted. Connection is about to be closed. Channel [{context.Channel.LocalAddress}->{context.Channel.RemoteAddress}](Id={context.Channel.Id})");
-            }
-            else if (se?.SocketErrorCode == SocketError.ConnectionReset)
-            {
-                //Logger().LogInformation($"Connection was reset by the remote peer. Channel [{context.Channel.LocalAddress}->{context.Channel.RemoteAddress}](Id={context.Channel.Id})");
-            }
-            else
-            {
-                base.ExceptionCaught(context, exception);
-            }
+public class DotNettyServerMessageListener : IMessageListener, IDisposable
+{
 
-            Console.WriteLine($"Exception: {exception.Message}");
-            //Logger().LogError(exception, exception.Message);
-            context.CloseAsync();
+    private readonly ILogger<DotNettyServerMessageListener> _logger;
+    private readonly ITransportMessageDecoder _transportMessageDecoder;
+    private readonly ITransportMessageEncoder _transportMessageEncoder;
+    private DotNetty.Transport.Channels.IChannel? _channel;
+
+
+    public DotNettyServerMessageListener(ILogger<DotNettyServerMessageListener> logger,
+        ITransportMessageCodecFactory codecFactory
+        )
+    {
+        _logger = logger;
+        _transportMessageEncoder = codecFactory.GetEncoder();
+        _transportMessageDecoder = codecFactory.GetDecoder();
+    }
+
+
+    public event ReceivedDelegate? Received;
+
+    /// <summary>
+    /// 触发接收到消息事件。
+    /// </summary>
+    /// <param name="sender">消息发送者。</param>
+    /// <param name="message">接收到的消息。</param>
+    public async Task OnReceived(IMessageSender sender, TransportMessage? message)
+    {
+        if (Received == null)
+            return;
+        await Received(sender, message);
+    }
+
+
+    public async Task StartAsync(URL url)
+    {
+        if (_logger.IsEnabled(Microsoft.Extensions.Logging.LogLevel.Debug))
+            _logger.LogDebug($"准备启动服务主机，监听地址：{url}。");
+
+        Console.WriteLine($"准备启动服务主机，监听地址：{url}。");
+
+        IEventLoopGroup bossGroup = new MultithreadEventLoopGroup(1);
+        IEventLoopGroup workerGroup = new MultithreadEventLoopGroup();//Default eventLoopCount is Environment.ProcessorCount * 2
+        var bootstrap = new ServerBootstrap();
+        var libuv = url.GetParameter("Libuv", false);
+        if (libuv)
+        {
+            var dispatcher = new DispatcherEventLoopGroup();
+            bossGroup = dispatcher;
+            workerGroup = new WorkerEventLoopGroup(dispatcher);
+            bootstrap.Channel<TcpServerChannel>();
+        }
+        else
+        {
+            bossGroup = new MultithreadEventLoopGroup(1);
+            workerGroup = new MultithreadEventLoopGroup();
+            bootstrap.Channel<TcpServerSocketChannel>();
+        }
+        var workerGroup1 = new SingleThreadEventLoop();
+        bootstrap
+        .Option(DotNetty.Transport.Channels.ChannelOption.SoBacklog, url.GetParameter("SoBacklog", 1024))
+        .ChildOption(DotNetty.Transport.Channels.ChannelOption.Allocator, PooledByteBufferAllocator.Default)
+        .Group(bossGroup, workerGroup)
+        .ChildHandler(new ActionChannelInitializer<DotNetty.Transport.Channels.IChannel>(channel =>
+        {
+            var pipeline = channel.Pipeline;
+            pipeline.AddLast(new LengthFieldPrepender(4));
+            pipeline.AddLast(new LengthFieldBasedFrameDecoder(int.MaxValue, 0, 4, 0, 4));
+            pipeline.AddLast(workerGroup1, "HandlerAdapter", new TransportMessageChannelHandlerAdapter(_transportMessageDecoder));
+            pipeline.AddLast(workerGroup1, "ServerHandler", new ServerHandler(async (contenxt, message) =>
+            {
+                var sender = new DotNettyServerMessageSender(_transportMessageEncoder, contenxt);
+                await OnReceived(sender, message);
+            }, _logger));
+        }));
+        try
+        {
+            var endPoint = new IPEndPoint(IPAddress.Any, url.Port);
+            _channel = await bootstrap.BindAsync(endPoint);
+            if (_logger.IsEnabled(Microsoft.Extensions.Logging.LogLevel.Debug))
+                _logger.LogDebug($"服务主机启动成功，监听地址：{url}。");
+        }
+        catch
+        {
+            _logger.LogError($"服务主机启动失败，监听地址：{url}。 ");
+        }
+    }
+
+    public void CloseAsync()
+    {
+        Task.Run(async () =>
+        {
+            if (_channel!=null) 
+            {
+                await _channel.EventLoop.ShutdownGracefullyAsync();
+                await _channel.CloseAsync();
+            }
+        }).Wait();
+    }
+
+
+    public void Dispose()
+    {
+        Task.Run(async () =>
+        {
+            if (_channel != null)
+            {
+                await _channel.DisconnectAsync();
+            }
+        }).Wait();
+    }
+
+    private class ServerHandler : ChannelHandlerAdapter
+    {
+        private readonly Action<IChannelHandlerContext, TransportMessage> _readAction;
+        private readonly Microsoft.Extensions.Logging.ILogger _logger;
+
+        public ServerHandler(Action<IChannelHandlerContext, TransportMessage> readAction, Microsoft.Extensions.Logging.ILogger logger)
+        {
+            _readAction = readAction;
+            _logger = logger;
         }
 
 
-        #endregion Overrides of ChannelHandlerAdapter
+        public override void ChannelRead(IChannelHandlerContext context, object message)
+        {
+            var transportMessage = (TransportMessage)message;
+            _readAction(context, transportMessage);
+        }
+
+        public override void ChannelReadComplete(IChannelHandlerContext context)
+        {
+            context.Flush();
+        }
+
+        public override void ExceptionCaught(IChannelHandlerContext context, Exception exception)
+        {
+            context.CloseAsync();//客户端主动断开需要应答，否则socket变成CLOSE_WAIT状态导致socket资源耗尽
+            if (_logger.IsEnabled(Microsoft.Extensions.Logging.LogLevel.Error))
+                _logger.LogError(exception, $"与服务器：{context.Channel.RemoteAddress}通信时发送了错误。");
+        }
 
     }
 }
@@ -900,7 +872,7 @@ public class ThriftServer
             return Protocol.Binary;
 
         protocol = protocol.Substring(0, 1).ToUpperInvariant() + protocol.Substring(1).ToLowerInvariant();
-        if (Enum.TryParse(protocol, true, out Protocol selectedProtocol))
+        if (System.Enum.TryParse(protocol, true, out Protocol selectedProtocol))
             return selectedProtocol;
         else
             return Protocol.Binary;
@@ -913,7 +885,7 @@ public class ThriftServer
             return Buffering.None;
 
         buffering = buffering.Substring(0, 1).ToUpperInvariant() + buffering.Substring(1).ToLowerInvariant();
-        if (Enum.TryParse<Buffering>(buffering, out var selectedBuffering))
+        if (System.Enum.TryParse<Buffering>(buffering, out var selectedBuffering))
             return selectedBuffering;
         else
             return Buffering.None;
@@ -926,7 +898,7 @@ public class ThriftServer
             return Transport.Tcp;
 
         transport = transport.Substring(0, 1).ToUpperInvariant() + transport.Substring(1).ToLowerInvariant();
-        if (Enum.TryParse(transport, true, out Transport selectedTransport))
+        if (System.Enum.TryParse(transport, true, out Transport selectedTransport))
             return selectedTransport;
         else
             return Transport.Tcp;

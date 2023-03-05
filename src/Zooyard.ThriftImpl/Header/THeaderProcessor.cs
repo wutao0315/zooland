@@ -38,7 +38,7 @@ public class THeaderProcessor : ITAsyncProcessor
             }
             else if (iprot.Transport is THttpTransport http)
             {
-                string hostAddress = http.RequestHeaders.Host;
+                string hostAddress = http.RequestHeaders.Host!;
             }
             else if (iprot.Transport is TNamedPipeTransport pipe)
             {

@@ -5,7 +5,7 @@ namespace Zooyard.Rpc.Route.State;
 public abstract class AbstractStateRouter: IStateRouter
 {
     private volatile bool force = false;
-    private volatile URL address;
+    //private volatile URL address;
     private volatile IStateRouter? nextRouter = null;
 
     //private final GovernanceRuleRepository ruleRepository;
@@ -15,7 +15,7 @@ public abstract class AbstractStateRouter: IStateRouter
 
     public AbstractStateRouter(URL address)
     {
-        this.address = address;
+        Address = address;
         _shouldFailFast = address.GetParameter(Constants.SHOULD_FAIL_FAST_KEY, true);
 
         //ModuleModel moduleModel = url.GetOrDefaultModuleModel();

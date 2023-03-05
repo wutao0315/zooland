@@ -56,7 +56,7 @@ public static class ObjectExtensions
             {
                 var result = JsonSerializer.Deserialize<T>(str, _option);
 
-                return result;
+                return result!;
             }
             catch (Exception)
             {
@@ -79,7 +79,7 @@ public static class ObjectExtensions
             try
             {
                 var result = JsonSerializer.Deserialize(str, returnType, _option);
-                return result;
+                return result!;
             }
             catch (Exception)
             {
@@ -99,7 +99,7 @@ public static class ObjectExtensions
             throw new Exception(" utf8stream is null");
         }
         var result = await JsonSerializer.DeserializeAsync<T>(utf8stream, _option, cancellationToken);
-        return result;
+        return result!;
     }
 }
 
@@ -367,7 +367,7 @@ public class DateTimeConverter : JsonConverter<DateTime>
     {
         if (reader.TokenType == JsonTokenType.String)
         {
-            var tokenValue = reader.GetString();
+            var tokenValue = reader.GetString()!;
             return DateTime.Parse(tokenValue);
         }
 
@@ -493,7 +493,7 @@ public class DictionaryLongStringJsonConverter : JsonConverter<Dictionary<long, 
 
             reader.Read();
             var key = long.Parse(propertyName);
-            var value = reader.GetString();
+            var value = reader.GetString()!;
             dictionary.Add(key, value);
         }
 

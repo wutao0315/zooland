@@ -20,6 +20,10 @@ public static class ObjectExtensions
             object? innerValue = ChangeType(value, innerType);
             return Activator.CreateInstance(type, new object?[] { innerValue });
         }
+        if (type == typeof(string))
+        {
+            return value.ToString();
+        }
         if (value is string valGuid && type == typeof(Guid)) return new Guid(valGuid);
         if (value is string valVersion && type == typeof(Version)) return new Version(valVersion);
         if (value is not IConvertible) return value;

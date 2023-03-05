@@ -11,30 +11,40 @@ using Zooyard.Diagnositcs;
 using Zooyard.Exceptions;
 using Zooyard.DotNettyImpl.Messages;
 using Zooyard.DotNettyImpl.Util;
+using System.Threading.Channels;
+using DotNetty.Transport.Channels;
+using System.Net;
 
 namespace Zooyard.DotNettyImpl.Transport
 {
     /// <summary>
     /// 一个默认的传输客户端实现。
     /// </summary>
-    public class TransportClient : ITransportClient, IDisposable
+    public class TransportClient : ITransportClient
     {
+        private readonly ILogger _logger;
         private readonly IMessageSender _messageSender;
         private readonly IMessageListener _messageListener;
-        private readonly ILogger _logger;
 
         private readonly ConcurrentDictionary<string, ManualResetValueTaskSource<TransportMessage>> _resultDictionary = new();
-        private readonly DiagnosticListener _diagnosticListener;
+        //private readonly DiagnosticListener _diagnosticListener;
 
-        public TransportClient(IMessageSender messageSender, IMessageListener messageListener, ILogger logger)
+        public TransportClient(
+        ILogger<TransportClient> logger,
+        IMessageSender messageSender, 
+        IMessageListener messageListener)
         {
-            _diagnosticListener = new DiagnosticListener(Constant.DiagnosticListenerName);
+            //_diagnosticListener = new DiagnosticListener(Constant.DiagnosticListenerName);
+            _logger = logger;
             _messageSender = messageSender;
             _messageListener = messageListener;
-            _logger = logger;
-            messageListener.Received += MessageListener_Received;
+            _messageListener.Received += MessageListener_Received;
         }
 
+        public async Task Open(URL url)
+        {
+            await _messageSender.Open(url);
+        }
         /// <summary>
         /// 发送消息。
         /// </summary>
@@ -48,7 +58,7 @@ namespace Zooyard.DotNettyImpl.Transport
                 if (_logger.IsEnabled(LogLevel.Debug))
                     _logger.LogDebug("准备发送消息。");
 
-                var transportMessage = TransportMessage.CreateInvokeMessage(message);
+                var transportMessage = TransportMessageExtensions.CreateInvokeMessage(message);
                 //WirteDiagnosticBefore(transportMessage);
                 //注册结果回调
                 var callbackTask = RegisterResultCallbackAsync(transportMessage.Id, cancellationToken);
@@ -81,7 +91,7 @@ namespace Zooyard.DotNettyImpl.Transport
         /// </summary>
         public void Dispose()
         {
-            (_messageSender as IDisposable)?.Dispose();
+            //(_messageSender as IDisposable)?.Dispose();
             (_messageListener as IDisposable)?.Dispose();
             foreach (var taskCompletionSource in _resultDictionary.Values)
             {
@@ -117,10 +127,13 @@ namespace Zooyard.DotNettyImpl.Transport
             }
         }
 
-        private async Task MessageListener_Received(IMessageSender sender, TransportMessage message)
+        private async Task MessageListener_Received(IMessageSender channel, TransportMessage? message)
         {
             if (_logger.IsEnabled(LogLevel.Trace))
                 _logger.LogTrace("服务消费者接收到消息。");
+
+            if (message == null)
+                return;
 
             if (!_resultDictionary.TryGetValue(message.Id, out ManualResetValueTaskSource<TransportMessage>? task))
                 return;
@@ -128,73 +141,19 @@ namespace Zooyard.DotNettyImpl.Transport
             if (message.IsInvokeResultMessage())
             {
                 var content = message.GetContent<RemoteInvokeResultMessage>();
-                if (!string.IsNullOrEmpty(content.ExceptionMessage))
+                if (content.Code != 0)
                 {
-                    //WirteDiagnosticError(message);
-                    task.SetException(new FrameworkException(content.ExceptionMessage));//, content.StatusCode
+                    task.SetException(new FrameworkException(content.Msg, content.Code));
                 }
                 else
                 {
                     task.SetResult(message);
-                    //WirteDiagnosticAfter(message);
                 }
             }
 
-            if (sender != null && message.IsInvokeMessage())
-                await sender.SendAndFlushAsync(new TransportMessage(message));
-            //if (_serviceExecutor != null && message.IsInvokeMessage())
-            //    await _serviceExecutor.ExecuteAsync(sender, message);
+            if (channel != null && message.IsInvokeMessage())
+                await channel.SendAndFlushAsync(new TransportMessage(message));
         }
-
-
-        //private void WirteDiagnosticBefore(TransportMessage message)
-        //{
-        //    //if (!AppConfig.ServerOptions.DisableDiagnostic)
-        //    //{
-        //    //    var remoteInvokeMessage = message.GetContent<RemoteInvokeMessage>();
-        //    //    //remoteInvokeMessage.Attachments.TryGetValue("TraceId", out object traceId);
-        //    //    //_diagnosticListener.WriteTransportBefore(TransportType.Rpc, new TransportEventData(new DiagnosticMessage
-        //    //    //{
-        //    //    //    Content = message.Content,
-        //    //    //    ContentType = message.ContentType,
-        //    //    //    Id = message.Id,
-        //    //    //    MessageName = remoteInvokeMessage.ServiceId
-        //    //    //}, remoteInvokeMessage.DecodeJOject ? RpcMethod.Json_Rpc.ToString() : RpcMethod.Proxy_Rpc.ToString(),
-        //    //     //traceId?.ToString(),
-        //    //    //RpcContext.GetContext().GetAttachment("RemoteAddress")?.ToString()));
-        //    //}
-        //    //var parameters = RpcContext.GetContext().GetContextParameters();
-        //    //parameters.TryRemove("RemoteAddress", out object value);
-        //    //RpcContext.GetContext().SetContextParameters(parameters);
-        //}
-
-        //private void WirteDiagnosticAfter(TransportMessage message)
-        //{
-        //    //if (!AppConfig.ServerOptions.DisableDiagnostic)
-        //    //{
-        //    //    var remoteInvokeResultMessage = message.GetContent<RemoteInvokeResultMessage>();
-        //    //    //_diagnosticListener.WriteTransportAfter(TransportType.Rpc, new ReceiveEventData(new DiagnosticMessage
-        //    //    //{
-        //    //    //    Content = message.Content,
-        //    //    //    ContentType = message.ContentType,
-        //    //    //    Id = message.Id
-        //    //    //}));
-        //    //}
-        //}
-
-        //private void WirteDiagnosticError(TransportMessage message)
-        //{
-        //    //if (!AppConfig.ServerOptions.DisableDiagnostic)
-        //    //{
-        //    //    var remoteInvokeResultMessage = message.GetContent<RemoteInvokeResultMessage>();
-        //    //    //_diagnosticListener.WriteTransportError(TransportType.Rpc, new TransportErrorEventData(new DiagnosticMessage
-        //    //    //{
-        //    //    //    Content = message.Content,
-        //    //    //    ContentType = message.ContentType,
-        //    //    //    Id = message.Id
-        //    //    //}, new FrameworkException(remoteInvokeResultMessage.ExceptionMessage)));
-        //    //}
-        //}
 
     }
 }

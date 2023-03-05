@@ -1,6 +1,6 @@
 ﻿using Zooyard.DotNettyImpl.Messages;
 
-namespace Zooyard.DotNettyImpl.Codec;
+namespace Zooyard.DotNettyImpl.Transport;
 
 public interface ITransportMessageEncoder
 {

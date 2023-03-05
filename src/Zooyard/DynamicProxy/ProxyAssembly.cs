@@ -15,7 +15,7 @@ internal class ProxyAssembly
     private readonly Dictionary<MethodInfo, int> _methodToToken = new Dictionary<MethodInfo, int>();
     private readonly List<MethodInfo> _methodsByToken = new List<MethodInfo>();
     private readonly HashSet<string> _ignoresAccessAssemblyNames = new HashSet<string>();
-    private ConstructorInfo _ignoresAccessChecksToAttributeConstructor;
+    private ConstructorInfo? _ignoresAccessChecksToAttributeConstructor;
 
     public ProxyAssembly()
     {
@@ -162,7 +162,7 @@ internal class ProxyAssembly
         TypeInfo typeInfo = type.GetTypeInfo();
         if (!typeInfo.IsVisible)
         {
-            string assemblyName = typeInfo.Assembly.GetName().Name;
+            string assemblyName = typeInfo.Assembly.GetName().Name??"";
             if (!_ignoresAccessAssemblyNames.Contains(assemblyName))
             {
                 GenerateInstanceOfIgnoresAccessChecksToAttribute(assemblyName);
@@ -173,7 +173,7 @@ internal class ProxyAssembly
 
     internal void GetTokenForMethod(MethodInfo method, out Type type, out int token)
     {
-        type = method.DeclaringType;
+        type = method.DeclaringType!;
         token = 0;
         if (!_methodToToken.TryGetValue(method, out token))
         {

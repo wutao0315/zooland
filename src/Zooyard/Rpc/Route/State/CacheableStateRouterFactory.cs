@@ -13,7 +13,7 @@ namespace Zooyard.Rpc.Route.State
 
         public IStateRouter GetRouter(Type interfaceClass, URL address)
         {
-            return routerMap.GetOrAdd(address.ServiceKey, CreateRouter(interfaceClass, address));
+            return routerMap.GetOrAdd(address.ServiceKey!, CreateRouter(interfaceClass, address));
         }
         public void ClearCache() 
         {

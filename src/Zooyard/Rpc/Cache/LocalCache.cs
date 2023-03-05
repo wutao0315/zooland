@@ -23,9 +23,13 @@ public class LocalCache : ICache
         _zooyard = zooyard;
     }
 
-    public T Get<T>(object key)
+    public T? Get<T>(object key)
     {
-        var result = _memoryCache.Get(key.ToString());
+        var result = _memoryCache.Get(key.ToString()??"");
+        if (result == null) 
+        {
+            return default;
+        }
         return (T)result;
     }
 

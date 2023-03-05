@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using Newtonsoft.Json;
+using System.Diagnostics;
 using Zooyard.DotNettyImpl.Messages;
 using Zooyard.DotNettyImpl.Transport;
 using Zooyard.Logging;
@@ -10,45 +11,63 @@ public class NettyInvoker : AbstractInvoker
 {
     private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(NettyInvoker));
 
-    private readonly ITransportClient _transportClient;
+    private readonly ITransportClient _channel;
     private readonly int _clientTimeout;
 
-    public NettyInvoker(ITransportClient transportClient, int clientTimeout)
+    public NettyInvoker(ITransportClient channel, int clientTimeout)
     {
-        _transportClient = transportClient;
+        _channel = channel;
         _clientTimeout = clientTimeout;
     }
-    public override object Instance => _transportClient;
+    public override object Instance => _channel;
     public override int ClientTimeout => _clientTimeout;
 
-    protected override async Task<IResult<T>> HandleInvoke<T>(IInvocation invocation)
+    protected override async Task<IResult<T>> HandleInvoke<T>(IInvocation invocation) 
     {
+
         var message = new RemoteInvokeMessage
         {
             Method = invocation.MethodInfo.Name,
-            Arguments = invocation.Arguments
+            Arguments = invocation.Arguments,
+            ArgumentTypes = invocation.ArgumentTypes,
+            //Arguments = { from a in invocation.Arguments select Any.Pack((IMessage)a) }
         };
 
         var watch = Stopwatch.StartNew();
         
         try
         {
-            var result = await _transportClient.SendAsync(message, CancellationToken.None);
+            var response = await _channel.SendAsync(message, CancellationToken.None);
             watch.Stop();
             if (invocation.MethodInfo.ReturnType == typeof(Task))
             {
                 return new RpcResult<T>(watch.ElapsedMilliseconds);
-                //return new RpcResult(Task.CompletedTask);
             }
-            else if (invocation.MethodInfo.ReturnType.IsGenericType && invocation.MethodInfo.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
+            else if (invocation.MethodInfo.ReturnType.IsGenericType 
+                && invocation.MethodInfo.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
             {
-                return new RpcResult<T>((T)result.Result.ChangeType(typeof(T)), watch.ElapsedMilliseconds);
-                //var resultData = Task.FromResult((dynamic)value.Result);
-                //return new RpcResult<T>((T)value.Result.ChangeType(typeof(T)), watch.ElapsedMilliseconds);
+                if (typeof(T).IsValueType || typeof(T) == typeof(string))
+                {
+                    return new RpcResult<T>((T)response.Data.ChangeType(typeof(T))!, watch.ElapsedMilliseconds);
+                }
+                else 
+                {
+                    var data = JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(response.Data))!;
+
+                    return new RpcResult<T>(data, watch.ElapsedMilliseconds);
+                }
             }
 
-            return new RpcResult<T>((T)result.Result.ChangeType(typeof(T)), watch.ElapsedMilliseconds);
-            //return new RpcResult<T>((T)value.Result.ChangeType(typeof(T)), watch.ElapsedMilliseconds);
+            if (typeof(T).IsValueType || typeof(T) == typeof(string))
+            {
+                return new RpcResult<T>((T)response.Data!, watch.ElapsedMilliseconds);
+            }
+            else
+            {
+                var data = JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(response.Data))!;
+
+                return new RpcResult<T>(data, watch.ElapsedMilliseconds);
+            }
         }
         catch (Exception ex)
         {
@@ -59,7 +78,7 @@ public class NettyInvoker : AbstractInvoker
         {
             if (watch.IsRunning)
                 watch.Stop();
-            Logger().LogInformation($"Thrift Invoke {watch.ElapsedMilliseconds} ms");
+            Logger().LogInformation($"Netty Invoke {watch.ElapsedMilliseconds} ms");
         }
     }
 }

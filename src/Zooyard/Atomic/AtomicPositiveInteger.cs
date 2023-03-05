@@ -168,7 +168,7 @@ public class AtomicPositiveInteger
         return i.Value;
     }
 
-    public override string ToString()
+    public override string? ToString()
     {
         return i.ToString();
     }
@@ -181,17 +181,16 @@ public class AtomicPositiveInteger
         return result;
     }
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         if (this == obj)
         {
             return true;
         }
-        if (!(obj is AtomicPositiveInteger))
+        if (obj is not AtomicPositiveInteger other)
         {
             return false;
         }
-        var other = (AtomicPositiveInteger)obj;
         return i.Value == other.IntValue();
     }
 }

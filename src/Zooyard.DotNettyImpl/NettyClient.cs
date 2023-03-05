@@ -1,25 +1,29 @@
-﻿using Zooyard.DotNettyImpl.Transport;
+﻿using DotNetty.Transport.Channels;
+using System.Net;
+using System;
 using Zooyard.Logging;
 using Zooyard.Rpc.Support;
+using System.Threading.Channels;
+using Zooyard.DotNettyImpl.Transport;
 
 namespace Zooyard.DotNettyImpl;
 
 public class NettyClient : AbstractClient
 {
     private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(NettyClient));
-    public const string QUIETPERIOD_KEY = "quietPeriod";
-    public const int DEFAULT_QUIETPERIOD = 100;
+    //public const string QUIETPERIOD_KEY = "quietPeriod";
+    //public const int DEFAULT_QUIETPERIOD = 100;
     //public const string TIMEOUT_KEY = "timeout";
     //public const int DEFAULT_TIMEOUT = 5000;
 
     public override URL Url { get; }
     public override int ClientTimeout { get; }
     
-    private readonly ITransportClient _transportClient;
+    private readonly ITransportClient _channel;
 
-    public NettyClient(ITransportClient transportClient, int clientTimeout, URL url)
+    public NettyClient(ITransportClient channel, int clientTimeout, URL url)
     {
-        _transportClient = transportClient;
+        _channel = channel;
         this.ClientTimeout = clientTimeout;
         this.Url = url;
     }
@@ -29,37 +33,23 @@ public class NettyClient : AbstractClient
     {
         await this.Open(cancellationToken);
 
-        return new NettyInvoker(_transportClient, this.ClientTimeout);
+        return new NettyInvoker(_channel, this.ClientTimeout);
     }
 
     public override async Task Open(CancellationToken cancellationToken = default)
     {
+        await _channel.Open(Url);
         await Task.CompletedTask;
-        //if (!_channel.Open || !_channel.Active)
-        //{
-        //    var k = new IPEndPoint(IPAddress.Parse(Url.Host), Url.Port);
-        //    await _channel.ConnectAsync(k);
-        //}
     }
 
     public override async Task Close(CancellationToken cancellationToken = default)
     {
+        _channel.Dispose();
         await Task.CompletedTask;
-        //if (_channel.Active || _channel.Open)
-        //{
-        //    await _channel.CloseAsync();
-        //}
     }
 
     public override async ValueTask DisposeAsync()
     {
         await Close();
-        //await _channel.CloseAsync();
-        //if (!_eventLoopGroup.IsShutdown || !_eventLoopGroup.IsTerminated)
-        //{
-        //    var quietPeriod = Url.GetParameter(QUIETPERIOD_KEY, DEFAULT_QUIETPERIOD);
-        //    //var timeout = Url.GetParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
-        //    await _eventLoopGroup.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(quietPeriod), TimeSpan.FromMilliseconds(_clientTimeout));
-        //}
     }
 }

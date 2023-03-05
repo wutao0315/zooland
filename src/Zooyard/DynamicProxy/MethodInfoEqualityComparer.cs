@@ -8,7 +8,7 @@ internal sealed class MethodInfoEqualityComparer : EqualityComparer<MethodInfo>
 
     private MethodInfoEqualityComparer() { }
 
-    public sealed override bool Equals(MethodInfo left, MethodInfo right)
+    public sealed override bool Equals(MethodInfo? left, MethodInfo? right)
     {
         if (ReferenceEquals(left, right))
             return true;

@@ -1,6 +1,5 @@
 ﻿namespace RpcContractNetty;
 
-[Serializable]
 public class HelloResult
 {
     public string Name { get; set; } = String.Empty;

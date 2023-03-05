@@ -165,7 +165,7 @@ public class ThriftClientPool : AbstractClientPool
                 break;
         }
 
-        return transport;
+        return transport!;
     }
         
     private X509Certificate2 GetCertificate()
@@ -175,17 +175,14 @@ public class ThriftClientPool : AbstractClientPool
         return new X509Certificate2(certFile, "ThriftTest");
     }
 
-    private string GetCertPath(DirectoryInfo di, int maxCount = 6)
+    private string GetCertPath(DirectoryInfo? di, int maxCount = 6)
     {
-        var topDir = di;
-        var certFile =
-            topDir.EnumerateFiles("ThriftTest.pfx", SearchOption.AllDirectories)
-                .FirstOrDefault();
+        var certFile =di?.EnumerateFiles("ThriftTest.pfx", SearchOption.AllDirectories)?.FirstOrDefault();
         if (certFile == null)
         {
             if (maxCount == 0)
                 throw new FileNotFoundException("Cannot find file in directories");
-            return GetCertPath(di.Parent, maxCount - 1);
+            return GetCertPath(di?.Parent, maxCount - 1);
         }
 
         return certFile.FullName;

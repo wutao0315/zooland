@@ -1,22 +1,22 @@
 ﻿namespace Zooyard.Rpc.Merger;
 
-public class DictionaryMerger<key, value> : IMerger<IDictionary<key, value>>
-    where key:notnull
+public class DictionaryMerger<K, V> : IMerger<IDictionary<K, V>>
+    where K:notnull
 {
     public string Name => "dictionary";
     public Type Type => typeof(IDictionary<,>);
-    public IDictionary<key, value>? Merge(params IDictionary<key, value>[] items)
+    public IDictionary<K, V>? Merge(params IDictionary<K, V>[] items)
     {
         if (items.Length == 0)
         {
             return null;
         }
-        var result = new Dictionary<key, value>();
+        var result = new Dictionary<K, V>();
         foreach (var item in items)
-			{
-            if (item != null)
+        {
+            foreach (var data in item)
             {
-                result.PutAll(item);
+                result[data.Key] = data.Value;
             }
         }
         return result;

@@ -3,8 +3,7 @@
 /// <summary>
 /// 传输消息模型。
 /// </summary>
-[Serializable]
-public class TransportMessage
+public record TransportMessage
 {
     public TransportMessage() { }
     public TransportMessage(object content)
@@ -32,23 +31,29 @@ public class TransportMessage
     /// 内容类型。
     /// </summary>
     public string ContentType { get; set; } = string.Empty;
+}
 
+/// <summary>
+/// 传输消息模型。
+/// </summary>
+public static class TransportMessageExtensions
+{
     /// <summary>
     /// 是否调用消息。
     /// </summary>
     /// <returns>如果是则返回true，否则返回false。</returns>
-    public bool IsInvokeMessage()
+    public static bool IsInvokeMessage(this TransportMessage tm)
     {
-        return ContentType == typeof(RemoteInvokeMessage).FullName;
+        return tm.ContentType == typeof(RemoteInvokeMessage).FullName;
     }
 
     /// <summary>
     /// 是否是调用结果消息。
     /// </summary>
     /// <returns>如果是则返回true，否则返回false。</returns>
-    public bool IsInvokeResultMessage()
+    public static bool IsInvokeResultMessage(this TransportMessage tm)
     {
-        return ContentType == typeof(RemoteInvokeResultMessage).FullName;
+        return tm.ContentType == typeof(RemoteInvokeResultMessage).FullName;
     }
 
 
@@ -58,9 +63,9 @@ public class TransportMessage
     /// </summary>
     /// <typeparam name="T">内容类型。</typeparam>
     /// <returns>内容实例。</returns>
-    public T GetContent<T>()
+    public static T GetContent<T>(this TransportMessage tm)
     {
-        return (T)Content;
+        return (T)tm.Content!;
     }
 
     /// <summary>
@@ -70,10 +75,13 @@ public class TransportMessage
     /// <returns>调用传输消息。</returns>
     public static TransportMessage CreateInvokeMessage(RemoteInvokeMessage invokeMessage)
     {
-        return new TransportMessage(invokeMessage, typeof(RemoteInvokeMessage).FullName!)
+        var result = new TransportMessage()
         {
-            Id = Guid.NewGuid().ToString("N")
+            Id = Guid.NewGuid().ToString("N"),
+            Content = invokeMessage,
+            ContentType = typeof(RemoteInvokeMessage).FullName!
         };
+        return result;
     }
 
     /// <summary>
@@ -84,9 +92,12 @@ public class TransportMessage
     /// <returns>调用结果传输消息。</returns>
     public static TransportMessage CreateInvokeResultMessage(string id, RemoteInvokeResultMessage invokeResultMessage)
     {
-        return new TransportMessage(invokeResultMessage, typeof(RemoteInvokeResultMessage).FullName!)
+        var result = new TransportMessage()
         {
-            Id = id
+            Id = id,
+            Content = invokeResultMessage,
+            ContentType = typeof(RemoteInvokeResultMessage).FullName!
         };
+        return result;
     }
 }

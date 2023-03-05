@@ -64,7 +64,7 @@ public class Constants
 
     public const string WARMUP_KEY = "warmup";
 
-    int DEFAULT_WARMUP = 10 * 60 * 1000;
+    //int DEFAULT_WARMUP = 10 * 60 * 1000;
 
     public const string CONFIG_VERSION_KEY = "configVersion";
 
