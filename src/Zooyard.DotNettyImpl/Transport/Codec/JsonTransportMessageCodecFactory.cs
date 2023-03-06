@@ -46,7 +46,8 @@ public class JsonTransportMessageCodecFactory: ITransportMessageCodecFactory
             new BoolNullableConverter(),
             new GuidConverter(),
             new GuidNullableConverter(),
-            new DictionaryLongStringJsonConverter()
+            new DictionaryLongStringJsonConverter(),
+            new TypeConverter(),
         }
     };
 }
@@ -461,5 +462,30 @@ public class DictionaryLongStringJsonConverter : JsonConverter<Dictionary<long, 
         }
 
         writer.WriteEndObject();
+    }
+}
+
+public class TypeConverter : JsonConverter<Type>
+{
+    public override Type Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        var readStr = reader.GetString()!;
+        var val = Type.GetType(readStr)!;
+        return val;
+    }
+
+    public override void Write(Utf8JsonWriter writer, Type value, JsonSerializerOptions options)
+    {
+        var typeString = value.AssemblyQualifiedName;
+        if (!string.IsNullOrWhiteSpace(typeString)) 
+        {
+            var typeArr = typeString.Split(',');
+            if (typeArr.Length >= 2) 
+            {
+                typeString = $"{typeArr[0]}, {typeArr[1]}";
+            }
+        }
+        
+        writer.WriteStringValue(typeString);
     }
 }

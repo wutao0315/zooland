@@ -1,7 +1,8 @@
-﻿using Newtonsoft.Json;
-using System.Text;
+﻿using System.Text;
+using System.Text.Json;
 using Zooyard.DotNettyImpl.Messages;
 using Zooyard.DotNettyImpl.Transport;
+using Zooyard.DotNettyImpl.Transport.Codec;
 
 namespace Zooyard.DotNettyImpl.Codec;
 
@@ -18,10 +19,10 @@ public sealed class JsonTransportMessageEncoder : ITransportMessageEncoder
         //message.WriteTo(ms);
         //return ms.ToArray();
 
-        var content = JsonConvert.SerializeObject(message);
-        return Encoding.UTF8.GetBytes(content);
+        //var content = JsonConvert.SerializeObject(message);
+        //return Encoding.UTF8.GetBytes(content);
 
-        //var result = JsonSerializer.SerializeToUtf8Bytes(message, JsonTransportMessageCodecFactory._option);
-        //return result;
+        var result = JsonSerializer.SerializeToUtf8Bytes(message, JsonTransportMessageCodecFactory._option);
+        return result;
     }
 }

@@ -17,8 +17,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using NLog;
 using NLog.Extensions.Hosting;
 using NLog.Extensions.Logging;
@@ -28,6 +26,7 @@ using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
 using System.ServiceModel.Channels;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Channels;
 using Thrift;
 using Thrift.Processor;
@@ -538,14 +537,18 @@ public class NettyServer
             var arguments = new object[rpc.Arguments.Length];
             for (int i = 0; i < rpc.Arguments.Length; i++)
             {
-                if (rpc.ArgumentTypes[i].IsValueType || rpc.ArgumentTypes[i] == typeof(string))
+                if (rpc.ArgumentTypes[i].IsValueType)
                 {
                     arguments[i] = rpc.Arguments[i];
                 }
-                else 
+                else if (rpc.ArgumentTypes[i] == typeof(string)) 
                 {
-                    var arg = JsonConvert.SerializeObject(rpc.Arguments[i]);
-                    arguments[i] = JsonConvert.DeserializeObject(arg, rpc.ArgumentTypes[i])!;
+                    arguments[i] = rpc.Arguments[i].ToString()!;
+                }
+                else
+                {
+                    var arg = JsonSerializer.Serialize(rpc.Arguments[i], JsonTransportMessageCodecFactory._option);
+                    arguments[i] = JsonSerializer.Deserialize(arg, rpc.ArgumentTypes[i], JsonTransportMessageCodecFactory._option)!;
                 }
             }
             //var types = (from item in arguments select item.GetType()).ToArray();

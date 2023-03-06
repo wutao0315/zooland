@@ -7,29 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Protos\**" />
-    <EmbeddedResource Remove="Protos\**" />
-    <None Remove="Protos\**" />
-  </ItemGroup>
-
-  <ItemGroup>
 	  <PackageReference Include="DotNetty.Codecs" Version="0.7.5" />
 	  <PackageReference Include="DotNetty.Transport.Libuv" Version="0.7.5" />
-	  <!--<PackageReference Include="MemoryPack" Version="1.9.13" />-->
   </ItemGroup>
-
-
-	<!--<ItemGroup>
-		<Protobuf Include="Protos/*.proto" ProtoRoot="Protos" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<PackageReference Include="Google.Protobuf" Version="3.22.0" />
-		<PackageReference Include="Grpc.Tools" Version="2.52.0">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-		</PackageReference>
-	</ItemGroup>-->
 
   <ItemGroup>
     <ProjectReference Include="..\Zooyard\Zooyard.csproj" />

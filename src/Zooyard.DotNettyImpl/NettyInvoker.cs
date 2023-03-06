@@ -1,7 +1,8 @@
-﻿using Newtonsoft.Json;
-using System.Diagnostics;
+﻿using System.Diagnostics;
+using System.Text.Json;
 using Zooyard.DotNettyImpl.Messages;
 using Zooyard.DotNettyImpl.Transport;
+using Zooyard.DotNettyImpl.Transport.Codec;
 using Zooyard.Logging;
 using Zooyard.Rpc.Support;
 
@@ -52,7 +53,7 @@ public class NettyInvoker : AbstractInvoker
                 }
                 else 
                 {
-                    var data = JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(response.Data))!;
+                    var data = JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(response.Data, JsonTransportMessageCodecFactory._option), JsonTransportMessageCodecFactory._option)!;
 
                     return new RpcResult<T>(data, watch.ElapsedMilliseconds);
                 }
@@ -64,7 +65,7 @@ public class NettyInvoker : AbstractInvoker
             }
             else
             {
-                var data = JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(response.Data))!;
+                var data = JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(response.Data, JsonTransportMessageCodecFactory._option), JsonTransportMessageCodecFactory._option)!;
 
                 return new RpcResult<T>(data, watch.ElapsedMilliseconds);
             }
