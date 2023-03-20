@@ -2,7 +2,7 @@
 
 namespace Zooyard;
 
-public class ZooyardOption
+public record ZooyardOption
 {
     public string Address { get; set; } = String.Empty;
     public Dictionary<string, string> Meta { get; set; } = new();
@@ -10,12 +10,12 @@ public class ZooyardOption
     public Dictionary<string, ZooyardServiceOption> Services { get; set; } = new();
 }
 
-public class ZooyardServiceOption
+public record ZooyardServiceOption
 {
     public Dictionary<string, string> Meta { get; set; } = new();
     public List<ZooyardInstanceOption> Instances { get; set; } = new();
 }
-public class ZooyardInstanceOption
+public record ZooyardInstanceOption
 {
     public string Host { get; set; } = String.Empty;
     public int Port { get; set; }

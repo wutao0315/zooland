@@ -56,6 +56,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.GrpcNetImpl", "src\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcContractGrpcNet", "samples\RpcContractGrpcNet\RpcContractGrpcNet.csproj", "{AFC26A63-6D48-41A2-A9A4-A11FB2057ED5}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.Instrumentation.OpenTelemetry", "src\Zooyard.Instrumentation.OpenTelemetry\Zooyard.Instrumentation.OpenTelemetry.csproj", "{401A90C7-EDCD-4CF3-A701-9F2F0752CAA7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -118,6 +120,10 @@ Global
 		{AFC26A63-6D48-41A2-A9A4-A11FB2057ED5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AFC26A63-6D48-41A2-A9A4-A11FB2057ED5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AFC26A63-6D48-41A2-A9A4-A11FB2057ED5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{401A90C7-EDCD-4CF3-A701-9F2F0752CAA7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{401A90C7-EDCD-4CF3-A701-9F2F0752CAA7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{401A90C7-EDCD-4CF3-A701-9F2F0752CAA7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{401A90C7-EDCD-4CF3-A701-9F2F0752CAA7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -137,6 +143,7 @@ Global
 		{A55DA158-7776-4554-9007-7A89311642B5} = {50C4867C-8931-45F0-B773-463C7B953969}
 		{D411F8ED-C5BC-4AC8-922D-342699B7DDDB} = {50C4867C-8931-45F0-B773-463C7B953969}
 		{AFC26A63-6D48-41A2-A9A4-A11FB2057ED5} = {1E4B38C1-0CF2-4E5C-AC4A-30B48CB3F7BA}
+		{401A90C7-EDCD-4CF3-A701-9F2F0752CAA7} = {50C4867C-8931-45F0-B773-463C7B953969}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4FBB3247-7E5E-40FB-85B2-67B3E3D57FCB}

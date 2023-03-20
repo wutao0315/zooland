@@ -1,27 +1,68 @@
-﻿using System.Text;
+﻿using Microsoft.Extensions.Options;
+using System.Text;
 using Zooyard.Logging;
 using Zooyard.Rpc.Route.Condition.Config.Model;
 using Zooyard.Rpc.Route.State;
+using Zooyard.Rpc.Route.Tag.Model;
 using Zooyard.Utils;
 
 namespace Zooyard.Rpc.Route.Condition.Config;
 
 public abstract class ListenableStateRouter : AbstractStateRouter
 {
+    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ListenableStateRouter));
+
     public const string NAME = "LISTENABLE_ROUTER";
     private const string RULE_SUFFIX = ".condition-router";
-    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ListenableStateRouter));
     private volatile ConditionRouterRule? routerRule;
     private volatile List<ConditionStateRouter> conditionRouters = new();
     private string ruleKey;
 
-    public ListenableStateRouter(URL address, string ruleKey):base(address)
+    private readonly IOptionsMonitor<ZooyardOption> _zooyard;
+    public ListenableStateRouter(IOptionsMonitor<ZooyardOption> zooyard, URL address, string ruleKey):base(address)
     {
+        _zooyard = zooyard;
+        _zooyard.OnChange(OnChanged);
+
         this.Force = false;
-        this.init(ruleKey);
+        this.Init(ruleKey);
         this.ruleKey = ruleKey;
     }
+    // 监听配置或者服务注册变化，清空缓存
+    void OnChanged(ZooyardOption value, string? name)
+    {
+        var applicationName = Environment.GetEnvironmentVariable("applicationName") ?? "system_name";
+        if (!value.Services.TryGetValue(applicationName, out var serviceOption))
+        {
+            return;
+        }
 
+        serviceOption.Meta.TryGetValue("route.rule", out var ruleContent);
+
+        if (Logger().IsEnabled(LogLevel.Debug))
+        {
+            Logger().LogDebug($"Notification of tag rule, change type is: {value}, raw rule is:\n {ruleContent}");
+        }
+
+
+        if (string.IsNullOrWhiteSpace(ruleContent))
+        {
+            routerRule = null;
+            conditionRouters = new();
+        }
+        else
+        {
+            try
+            {
+                routerRule = ConditionRuleParser.Parse(ruleContent);
+                GenerateConditions(routerRule);
+            }
+            catch (Exception e)
+            {
+                Logger().LogError(e, $"Failed to parse the raw condition rule and it will not take effect, please check if the condition rule matches with the template, the raw rule is:\n {ruleContent}");
+            }
+        }
+    }
     //@Override
     //public synchronized void process(ConfigChangedEvent event) {
     //    if (logger.isDebugEnabled()) {
@@ -43,37 +84,36 @@ public abstract class ListenableStateRouter : AbstractStateRouter
     //    }
     //}
 
-    protected override IList<URL> DoRoute(IList<URL> invokers, URL address, IInvocation invocation, bool needToPrintMessage)
+    protected override IList<URL> DoRoute(IList<URL> invokers, URL address, IInvocation invocation, bool needToPrintMessage, Holder<RouterSnapshotNode> nodeHolder, Holder<String> messageHolder)
     {
         if (invokers.Count == 0 || conditionRouters.Count == 0)
         {
             if (needToPrintMessage)
             {
-                Logger().LogInformation("Directly return. Reason: Invokers from previous router is empty or conditionRouters is empty.");
-               // messageHolder.Value = "Directly return. Reason: Invokers from previous router is empty or conditionRouters is empty.";
+               messageHolder.Value = "Directly return. Reason: Invokers from previous router is empty or conditionRouters is empty.";
             }
             return invokers;
         }
 
         // We will check enabled status inside each router.
-        StringBuilder? resultMessage;
+        StringBuilder? resultMessage = null;
         if (needToPrintMessage)
         {
             resultMessage = new StringBuilder();
         }
         foreach (AbstractStateRouter router in conditionRouters)
         {
-            invokers = router.Route(invokers, address, invocation, needToPrintMessage);//, nodeHolder);
-            //if (needToPrintMessage)
-            //{
-            //    resultMessage.Append(messageHolder.Value);
-            //}
+            invokers = router.Route(invokers, address, invocation, needToPrintMessage, nodeHolder);
+            if (needToPrintMessage)
+            {
+                resultMessage!.Append(messageHolder.Value);
+            }
         }
 
-        //if (needToPrintMessage)
-        //{
-        //    //messageHolder.Value = resultMessage.ToString();
-        //}
+        if (needToPrintMessage)
+        {
+            messageHolder.Value = resultMessage!.ToString();
+        }
 
         return invokers;
     }
@@ -82,7 +122,7 @@ public abstract class ListenableStateRouter : AbstractStateRouter
 
     private bool RuleRuntime=> routerRule != null && routerRule.Valid && routerRule.Runtime;
 
-    private void generateConditions(ConditionRouterRule rule)
+    private void GenerateConditions(ConditionRouterRule? rule)
     {
         if (rule != null && rule.Valid)
         {
@@ -91,12 +131,12 @@ public abstract class ListenableStateRouter : AbstractStateRouter
 
             foreach (var conditionRouter in this.conditionRouters)
             {
-                conditionRouter.NextRouter = TailStateRouter.getInstance();
+                conditionRouter.NextRouter = TailStateRouter.GetInstance();
             }
         }
     }
 
-    private void init(string? ruleKey)
+    private void Init(string? ruleKey)
     {
         if (string.IsNullOrWhiteSpace(ruleKey))
         {
@@ -104,7 +144,7 @@ public abstract class ListenableStateRouter : AbstractStateRouter
         }
         string routerKey = ruleKey + RULE_SUFFIX;
         //this.getRuleRepository().addListener(routerKey, this);
-        //String rule = this.getRuleRepository().getRule(routerKey, DynamicConfiguration.DEFAULT_GROUP);
+        //string rule = this.getRuleRepository().getRule(routerKey, DynamicConfiguration.DEFAULT_GROUP);
         //if (StringUtils.isNotEmpty(rule))
         //{
         //    this.process(new ConfigChangedEvent(routerKey, DynamicConfiguration.DEFAULT_GROUP, rule));
@@ -115,5 +155,4 @@ public abstract class ListenableStateRouter : AbstractStateRouter
     //{
     //    //this.getRuleRepository().removeListener(ruleKey + RULE_SUFFIX, this);
     //}
-
 }

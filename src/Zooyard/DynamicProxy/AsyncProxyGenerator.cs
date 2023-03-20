@@ -142,13 +142,9 @@ public class AsyncProxyGenerator : IDisposable
         T? returnValue = default;
         try
         {
-            //Debug.Assert(_dispatchProxyInvokeAsyncTMethod != null);
-            //var genericmethod = _dispatchProxyInvokeAsyncTMethod.MakeGenericMethod(typeof(T));
-            //returnValue = await (Task<T>)genericmethod.Invoke(context.Packed.DispatchProxy,
-            //                                                       new object[] { context.Method, context.Packed.Args });
             var icn = new RpcInvocation(_serviceName, _version, _url, context.Packed.DeclaringType, context.Method, context.Packed.Args);
             var result = await _zooyardPools.Invoke<T>(icn);
-            if (result!=null) 
+            if (result != null)
             {
                 returnValue = result.Value;
                 context.Packed.ReturnValue = returnValue;

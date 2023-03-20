@@ -1,5 +1,6 @@
 ﻿using Grpc.Core;
 using Grpc.Net.Client;
+using System.Threading.Channels;
 using Zooyard.Logging;
 using Zooyard.Rpc.Support;
 
@@ -41,13 +42,17 @@ public class GrpcClient : AbstractClient
 
     public override async Task Open(CancellationToken cancellationToken = default)
     {
-        if (_channel.State != ConnectivityState.Ready)
+        using var cts = new CancellationTokenSource(ClientTimeout);
+        await Timeout(_channel.ConnectAsync(cts.Token), ClientTimeout, cts);
+
+        async Task Timeout(Task task, int millisecondsDelay, CancellationTokenSource cts)
         {
-            await _channel.ConnectAsync(cancellationToken);
-        }
-        if (_channel.State != ConnectivityState.Ready)
-        {
-            throw new Grpc.Core.RpcException(Status.DefaultCancelled, "connect failed");
+            if (await Task.WhenAny(task, Task.Delay(millisecondsDelay, cts.Token)).ConfigureAwait(false) == task)
+                return;
+
+            cts.Cancel();
+
+            throw new TimeoutException($"{Url} connect timeout");
         }
     }
 

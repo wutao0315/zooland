@@ -6,6 +6,7 @@ using Zooyard.Logging;
 using Zooyard.Rpc.Cache;
 using Zooyard.Rpc.Cluster;
 using Zooyard.Rpc.LoadBalance;
+using Zooyard.Rpc.Route;
 using Zooyard.Rpc.Route.None;
 using Zooyard.Rpc.Route.State;
 using Zooyard.Utils;
@@ -422,7 +423,10 @@ public class ZooyardPools : IZooyardPools
                 key = address.GetParameter(ROUTE_KEY, "");
             }
 
-            if (!string.IsNullOrWhiteSpace(key) && _loadBalances.ContainsKey(key) && key != NoneStateRouterFactory.NAME)
+            if (!string.IsNullOrWhiteSpace(key) 
+                && _loadBalances.ContainsKey(key) 
+                && key != NoneStateRouterFactory.NAME
+                && _routeFoctories.ContainsKey(key))
             {
                 routerFactory = _routeFoctories[key];
             }
@@ -441,9 +445,16 @@ public class ZooyardPools : IZooyardPools
                 needToPrintMessageStr = address.GetParameter("needToPrintMessage", "");
             }
 
-            _ = bool.TryParse(needToPrintMessageStr, out bool needToPrintMessage);
+            Holder<RouterSnapshotNode>? nodeHolder = null;
+            if (bool.TryParse(needToPrintMessageStr, out bool needToPrintMessage) && needToPrintMessage) 
+            {
+                nodeHolder = new Holder<RouterSnapshotNode>
+                {
+                    Value = new RouterSnapshotNode(invocation.ServiceNamePoint(), urls)
+                };
+            }
 
-            var result = stateRoute.Route(urls, address, invocation, needToPrintMessage);
+            var result = stateRoute.Route(urls, address, invocation, needToPrintMessage, nodeHolder);
 
             _cacheRouteUrl[cacheKey] = result;
             return result;

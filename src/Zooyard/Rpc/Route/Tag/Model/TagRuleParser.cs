@@ -4,20 +4,17 @@ namespace Zooyard.Rpc.Route.Tag.Model;
 
 public class TagRuleParser
 {
-    public static TagRouterRule parse(string rawRule)
+    public static TagRouterRule Parse(string rawRule)
     {
-        //Yaml yaml = new Yaml(new SafeConstructor());
-        //Dictionary<String, Object> map = yaml.load(rawRule);
         var map = JsonSerializer.Deserialize<Dictionary<string, object>>(rawRule)!;
-        //Dictionary<String, Object> map = new();
-        TagRouterRule rule = TagRouterRule.parseFromMap(map);
+        TagRouterRule rule = TagRouterRule.ParseFromMap(map);
         rule.RawRule= rawRule;
         if (rule.Tags.Count == 0)
         {
             rule.Valid = false;
         }
 
-        rule.init();
+        rule.Init();
         return rule;
     }
 }

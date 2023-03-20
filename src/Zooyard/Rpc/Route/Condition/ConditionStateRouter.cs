@@ -77,8 +77,8 @@ public class ConditionStateRouter : AbstractStateRouter
         var matcher = ROUTE_PATTERN.Match(rule);
 
         while (matcher != null)
-        { // Try to match one by one
-
+        { 
+            // Try to match one by one
             string separator = matcher.Groups[1].Value;
             string content = matcher.Groups[2].Value;
             // Start part of the condition expression.
@@ -105,9 +105,7 @@ public class ConditionStateRouter : AbstractStateRouter
             {
                 if (pair == null)
                 {
-                    throw new Exception("Illegal route rule \""
-                            + rule + "\", The error char '" + separator
-                            + "' at index " + matcher.Index + " before \""
+                    throw new Exception($"Illegal route rule \"{rule}\", The error char '{separator}' at index {matcher.Index} before \""
                             + content + "\".");
                 }
 
@@ -119,10 +117,7 @@ public class ConditionStateRouter : AbstractStateRouter
             {
                 if (pair == null)
                 {
-                    throw new Exception("Illegal route rule \""
-                            + rule + "\", The error char '" + separator
-                            + "' at index " + matcher.Index + " before \""
-                            + content + "\".");
+                    throw new Exception($"Illegal route rule \"{rule}\", The error char '{separator}' at index {matcher.Index} before \"{content}\".");
                 }
 
                 values = pair.mismatches;
@@ -133,18 +128,13 @@ public class ConditionStateRouter : AbstractStateRouter
             { // Should be separated by ','
                 if (values == null || values.Count == 0)
                 {
-                    throw new Exception("Illegal route rule \""
-                            + rule + "\", The error char '" + separator
-                            + "' at index " + matcher.Index + " before \""
-                            + content + "\".");
+                    throw new Exception($"Illegal route rule \"{rule}\", The error char '{separator}' at index {matcher.Index} before \"{content}\".");
                 }
                 values.Add(content);
             }
             else
             {
-                throw new Exception("Illegal route rule \"" + rule
-                        + "\", The error char '" + separator + "' at index "
-                        + matcher.Index + " before \"" + content + "\".");
+                throw new Exception($"Illegal route rule \"{rule}\", The error char '{separator}' at index {matcher.Index} before \"{content}\".");
             }
 
             matcher = matcher.NextMatch();
@@ -153,14 +143,13 @@ public class ConditionStateRouter : AbstractStateRouter
     }
 
     protected override IList<URL> DoRoute(IList<URL> invokers, URL url, IInvocation invocation,
-                                              bool needToPrintMessage)//, Holder<RouterSnapshotNode<T>> nodeHolder,Holder<String> messageHolder)
+                                              bool needToPrintMessage, Holder<RouterSnapshotNode> nodeHolder, Holder<String> messageHolder)
     {
         if (!_enabled)
         {
             if (needToPrintMessage)
             {
-                Logger().LogInformation("Directly return. Reason: ConditionRouter disabled.");
-                //messageHolder.Value = "Directly return. Reason: ConditionRouter disabled.";
+                messageHolder.Value = "Directly return. Reason: ConditionRouter disabled.";
             }
             return invokers;
         }
@@ -169,8 +158,7 @@ public class ConditionStateRouter : AbstractStateRouter
         {
             if (needToPrintMessage)
             {
-                Logger().LogInformation("Directly return. Reason: Invokers from previous router is empty.");
-                //messageHolder.Value = "Directly return. Reason: Invokers from previous router is empty.";
+                messageHolder.Value = "Directly return. Reason: Invokers from previous router is empty.";
             }
             return invokers;
         }
@@ -180,43 +168,37 @@ public class ConditionStateRouter : AbstractStateRouter
             {
                 if (needToPrintMessage)
                 {
-                    Logger().LogInformation("Directly return. Reason: WhenCondition not match.");
-                    //messageHolder.Value = "Directly return. Reason: WhenCondition not match.";
+                    messageHolder.Value = "Directly return. Reason: WhenCondition not match.";
                 }
                 return invokers;
             }
             if (thenCondition == null)
             {
-                Logger().LogWarning("The current consumer in the service blacklist. consumer: " + NetUtil.LocalHost + ", service: " + url.ServiceKey);
+                Logger().LogWarning($"The current consumer in the service blacklist. consumer: {NetUtil.LocalHost}, service: {url.ServiceKey}");
                 if (needToPrintMessage)
                 {
-                    Logger().LogInformation("Empty return. Reason: ThenCondition is empty.");
-                    //messageHolder.Value = "Empty return. Reason: ThenCondition is empty.";
+                    messageHolder.Value = "Empty return. Reason: ThenCondition is empty.";
                 }
                 return new List<URL>();
             }
-            var result = new List<URL>(invokers);
 
-            result.RemoveAll(invoker => !MatchThen(invoker, url));
-            //result.removeIf(invoker-> !matchThen(invoker.getUrl(), url));
+            var result = invokers.Where(w=> !MatchThen(w, url)).ToList();
 
             if (result.Count>0)
             {
                 if (needToPrintMessage)
                 {
-                    Logger().LogInformation("Match return.");
-                    //messageHolder.Value = "Match return.";
+                    messageHolder.Value = "Match return.";
                 }
                 return result;
             }
             else if (this.Force)
             {
-                Logger().LogWarning("The route result is empty and force execute. consumer: " + NetUtil.LocalHost + ", service: " + url.ServiceKey + ", router: " + url.GetParameterAndDecoded(Constants.RULE_KEY));
+                Logger().LogWarning($"The route result is empty and force execute. consumer: {NetUtil.LocalHost}, service: {url.ServiceKey}, router: {url.GetParameterAndDecoded(Constants.RULE_KEY)}");
 
                 if (needToPrintMessage)
                 {
-                    Logger().LogInformation("Empty return. Reason: Empty result from condition and condition is force.");
-                    //messageHolder.Value = "Empty return. Reason: Empty result from condition and condition is force.";
+                    messageHolder.Value = "Empty return. Reason: Empty result from condition and condition is force.";
                 }
                 return result;
             }
@@ -227,8 +209,7 @@ public class ConditionStateRouter : AbstractStateRouter
         }
         if (needToPrintMessage)
         {
-            Logger().LogInformation("Directly return. Reason: Error occurred ( or result is empty ).");
-            //messageHolder.Value = "Directly return. Reason: Error occurred ( or result is empty ).";
+            messageHolder.Value = "Directly return. Reason: Error occurred ( or result is empty ).";
         }
         return invokers;
     }
@@ -253,7 +234,7 @@ public class ConditionStateRouter : AbstractStateRouter
         bool result = false;
         foreach (var matchPair in condition)
         {
-            String key = matchPair.Key;
+            string key = matchPair.Key;
 
             if (key.StartsWith(Constants.ARGUMENTS))
             {

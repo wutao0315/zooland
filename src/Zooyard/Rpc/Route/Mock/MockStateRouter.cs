@@ -8,21 +8,18 @@ public class MockStateRouter : AbstractStateRouter
 {
     public const string NAME = "MOCK_ROUTER";
 
-    private volatile IList<URL> normalInvokers = new List<URL>();
-    private volatile IList<URL> mockedInvokers = new List<URL>();
+    private volatile List<URL> normalInvokers = new();
+    private volatile List<URL> mockedInvokers = new();
 
-    public MockStateRouter(URL address) : base(address)
-    {
-    }
+    public MockStateRouter(URL address) : base(address) { }
 
-    protected override IList<URL> DoRoute(IList<URL> invokers, URL url, IInvocation invocation,
-                                          bool needToPrintMessage)//, Holder<RouterSnapshotNode> nodeHolder,Holder<String> messageHolder)
+    protected override IList<URL> DoRoute(IList<URL> invokers, URL url, IInvocation invocation, bool needToPrintMessage, Holder<RouterSnapshotNode> nodeHolder, Holder<String> messageHolder)
     {
         if (invokers.Count == 0)
         {
             if (needToPrintMessage)
             {
-                //messageHolder.Value = "Empty invokers. Directly return.";
+                messageHolder.Value = "Empty invokers. Directly return.";
             }
             return invokers;
         }
@@ -31,7 +28,7 @@ public class MockStateRouter : AbstractStateRouter
         {
             if (needToPrintMessage)
             {
-                //messageHolder.Value = "ObjectAttachments from invocation are null. Return normal Invokers.";
+                messageHolder.Value = "ObjectAttachments from invocation are null. Return normal Invokers.";
             }
             return invokers.Intersect(normalInvokers).ToList();
             //交集
@@ -45,7 +42,7 @@ public class MockStateRouter : AbstractStateRouter
             {
                 if (needToPrintMessage)
                 {
-                    //messageHolder.Value = "invocation.need.mock not set. Return normal Invokers.";
+                   messageHolder.Value = "invocation.need.mock not set. Return normal Invokers.";
                 }
                 return invokers.Intersect(normalInvokers).ToList();
                 //return invokers.and(normalInvokers);
@@ -54,7 +51,7 @@ public class MockStateRouter : AbstractStateRouter
             {
                 if (needToPrintMessage)
                 {
-                    //messageHolder.Value = "invocation.need.mock is true. Return mocked Invokers.";
+                    messageHolder.Value = "invocation.need.mock is true. Return mocked Invokers.";
                 }
                 return invokers.Intersect(mockedInvokers).ToList();
                 //return invokers.and(mockedInvokers);
@@ -62,7 +59,7 @@ public class MockStateRouter : AbstractStateRouter
         }
         if (needToPrintMessage)
         {
-            //messageHolder.Value = "Directly Return. Reason: invocation.need.mock is set but not match true";
+            messageHolder.Value = "Directly Return. Reason: invocation.need.mock is set but not match true";
         }
         return invokers;
     }
@@ -73,26 +70,25 @@ public class MockStateRouter : AbstractStateRouter
     //    cacheNormalInvokers(invokers);
     //}
 
-    private void cacheMockedInvokers(IList<URL> invokers)
+    private void CacheMockedInvokers(IList<URL> invokers)
     {
-        IList<URL> clonedInvokers = invokers;//.clone();
-        //clonedInvokers.removeIf((invoker) => !invoker.getUrl().getProtocol().equals(Constants.MOCK_PROTOCOL));
+        var clonedInvokers = invokers.Where(w=>!w.Protocol.Equals(Constants.MOCK_PROTOCOL, StringComparison.OrdinalIgnoreCase)).ToList();
         mockedInvokers = clonedInvokers;
     }
 
-    //@SuppressWarnings("rawtypes")
-    private void cacheNormalInvokers(IList<URL> invokers)
+    private void CacheNormalInvokers(IList<URL> invokers)
     {
-        IList<URL> clonedInvokers = invokers;//.clone();
-        //clonedInvokers.removeIf((invoker)->invoker.getUrl().getProtocol().Equals(Constants.MOCK_PROTOCOL));
+        var clonedInvokers = invokers.Where(w => w.Protocol.Equals(Constants.MOCK_PROTOCOL, StringComparison.OrdinalIgnoreCase)).ToList();
         normalInvokers = clonedInvokers;
     }
 
-    protected string doBuildSnapshot()
+    protected string DoBuildSnapshot()
     {
-        Dictionary<string, IList<URL>> grouping = new();
-        grouping.Add("Mocked", mockedInvokers);
-        grouping.Add("Normal", normalInvokers);
+        var  grouping = new Dictionary<string, IList<URL>>
+        {
+            { "Mocked", mockedInvokers },
+            { "Normal", normalInvokers }
+        };
         return new RouterGroupingState(this.GetType().Name, mockedInvokers.Count + normalInvokers.Count, grouping).ToString();
     }
 }

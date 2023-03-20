@@ -1,8 +1,12 @@
 ﻿namespace Zooyard.Rpc.Route.Tag.Model;
 
-public class Tag
+public record Tag
 {
-    public static Tag parseFromMap(Dictionary<string, object> map)
+    public string Name { get; set; } = string.Empty;
+
+    public List<string> Addresses { get; set; } = new();
+
+    public static Tag ParseFromMap(Dictionary<string, object> map)
     {
         var tag = new Tag();
         if (map.TryGetValue("name", out object? nameObj))
@@ -16,14 +20,4 @@ public class Tag
         }
         return tag;
     }
-
-    //if (addresses != null && List.class.isAssignableFrom(addresses.getClass())) 
-    //{
-    //    //tag.Addresses = ((List<Object>) addresses).stream().map(String::valueOf).collect(Collectors.toList()));
-    //    return tag;
-    //}
-
-    public string Name { get; set; } = string.Empty;
-
-    public List<String> Addresses { get; set; } = new();
 }

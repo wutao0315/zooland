@@ -101,7 +101,7 @@ public class NettyLoggingHandler : ChannelHandlerAdapter
 
     protected string Format(IChannelHandlerContext ctx, string eventName)
     {
-        string chStr = ctx.Channel.ToString();
+        string chStr = ctx.Channel.ToString()!;
         return new StringBuilder(chStr.Length + 1 + eventName.Length)
             .Append(chStr)
             .Append(' ')
@@ -131,9 +131,9 @@ public class NettyLoggingHandler : ChannelHandlerAdapter
         {
             return FormatSimple(ctx, eventName, firstArg);
         }
-        string chStr = ctx.Channel.ToString();
-        string arg1Str = firstArg.ToString();
-        string arg2Str = secondArg.ToString();
+        string chStr = ctx.Channel.ToString()!;
+        string arg1Str = firstArg.ToString()!;
+        string arg2Str = secondArg.ToString()!;
 
         var buf = new StringBuilder(
             chStr.Length + 1 + eventName.Length + 2 + arg1Str.Length + 2 + arg2Str.Length);
@@ -144,7 +144,7 @@ public class NettyLoggingHandler : ChannelHandlerAdapter
 
     string FormatByteBuffer(IChannelHandlerContext ctx, string eventName, IByteBuffer msg)
     {
-        string chStr = ctx.Channel.ToString();
+        string chStr = ctx.Channel.ToString()!;
         int length = msg.ReadableBytes;
         if (length == 0)
         {
@@ -166,8 +166,8 @@ public class NettyLoggingHandler : ChannelHandlerAdapter
 
     string FormatByteBufferHolder(IChannelHandlerContext ctx, string eventName, IByteBufferHolder msg)
     {
-        string chStr = ctx.Channel.ToString();
-        string msgStr = msg.ToString();
+        string chStr = ctx.Channel.ToString()!;
+        string msgStr = msg.ToString()!;
         IByteBuffer content = msg.Content;
         int length = content.ReadableBytes;
         if (length == 0)
@@ -192,8 +192,8 @@ public class NettyLoggingHandler : ChannelHandlerAdapter
 
     string FormatSimple(IChannelHandlerContext ctx, string eventName, object msg)
     {
-        string chStr = ctx.Channel.ToString();
-        string msgStr = msg.ToString();
+        string chStr = ctx.Channel.ToString()!;
+        string msgStr = msg.ToString()!;
         var buf = new StringBuilder(chStr.Length + 1 + eventName.Length + 2 + msgStr.Length);
         return buf.Append(chStr).Append(' ').Append(eventName).Append(": ").Append(msgStr).ToString();
     }

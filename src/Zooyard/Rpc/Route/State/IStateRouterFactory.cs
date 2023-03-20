@@ -6,7 +6,6 @@ public interface IStateRouterFactory
     /// <summary>
     /// Create state router.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
     /// <param name="interfaceClass"></param>
     /// <param name="address"></param>
     /// <returns></returns>

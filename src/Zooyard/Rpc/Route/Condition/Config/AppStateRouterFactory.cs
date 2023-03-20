@@ -1,4 +1,5 @@
-﻿using Zooyard.Rpc.Route.State;
+﻿using Microsoft.Extensions.Options;
+using Zooyard.Rpc.Route.State;
 
 namespace Zooyard.Rpc.Route.Condition.Config;
 
@@ -7,10 +8,12 @@ public class AppStateRouterFactory : IStateRouterFactory
     public const string NAME = "app";
 
     public string Name => NAME;
-
-    public void ClearCache()
+    private readonly IOptionsMonitor<ZooyardOption> _zooyard;
+    public AppStateRouterFactory(IOptionsMonitor<ZooyardOption> zooyard)
     {
+        _zooyard = zooyard;
     }
+    public void ClearCache() { }
 
     private volatile IStateRouter? router;
 
@@ -29,6 +32,6 @@ public class AppStateRouterFactory : IStateRouterFactory
 
     private IStateRouter CreateRouter(URL address)
     {
-        return new AppStateRouter(address, address.GetParameter("rule", "application"));
+        return new AppStateRouter(_zooyard, address, address.GetParameter("rule", "application"));
     }
 }

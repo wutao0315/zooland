@@ -1,6 +1,6 @@
 ﻿namespace Zooyard.Rpc.Route;
 
-public class Constants
+public record Constants
 {
     public const string FAIL_BACK_TASKS_KEY = "failbacktasks";
 
@@ -99,7 +99,7 @@ public class Constants
     public const string FORCE_USE_TAG = "force.use.tag";
 }
 
-public class CommonConstants 
+public record CommonConstants 
 {
     public const string METHOD_KEY = "mehod";
     public const string METHODS_KEY = "methods";

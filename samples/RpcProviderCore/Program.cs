@@ -795,16 +795,19 @@ public class ThriftServer
     private readonly Microsoft.Extensions.Logging.ILogger _logger;
     private readonly ILoggerFactory _loggerFactory;
     private readonly IEnumerable<ITAsyncProcessor> _asyncProcessorList;
-    public ThriftServer(//TServer server,
+    private readonly IConfiguration _configuration;
+    public ThriftServer(
         IEnumerable<ITAsyncProcessor> asyncProcessorList,
         ILogger<ThriftServer> logger,
         ILoggerFactory loggerFactory,
-        IOptionsMonitor<ThriftServerOption> thriftServerOption)
+        IOptionsMonitor<ThriftServerOption> thriftServerOption,
+        IConfiguration configuration)
     {
         _asyncProcessorList = asyncProcessorList;
         _thriftServerOption = thriftServerOption;
         _logger = logger;
         _loggerFactory = loggerFactory;
+        _configuration = configuration;
     }
 
 
@@ -826,6 +829,7 @@ public class ThriftServer
             }
         }, cancellationToken);
 
+        await Task.CompletedTask;
         //await _server.ServeAsync(cancellationToken);
         
         _logger.LogInformation("Started the thrift server ...");
@@ -853,7 +857,7 @@ public class ThriftServer
                 throw new Exception("This semple code does not yet allow multiplex over http (although Thrift itself of course does)");
 
             var asyncProcessor = _asyncProcessorList.FirstOrDefault();
-            await new HttpServerSample(asyncProcessor).Run(cancellationToken);
+            await new HttpServerSample(asyncProcessor!).Run(cancellationToken);
         }
         else
         {
@@ -911,10 +915,12 @@ public class ThriftServer
     {
         var port = _thriftServerOption.CurrentValue.Port;
         var configuration = _thriftServerOption.CurrentValue.Configuration;
+
+        var namedPipeNum = _configuration.GetValue("Thrift:NamedPipe", 10);
         TServerTransport serverTransport = transport switch
         {
             Transport.Tcp => new TServerSocketTransport(port, configuration),
-            Transport.NamedPipe => new TNamedPipeServerTransport(".test", configuration, NamedPipeClientFlags.None),
+            Transport.NamedPipe => new TNamedPipeServerTransport(".test", configuration, NamedPipeServerFlags.None, namedPipeNum),
             Transport.TcpTls => new TTlsServerSocketTransport(9090, configuration, GetCertificate(), ClientCertValidator, LocalCertificateSelectionCallback),
             _ => throw new ArgumentException("unsupported value $transport", nameof(transport)),
         };
@@ -941,7 +947,7 @@ public class ThriftServer
 
         //var handler = new CalculatorAsyncHandler();
         //ITAsyncProcessor processor = new Calculator.AsyncProcessor(handler);
-        ITAsyncProcessor processor = _asyncProcessorList.FirstOrDefault();
+        ITAsyncProcessor processor = _asyncProcessorList.FirstOrDefault()!;
         if (multiplex)
         {
             var multiplexedProcessor = new TMultiplexedProcessor();
@@ -999,7 +1005,7 @@ public class ThriftServer
     private X509Certificate2 GetCertificate()
     {
         // due to files location in net core better to take certs from top folder
-        var certFile = GetCertPath(Directory.GetParent(Directory.GetCurrentDirectory()));
+        var certFile = GetCertPath(Directory.GetParent(Directory.GetCurrentDirectory())!);
         return new X509Certificate2(certFile, "ThriftTest");
     }
 
@@ -1013,7 +1019,7 @@ public class ThriftServer
         {
             if (maxCount == 0)
                 throw new FileNotFoundException("Cannot find file in directories");
-            return GetCertPath(di.Parent, maxCount - 1);
+            return GetCertPath(di.Parent!, maxCount - 1);
         }
 
         return certFile.FullName;
@@ -1094,7 +1100,7 @@ public class ThriftServer
 
         public class Startup
         {
-            public Startup(Microsoft.Extensions.Hosting.IHostingEnvironment env)
+            public Startup(Microsoft.Extensions.Hosting.IHostEnvironment env)
             {
                 var builder = new ConfigurationBuilder()
                     .SetBasePath(env.ContentRootPath)
@@ -1159,6 +1165,8 @@ public class HttpServer
             }
         }, cancellationToken);
 
+        await Task.CompletedTask;
+
     }
 
     public async Task Stop(CancellationToken cancellationToken)
@@ -1201,6 +1209,7 @@ public class GrpcNetServer
             {
             }
         }, cancellationToken);
+        await Task.CompletedTask;
     }
 
     public async Task Stop(CancellationToken cancellationToken)

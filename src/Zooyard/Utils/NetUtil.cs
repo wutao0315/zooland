@@ -248,7 +248,7 @@ public class NetUtil
         return new IPEndPoint(IPAddress.Parse(host), port);
     }
 
-    public static bool matchIpExpression(string pattern, string host, int port)
+    public static bool MatchIpExpression(string pattern, string host, int port)
     {
 
         // if the pattern is subnet format, it will not be allowed to config port param in pattern.
@@ -261,9 +261,9 @@ public class NetUtil
         }
 
 
-        return matchIpRange(pattern, host, port);
+        return MatchIpRange(pattern, host, port);
     }
-    public static bool matchIpRange(string pattern, string host, int port)
+    public static bool MatchIpRange(string pattern, string host, int port)
     {
         if (pattern == null || host == null)
         {
@@ -277,8 +277,8 @@ public class NetUtil
 
         
         IPAddress inetAddress = IPAddress.Parse(host);
-        bool isIpv4 = isValidV4Address(inetAddress);
-        string[] hostAndPort = getPatternHostAndPort(pattern, isIpv4);
+        bool isIpv4 = IsValidV4Address(inetAddress);
+        string[] hostAndPort = GetPatternHostAndPort(pattern, isIpv4);
         if (hostAndPort[1] != null && !hostAndPort[1].Equals(port.ToString()))
         {
             return false;
@@ -292,7 +292,7 @@ public class NetUtil
         }
         string[] mask = pattern.Split(splitCharacter);
         // check format of pattern
-        checkHostPattern(pattern, mask, isIpv4);
+        CheckHostPattern(pattern, mask, isIpv4);
 
         host = inetAddress.ToString();//.getHostAddress();
         if (pattern.Equals(host))
@@ -301,7 +301,7 @@ public class NetUtil
         }
 
         // short name condition
-        if (!ipPatternContainExpression(pattern))
+        if (!IpPatternContainExpression(pattern))
         {
             IPAddress patternAddress = IPAddress.Parse(pattern);// InetAddress.getByName(pattern);
             return patternAddress.ToString().Equals(host);
@@ -322,9 +322,9 @@ public class NetUtil
                 {
                     throw new ArgumentException("There is wrong format of ip Address: " + mask[i]);
                 }
-                int min = getNumOfIpSegment(rangeNumStrs[0], isIpv4);
-                int max = getNumOfIpSegment(rangeNumStrs[1], isIpv4);
-                int ip = getNumOfIpSegment(ipAddress[i], isIpv4);
+                int min = GetNumOfIpSegment(rangeNumStrs[0], isIpv4);
+                int max = GetNumOfIpSegment(rangeNumStrs[1], isIpv4);
+                int ip = GetNumOfIpSegment(ipAddress[i], isIpv4);
                 if (ip < min || ip > max)
                 {
                     return false;
@@ -342,7 +342,7 @@ public class NetUtil
         return true;
     }
 
-    static bool isValidV4Address(IPAddress? address)
+    static bool IsValidV4Address(IPAddress? address)
     {
         
         if (address == null || IPAddress.IsLoopback(address))
@@ -356,7 +356,7 @@ public class NetUtil
             && !ANYHOST.Equals(name)
             && !LOCALHOST.Equals(name));
     }
-    private static int getNumOfIpSegment(string ipSegment, bool isIpv4)
+    private static int GetNumOfIpSegment(string ipSegment, bool isIpv4)
     {
         if (isIpv4)
         {
@@ -364,15 +364,15 @@ public class NetUtil
         }
         return int.Parse(ipSegment);// Integer.parseInt(ipSegment, 16)
     }
-    private static bool ipPatternContainExpression(string pattern)
+    private static bool IpPatternContainExpression(string pattern)
     {
         return pattern.Contains('*') || pattern.Contains('-');
     }
-    private static void checkHostPattern(string pattern, string[] mask, bool isIpv4)
+    private static void CheckHostPattern(string pattern, string[] mask, bool isIpv4)
     {
         if (!isIpv4)
         {
-            if (mask.Length != 8 && ipPatternContainExpression(pattern))
+            if (mask.Length != 8 && IpPatternContainExpression(pattern))
             {
                 throw new ArgumentException("If you config ip expression that contains '*' or '-', please fill qualified ip pattern like 234e:0:4567:0:0:0:3d:*. ");
             }
@@ -389,7 +389,7 @@ public class NetUtil
             }
         }
     }
-    static string[] getPatternHostAndPort(string pattern, bool isIpv4)
+    static string[] GetPatternHostAndPort(string pattern, bool isIpv4)
     {
         var result = new string[2];
         if (pattern.StartsWith("[") && pattern.Contains("]:"))

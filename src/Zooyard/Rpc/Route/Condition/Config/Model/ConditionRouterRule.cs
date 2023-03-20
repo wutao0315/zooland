@@ -1,6 +1,8 @@
-﻿namespace Zooyard.Rpc.Route.Condition.Config.Model;
+﻿using System.Collections;
 
-public class ConditionRouterRule: AbstractRouterRule
+namespace Zooyard.Rpc.Route.Condition.Config.Model;
+
+public record ConditionRouterRule : AbstractRouterRule
 {
 
     public static ConditionRouterRule ParseFromMap(Dictionary<string, object> map)
@@ -8,16 +10,16 @@ public class ConditionRouterRule: AbstractRouterRule
         var conditionRouterRule = new ConditionRouterRule();
         conditionRouterRule.ParseFromMapInner(map);
 
-        if (map.TryGetValue(Constants.CONDITIONS_KEY, out object? conditions) &&  conditions is List<string> cds) 
+        if (map.TryGetValue(Constants.CONDITIONS_KEY, out object? conditions) 
+            && typeof(IEnumerable).IsAssignableFrom(conditions.GetType())) 
         {
+            var cds = new List<string>();
+            foreach (var item in (IEnumerable)conditions)
+            {
+                cds.Add(item.ToString()!);
+            }
             conditionRouterRule.Conditions = cds;
         }
-
-        //Object conditions = map.get();
-        //if (conditions != null && List.class.isAssignableFrom(conditions.getClass())) {
-        //    conditionRouterRule.setConditions(((List<Object>) conditions).stream()
-        //            .map(String::valueOf).collect(Collectors.toList()));
-        //}
 
         return conditionRouterRule;
     }

@@ -1,34 +1,31 @@
 ﻿namespace Zooyard.Rpc.Route;
 
-public class RouterResult<T>
+public record RouterResult<T>
 {
-    private readonly bool _needContinueRoute;
-    private readonly List<T>? _result;
-    private readonly string? _message;
 
     public RouterResult(List<T>? result)
     {
-        _needContinueRoute = true;
-        _result = result;
-        _message = null;
+        IsNeedContinueRoute = true;
+        Result = result;
+        Message = null;
     }
 
     public RouterResult(List<T> result, string message)
     {
-        _needContinueRoute = true;
-        _result = result;
-        _message = message;
+        IsNeedContinueRoute = true;
+        Result = result;
+        Message = message;
     }
 
     public RouterResult(bool needContinueRoute, List<T> result, string message)
     {
-        _needContinueRoute = needContinueRoute;
-        _result = result;
-        _message = message;
+        IsNeedContinueRoute = needContinueRoute;
+        Result = result;
+        Message = message;
     }
 
-    public bool IsNeedContinueRoute => _needContinueRoute;
+    public bool IsNeedContinueRoute { get; init; }
 
-    public List<T>? Result => _result;
-    public string? Message => _message;
+    public List<T>? Result { get; init; }
+    public string? Message { get; init; }
 }

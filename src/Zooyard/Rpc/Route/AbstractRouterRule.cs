@@ -1,6 +1,6 @@
 ﻿namespace Zooyard.Rpc.Route;
 
-public class AbstractRouterRule
+public record AbstractRouterRule
 {
     protected void ParseFromMapInner(Dictionary<string, object> map)
     {

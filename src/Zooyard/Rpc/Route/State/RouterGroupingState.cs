@@ -2,55 +2,37 @@
 
 namespace Zooyard.Rpc.Route.State;
 
-public class RouterGroupingState
+public record RouterGroupingState
 {
-    private readonly string routerName;
-    private readonly int total;
-    private readonly Dictionary<string, IList<URL>> grouping;
-
-    public RouterGroupingState(String routerName, int total, Dictionary<String, IList<URL>> grouping)
+    public RouterGroupingState(string routerName, int total, Dictionary<String, IList<URL>> grouping)
     {
-        this.routerName = routerName;
-        this.total = total;
-        this.grouping = grouping;
+        RouterName = routerName;
+        Total = total;
+        Grouping = grouping;
     }
 
-    public String getRouterName()
-    {
-        return routerName;
-    }
+    public string RouterName { get; init; }
 
-    public int getTotal()
-    {
-        return total;
-    }
+    public int Total { get; init; }
 
-    public Dictionary<String, IList<URL>> getGrouping()
-    {
-        return grouping;
-    }
+    public Dictionary<String, IList<URL>> Grouping { get; init; }
 
     public override string ToString()
     {
         var stringBuilder = new StringBuilder();
-        stringBuilder.Append(routerName)
+        stringBuilder.Append(RouterName)
             .Append(' ')
             .Append(" Total: ")
-            .Append(total)
+            .Append(Total)
             .Append('\n');
 
-        foreach (var entry in grouping)
+        foreach (var entry in Grouping)
         {
             IList<URL> invokers = entry.Value;
             stringBuilder.Append("[ ")
                 .Append(entry.Key)
                 .Append(" -> ")
                 .Append(invokers.Count == 0 ? "Empty" : string.Join(",", invokers.Take(5)))
-                //invokers.stream()
-                //    .limit(5)
-                //    .map(Invoker::getUrl)
-                //    .map(URL::getAddress)
-                //    .collect(Collectors.joining(",")))
                 .Append(invokers.Count > 5 ? "..." : "")
                 .Append(" (Total: ")
                 .Append(invokers.Count)

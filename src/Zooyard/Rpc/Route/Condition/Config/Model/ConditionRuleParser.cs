@@ -7,7 +7,7 @@ public class ConditionRuleParser
     /// <summary>
     /// 
     ///
-    ///%YAML1.2
+    ///Json
     ///
     ///scope: application
     ///runtime: true
@@ -22,10 +22,8 @@ public class ConditionRuleParser
     /// </summary>
     /// <param name="rawRule"></param>
     /// <returns></returns>
-    public static ConditionRouterRule parse(string rawRule)
+    public static ConditionRouterRule Parse(string rawRule)
     {
-        //Yaml yaml = new Yaml(new SafeConstructor());
-        //Dictionary<String, Object> map = yaml.load(rawRule);
         var map = JsonSerializer.Deserialize<Dictionary<string, Object>>(rawRule)!;
         ConditionRouterRule rule = ConditionRouterRule.ParseFromMap(map);
         rule.RawRule = rawRule;

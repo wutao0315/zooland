@@ -1,70 +1,79 @@
-﻿namespace Zooyard.Rpc.Route.Tag.Model;
+﻿using System.Collections.Generic;
+using System.Reflection;
 
-public class TagRouterRule: AbstractRouterRule
+namespace Zooyard.Rpc.Route.Tag.Model;
+
+public record TagRouterRule: AbstractRouterRule
 {
-    //private List<Tag> tags;
     private readonly Dictionary<string, List<string>> addressToTagnames = new();
     private readonly Dictionary<string, List<string>> tagnameToAddresses = new();
 
-    public static TagRouterRule parseFromMap(Dictionary<string, object> map)
+    public static TagRouterRule ParseFromMap(Dictionary<string, object> map)
     {
         var tagRouterRule = new TagRouterRule();
         tagRouterRule.ParseFromMapInner(map);
 
-        if (map.TryGetValue(Constants.TAGS_KEY, out object? tags) && tags != null)
+        if (map.TryGetValue(Constants.TAGS_KEY, out object? tags) 
+            && tags != null
+            && typeof(List<Dictionary<string, object>>).IsAssignableFrom(tags.GetType()))
         {
-            //tagRouterRule.Tags
+            var tagList = (List<Dictionary<string, object>>)tags;
+            var tagResult = new List<Tag>();
+            foreach (var tag in tagList)
+            {
+                var item = Tag.ParseFromMap(tag);
+                tagResult.Add(item);
+            }
+            tagRouterRule.Tags = tagResult;
         }
-        //if (tags != null && List.class.isAssignableFrom(tags.getClass())) 
-        //{
-        //    tagRouterRule.setTags(((List<Map<String, Object>>) tags).stream()
-        //            .map(Tag::parseFromMap).collect(Collectors.toList()));
-        //}
 
         return tagRouterRule;
     }
 
-    public void init()
+    public void Init()
     {
         if (!Valid)
         {
             return;
         }
-        //tags.stream().filter(tag->CollectionUtils.isNotEmpty(tag.getAddresses())).forEach(tag-> {
-        //    tagnameToAddresses.put(tag.getName(), tag.getAddresses());
-        //    tag.getAddresses().forEach(addr-> {
-        //        List<String> tagNames = addressToTagnames.computeIfAbsent(addr, k-> new ArrayList<>());
-        //        tagNames.add(tag.getName());
-        //    });
-        //    });
-        //}
+        foreach (var tag in Tags.Where(w => w.Addresses.Count > 0))
+        {
+            tagnameToAddresses.Add(tag.Name, tag.Addresses);
+            foreach (var addr in tag.Addresses)
+            {
+                addressToTagnames.TryGetValue(addr, out var tagNames);
+                tagNames ??= new List<string>();
+                tagNames.Add(tag.Name);
+                addressToTagnames[addr] = tagNames;
+            }
+        }
     }
 
     public List<string> Addresses
     {
-        get => null!;
-        //return tags.stream()
-        //        .filter(tag->CollectionUtils.isNotEmpty(tag.getAddresses()))
-        //        .flatMap(tag->tag.getAddresses().stream())
-        //        .collect(Collectors.toList());
+
+        get
+        {
+            var result = new List<string>();
+            foreach (var addresses in Tags.Where(w => w.Addresses.Count > 0).Select(w => w.Addresses))
+            {
+                foreach (var addr in addresses) 
+                {
+                    result.Add(addr);
+                }
+            }
+            return result;
+        }
     }
 
-    public List<string> getTagNames()
+    public List<string> GetTagNames()
     {
-        return null!;
-        //return tags.stream().map(Tag::getName).collect(Collectors.toList());
+        return Tags.Select(w => w.Name).ToList();
     }
 
-    public Dictionary<string, List<string>> getAddressToTagnames()
-    {
-        return addressToTagnames;
-    }
+    public Dictionary<string, List<string>> AddressToTagnames=> addressToTagnames;
 
-
-    public Dictionary<string, List<string>> getTagnameToAddresses()
-    {
-        return tagnameToAddresses;
-    }
+    public Dictionary<string, List<string>> TagnameToAddresses => tagnameToAddresses;
 
     public List<Tag> Tags { get; set; } = new();
 }

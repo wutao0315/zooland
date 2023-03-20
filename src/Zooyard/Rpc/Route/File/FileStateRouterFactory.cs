@@ -1,4 +1,5 @@
-﻿using Zooyard.Rpc.Route.Script;
+﻿using System;
+using Zooyard.Rpc.Route.Script;
 using Zooyard.Rpc.Route.State;
 
 namespace Zooyard.Rpc.Route.File;
@@ -27,8 +28,10 @@ public class FileStateRouterFactory: IStateRouterFactory
         {
             // Transform File URL into Script Route URL, and Load
             // file:///d:/path/to/route.js?router=script ==> script:///d:/path/to/route.js?type=js&rule=<file-content>
-            string protocol = address.GetParameter(Constants.ROUTER_KEY, ScriptStateRouterFactory.NAME); // Replace original protocol (maybe 'file') with 'script'
-            string? type = null; // Use file suffix to config script type, e.g., js, groovy ...
+            // Replace original protocol (maybe 'file') with 'script'
+            string protocol = address.GetParameter(Constants.ROUTER_KEY, ScriptStateRouterFactory.NAME);
+            // Use file suffix to config script type, e.g., js, ...
+            string? type = null; 
             string? path = address.Path;
             if (path != null)
             {
@@ -39,7 +42,7 @@ public class FileStateRouterFactory: IStateRouterFactory
                 }
             }
 
-            string rule = "";// IOUtils.read(new FileReader(url.getAbsolutePath()));
+            string rule = System.IO.File.ReadAllText(address.AbsolutePath!);
 
             // FIXME: this code looks useless
             bool runtime = address.GetParameter(Constants.RUNTIME_KEY, false);

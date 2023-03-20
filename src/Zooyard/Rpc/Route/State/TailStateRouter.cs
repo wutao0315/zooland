@@ -10,16 +10,12 @@ namespace Zooyard.Rpc.Route.State
     public class TailStateRouter : IStateRouter
     {
         private static readonly TailStateRouter INSTANCE = new ();
-        private TailStateRouter()
-        {
+        private TailStateRouter() { }
 
-        }
-        public static TailStateRouter getInstance()
+        public static TailStateRouter GetInstance()
         {
             return INSTANCE;
         }
-
-
 
         public void SetNextRouter(IStateRouter nextRouter)
         {
@@ -28,8 +24,7 @@ namespace Zooyard.Rpc.Route.State
 
         //public URL Url => null;
 
-
-        public IList<URL> Route(IList<URL> invokers, URL address, IInvocation invocation, bool needToPrintMessage)//, Holder<RouterSnapshotNode> nodeHolder)
+        public IList<URL> Route(IList<URL> invokers, URL address, IInvocation invocation, bool needToPrintMessage, Holder<RouterSnapshotNode> nodeHolder)
         {
             return invokers;
         }
@@ -42,11 +37,9 @@ namespace Zooyard.Rpc.Route.State
 
         //}
 
-        public string BuildSnapshot()
-        {
-            return "TailStateRouter End";
-        }
-
-       
+        //public string BuildSnapshot()
+        //{
+        //    return "TailStateRouter End";
+        //}
     }
 }
