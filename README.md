@@ -6,6 +6,13 @@
 本微服务架构的设计特点是不需要自己实现通信层，利用各家大厂已经开发并在产品中验证过的通信框架，如grpc,thrift,akk,wcf等，在他们基础上实现容错，负载均衡，支持 opentracing,调用的失败自动隔离,错误自动重试等，支持通信框架混用，支持部分代码是.net core,部分代码是.net framework，跨平台，让历史项目可以更加平滑的过度到微服务框架下，同时提供统一的调用接口和封装，保证业务的统一和独立。同时为了保证性能在底层实现自有的连接池，通过一套统一的机制充分利用系统资源。
 
 
+### RPC
+请求->路由->集群->负载均衡
+
+请求携带meta：ip,token(app|user),user(id|name)
+接口描述meta：serviceName,routeRule,routeContent,cluster,loadbance
+实例描述meta: routeRule,routeContent,cluster,loadbance,weight
+
 ### 如何安装
 
 nuget:Install-Package Zooyard.Extensions -Version  版本号
