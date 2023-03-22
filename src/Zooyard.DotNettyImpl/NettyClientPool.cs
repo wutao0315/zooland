@@ -6,14 +6,9 @@ using DotNetty.Transport.Channels;
 using DotNetty.Transport.Channels.Sockets;
 using DotNetty.Transport.Libuv;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 using System.Net;
-using System.Text;
-using System.Threading.Channels;
 using Zooyard.DotNettyImpl.Adapter;
-//using Zooyard.DotNettyImpl.Adapter;
-//using Zooyard.DotNettyImpl.Codec;
 using Zooyard.DotNettyImpl.Messages;
 using Zooyard.DotNettyImpl.Transport;
 using Zooyard.Rpc;
@@ -23,7 +18,6 @@ namespace Zooyard.DotNettyImpl;
 
 public class NettyClientPool : AbstractClientPool
 {
-    
     private readonly ILogger _logger;
     private readonly ILoggerFactory _loggerFactory;
     private readonly ITransportMessageEncoder _transportMessageEncoder;

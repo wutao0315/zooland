@@ -47,15 +47,12 @@ public sealed class AtomicInteger
     }
     public override bool Equals(object? obj)
     {
-        switch (obj)
+        return obj switch
         {
-            case AtomicInteger atomicInteger:
-                return atomicInteger.atomicValue == atomicValue;
-            case int value:
-                return value == atomicValue;
-            default:
-                return false;
-        }
+            AtomicInteger atomicInteger => atomicInteger.atomicValue == atomicValue,
+            int value => value == atomicValue,
+            _ => false,
+        };
     }
 
     public override int GetHashCode()

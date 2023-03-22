@@ -4,7 +4,7 @@ public class RandomLoadBalance : AbstractLoadBalance
 {
     public override string Name => NAME;
     public const string NAME = "random";
-    private readonly Random random = new Random();
+    private readonly Random random = new ();
 
     protected override URL DoSelect(IList<URL> urls, IInvocation invocation)
     {

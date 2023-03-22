@@ -3,7 +3,7 @@
 /// <summary>
 /// 计数器，从0开始，保证正数。
 /// </summary>
-public class PositiveAtomicCounter
+public sealed record PositiveAtomicCounter
 {
     private const int MASK = 0x7FFFFFFF;
     private readonly AtomicInteger atom;

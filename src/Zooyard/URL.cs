@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -569,7 +570,7 @@ public sealed record URL
     }
 
     public T GetMethodPositiveParameter<T>(string method, string key, T defaultValue) 
-        where T : IComparable<int>, IConvertible
+        where T : IComparable, IConvertible
     {
         if (defaultValue.CompareTo(0) <= 0)
         {
@@ -1283,4 +1284,17 @@ public sealed record URL
     //    }
     //    return true;
     //}
+}
+
+public sealed record BadUrl 
+{
+    public BadUrl(URL url, Exception ex, DateTime? dt = default)
+    {
+        Url = url;
+        CurrentException = ex;
+        BadTime = dt ?? DateTime.Now;
+    }
+    public URL Url { get; init; }
+    public Exception CurrentException { get; set; }
+    public DateTime BadTime { get; set; }
 }

@@ -38,12 +38,13 @@ public abstract class AbstractCluster : ICluster
     /// <param name="loadbalance"></param>
     /// <param name="invocation"></param>
     /// <param name="invokers"></param>
+    /// <param name="disabledUrls"></param>
     /// <param name="selected"> 已选过的invoker.注意：输入保证不重复</param>
     /// <returns></returns>
-    protected URL Select(ILoadBalance loadbalance, IInvocation invocation, IList<URL>? invokers, IList<URL>? selected = null)
+    protected URL Select(ILoadBalance loadbalance, IInvocation invocation, IList<URL>? invokers, IList<BadUrl> disabledUrls, IList<URL>? selected = null)
     {
         if (invokers == null || invokers.Count == 0)
-            throw new Exception("invokers is null or empty");
+            throw new RpcException("invokers is null or empty");
 
         string methodName = invocation.MethodInfo.Name;
 
@@ -56,7 +57,7 @@ public abstract class AbstractCluster : ICluster
         //ignore cucurrent problem
         if (sticky && stickyInvoker != null && (selected == null || !selected.Contains(stickyInvoker)))
         {
-            if (availablecheck)//&& stickyInvoker.IsAvailable()
+            if (availablecheck && !disabledUrls.Any(w=>w.Url == stickyInvoker))
             {
                 return stickyInvoker;
             }
@@ -199,10 +200,21 @@ public abstract class AbstractCluster : ICluster
                     + ". Please check if the providers have been started and registered.");
         }
     }
-    public virtual async Task<IClusterResult<T>> Invoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation) 
+
+    public virtual async Task<IClusterResult<T>> Invoke<T>(IClientPool pool, 
+        ILoadBalance loadbalance,
+        URL address, 
+        IList<URL> urls,
+        IList<BadUrl> disabledUrls,
+        IInvocation invocation) 
     {
-        var result = await this.DoInvoke<T>(pool, loadbalance, address, urls, invocation);
+        var result = await this.DoInvoke<T>(pool, loadbalance, address, urls, disabledUrls, invocation);
         return result;
     }
-    protected abstract Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> urls, IInvocation invocation);
+    protected abstract Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool,
+        ILoadBalance loadbalance, 
+        URL address, 
+        IList<URL> urls, 
+        IList<BadUrl> disabledUrls,
+        IInvocation invocation);
 }

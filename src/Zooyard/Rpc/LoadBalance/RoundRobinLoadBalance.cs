@@ -7,7 +7,7 @@ public class RoundRobinLoadBalance : AbstractLoadBalance
 {
     public override string Name => NAME;
     public const string NAME = "roundrobin";
-    private readonly ConcurrentDictionary<string, AtomicPositiveInteger> _sequences = new ConcurrentDictionary<string, AtomicPositiveInteger>();
+    private readonly ConcurrentDictionary<string, AtomicPositiveInteger> _sequences = new ();
 
     protected override URL DoSelect(IList<URL> urls, IInvocation invocation)
     {
@@ -45,11 +45,11 @@ public class RoundRobinLoadBalance : AbstractLoadBalance
                 {
                     var k = each.Key;
                     var v = each.Value;
-                    if (mod == 0 && v.GetValue() > 0)
+                    if (mod == 0 && v.Value > 0)
                     {
                         return k;
                     }
-                    if (v.GetValue() > 0)
+                    if (v.Value > 0)
                     {
                         v.Decrement();
                         mod--;
@@ -61,28 +61,18 @@ public class RoundRobinLoadBalance : AbstractLoadBalance
         return urls[currentSequence % length];
     }
 
-    private sealed class IntegerWrapper
+    private sealed record IntegerWrapper
     {
-        private int value;
-
         public IntegerWrapper(int value)
         {
-            this.value = value;
+            this.Value = value;
         }
 
-        public int GetValue()
-        {
-            return value;
-        }
-
-        public void SetValue(int value)
-        {
-            this.value = value;
-        }
+        public int Value { get; set; }
 
         public void Decrement()
         {
-            this.value--;
+            this.Value--;
         }
     }
 

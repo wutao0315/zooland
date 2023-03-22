@@ -11,14 +11,19 @@ public class FailsafeCluster : AbstractCluster
     public const string NAME = "failsafe";
 
 
-    protected override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> invokers, IInvocation invocation)
+    protected override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool,
+        ILoadBalance loadbalance, 
+        URL address, 
+        IList<URL> invokers, 
+        IList<BadUrl> disabledUrls, 
+        IInvocation invocation)
     {
-        //var goodUrls = new List<URL>();
-        //var badUrls = new List<BadUrl>();
+        var goodUrls = new List<URL>();
+        var badUrls = new List<BadUrl>();
         Exception? exception = null;
         CheckInvokers(invokers, invocation, address);
 
-        var invoker = base.Select(loadbalance, invocation, invokers, null);
+        var invoker = base.Select(loadbalance, invocation, invokers, disabledUrls);
         try
         {
             var client = await pool.GetClient(invoker);
@@ -29,9 +34,9 @@ public class FailsafeCluster : AbstractCluster
                 var result = await refer.Invoke<T>(invocation);
                 _source.WriteConsumerAfter(invoker, invocation, result);
                 await pool.Recovery(client);
-                //goodUrls.Add(invoker);
+                goodUrls.Add(invoker);
                 return new ClusterResult<T>(result, 
-                    //goodUrls, badUrls,
+                    goodUrls, badUrls,
                     exception, false);
             }
             catch (Exception ex)
@@ -48,7 +53,7 @@ public class FailsafeCluster : AbstractCluster
             Logger().LogError(e, $"Failsafe ignore exception: {e.Message}");
             var result = new RpcResult<T>(e); // ignore
             return new ClusterResult<T>(result, 
-                //goodUrls, badUrls, 
+                goodUrls, badUrls, 
                 exception, false);
         }
     }

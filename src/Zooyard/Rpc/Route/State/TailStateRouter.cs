@@ -24,7 +24,7 @@ namespace Zooyard.Rpc.Route.State
 
         //public URL Url => null;
 
-        public IList<URL> Route(IList<URL> invokers, URL address, IInvocation invocation, bool needToPrintMessage, Holder<RouterSnapshotNode> nodeHolder)
+        public IList<URL> Route(IList<URL> invokers, URL address, IInvocation invocation, bool needToPrintMessage, Holder<RouterSnapshotNode>? nodeHolder)
         {
             return invokers;
         }

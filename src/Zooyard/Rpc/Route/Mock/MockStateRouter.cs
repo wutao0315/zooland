@@ -37,7 +37,7 @@ public class MockStateRouter : AbstractStateRouter
         else
         {
             //string value = (string)invocation.GetObjectAttachmentWithoutConvert(Constants.INVOCATION_NEED_MOCK);
-            string value = (string)invocation.GetAttachment(Constants.INVOCATION_NEED_MOCK);
+            string? value = invocation.GetAttachment(Constants.INVOCATION_NEED_MOCK);
             if (value == null)
             {
                 if (needToPrintMessage)

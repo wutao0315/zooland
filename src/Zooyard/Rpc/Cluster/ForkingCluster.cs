@@ -1,4 +1,5 @@
-﻿using Zooyard.Atomic;
+﻿using System;
+using Zooyard.Atomic;
 using Zooyard.Diagnositcs;
 using Zooyard.Logging;
 
@@ -16,11 +17,16 @@ public class ForkingCluster : AbstractCluster
     public const string FORKS_KEY = "forks";
     public const int DEFAULT_FORKS = 2;
 
-    protected override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> invokers, IInvocation invocation)
+    protected override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, 
+        ILoadBalance loadbalance,
+        URL address, 
+        IList<URL> invokers, 
+        IList<BadUrl> disabledUrls,
+        IInvocation invocation)
     {
         //IResult result = null;
-        //var goodUrls = new List<URL>();
-        //var badUrls = new List<BadUrl>();
+        var goodUrls = new List<URL>();
+        var badUrls = new List<BadUrl>();
 
         CheckInvokers(invokers, invocation, address);
 
@@ -39,7 +45,7 @@ public class ForkingCluster : AbstractCluster
             for (int i = 0; i < forks; i++)
             {
                 //在invoker列表(排除selected)后,如果没有选够,则存在重复循环问题.见select实现.
-                var invoker = base.Select(loadbalance, invocation, invokers, selected);
+                var invoker = base.Select(loadbalance, invocation, invokers, disabledUrls, selected);
                 if (!selected.Contains(invoker))
                 {//防止重复添加invoker
                     selected.Add(invoker);
@@ -64,7 +70,7 @@ public class ForkingCluster : AbstractCluster
                         var resultInner = await refer.Invoke<T>(invocation);
                         _source.WriteConsumerAfter(invoker, invocation, resultInner);
                         await pool.Recovery(client);
-                        //goodUrls.Add(invoker);
+                        goodUrls.Add(invoker);
                         return resultInner;
                     }
                     catch (Exception ex)
@@ -76,7 +82,7 @@ public class ForkingCluster : AbstractCluster
                 }
                 catch (Exception e)
                 {
-                    //badUrls.Add(new BadUrl { Url = invoker, BadTime = DateTime.Now, CurrentException = e });
+                    badUrls.Add(new BadUrl(invoker, e));
                     int value = count.IncrementAndGet();
                     if (value >= selected.Count)
                     {
@@ -98,14 +104,14 @@ public class ForkingCluster : AbstractCluster
                 throw new RpcException(e is RpcException exception ? exception.Code : 0, "Failed to forking invoke provider " + selected + ", but no luck to perform the invocation. Last error is: " + e?.Message, e?.InnerException != null ? e.InnerException : e);
             }
             return new ClusterResult<T>(ret, 
-                //goodUrls, badUrls,
+                goodUrls, badUrls,
                 null,false);
         }
         catch (Exception e)
         {
             var exception = new RpcException("Failed to forking invoke provider " + selected + ", but no luck to perform the invocation. Last error is: " + e.Message, e);
             return new ClusterResult<T>(new RpcResult<T>(exception), 
-                //goodUrls, badUrls,
+                goodUrls, badUrls,
                 exception, true);
         }
     }

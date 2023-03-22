@@ -1,7 +1,10 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Runtime.Intrinsics.Arm;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using static Zooyard.Rpc.LoadBalance.ConsistentHashLoadBalance;
 
 namespace Zooyard.Rpc.LoadBalance;
 
@@ -14,20 +17,82 @@ public class ConsistentHashLoadBalance : AbstractLoadBalance
     protected override URL DoSelect(IList<URL> urls, IInvocation invocation)
     {
         var key = urls[0].ServiceKey + "." + invocation.MethodInfo.Name;
-        int identityHashCode = urls.GetHashCode();
-        var selector = _selectors[key];
-        if (selector == null || selector.GetHashCode() != identityHashCode)
+
+        var bs = new StringBuilder();
+        foreach(var invoker in urls) {
+            bs.Append(invoker.ToString());
+        }
+
+        int identityHashCode = Hash(bs.ToString());
+        
+        if (!_selectors.TryGetValue(key, out var selector) || selector.IdentityHashCode != identityHashCode)
         {
-            _selectors.TryAdd(key, new ConsistentHashSelector(urls, invocation.MethodInfo.Name, identityHashCode));
+            _selectors[key] =  new ConsistentHashSelector(urls, invocation.MethodInfo.Name, identityHashCode);
             selector = _selectors[key];
         }
         return selector.Select(invocation);
     }
-    private sealed class ConsistentHashSelector
+
+    public int Hash(string item)
+    {
+        var hash = Hash(Encoding.ASCII.GetBytes(item ?? ""));
+        return (int)hash;
+    }
+    private const UInt32 m = 0x5bd1e995;
+    private const Int32 r = 24;
+
+    public UInt32 Hash(Byte[] data, UInt32 seed = 0xc58f1a7b)
+    {
+        var length = data.Length;
+        if (length == 0)
+            return 0;
+
+        var h = seed ^ (UInt32)length;
+        var c = 0;
+        while (length >= 4)
+        {
+            var k = (UInt32)(
+                data[c++]
+                | data[c++] << 8
+                | data[c++] << 16
+                | data[c++] << 24);
+            k *= m;
+            k ^= k >> r;
+            k *= m;
+            h *= m;
+            h ^= k;
+            length -= 4;
+        }
+        switch (length)
+        {
+            case 3:
+                h ^= (UInt16)(data[c++] | data[c++] << 8);
+                h ^= (UInt32)(data[c] << 16);
+                h *= m;
+                break;
+            case 2:
+                h ^= (UInt16)(data[c++] | data[c] << 8);
+                h *= m;
+                break;
+            case 1:
+                h ^= data[c];
+                h *= m;
+                break;
+            default:
+                break;
+        }
+
+        h ^= h >> 13;
+        h *= m;
+        h ^= h >> 15;
+        return h;
+    }
+
+    private sealed record ConsistentHashSelector
     {
         public Regex COMMA_SPLIT_PATTERN = new ("\\s*[,]+\\s*",RegexOptions.Compiled);
         // 创建TreeMap 来保存结点
-        private readonly IDictionary<long, URL> _virtualInvokers;
+        private readonly SortedDictionary<uint, URL> _virtualInvokers;
         // 副本数 
         private readonly int _replicaNumber;
         // 生成调用结点HashCode
@@ -38,7 +103,7 @@ public class ConsistentHashLoadBalance : AbstractLoadBalance
         public ConsistentHashSelector(IList<URL> invokers, string methodName, int identityHashCode)
         {
             // 创建TreeMap 来保存结点  
-            _virtualInvokers = new Dictionary<long, URL>();
+            _virtualInvokers = new SortedDictionary<uint, URL>();
             // 生成调用结点HashCode
             _identityHashCode = identityHashCode;
             // 获取Url
@@ -57,7 +122,7 @@ public class ConsistentHashLoadBalance : AbstractLoadBalance
             // 对每个invoker生成replicaNumber个虚拟结点，并存放于TreeMap中
             foreach (var invoker in invokers)
             {
-                var address = invoker.Address;
+                var address = invoker.Ip + ":" + invoker.Port;
                 for (int i = 0; i < _replicaNumber / 4; i++)
                 {
                     // 根据md5算法为每4个结点生成一个消息摘要，摘要长为16字节128位。
@@ -66,13 +131,15 @@ public class ConsistentHashLoadBalance : AbstractLoadBalance
                     // 并作为虚拟结点的key。
                     for (int h = 0; h < 4; h++)
                     {
-                        long m = Hash(digest, h);
-                        _virtualInvokers.Add(m, invoker);
+                        var m = Hash(digest, h);
+                        _virtualInvokers[m] = invoker;
                     }
                 }
             }
+            //sort.Sort(selector.keys)
         }
 
+        public int IdentityHashCode => _identityHashCode;
         //选择结点
         public URL Select(IInvocation invocation)
         {
@@ -93,45 +160,46 @@ public class ConsistentHashLoadBalance : AbstractLoadBalance
             {
                 if (i >= 0 && i < args.Length)
                 {
-                    buf.Append(args[i]);
+                    buf.Append(args[i].ToString());
                 }
             }
             return buf.ToString();
         }
 
         //根据hashCode选择结点
-        private URL SelectForKey(long hash)
+        private URL SelectForKey(uint hash)
         {
-            URL invoker;
-            long key = hash;
+            var key = hash;
             // 若HashCode直接与某个虚拟结点的key一样，则直接返回该结点
             if (!_virtualInvokers.ContainsKey(key))
             {
-                // 若不一致，找到一个最小上届的key所对应的结点。
-                var tailMap = _virtualInvokers.Where(w=>w.Key>=key)?.OrderBy(o=>o.Key);
-                // 若存在则返回，例如hashCode落在图中[1]的位置
-                // 若不存在，例如hashCode落在[2]的位置，那么选择treeMap中第一个结点
-                // 使用TreeMap的firstKey方法，来选择最小上界。
-                if (tailMap == null || tailMap.Count() <= 0)
-                {
-                    key = _virtualInvokers.First().Key;
-                }
-                else {
-                    key = tailMap.First().Key;
-                }
+                return _virtualInvokers[key];
             }
-            invoker = _virtualInvokers[key];
+
+            // 若不一致，找到一个最小上届的key所对应的结点。
+            var tailMap = _virtualInvokers.Keys.Where(w => w >= key);
+            // 若存在则返回，例如hashCode落在图中[1]的位置
+            // 若不存在，例如hashCode落在[2]的位置，那么选择treeMap中第一个结点
+            // 使用TreeMap的firstKey方法，来选择最小上界。
+            if (tailMap == null || tailMap.Count() <= 0)
+            {
+                key = _virtualInvokers.First().Key;
+            }
+            else
+            {
+                key = tailMap.First();
+            }
+            var invoker = _virtualInvokers[key];
             return invoker;
         }
 
-        private long Hash(byte[] digest, int number)
+        private uint Hash(byte[] digest, int number)
         {
-            #pragma warning disable CS0675
-            return (((long)(digest[3 + number * 4] & 0xFF) << 24)
-                    | ((long)(digest[2 + number * 4] & 0xFF) << 16)
-                    | ((long)(digest[1 + number * 4] & 0xFF) << 8)
-                    | (digest[number * 4] & 0xFF))
-                    & 0xFFFFFFFFL;
+            return (((uint)((digest[3 + number * 4] & 0xFF) << 24))
+                    | ((uint)((digest[2 + number * 4] & 0xFF) << 16))
+                    | ((uint)((digest[1 + number * 4] & 0xFF) << 8))
+                    | ((uint)digest[number * 4] & 0xFF))
+                    & 0xFFFFFFF;
         }
         private byte[] Md5(string value)
         {

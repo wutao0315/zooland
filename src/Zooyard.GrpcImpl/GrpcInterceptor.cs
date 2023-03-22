@@ -16,7 +16,7 @@ public class ClientGrpcHeaderInterceptor : ClientInterceptor
         var attachments = RpcContext.GetContext().Attachments;
         foreach (var item in attachments)
         {
-            metadata.Add(item.Key, item.Value);
+            metadata.Add(item.Key, item.Value.ToString()!);
         } 
         var options = context.Options.WithHeaders(metadata);
         context = new ClientInterceptorContext<TRequest, TResponse>(context.Method, context.Host, options);
@@ -30,7 +30,7 @@ public class ClientGrpcHeaderInterceptor : ClientInterceptor
         var attachments = RpcContext.GetContext().Attachments;
         foreach (var item in attachments)
         {
-            metadata.Add(item.Key, item.Value);
+            metadata.Add(item.Key, item.Value.ToString()!);
         }
         var options = context.Options.WithHeaders(metadata);
         context = new ClientInterceptorContext<TRequest, TResponse>(context.Method, context.Host, options);

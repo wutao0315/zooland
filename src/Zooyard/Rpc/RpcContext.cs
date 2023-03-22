@@ -1,6 +1,8 @@
-﻿using System.Collections.Concurrent;
+﻿using Newtonsoft.Json.Linq;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Net;
-using System.Runtime.CompilerServices;
 using Zooyard.Utils;
 
 namespace Zooyard.Rpc;
@@ -13,85 +15,16 @@ namespace Zooyard.Rpc;
 /// </summary>
 public class RpcContext
 {
-    //public const string ASYNC_KEY = "async";
-    //public const string RETURN_KEY = "return";
     private static readonly AsyncLocal<RpcContext> LOCAL = new();
-    
-    //private Task future;
+    protected volatile IDictionary<string, object> attachments = new Dictionary<string, object>();
 
     private IList<URL>? urls;
-
-    private DnsEndPoint? localAddress;
-
-    private DnsEndPoint? remoteAddress;
-
-    private readonly ConcurrentDictionary<string, string> attachments = new ();
-
-    private readonly ConcurrentDictionary<string, object> values = new ();
-
-    protected internal RpcContext()
-    {
-    }
-
+    
     public static RpcContext GetContext()
     {
         LOCAL.Value ??= new RpcContext();
         return LOCAL.Value;
     }
-
-    /// <summary>
-    /// is provider side.
-    /// </summary>
-    /// <returns> provider side. </returns>
-    public virtual bool ProviderSide
-    {
-        get
-        {
-            URL? url = Url;
-            if (url == null)
-            {
-                return false;
-            }
-            DnsEndPoint? address = RemoteAddress;
-            if (address == null)
-            {
-                return false;
-            }
-            string host = address.Host;
-            return url.Port != address.Port || !NetUtil.FilterLocalHost(url.Ip??"").Equals(NetUtil.FilterLocalHost(host));
-        }
-    }
-
-    /// <summary>
-    /// is consumer side.
-    /// </summary>
-    /// <returns> consumer side. </returns>
-    public virtual bool ConsumerSide
-    {
-        get
-        {
-            URL? url = Url;
-            if (url == null)
-            {
-                return false;
-            }
-            DnsEndPoint? address = RemoteAddress;
-            if (address == null)
-            {
-                return false;
-            }
-            string host = address.Host;
-            return url.Port == address.Port && NetUtil.FilterLocalHost(url.Ip??"").Equals(NetUtil.FilterLocalHost(host));
-        }
-    }
-
-    ///// <summary>
-    ///// get future.
-    ///// </summary>
-    ///// @param <T> </param>
-    ///// <returns> future </returns>
-    //public virtual Task? Future { get; set; }
-
 
     public virtual IList<URL>? Urls
     {
@@ -130,212 +63,37 @@ public class RpcContext
     /// <returns> arguments. </returns>
     public virtual object[]? Arguments { get; set; }
 
-
-    /// <summary>
-    /// set local address.
-    /// </summary>
-    /// <param name="address"> </param>
-    /// <returns> context </returns>
-    public virtual RpcContext SetLocalAddress(DnsEndPoint address)
+    public IDictionary<string, object> Attachments => attachments;
+    public string? GetAttachment(string key)
     {
-        this.localAddress = address;
-        return this;
-    }
-
-    /// <summary>
-    /// set local address.
-    /// </summary>
-    /// <param name="host"> </param>
-    /// <param name="port"> </param>
-    /// <returns> context </returns>
-    public virtual RpcContext SetLocalAddress(string host, int port)
-    {
-        if (port < 0)
+        if (attachments.TryGetValue(key, out var value) && value is string val)
         {
-            port = 0;
+            return val;
         }
-        this.localAddress = new DnsEndPoint(host, port);
-        return this;
+        return null;
     }
 
-    /// <summary>
-    /// get local address.
-    /// </summary>
-    /// <returns> local address </returns>
-    public virtual DnsEndPoint? LocalAddress
+    public object? GetObjectAttachment(string key)
     {
-        get
-        {
-            return localAddress;
-        }
+        attachments.TryGetValue(key, out var obj);
+        return obj;
     }
 
-    public virtual string LocalAddressString
+    public RpcContext SetAttachment(string key, string value)
     {
-        get
-        {
-            return LocalHost + ":" + LocalPort;
-        }
+        return SetObjectAttachment(key, value);
     }
 
-    /// <summary>
-    /// get local host name.
-    /// </summary>
-    /// <returns> local host name </returns>
-    public virtual string? LocalHostName
+    public RpcContext SetAttachment(string key, object value)
     {
-        get
-        {
-            var host = localAddress == null ? null : localAddress.Host;
-            if (host == null || host.Length == 0)
-            {
-                return LocalHost;
-            }
-            return host;
-        }
+        return SetObjectAttachment(key, value);
     }
 
-    /// <summary>
-    /// set remote address.
-    /// </summary>
-    /// <param name="address"> </param>
-    /// <returns> context </returns>
-    public virtual RpcContext SetRemoteAddress(DnsEndPoint address)
-    {
-        this.remoteAddress = address;
-        return this;
-    }
-
-    /// <summary>
-    /// set remote address.
-    /// </summary>
-    /// <param name="host"> </param>
-    /// <param name="port"> </param>
-    /// <returns> context </returns>
-    public virtual RpcContext SetRemoteAddress(string host, int port)
-    {
-        if (port < 0)
-        {
-            port = 0;
-        }
-        this.remoteAddress = new DnsEndPoint(host, port);
-        return this;
-    }
-
-    /// <summary>
-    /// get remote address.
-    /// </summary>
-    /// <returns> remote address </returns>
-    public virtual DnsEndPoint? RemoteAddress
-    {
-        get
-        {
-            return remoteAddress;
-        }
-        set
-        {
-            remoteAddress = value;
-        }
-    }
-
-    /// <summary>
-    /// get remote address string.
-    /// </summary>
-    /// <returns> remote address string. </returns>
-    public virtual string RemoteAddressString
-    {
-        get
-        {
-            return RemoteHost + ":" + RemotePort;
-        }
-    }
-
-    /// <summary>
-    /// get remote host name.
-    /// </summary>
-    /// <returns> remote host name </returns>
-    public virtual string? RemoteHostName
-    {
-        get
-        {
-            return remoteAddress?.Host;
-        }
-    }
-
-    /// <summary>
-    /// get local host.
-    /// </summary>
-    /// <returns> local host </returns>
-    public virtual string? LocalHost
-    {
-        get
-        {
-            string? host = localAddress == null ? null : NetUtil.FilterLocalHost(localAddress.Host);
-            if (string.IsNullOrWhiteSpace(host))
-            {
-                return NetUtil.LocalHost;
-            }
-            return host;
-        }
-    }
-
-    /// <summary>
-    /// get local port.
-    /// </summary>
-    /// <returns> port </returns>
-    public virtual int LocalPort
-    {
-        get
-        {
-            return localAddress?.Port??0;
-        }
-    }
-
-    /// <summary>
-    /// get remote host.
-    /// </summary>
-    /// <returns> remote host </returns>
-    public virtual string? RemoteHost
-    {
-        get
-        {
-            return remoteAddress == null ? null : NetUtil.FilterLocalHost(remoteAddress.Host);
-        }
-    }
-
-    /// <summary>
-    /// get remote port.
-    /// </summary>
-    /// <returns> remote port </returns>
-    public virtual int RemotePort
-    {
-        get
-        {
-            return remoteAddress?.Port??0;
-        }
-    }
-
-    /// <summary>
-    /// get attachment.
-    /// </summary>
-    /// <param name="key"> </param>
-    /// <returns> attachment </returns>
-    public virtual string GetAttachment(string key)
-    {
-        return attachments[key];
-    }
-
-    /// <summary>
-    /// set attachment.
-    /// </summary>
-    /// <param name="key"> </param>
-    /// <param name="value"> </param>
-    /// <returns> context </returns>
-    public virtual RpcContext SetAttachment(string key, string value)
+    public RpcContext SetObjectAttachment(string key, object value)
     {
         if (value == null)
         {
-            attachments.TryRemove(key, out _);
+            attachments.Remove(key);
         }
         else
         {
@@ -344,97 +102,43 @@ public class RpcContext
         return this;
     }
 
-    /// <summary>
-    /// remove attachment.
-    /// </summary>
-    /// <param name="key"> </param>
-    /// <returns> context </returns>
-    public virtual RpcContext RemoveAttachment(string key)
+    public RpcContext RemoveAttachment(string key)
     {
-        attachments.TryRemove(key,out _);
+        attachments.Remove(key);
         return this;
     }
 
-    /// <summary>
-    /// get attachments.
-    /// </summary>
-    /// <returns> attachments </returns>
-    public virtual IDictionary<string, string> Attachments
+    public IDictionary<string, object> GetObjectAttachments()
     {
-        get
-        {
-            return attachments;
-        }
+        return attachments;
     }
 
-    /// <summary>
-    /// set attachments
-    /// </summary>
-    /// <param name="attachment"> </param>
-    /// <returns> context </returns>
-    public virtual RpcContext SetAttachments(IDictionary<string, string> attachment)
+    public RpcContext SetAttachments(IDictionary<string, string> attachment)
     {
         this.attachments.Clear();
         if (attachment != null && attachment.Count > 0)
         {
-            this.attachments.PutAll(attachment);
+            foreach (var item in attachment)
+            {
+                attachments[item.Key] = item.Value;
+            }
         }
         return this;
     }
 
-    public virtual void ClearAttachments()
+    public RpcContext SetObjectAttachments(IDictionary<string, object> attachment)
     {
         this.attachments.Clear();
-    }
-
-    /// <summary>
-    /// get values.
-    /// </summary>
-    /// <returns> values </returns>
-    public virtual IDictionary<string, object> Get()
-    {
-        return values;
-    }
-
-    /// <summary>
-    /// set value.
-    /// </summary>
-    /// <param name="key"> </param>
-    /// <param name="value"> </param>
-    /// <returns> context </returns>
-    public virtual RpcContext Set(string key, object value)
-    {
-        if (value == null)
+        if (attachment.Count > 0)
         {
-            values.TryRemove(key, out _);
-        }
-        else
-        {
-            values[key] = value;
+            this.attachments = attachment;
         }
         return this;
     }
 
-    /// <summary>
-    /// remove value.
-    /// </summary>
-    /// <param name="key"> </param>
-    /// <returns> value </returns>
-    public virtual RpcContext Remove(string key)
+    public void ClearAttachments()
     {
-        values.TryRemove(key, out _);
-        return this;
-    }
-
-    /// <summary>
-    /// get value.
-    /// </summary>
-    /// <param name="key"> </param>
-    /// <returns> value </returns>
-    public virtual object? Get(string key)
-    {
-        values.TryGetValue(key, out object? val);
-        return val;
+        this.attachments.Clear();
     }
 
     public virtual RpcContext SetInvokers(IList<URL>? invokers)
@@ -447,7 +151,7 @@ public class RpcContext
         return this;
     }
 
-    public virtual RpcContext SetInvoker(URL invoker)//<T>
+    public virtual RpcContext SetInvoker(URL invoker)
     {
         //this.invoker = invoker;
         if (invoker != null)
@@ -457,7 +161,7 @@ public class RpcContext
         return this;
     }
 
-    public virtual RpcContext SetInvocation(IInvocation invocation)//<T>
+    public virtual RpcContext SetInvocation(IInvocation invocation)
     {
         //this.invocation = invocation;
         if (invocation != null)
@@ -468,117 +172,114 @@ public class RpcContext
         }
         return this;
     }
-
-    ///// <summary>
-    ///// 异步调用 ，需要返回值，即使步调用Future.get方法，也会处理调用超时问题.
-    ///// </summary>
-    ///// <param name="callable"> </param>
-    ///// <returns> 通过future.get()获取返回结果. </returns>
-    //public virtual async Task<T> AsyncCall<T>(Func<T> callable)
-    //{
-    //    try
-    //    {
-    //        try
-    //        {
-    //            SetAttachment(ASYNC_KEY, true.ToString());
-
-    //            var result = await Task.Run<T>(callable);
-    //            return result;
-    //        }
-    //        catch (Exception e)
-    //        {
-    //            throw new RpcException(e);
-    //        }
-    //        finally
-    //        {
-    //            RemoveAttachment(ASYNC_KEY);
-    //        }
-    //    }
-    //    catch (RpcException e)
-    //    {
-    //        throw e;
-    //    }
-    //}
-    
-    ///// <summary>
-    ///// oneway调用，只发送请求，不接收返回结果.
-    ///// </summary>
-    ///// <param name="callable"> </param>
-    //public virtual void AsyncCall(Task runable)
-    //{
-    //    try
-    //    {
-    //        SetAttachment(RETURN_KEY, false.ToString());
-    //        runable.Start();
-    //    }
-    //    catch (Exception e)
-    //    {
-    //        //FIXME 异常是否应该放在future中？
-    //        throw new RpcException("oneway call error ." + e.Message, e);
-    //    }
-    //    finally
-    //    {
-    //        RemoveAttachment(RETURN_KEY);
-    //    }
-    //}
 }
 
-
-//public class RpcContextData
+//public record RpcContextAttachment
 //{
-//    private ConcurrentDictionary<string, object>? contextParameters;
-
-//    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-//    public ConcurrentDictionary<string, object>? GetContextParameters()
+//    protected volatile IDictionary<string, object> attachments = new Dictionary<string, object>();
+//    public string? GetAttachment(string key)
 //    {
-//        return contextParameters;
-//    }
-
-//    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-//    public void SetAttachment(string key, object value)
-//    {
-//        contextParameters?.AddOrUpdate(key, value, (k, v) => value);
-//    }
-
-//    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-//    public object? GetAttachment(string key)
-//    {
-//        if (contextParameters == null) 
-//        {
-//            return default;
+//        if (attachments.TryGetValue(key, out var value) && value is string val) {
+//            return val;
 //        }
-//        contextParameters.TryGetValue(key, out object? result);
-//        return result;
+//        return null;
 //    }
 
-//    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-//    public void SetContextParameters(ConcurrentDictionary<string, object> contextParameters)
+//    public object? GetObjectAttachment(string key)
 //    {
-//        this.contextParameters = contextParameters;
+//        attachments.TryGetValue(key, out var obj);
+//        return obj;
 //    }
 
-//    private static AsyncLocal<RpcContextData?> rpcContextThreadLocal = new ();
-
-//    public static RpcContextData? GetContext()
+//    public RpcContextAttachment SetAttachment(string key, string value)
 //    {
-//        var context = rpcContextThreadLocal.Value;
+//        return SetObjectAttachment(key, value);
+//    }
 
-//        if (context == null)
+//    public RpcContextAttachment SetAttachment(string key, object value)
+//    {
+//        return SetObjectAttachment(key, value);
+//    }
+
+//    public RpcContextAttachment SetObjectAttachment(string key, object value)
+//    {
+//        if (value == null)
 //        {
-//            context = new RpcContextData();
-//            context.SetContextParameters(new ConcurrentDictionary<string, object>());
-//            rpcContextThreadLocal.Value = context;
+//            attachments.Remove(key);
+//        }
+//        else
+//        {
+//            attachments[key] =  value;
+//        }
+//        return this;
+//    }
+
+//    public RpcContextAttachment RemoveAttachment(string key)
+//    {
+//        attachments.Remove(key);
+//        return this;
+//    }
+
+//    public IDictionary<string, object> GetObjectAttachments()
+//    {
+//        return attachments;
+//    }
+
+//    public RpcContextAttachment SetAttachments(IDictionary<string, string> attachment)
+//    {
+//        this.attachments.Clear();
+//        if (attachment != null && attachment.Count > 0)
+//        {
+//            foreach (var item in attachment)
+//            {
+//                attachments[item.Key] = item.Value;
+//            }
+//        }
+//        return this;
+//    }
+
+//    public RpcContextAttachment SetObjectAttachments(IDictionary<string, object> attachment)
+//    {
+//        this.attachments.Clear();
+//        if (attachment.Count>0)
+//        {
+//            this.attachments = attachment;
+//        }
+//        return this;
+//    }
+
+//    public void ClearAttachments()
+//    {
+//        this.attachments.Clear();
+//    }
+
+//    public RpcContextAttachment? CopyOf(bool needCopy)
+//    {
+//        if (!IsValid())
+//        {
+//            return null;
 //        }
 
-//        return rpcContextThreadLocal.Value;
+//        if (needCopy)
+//        {
+//            var copy = new RpcContextAttachment();
+//            if (attachments.Count>0)
+//            {
+//                copy.attachments.PutAll(this.attachments);
+//            }
+//            return copy;
+//        }
+//        else
+//        {
+//            return this;
+//        }
 //    }
 
-//    public static void RemoveContext()
+//    protected bool IsValid()
 //    {
-//        rpcContextThreadLocal.Value = null;
-//    }
-
-//    private RpcContextData()
-//    {
+//        return attachments.Count>0;
 //    }
 //}
+
+
+

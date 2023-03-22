@@ -34,6 +34,7 @@ class Program
         services.Configure<GrpcNetOption>(config.GetSection("grpc"));
         //services.Configure<NettyOption>(config.GetSection("netty"));
         //services.Configure<ThriftOption>(config.GetSection("thrift"));
+
         services.Configure<ZooyardOption>(config.GetSection("zooyard"));
         services.AddLogging();
         services.AddZooyardGrpc();

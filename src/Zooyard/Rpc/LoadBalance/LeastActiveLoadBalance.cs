@@ -4,7 +4,7 @@ public class LeastActiveLoadBalance : AbstractLoadBalance
 {
     public override string Name => NAME;
     public const string NAME = "leastactive";
-    private readonly Random random = new Random();
+    private readonly Random random = new ();
     protected override URL DoSelect(IList<URL> urls, IInvocation invocation)
     {
         int length = urls.Count; // 总个数

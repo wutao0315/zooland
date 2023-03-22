@@ -27,8 +27,12 @@ public class TagStateRouter : AbstractStateRouter
     // 监听配置或者服务注册变化，清空缓存
     void OnChanged(ZooyardOption value, string? name)
     {
-        var applicationName = Environment.GetEnvironmentVariable("applicationName") ?? "system_name";
-        if (!value.Services.TryGetValue(applicationName, out var serviceOption)) 
+        if (string.IsNullOrWhiteSpace(application)) 
+        {
+            return;
+        }
+
+        if (!value.Services.TryGetValue(application, out var serviceOption)) 
         {
             return;
         }
@@ -106,7 +110,7 @@ public class TagStateRouter : AbstractStateRouter
         }
 
         IList<URL> result = invokers;
-        string tag = string.IsNullOrWhiteSpace(invocation.GetAttachment(TAG_KEY)) ? address.GetParameter(TAG_KEY)! : invocation.GetAttachment(TAG_KEY);
+        string? tag = string.IsNullOrWhiteSpace(invocation.GetAttachment(TAG_KEY)) ? address.GetParameter(TAG_KEY)! : invocation.GetAttachment(TAG_KEY);
 
         // if we are requesting for a Provider with a specific tag
         if (!string.IsNullOrWhiteSpace(tag))
@@ -204,7 +208,7 @@ public class TagStateRouter : AbstractStateRouter
     {
         IList<URL>? result = null;
         // Dynamic param
-        string tag = string.IsNullOrWhiteSpace(invocation.GetAttachment(TAG_KEY)) ? url.GetParameter(TAG_KEY)! :invocation.GetAttachment(TAG_KEY);
+        string? tag = string.IsNullOrWhiteSpace(invocation.GetAttachment(TAG_KEY)) ? url.GetParameter(TAG_KEY)! :invocation.GetAttachment(TAG_KEY);
         // Tag request
         if (!string.IsNullOrWhiteSpace(tag))
         {
@@ -226,7 +230,7 @@ public class TagStateRouter : AbstractStateRouter
 
     private bool IsForceUseTag(IInvocation invocation)
     {
-        return bool.Parse(invocation.GetAttachment(Constants.FORCE_USE_TAG, this.Address.GetParameter(Constants.FORCE_USE_TAG, "false")));
+        return bool.Parse(invocation.GetAttachment(Constants.FORCE_USE_TAG, this.Address.GetParameter(Constants.FORCE_USE_TAG, "false"))!);
     }
 
     private IList<URL> FilterInvoker(IList<URL> invokers, Func<URL, bool> predicate)

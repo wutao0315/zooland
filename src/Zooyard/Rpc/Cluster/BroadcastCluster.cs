@@ -8,14 +8,19 @@ public class BroadcastCluster : AbstractCluster
     private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(BroadcastCluster));
     public override string Name => NAME;
     public const string NAME = "broadcast";
-    protected override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, ILoadBalance loadbalance, URL address, IList<URL> invokers, IInvocation invocation)
+    protected override async Task<IClusterResult<T>> DoInvoke<T>(IClientPool pool, 
+        ILoadBalance loadbalance,
+        URL address,
+        IList<URL> invokers,
+        IList<BadUrl> disabledUrls,
+        IInvocation invocation)
     {
         CheckInvokers(invokers, invocation, address);
 
         RpcContext.GetContext().SetInvokers(invokers);
         Exception? exception = null;
-        //var goodUrls = new List<URL>();
-        //var badUrls = new List<BadUrl>();
+        var goodUrls = new List<URL>();
+        var badUrls = new List<BadUrl>();
         var isThrow = false;
         IResult<T>? result = null;
         foreach (var invoker in invokers)
@@ -30,7 +35,7 @@ public class BroadcastCluster : AbstractCluster
                     result = await refer.Invoke<T>(invocation);
                     _source.WriteConsumerAfter(invoker, invocation, result);
                     await pool.Recovery(client);
-                    //goodUrls.Add(invoker);
+                    goodUrls.Add(invoker);
                 }
                 catch (Exception ex)
                 {
@@ -42,7 +47,7 @@ public class BroadcastCluster : AbstractCluster
             catch (Exception e)
             {
                 exception = e;
-                //badUrls.Add(new BadUrl { Url = invoker, BadTime = DateTime.Now, CurrentException = exception });
+                badUrls.Add(new BadUrl(invoker, exception));
                 Logger().LogWarning(e, e.Message);
             }
         }
@@ -51,7 +56,7 @@ public class BroadcastCluster : AbstractCluster
             isThrow = true;
         }
         var clusterResult = new ClusterResult<T>(result, 
-            //goodUrls, badUrls,
+            goodUrls, badUrls,
             exception, isThrow);
         return clusterResult;
     }

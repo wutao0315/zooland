@@ -13,11 +13,8 @@ public abstract class AbstractClientPool: IClientPool
 
     public string ServiceName { get; set; } = String.Empty;
     public string Version { get; set; } = String.Empty;
-    //public URL Address { get; set; }
-    //public URL Url { get; set; }
     public Type? ProxyType { get; set; }
     public int MaxIdle { protected set; get; } = Environment.ProcessorCount * 2;
-
 
     /// <summary>
     /// 从连接池取出一个连接

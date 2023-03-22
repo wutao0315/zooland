@@ -30,7 +30,7 @@ public class HttpStub
         _httpClient.Timeout = TimeSpan.FromMilliseconds(timeout);
     }
 
-    public async Task<Stream?> Request(IList<string> path, string contentType, string method, ParameterInfo[] parameters, object[] paras, IDictionary<string, string> headers)
+    public async Task<Stream?> Request(IList<string> path, string contentType, string method, ParameterInfo[] parameters, object[] paras, IDictionary<string, object> headers)
     {
         try
         {
@@ -73,7 +73,7 @@ public class HttpStub
 
             foreach (var item in headers)
             {
-                request.Headers.TryAddWithoutValidation(item.Key, item.Value);
+                request.Headers.TryAddWithoutValidation(item.Key, item.Value.ToString()!);
             }
 
             var response = await _httpClient.SendAsync(request);
