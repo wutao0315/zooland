@@ -20,7 +20,7 @@ public class ZooyardAttribute : Attribute
     /// <summary>
     /// 版本
     /// </summary>
-    public string Version { get; init; } = "1.0";
+    public string Version { get; init; } = "1.0.0";
     /// <summary>
     /// 默认路径和默认配置参数
     /// </summary>

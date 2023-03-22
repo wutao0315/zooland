@@ -315,7 +315,7 @@ public class ZooyardPools : IZooyardPools
                                 url = url.SetPort(port);
                             }
                             break;
-                        case string a when a.Equals("path", StringComparison.OrdinalIgnoreCase):
+                        case string a when a.Equals(CommonConstants.PATH_KEY, StringComparison.OrdinalIgnoreCase):
                             url = url.SetPath(item.Value);
                             break;
                         default:
@@ -325,13 +325,12 @@ public class ZooyardPools : IZooyardPools
                 }
                 return url;
             }
-            URL GetUrl(URL url, string urlString)
+            URL GetUrl(URL url, URL? u)
             {
-                if (string.IsNullOrWhiteSpace(urlString))
+                if (u == null)
                 {
                     return url;
                 }
-                var u = URL.ValueOf(urlString);
                 url = url.SetProtocol(u.Protocol);
                 url = url.SetUsername(u.Username);
                 url = url.SetPassword(u.Password);

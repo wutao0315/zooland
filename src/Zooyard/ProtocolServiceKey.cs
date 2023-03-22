@@ -14,7 +14,7 @@ public class ProtocolServiceKey: ServiceKey
 
     public string Protocol { get; init; }
 
-    public String getServiceKeyString()
+    public string GetServiceKeyString()
     {
         return base.ToString();
     }

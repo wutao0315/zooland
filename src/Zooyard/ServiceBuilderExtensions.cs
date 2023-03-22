@@ -24,11 +24,14 @@ public static class ServiceBuilderExtensions
     private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ServiceBuilderExtensions));
     public static void AddZoolandClient(this IServiceCollection services, params Type[] types)
     {
+        services.AddSingleton<AdaptiveMetrics>();
 
         services.AddSingleton<ILoadBalance, ConsistentHashLoadBalance>();
         services.AddSingleton<ILoadBalance, LeastActiveLoadBalance>();
         services.AddSingleton<ILoadBalance, RandomLoadBalance>();
         services.AddSingleton<ILoadBalance, RoundRobinLoadBalance>();
+        services.AddSingleton<ILoadBalance, ShortestResponseLoadBalance>();
+        services.AddSingleton<ILoadBalance, AdaptiveLoadBalance>();
 
 
         services.AddSingleton<ICluster, BroadcastCluster>();
@@ -81,7 +84,7 @@ public static class ServiceBuilderExtensions
                 var zooyard = serviceType.GetCustomAttribute<ZooyardAttribute>();
                 if (zooyard == null)
                 {
-                    throw new Exception($"{nameof(ZooyardAttribute)} is not exists");
+                    throw new RpcException($"{nameof(ZooyardAttribute)} is not exists");
                 }
 
                 var poolType = Type.GetType(zooyard.TypeName)!;
@@ -112,12 +115,12 @@ public static class ServiceBuilderExtensions
                 var constructor = factoryType.GetConstructor(new[] { typeof(IZooyardPools), typeof(string), typeof(string), typeof(string) });
                 if (constructor == null)
                 {
-                    throw new Exception($"{nameof(constructor)} is not exists");
+                    throw new RpcException($"{nameof(constructor)} is not exists");
                 }
                 var zooyard = serviceType.GetCustomAttribute<ZooyardAttribute>();
                 if (zooyard == null)
                 {
-                    throw new Exception($"{nameof(ZooyardAttribute)} is not exists");
+                    throw new RpcException($"{nameof(ZooyardAttribute)} is not exists");
                 }
                 var zooyardFactory = constructor.Invoke(new object[] { pools, zooyard.ServiceName, zooyard.Version, zooyard.Url });
                 return zooyardFactory;
@@ -130,12 +133,12 @@ public static class ServiceBuilderExtensions
                 var createYardMethod = factoryType.GetMethod("CreateYard");
                 if (createYardMethod == null)
                 {
-                    throw new Exception($"{nameof(createYardMethod)} is not exists");
+                    throw new RpcException($"{nameof(createYardMethod)} is not exists");
                 }
                 var result = createYardMethod.Invoke(factory, null);
                 if (result == null)
                 {
-                    throw new Exception($"{nameof(createYardMethod)} is not null");
+                    throw new RpcException($"{nameof(createYardMethod)} is not null");
                 }
                 return result;
             });

@@ -37,8 +37,8 @@ public class AdaptiveLoadBalance : AbstractLoadBalance
         long startTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         invocation.GetAttributes()[ADAPTIVE_LOADBALANCE_START_TIME] = startTime;
         invocation.GetAttributes()[CommonConstants.LOADBALANCE_KEY] = ADAPTIVE;
-        _adaptiveMetrics.addConsumerReq(getServiceKey(invoker, invocation));
-        _adaptiveMetrics.setPickTime(getServiceKey(invoker, invocation), startTime);
+        _adaptiveMetrics.AddConsumerReq(GetServiceKey(invoker, invocation));
+        _adaptiveMetrics.SetPickTime(GetServiceKey(invoker, invocation), startTime);
 
         return invoker;
     }
@@ -66,7 +66,7 @@ public class AdaptiveLoadBalance : AbstractLoadBalance
         return ChooseLowLoadInvoker(invokers[pos1], invokers[pos2], invocation);
     }
 
-    private string getServiceKey(URL invoker, IInvocation invocation)
+    private string GetServiceKey(URL invoker, IInvocation invocation)
     {
 
         if (invocation.GetAttributes().TryGetValue(invoker, out var key)
@@ -150,8 +150,8 @@ public class AdaptiveLoadBalance : AbstractLoadBalance
         int weight2 = GetWeight(invoker2, invocation);
         int timeout1 = GetTimeout(invoker2, invocation);
         int timeout2 = GetTimeout(invoker2, invocation);
-        long load1 = BitConverter.DoubleToInt64Bits(_adaptiveMetrics.getLoad(getServiceKey(invoker1, invocation), weight1, timeout1));
-        long load2 = BitConverter.DoubleToInt64Bits(_adaptiveMetrics.getLoad(getServiceKey(invoker2, invocation), weight2, timeout2));
+        long load1 = BitConverter.DoubleToInt64Bits(_adaptiveMetrics.GetLoad(GetServiceKey(invoker1, invocation), weight1, timeout1));
+        long load2 = BitConverter.DoubleToInt64Bits(_adaptiveMetrics.GetLoad(GetServiceKey(invoker2, invocation), weight2, timeout2));
 
         if (load1 == load2)
         {
@@ -175,7 +175,7 @@ public class AdaptiveLoadBalance : AbstractLoadBalance
 
 public record AdaptiveMetrics
 {
-    private readonly ConcurrentDictionary<String, AdaptiveMetrics> metricsStatistics = new();
+    private readonly ConcurrentDictionary<string, AdaptiveMetrics> _metricsStatistics = new();
     private long currentProviderTime = 0;
     private double providerCPULoad = 0;
     private long lastLatency = 0;
@@ -185,14 +185,14 @@ public record AdaptiveMetrics
     private long pickTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
     private double beta = 0.5;
-    private readonly AtomicLong consumerReq = new();
-    private readonly AtomicLong consumerSuccess = new();
-    private readonly AtomicLong errorReq = new();
+    private readonly AtomicLong _consumerReq = new();
+    private readonly AtomicLong _consumerSuccess = new();
+    private readonly AtomicLong _errorReq = new();
     private double ewma = 0;
 
-    public double getLoad(String idKey, int weight, int timeout)
+    public double GetLoad(string idKey, int weight, int timeout)
     {
-        AdaptiveMetrics metrics = getStatus(idKey);
+        AdaptiveMetrics metrics = GetStatus(idKey);
 
         //If the time more than 2 times, mandatory selected
         if (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - metrics.pickTime > timeout * 2)
@@ -219,43 +219,43 @@ public record AdaptiveMetrics
             }
         }
 
-        long inflight = metrics.consumerReq.Value - metrics.consumerSuccess.Value - metrics.errorReq.Value;
-        return metrics.providerCPULoad * (Math.Sqrt(metrics.ewma) + 1) * (inflight + 1) / ((((double)metrics.consumerSuccess.Value / (double)(metrics.consumerReq.Value + 1)) * weight) + 1);
+        long inflight = metrics._consumerReq.Value - metrics._consumerSuccess.Value - metrics._errorReq.Value;
+        return metrics.providerCPULoad * (Math.Sqrt(metrics.ewma) + 1) * (inflight + 1) / ((((double)metrics._consumerSuccess.Value / (double)(metrics._consumerReq.Value + 1)) * weight) + 1);
     }
 
-    public AdaptiveMetrics getStatus(String idKey)
+    public AdaptiveMetrics GetStatus(string idKey)
     {
-        return metricsStatistics.GetOrAdd(idKey, new AdaptiveMetrics());
+        return _metricsStatistics.GetOrAdd(idKey, new AdaptiveMetrics());
     }
 
-    public void addConsumerReq(String idKey)
+    public void AddConsumerReq(string idKey)
     {
-        AdaptiveMetrics metrics = getStatus(idKey);
-        metrics.consumerReq.IncrementAndGet();
+        AdaptiveMetrics metrics = GetStatus(idKey);
+        metrics._consumerReq.IncrementAndGet();
     }
 
-    public void addConsumerSuccess(String idKey)
+    public void AddConsumerSuccess(String idKey)
     {
-        AdaptiveMetrics metrics = getStatus(idKey);
-        metrics.consumerSuccess.IncrementAndGet();
+        AdaptiveMetrics metrics = GetStatus(idKey);
+        metrics._consumerSuccess.IncrementAndGet();
     }
 
-    public void addErrorReq(String idKey)
+    public void AddErrorReq(String idKey)
     {
-        AdaptiveMetrics metrics = getStatus(idKey);
-        metrics.errorReq.IncrementAndGet();
+        AdaptiveMetrics metrics = GetStatus(idKey);
+        metrics._errorReq.IncrementAndGet();
     }
 
-    public void setPickTime(String idKey, long time)
+    public void SetPickTime(String idKey, long time)
     {
-        AdaptiveMetrics metrics = getStatus(idKey);
+        AdaptiveMetrics metrics = GetStatus(idKey);
         metrics.pickTime = time;
     }
 
 
-    public void setProviderMetrics(String idKey, IDictionary<string, string> metricsMap)
+    public void SetProviderMetrics(String idKey, IDictionary<string, string> metricsMap)
     {
-        AdaptiveMetrics metrics = getStatus(idKey);
+        AdaptiveMetrics metrics = GetStatus(idKey);
 
         long serviceTime = 0;
         if (metricsMap.TryGetValue("curTime", out var curTimeStr) && long.TryParse(curTimeStr, out var curTime))
