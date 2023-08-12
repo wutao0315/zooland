@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <Compile Remove="HelloServiceAkkaImpl.cs" />
+    <Compile Remove="HelloServiceGrpcImpl.cs" />
     <Compile Remove="HelloServiceWcfImpl.cs" />
   </ItemGroup>
 
@@ -21,23 +22,21 @@
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
-    <PackageReference Include="NLog" Version="5.1.2" />
-    <PackageReference Include="NLog.Extensions.Hosting" Version="5.2.2" />
-    <PackageReference Include="NLog.Extensions.Logging" Version="5.2.2" />
-    <PackageReference Include="SoapCore" Version="1.1.0.36" />
+    <PackageReference Include="NLog" Version="5.2.3" />
+    <PackageReference Include="NLog.Extensions.Hosting" Version="5.3.3" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.3" />
+    <PackageReference Include="SoapCore" Version="1.1.0.38" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="7.0.0" />
     <PackageReference Include="ApacheThrift" Version="0.18.1" />
-	  <PackageReference Include="Grpc.AspNetCore" Version="2.51.0" />
+	  <PackageReference Include="Grpc.AspNetCore" Version="2.55.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Zooyard.DotNettyImpl\Zooyard.DotNettyImpl.csproj" />
     <ProjectReference Include="..\..\src\Zooyard\Zooyard.csproj" />
-    <ProjectReference Include="..\..\src\Zooyard.GrpcImpl\Zooyard.GrpcImpl.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.HttpImpl\Zooyard.HttpImpl.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.ThriftImpl\Zooyard.ThriftImpl.csproj" />
     <ProjectReference Include="..\RpcContractGrpcNet\RpcContractGrpcNet.csproj" />
-    <ProjectReference Include="..\RpcContractGrpc\RpcContractGrpc.csproj" />
     <ProjectReference Include="..\RpcContractHttp\RpcContractHttp.csproj" />
     <ProjectReference Include="..\RpcContractNetty\RpcContractNetty.csproj" />
     <ProjectReference Include="..\RpcContractThrift\RpcContractThrift.csproj" />

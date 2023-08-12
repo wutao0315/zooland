@@ -4,11 +4,8 @@ using DotNetty.Transport.Bootstrapping;
 using DotNetty.Transport.Channels;
 using DotNetty.Transport.Channels.Sockets;
 using DotNetty.Transport.Libuv;
-using Google.Protobuf;
-using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Grpc.Core.Interceptors;
-using Grpc.Core.Logging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -22,12 +19,8 @@ using NLog.Extensions.Hosting;
 using NLog.Extensions.Logging;
 using System.Net;
 using System.Net.Security;
-using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
-using System.ServiceModel.Channels;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Channels;
 using Thrift;
 using Thrift.Processor;
 using Thrift.Protocol;
@@ -39,8 +32,6 @@ using Zooyard.DotNettyImpl.Adapter;
 using Zooyard.DotNettyImpl.Messages;
 using Zooyard.DotNettyImpl.Transport;
 using Zooyard.DotNettyImpl.Transport.Codec;
-using Zooyard.GrpcImpl;
-using Zooyard.HttpImpl;
 using Zooyard.ThriftImpl.Header;
 
 namespace RpcProviderCore;
@@ -96,7 +87,7 @@ public class Program
 
 
 
-            services.AddTransient<RpcContractGrpc.HelloService.HelloServiceBase, HelloServiceGrpcImpl>();
+            //services.AddTransient<RpcContractGrpc.HelloService.HelloServiceBase, HelloServiceGrpcImpl>();
 
             services.AddGrpcServer();
 
@@ -181,36 +172,36 @@ public class Program
         });
 }
 
-public class ClientGrpcInterceptor : ClientInterceptor
-{
+//public class ClientGrpcInterceptor : ClientInterceptor
+//{
 
-    public override TResponse BlockingUnaryCall<TRequest, TResponse>(TRequest request, ClientInterceptorContext<TRequest, TResponse> context, BlockingUnaryCallContinuation<TRequest, TResponse> continuation)
-    {
-        var metadata = new Metadata
-        {
-            new Metadata.Entry("test", "test")
-        };
-        var options = context.Options.WithHeaders(metadata);
-        context = new ClientInterceptorContext<TRequest, TResponse>(context.Method, context.Host, options);
-        var response = continuation(request, context);
-        return response;
-    }
+//    public override TResponse BlockingUnaryCall<TRequest, TResponse>(TRequest request, ClientInterceptorContext<TRequest, TResponse> context, BlockingUnaryCallContinuation<TRequest, TResponse> continuation)
+//    {
+//        var metadata = new Metadata
+//        {
+//            new Metadata.Entry("test", "test")
+//        };
+//        var options = context.Options.WithHeaders(metadata);
+//        context = new ClientInterceptorContext<TRequest, TResponse>(context.Method, context.Host, options);
+//        var response = continuation(request, context);
+//        return response;
+//    }
 
-    public override AsyncUnaryCall<TResponse> AsyncUnaryCall<TRequest, TResponse>(TRequest request, ClientInterceptorContext<TRequest, TResponse> context, AsyncUnaryCallContinuation<TRequest, TResponse> continuation)
-    {
-        var metadata = new Metadata
-        {
-            new Metadata.Entry("test", "test")
-        };
-        var options = context.Options.WithHeaders(metadata);
-        context = new ClientInterceptorContext<TRequest, TResponse>(context.Method, context.Host, options);
-        var response = continuation(request, context);
+//    public override AsyncUnaryCall<TResponse> AsyncUnaryCall<TRequest, TResponse>(TRequest request, ClientInterceptorContext<TRequest, TResponse> context, AsyncUnaryCallContinuation<TRequest, TResponse> continuation)
+//    {
+//        var metadata = new Metadata
+//        {
+//            new Metadata.Entry("test", "test")
+//        };
+//        var options = context.Options.WithHeaders(metadata);
+//        context = new ClientInterceptorContext<TRequest, TResponse>(context.Method, context.Host, options);
+//        var response = continuation(request, context);
 
-        var responseAsync = response.ResponseAsync.ContinueWith<TResponse>((r) => r.Result);
-        return new AsyncUnaryCall<TResponse>(responseAsync, response.ResponseHeadersAsync, response.GetStatus, response.GetTrailers, response.Dispose);
+//        var responseAsync = response.ResponseAsync.ContinueWith<TResponse>((r) => r.Result);
+//        return new AsyncUnaryCall<TResponse>(responseAsync, response.ResponseHeadersAsync, response.GetStatus, response.GetTrailers, response.Dispose);
 
-    }
-}
+//    }
+//}
 
 public abstract class ServerInterceptor : Interceptor
 {
@@ -347,28 +338,28 @@ public static class ServiceBuilderExtensions
             return result;
         });
 
-        services.AddSingleton<IEnumerable<ServerPort>>((serviceProvder) =>
-        {
-            var option = serviceProvder.GetRequiredService<IOptionsMonitor<GrpcServerOption>>().CurrentValue;
-            var result = new List<ServerPort>();
-            foreach (var item in option.ServerPorts)
-            {
-                var defaultCredential = ServerCredentials.Insecure;
-                if (!string.IsNullOrWhiteSpace(item.Credentials)
-                && item.Credentials != "default"
-                && item.Credentials != "Insecure"
-                )
-                {
-                    var credentialType = System.Type.GetType(item.Credentials)!;
-                    defaultCredential = serviceProvder.GetService(credentialType) as ServerCredentials;
-                }
-                var port = new ServerPort(item.Host, item.Port, defaultCredential);
-                result.Add(port);
-            }
-            return result;
-        });
+        //services.AddSingleton<IEnumerable<ServerPort>>((serviceProvder) =>
+        //{
+        //    var option = serviceProvder.GetRequiredService<IOptionsMonitor<GrpcServerOption>>().CurrentValue;
+        //    var result = new List<ServerPort>();
+        //    foreach (var item in option.ServerPorts)
+        //    {
+        //        var defaultCredential = ServerCredentials.Insecure;
+        //        if (!string.IsNullOrWhiteSpace(item.Credentials)
+        //        && item.Credentials != "default"
+        //        && item.Credentials != "Insecure"
+        //        )
+        //        {
+        //            var credentialType = System.Type.GetType(item.Credentials)!;
+        //            defaultCredential = serviceProvder.GetService(credentialType) as ServerCredentials;
+        //        }
+        //        var port = new ServerPort(item.Host, item.Port, defaultCredential);
+        //        result.Add(port);
+        //    }
+        //    return result;
+        //});
 
-        services.AddSingleton<GrpcServer>();
+        //services.AddSingleton<GrpcServer>();
     }
     public static void AddNettyServer(this IServiceCollection services)
     {
@@ -402,19 +393,19 @@ public static class ServiceBuilderExtensions
 }
 public class ZoolandHostedService : IHostedService
 {
-    private readonly GrpcServer _grpcServer;
+    //private readonly GrpcServer _grpcServer;
     private readonly ThriftServer _thriftServer;
     private readonly NettyServer _nettyServer;
     private readonly HttpServer _httpServer;
     private readonly GrpcNetServer _grpcNetServer;
 
-    public ZoolandHostedService(GrpcServer grpcServer,
+    public ZoolandHostedService(//GrpcServer grpcServer,
         ThriftServer thriftServer, 
         NettyServer nettyServer, 
         HttpServer httpServer,
         GrpcNetServer grpcNetServer)
     {
-        _grpcServer = grpcServer;
+        //_grpcServer = grpcServer;
         _thriftServer = thriftServer;
         _nettyServer = nettyServer;
         _httpServer = httpServer;
@@ -426,7 +417,7 @@ public class ZoolandHostedService : IHostedService
         Console.WriteLine("Zooland started...");
         try
         {
-            await _grpcServer.Start(cancellationToken).ConfigureAwait(false);
+            //await _grpcServer.Start(cancellationToken).ConfigureAwait(false);
             await _thriftServer.Start(cancellationToken).ConfigureAwait(false);
             await _nettyServer.Start(cancellationToken).ConfigureAwait(false);
             await _httpServer.Start(cancellationToken).ConfigureAwait(false);
@@ -443,7 +434,7 @@ public class ZoolandHostedService : IHostedService
         Console.WriteLine("Zooland stopped...");
         try
         {
-            await _grpcServer.Stop(cancellationToken).ConfigureAwait(false);
+            //await _grpcServer.Stop(cancellationToken).ConfigureAwait(false);
             await _thriftServer.Stop(cancellationToken).ConfigureAwait(false);
             await _nettyServer.Stop(cancellationToken).ConfigureAwait(false);
             await _httpServer.Stop(cancellationToken).ConfigureAwait(false);
@@ -455,51 +446,51 @@ public class ZoolandHostedService : IHostedService
         }
     }
 }
-public class GrpcServer
-{
-    private Server _server;
-    public GrpcServer(IEnumerable<ServerServiceDefinition> services,
-        IEnumerable<ServerPort> ports,
-        IEnumerable<ServerInterceptor> interceptors)
-    {
-        _server = new Server();
+//public class GrpcServer
+//{
+//    private Server _server;
+//    public GrpcServer(IEnumerable<ServerServiceDefinition> services,
+//        IEnumerable<ServerPort> ports,
+//        IEnumerable<ServerInterceptor> interceptors)
+//    {
+//        _server = new Server();
 
-        foreach (var item in services)
-        {
-            if (interceptors?.Count() > 0)
-            {
-                item.Intercept(interceptors.ToArray());
-            }
-            _server.Services.Add(item);
-        }
-        foreach (var item in ports)
-        {
-            _server.Ports.Add(item);
-        }
-    }
+//        foreach (var item in services)
+//        {
+//            if (interceptors?.Count() > 0)
+//            {
+//                item.Intercept(interceptors.ToArray());
+//            }
+//            _server.Services.Add(item);
+//        }
+//        foreach (var item in ports)
+//        {
+//            _server.Ports.Add(item);
+//        }
+//    }
 
 
-    public async Task Start(CancellationToken cancellationToken)
-    {
-        //开启服务
-        _server.Start();
-        await Task.CompletedTask;
-        var ports = _server.Ports.Select(w => w.Port);
-        Console.WriteLine($"Started the grpc server on{string.Join(",", ports)} ...");
-    }
+//    public async Task Start(CancellationToken cancellationToken)
+//    {
+//        //开启服务
+//        _server.Start();
+//        await Task.CompletedTask;
+//        var ports = _server.Ports.Select(w => w.Port);
+//        Console.WriteLine($"Started the grpc server on{string.Join(",", ports)} ...");
+//    }
 
-    public async Task Stop(CancellationToken cancellationToken)
-    {
-        try
-        {
-            await _server.ShutdownAsync();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex.Message + ex.StackTrace);
-        }
-    }
-}
+//    public async Task Stop(CancellationToken cancellationToken)
+//    {
+//        try
+//        {
+//            await _server.ShutdownAsync();
+//        }
+//        catch (Exception ex)
+//        {
+//            Console.WriteLine(ex.Message + ex.StackTrace);
+//        }
+//    }
+//}
 
 
 public class NettyServer

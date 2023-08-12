@@ -15,20 +15,18 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="7.0.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
-    <PackageReference Include="MSTest.TestAdapter" Version="3.0.2" />
-    <PackageReference Include="MSTest.TestFramework" Version="3.0.2" />
-    <PackageReference Include="System.ServiceModel.Http" Version="4.10.0" />
-    <PackageReference Include="System.ServiceModel.NetTcp" Version="4.10.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.0" />
+    <PackageReference Include="MSTest.TestAdapter" Version="3.1.1" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.1.1" />
+    <PackageReference Include="System.ServiceModel.Http" Version="6.0.0" />
+    <PackageReference Include="System.ServiceModel.NetTcp" Version="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\samples\RpcContractGrpc\RpcContractGrpc.csproj" />
     <ProjectReference Include="..\..\samples\RpcContractHttp\RpcContractHttp.csproj" />
     <ProjectReference Include="..\..\samples\RpcContractNetty\RpcContractNetty.csproj" />
     <ProjectReference Include="..\..\samples\RpcContractThrift\RpcContractThrift.csproj" />
     <ProjectReference Include="..\..\src\Zooyard\Zooyard.csproj" />
-    <ProjectReference Include="..\..\src\Zooyard.GrpcImpl\Zooyard.GrpcImpl.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.HttpImpl\Zooyard.HttpImpl.csproj" />
   </ItemGroup>
 

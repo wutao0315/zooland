@@ -24,13 +24,13 @@ namespace ZooyardTest
             var config = builder.Build();
 
             IServiceCollection services = new ServiceCollection();
-            services.Configure<GrpcOption>(config.GetSection("grpc"));
+            //services.Configure<GrpcOption>(config.GetSection("grpc"));
             //services.Configure<NettyOption>(config.GetSection("netty"));
             //services.Configure<ThriftOption>(config.GetSection("thrift"));
             services.Configure<ZooyardOption>(config.GetSection("zooyard"));
             services.AddLogging();
             //services.AddAkkaClient();
-            services.AddZooyardGrpc();
+            //services.AddZooyardGrpc();
             services.AddZooyardHttp();
 
 
@@ -41,8 +41,8 @@ namespace ZooyardTest
             services.AddZoolandClient();
 
             using var bsp = services.BuildServiceProvider();
-            var tgrpcHelloService = bsp.GetService<RpcContractGrpc.IHelloService>();
-            Assert.IsNotNull(tgrpcHelloService);
+            //var tgrpcHelloService = bsp.GetService<RpcContractGrpc.IHelloService>();
+            //Assert.IsNotNull(tgrpcHelloService);
             var httpHelloService = bsp.GetService<RpcContractHttp.IHelloService>();
             Assert.IsNotNull(httpHelloService);
             var nettyHelloService = bsp.GetService<RpcContractNetty.IHelloService>();

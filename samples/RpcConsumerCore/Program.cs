@@ -30,14 +30,14 @@ class Program
         //ZooyardLogManager.UseConsoleLogging(Zooyard.Logging.LogLevel.Debug);
 
         IServiceCollection services = new ServiceCollection();
-        services.Configure<GrpcOption>(config.GetSection("grpc"));
+        //services.Configure<GrpcOption>(config.GetSection("grpc"));
         services.Configure<GrpcNetOption>(config.GetSection("grpc"));
         //services.Configure<NettyOption>(config.GetSection("netty"));
         //services.Configure<ThriftOption>(config.GetSection("thrift"));
 
         services.Configure<ZooyardOption>(config.GetSection("zooyard"));
         services.AddLogging();
-        services.AddZooyardGrpc();
+        //services.AddZooyardGrpc();
         services.AddZooyardHttp();
         services.AddZooyardNetty();
         services.AddZooyardThrift();
@@ -46,7 +46,7 @@ class Program
         services.AddMemoryCache();
         services.AddZoolandClient(
             typeof(RpcContractThrift.IHelloService)
-            , typeof(RpcContractGrpc.IHelloService)
+            //, typeof(RpcContractGrpc.IHelloService)
             , typeof(RpcContractGrpcNet.IHelloNetService)
             , typeof(RpcContractHttp.IHelloService)
             , typeof(RpcContractNetty.IHelloService)
@@ -54,7 +54,7 @@ class Program
 
         using var bsp = services.BuildServiceProvider();
         var helloServiceThrift = bsp.GetRequiredService<RpcContractThrift.IHelloService>();
-        var helloServiceGrpc = bsp.GetRequiredService<RpcContractGrpc.IHelloService>();
+        //var helloServiceGrpc = bsp.GetRequiredService<RpcContractGrpc.IHelloService>();
         var helloServiceGrpcNet = bsp.GetRequiredService<RpcContractGrpcNet.IHelloNetService>();
         var helloServiceHttp = bsp.GetRequiredService<RpcContractHttp.IHelloService>();
         var helloServiceNetty = bsp.GetRequiredService<RpcContractNetty.IHelloService>();
@@ -66,9 +66,9 @@ class Program
             var mode = Console.ReadLine()?.ToLower()??"all";
             switch (mode)
             {
-                case "grpc":
-                    CallWhile(async (helloword) => { await GrpcHello(helloServiceGrpc, helloword); });
-                    break;
+                //case "grpc":
+                //    CallWhile(async (helloword) => { await GrpcHello(helloServiceGrpc, helloword); });
+                //    break;
                 case "grpcnet":
                     CallWhile(async (helloword) => { await GrpcNetHello(helloServiceGrpcNet, helloword); });
                     break;
@@ -95,18 +95,18 @@ class Program
                         //        throw ex;
                         //    }
                         //});
-                        Task.Run(async () =>
-                        {
-                            try
-                            {
-                                await GrpcHello(helloServiceGrpc);
-                            }
-                            catch
-                            {
-                                throw;
-                            }
+                        //Task.Run(async () =>
+                        //{
+                        //    try
+                        //    {
+                        //        await GrpcHello(helloServiceGrpc);
+                        //    }
+                        //    catch
+                        //    {
+                        //        throw;
+                        //    }
 
-                        });
+                        //});
                         Task.Run(async () =>
                         {
                             try
@@ -201,23 +201,23 @@ class Program
         Console.WriteLine(showResult);
     }
 
-    private static async Task GrpcHello(RpcContractGrpc.IHelloService helloServiceGrpc, string helloword = "world")
-    {
-        Console.WriteLine("GrpcHello---------------------------------------------------------------------------");
-        var callNameVoid = await helloServiceGrpc.CallNameVoid(new RpcContractGrpc.Void());
-        Console.WriteLine(callNameVoid);
-        await helloServiceGrpc.CallName(new RpcContractGrpc.NameResult { Name = helloword });
-        Console.WriteLine("CallName called");
-        await helloServiceGrpc.CallVoid(new RpcContractGrpc.Void());
-        Console.WriteLine("CallVoid called");
-        var hello = await helloServiceGrpc.Hello(new RpcContractGrpc.NameResult { Name = helloword });
-        Console.WriteLine(hello.Name);
-        var helloResult = await helloServiceGrpc.SayHello(new RpcContractGrpc.NameResult { Name = $"{helloword} perfect world" });
-        Console.WriteLine($"{helloResult.Name},{helloResult.Gender},{helloResult.Head}");
-        helloResult.Name = helloword + " show perfect world";
-        var showResult = await helloServiceGrpc.ShowHello(helloResult);
-        Console.WriteLine(showResult.Name);
-    }
+    //private static async Task GrpcHello(RpcContractGrpc.IHelloService helloServiceGrpc, string helloword = "world")
+    //{
+    //    Console.WriteLine("GrpcHello---------------------------------------------------------------------------");
+    //    var callNameVoid = await helloServiceGrpc.CallNameVoid(new RpcContractGrpc.Void());
+    //    Console.WriteLine(callNameVoid);
+    //    await helloServiceGrpc.CallName(new RpcContractGrpc.NameResult { Name = helloword });
+    //    Console.WriteLine("CallName called");
+    //    await helloServiceGrpc.CallVoid(new RpcContractGrpc.Void());
+    //    Console.WriteLine("CallVoid called");
+    //    var hello = await helloServiceGrpc.Hello(new RpcContractGrpc.NameResult { Name = helloword });
+    //    Console.WriteLine(hello.Name);
+    //    var helloResult = await helloServiceGrpc.SayHello(new RpcContractGrpc.NameResult { Name = $"{helloword} perfect world" });
+    //    Console.WriteLine($"{helloResult.Name},{helloResult.Gender},{helloResult.Head}");
+    //    helloResult.Name = helloword + " show perfect world";
+    //    var showResult = await helloServiceGrpc.ShowHello(helloResult);
+    //    Console.WriteLine(showResult.Name);
+    //}
 
     private static async Task GrpcNetHello(RpcContractGrpcNet.IHelloNetService helloServiceGrpc, string helloword = "world")
     {

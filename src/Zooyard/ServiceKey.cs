@@ -40,7 +40,7 @@ public class ServiceKey
 
     public override int GetHashCode()
     {
-        return InterfaceName.GetHashCode() + Group.GetHashCode()+ Version.GetHashCode();
+        return HashCode.Combine(InterfaceName,Group, Version);
     }
 
     public override string ToString()

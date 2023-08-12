@@ -63,7 +63,7 @@ public class ProtocolServiceKey: ServiceKey
 
     public override int GetHashCode()
     {
-        return base.GetHashCode() + Protocol.GetHashCode();
+        return HashCode.Combine(InterfaceName, Group, Version, Protocol);
     }
 
     public override string ToString()
