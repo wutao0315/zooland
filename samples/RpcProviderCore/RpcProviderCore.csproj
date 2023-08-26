@@ -28,7 +28,7 @@
     <PackageReference Include="SoapCore" Version="1.1.0.38" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="7.0.0" />
     <PackageReference Include="ApacheThrift" Version="0.18.1" />
-	  <PackageReference Include="Grpc.AspNetCore" Version="2.55.0" />
+	  <PackageReference Include="Grpc.AspNetCore" Version="2.56.0" />
   </ItemGroup>
 
   <ItemGroup>
