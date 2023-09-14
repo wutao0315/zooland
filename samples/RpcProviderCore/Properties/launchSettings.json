@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "RpcProviderCore": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:51646;http://localhost:51647"
+    }
+  }
+}
