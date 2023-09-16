@@ -1,6 +1,5 @@
 ﻿using Grpc.Core;
 using System.Diagnostics;
-using System.Net.Mime;
 using System.Reflection;
 using Zooyard.DataAnnotations;
 using Zooyard.Logging;
@@ -12,7 +11,6 @@ namespace Zooyard.GrpcNetImpl;
 public class GrpcInvoker : AbstractInvoker
 {
     private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(GrpcInvoker));
-
     private readonly object _instance;
     private readonly int _clientTimeout;
 
@@ -33,6 +31,8 @@ public class GrpcInvoker : AbstractInvoker
             parasPlus[i] = invocation.Arguments[i];
         }
         paraTypes[invocation.Arguments.Length] = typeof(CallOptions);
+
+        Activity.Current?.SetTag("rpc.system", "zy_grpc");
 
         var callOption = new CallOptions();
         if (_clientTimeout > 0)

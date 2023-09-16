@@ -5,7 +5,7 @@ public record EventDataStore
 {
     public long? OperationTimestamp { get; set; }
 
-    public string Operation { get; set; } = default!;
+    public string Operation { get; set; } = string.Empty;
 
     public long? ElapsedTimeMs { get; set; }
 

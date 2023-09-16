@@ -46,7 +46,7 @@ internal class DiagnosticListener : IObserver<KeyValuePair<string, object?>>
 
                     if (activity != null)
                     {
-                        activity.SetTag("rpc.destination", eventData.Operation);
+                        activity.SetTag("server.address", eventData.Operation);
 
                         activity.AddEvent(new ActivityEvent("rpc message persistence start...",
                             DateTimeOffset.FromUnixTimeMilliseconds(eventData.OperationTimestamp!.Value)));
@@ -62,7 +62,7 @@ internal class DiagnosticListener : IObserver<KeyValuePair<string, object?>>
                     {
                         activity.AddEvent(new ActivityEvent("rpc message persistence succeeded!",
                             DateTimeOffset.FromUnixTimeMilliseconds(eventData.OperationTimestamp!.Value),
-                            new ActivityTagsCollection { new("prc.duration", eventData.ElapsedTimeMs) }));
+                            new ActivityTagsCollection { new("prc.client.duration", eventData.ElapsedTimeMs) }));
 
                         activity.Stop();
                     }

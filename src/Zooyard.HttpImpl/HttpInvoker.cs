@@ -64,6 +64,8 @@ public class HttpInvoker : AbstractInvoker
         var client = _instance.CreateClient();
         client.BaseAddress = new Uri($"{_url.Protocol}://{_url.Host}:{_url.Port}");
 
+        Activity.Current?.SetTag("rpc.system", "zy_http");
+
         var stub = new HttpStub(client, _clientTimeout);
         var watch = Stopwatch.StartNew();
         string? value = null;

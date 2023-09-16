@@ -46,6 +46,7 @@ public class ThriftInvoker : AbstractInvoker
         }
 
         var watch = Stopwatch.StartNew();
+        Activity.Current?.SetTag("rpc.system", "zy_thrift");
         try
         {
             var taskInvoke = method.Invoke(_instance, arguments.ToArray())!;

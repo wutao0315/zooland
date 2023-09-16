@@ -35,7 +35,8 @@ public class NettyInvoker : AbstractInvoker
         };
 
         var watch = Stopwatch.StartNew();
-        
+
+        Activity.Current?.SetTag("rpc.system", "zy_netty");
         try
         {
             var response = await _channel.SendAsync(message, CancellationToken.None);
