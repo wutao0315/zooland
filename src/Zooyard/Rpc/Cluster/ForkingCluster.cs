@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using Zooyard.Atomic;
 using Zooyard.Diagnositcs;
 using Zooyard.Logging;
@@ -60,15 +61,19 @@ public class ForkingCluster : AbstractCluster
         foreach (var invoker in selected)
         {
             var task = Task.Run(async() => {
+
+                var watch = Stopwatch.StartNew();
                 try
                 {
                     var client = await pool.GetClient(invoker);
+
                     try
                     {
                         var refer = await client.Refer();
-                        _source.WriteConsumerBefore(refer.Instance, invoker, invocation);
+                        _source.WriteConsumerBefore(client.System, Name, invoker, invocation);
                         var resultInner = await refer.Invoke<T>(invocation);
-                        _source.WriteConsumerAfter(invoker, invocation, resultInner);
+                        resultInner.ElapsedMilliseconds = watch.ElapsedMilliseconds;
+                        _source.WriteConsumerAfter(client.System, Name, invoker, invocation, resultInner);
                         await pool.Recovery(client);
                         goodUrls.Add(invoker);
                         return resultInner;
@@ -76,7 +81,7 @@ public class ForkingCluster : AbstractCluster
                     catch (Exception ex)
                     {
                         await pool.DestoryClient(client).ConfigureAwait(false);
-                        _source.WriteConsumerError(invoker, invocation, ex);
+                        _source.WriteConsumerError(client.System, Name, invoker, invocation, ex, watch.ElapsedMilliseconds);
                         throw;
                     }
                 }
@@ -88,6 +93,10 @@ public class ForkingCluster : AbstractCluster
                     {
                         return new RpcResult<T>(e);
                     }
+                }
+                finally
+                {
+                    watch.Stop();
                 }
                 return null;
             });

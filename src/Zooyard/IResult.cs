@@ -3,7 +3,7 @@
 public interface IResult<T>
 {
     T? Value { get; }
-    long ElapsedMilliseconds{get;}
+    long ElapsedMilliseconds{ get; set; }
     bool HasException { get; }
     Exception? Exception { get; }
 }
@@ -11,25 +11,22 @@ public interface IResult<T>
 public class RpcResult<T> : IResult<T>
 {
     public T? Value { get; private set; }
-    public long ElapsedMilliseconds { get; private set; }
+    public long ElapsedMilliseconds { get; set; }
     public Exception? Exception { get; private set; }
 
-    public RpcResult(long elapsedMilliseconds)
+    public RpcResult()
     {
-        ElapsedMilliseconds = elapsedMilliseconds;
     }
 
-    public RpcResult(T result, long elapsedMilliseconds)
+    public RpcResult(T result)
     {
         Value = result;
-        ElapsedMilliseconds = elapsedMilliseconds;
     }
 
     public RpcResult(Exception? exception)
     {
         Exception = exception;
     }
-
     public bool HasException => Exception != null;
 }
 

@@ -1,4 +1,5 @@
-﻿using Zooyard.Diagnositcs;
+﻿using System.Diagnostics;
+using Zooyard.Diagnositcs;
 using Zooyard.Logging;
 using Zooyard.Utils;
 
@@ -50,16 +51,20 @@ public class FailoverCluster : AbstractCluster
             var url = base.Select(loadbalance, invocation, invokers, disabledUrls, invoked);
             invoked.Add(url);
             RpcContext.GetContext().SetInvokers(invoked);
-            
+
+            var watch = Stopwatch.StartNew();
             try
             {
                 var client = await pool.GetClient(url);
+
+                var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                 try
                 {
                     var refer = await client.Refer();
-                    _source.WriteConsumerBefore(refer.Instance, url, invocation);
+                    _source.WriteConsumerBefore(client.System, Name, url, invocation);
                     var result = await refer.Invoke<T>(invocation);
-                    _source.WriteConsumerAfter(url, invocation, result);
+                    result.ElapsedMilliseconds = watch.ElapsedMilliseconds;
+                    _source.WriteConsumerAfter(client.System, Name, url, invocation, result);
                     await pool.Recovery(client);
                     if (le != null)
                     {
@@ -82,7 +87,7 @@ public class FailoverCluster : AbstractCluster
                 catch (Exception ex)
                 {
                     await pool.DestoryClient(client).ConfigureAwait(false);
-                    _source.WriteConsumerError(url, invocation, ex);
+                    _source.WriteConsumerError(client.System, Name, url, invocation, ex, watch.ElapsedMilliseconds);
                     throw;
                 }
                 
@@ -111,7 +116,8 @@ public class FailoverCluster : AbstractCluster
             }
             finally
             {
-                providers.Add(url.Address!);
+                providers.Add(url.Address!); 
+                watch.Stop();
             }
         }
 

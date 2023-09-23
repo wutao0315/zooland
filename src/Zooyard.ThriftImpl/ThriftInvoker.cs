@@ -45,31 +45,21 @@ public class ThriftInvoker : AbstractInvoker
             throw new Exception($"{_instance.GetType().FullName} not contians method {methodName} {argumentTypes}");
         }
 
-        var watch = Stopwatch.StartNew();
-        Activity.Current?.SetTag("rpc.system", "zy_thrift");
         try
         {
             var taskInvoke = method.Invoke(_instance, arguments.ToArray())!;
             if (invocation.MethodInfo.ReturnType == typeof(void) || invocation.MethodInfo.ReturnType == typeof(Task))
             {
                 await (Task)taskInvoke;
-                watch.Stop();
-                return new RpcResult<T>(watch.ElapsedMilliseconds);
+                return new RpcResult<T>();
             }
             var valueOut = await (Task<T>)taskInvoke;
-            watch.Stop();
-            return new RpcResult<T>(valueOut, watch.ElapsedMilliseconds);
+            return new RpcResult<T>(valueOut);
         }
         catch (Exception ex)
         {
-            Debug.Print(ex.StackTrace);
+            Logger().LogError(ex, ex.Message);
             throw;
-        }
-        finally
-        {
-            if (watch.IsRunning)
-                watch.Stop();
-            Logger().LogInformation($"Thrift Invoke {watch.ElapsedMilliseconds} ms");
         }
     }
 }

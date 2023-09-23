@@ -31,27 +31,39 @@ internal class DiagnosticListener : IObserver<KeyValuePair<string, object?>>
                 {
                     var eventData = (EventDataStore)evt.Value!;
 
-                    var parentContext = Propagator.Extract(default, eventData.TransportMessage, (msg, key) =>
+                    var parentContext = Propagator.Extract(default, eventData.Invocation, (msg, key) =>
                     {
-                        //if (msg.Headers.TryGetValue(key, out string? value))
-                        //{
-                        //    return new[] { value };
-                        //}
+                        if (msg.GetAttributes().TryGetValue(key, out object? value))
+                        {
+                            return new[] { value.ToString() };
+                        }
                         return Enumerable.Empty<string>();
                     });
 
-                    var activity = ActivitySource.StartActivity(eventData.Operation,
+                    var activity = ActivitySource.StartActivity(eventData.ClusterName,
                         ActivityKind.Consumer,
                         parentContext.ActivityContext);
 
                     if (activity != null)
                     {
-                        activity.SetTag("server.address", eventData.Operation);
+                        activity.SetTag("rpc.system", eventData.Url);
+                        activity.SetTag("rpc.url", eventData.Url);
+                        activity.SetTag("rpc.cluster.name", eventData.ClusterName);
+                        activity.SetTag("rpc.id", eventData.Invocation.Id);
 
                         activity.AddEvent(new ActivityEvent("rpc message persistence start...",
-                            DateTimeOffset.FromUnixTimeMilliseconds(eventData.OperationTimestamp!.Value)));
+                            DateTimeOffset.FromUnixTimeMilliseconds(eventData.ActiveTimestamp)));
 
-                        //_contexts[eventData.TransportMessage.GetId() + eventData.TransportMessage.GetGroup()] = activity.Context;
+                        if (parentContext != default)
+                        {
+                            _contexts[eventData.Invocation.Id] = Activity.Current!.Context;
+                        }
+
+                        Propagator.Inject(new PropagationContext(activity.Context, Baggage.Current), eventData.Invocation,
+                            (msg, key, value) =>
+                            {
+                                msg.SetAttachment(key, value);
+                            });
                     }
                 }
                 break;
@@ -61,8 +73,8 @@ internal class DiagnosticListener : IObserver<KeyValuePair<string, object?>>
                     if (Activity.Current is { } activity)
                     {
                         activity.AddEvent(new ActivityEvent("rpc message persistence succeeded!",
-                            DateTimeOffset.FromUnixTimeMilliseconds(eventData.OperationTimestamp!.Value),
-                            new ActivityTagsCollection { new("prc.client.duration", eventData.ElapsedTimeMs) }));
+                            DateTimeOffset.FromUnixTimeMilliseconds(eventData.ActiveTimestamp),
+                            new ActivityTagsCollection { new("rpc.client.duration", eventData.Elapsed) }));
 
                         activity.Stop();
                     }

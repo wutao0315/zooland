@@ -2,6 +2,7 @@
 
 public interface IClient : IDisposable, IAsyncDisposable
 {
+    string System { get; }
     URL Url { get; }
     Task<IInvoker> Refer(CancellationToken cancellationToken = default);
     string Version { get; }

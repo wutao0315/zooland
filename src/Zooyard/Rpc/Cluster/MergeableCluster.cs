@@ -65,24 +65,27 @@ public class MergeableCluster : AbstractCluster
         {
             foreach (var invoker in invokers)
             {
+                var watchInner = Stopwatch.StartNew();
                 try
                 {
                     var client = await pool.GetClient(invoker);
+                    var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                     try
                     {
                         var refer = await client.Refer();
-                        _source.WriteConsumerBefore(refer.Instance, invoker, invocation);
+                        _source.WriteConsumerBefore(client.System, Name, invoker, invocation);
                         var invokeResult = await refer.Invoke<T>(invocation);
-                        _source.WriteConsumerAfter(invoker, invocation, invokeResult);
+                        invokeResult.ElapsedMilliseconds = watchInner.ElapsedMilliseconds;
+                        _source.WriteConsumerAfter(client.System, Name, invoker, invocation, invokeResult);
                         await pool.Recovery(client);
                         goodUrls.Add(invoker);
-                        return new ClusterResult<T>(invokeResult, 
+                        return new ClusterResult<T>(invokeResult,
                             goodUrls, badUrls,
                             null, false);
                     }
                     catch (Exception ex)
                     {
-                        _source.WriteConsumerError(invoker, invocation, ex);
+                        _source.WriteConsumerError(client.System, Name, invoker, invocation, ex, watchInner.ElapsedMilliseconds);
                         await pool.DestoryClient(client).ConfigureAwait(false);
                         throw;
                     }
@@ -90,9 +93,13 @@ public class MergeableCluster : AbstractCluster
                 catch (Exception e)
                 {
                     badUrls.Add(new BadUrl(invoker, e));
-                    return new ClusterResult<T>(new RpcResult<T>(e), 
-                        goodUrls, badUrls, 
+                    return new ClusterResult<T>(new RpcResult<T>(e) { ElapsedMilliseconds = watchInner.ElapsedMilliseconds },
+                        goodUrls, badUrls,
                         e, true);
+                }
+                finally 
+                {
+                    watchInner.Stop();
                 }
             }
 
@@ -105,7 +112,7 @@ public class MergeableCluster : AbstractCluster
         Type? returnType = invocation.TargetType.GetMethod(invocation.MethodInfo.Name, invocation.ArgumentTypes)?.ReturnType;
 
         object? resultValue = null;
-        var watch = Stopwatch.StartNew();
+        var watchAll = Stopwatch.StartNew();
         try
         {
             var results = new Dictionary<string, Task<IResult<T>>>();
@@ -113,15 +120,18 @@ public class MergeableCluster : AbstractCluster
             {
                 var task = Task.Run(async () =>
                 {
+                    var watchInner = Stopwatch.StartNew();
                     try
                     {
                         var client = await pool.GetClient(invoker);
+                        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                         try
                         {
                             var refer = await client.Refer();
-                            _source.WriteConsumerBefore(refer.Instance, invoker, invocation);
+                            _source.WriteConsumerBefore(client.System, Name, invoker, invocation);
                             var invokeResult = await refer.Invoke<T>(invocation);
-                            _source.WriteConsumerAfter(invoker, invocation, invokeResult);
+                            invokeResult.ElapsedMilliseconds = watchInner.ElapsedMilliseconds;
+                            _source.WriteConsumerAfter(client.System, Name, invoker, invocation, invokeResult);
                             await pool.Recovery(client);
                             goodUrls.Add(invoker);
                             return invokeResult;
@@ -129,14 +139,18 @@ public class MergeableCluster : AbstractCluster
                         catch (Exception ex)
                         {
                             await pool.DestoryClient(client);
-                            _source.WriteConsumerError(invoker, invocation, ex);
+                            _source.WriteConsumerError(client.System, Name, invoker, invocation, ex, watchInner.ElapsedMilliseconds);
                             throw;
                         }
                     }
                     catch (Exception e)
                     {
                         badUrls.Add(new BadUrl(invoker, e));
-                        return new RpcResult<T>(e);
+                        return new RpcResult<T>(e) { ElapsedMilliseconds = watchInner.ElapsedMilliseconds };
+                    }
+                    finally
+                    {
+                        watchInner.Stop();
                     }
                 });
                 results.Add(invoker.ServiceKey??"", task);
@@ -152,7 +166,7 @@ public class MergeableCluster : AbstractCluster
                 if (r.HasException)
                 {
                     Logger().LogError(r.Exception, $"Invoke {entry.Key} {GetGroupDescFromServiceKey(entry.Key)}  failed: {r.Exception?.Message}");
-                    return new ClusterResult<T>(new RpcResult<T>(r.Exception), 
+                    return new ClusterResult<T>(new RpcResult<T>(r.Exception) { ElapsedMilliseconds = watchAll.ElapsedMilliseconds }, 
                         goodUrls, badUrls, 
                         r.Exception, true);
                 }
@@ -162,11 +176,9 @@ public class MergeableCluster : AbstractCluster
                 }
             }
 
-            watch.Stop();
-
             if (resultList.Count == 0)
             {
-                return new ClusterResult<T>(new RpcResult<T>(watch.ElapsedMilliseconds), 
+                return new ClusterResult<T>(new RpcResult<T>() { ElapsedMilliseconds = watchAll.ElapsedMilliseconds }, 
                     goodUrls, badUrls,
                     null, false);
             }
@@ -179,7 +191,7 @@ public class MergeableCluster : AbstractCluster
 
             if (returnType == typeof(void))
             {
-                return new ClusterResult<T>(new RpcResult<T>(watch.ElapsedMilliseconds), 
+                return new ClusterResult<T>(new RpcResult<T>() { ElapsedMilliseconds = watchAll.ElapsedMilliseconds }, 
                     goodUrls, badUrls, 
                     null, false);
             }
@@ -270,7 +282,7 @@ public class MergeableCluster : AbstractCluster
                         ex, true);
                 }
             }
-            return new ClusterResult<T>(new RpcResult<T>((T)resultValue.ChangeType(typeof(T))!, watch.ElapsedMilliseconds), 
+            return new ClusterResult<T>(new RpcResult<T>((T)resultValue.ChangeType(typeof(T))!) { ElapsedMilliseconds = watchAll.ElapsedMilliseconds }, 
                 goodUrls, badUrls,
                 null, false);
         }
@@ -281,8 +293,7 @@ public class MergeableCluster : AbstractCluster
         }
         finally 
         {
-            if (watch.IsRunning)
-                watch.Stop();
+                watchAll.Stop();
         }
         
     }

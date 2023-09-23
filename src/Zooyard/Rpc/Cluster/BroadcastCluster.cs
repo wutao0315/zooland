@@ -1,4 +1,5 @@
-﻿using Zooyard.Diagnositcs;
+﻿using System.Diagnostics;
+using Zooyard.Diagnositcs;
 using Zooyard.Logging;
 
 namespace Zooyard.Rpc.Cluster;
@@ -25,22 +26,24 @@ public class BroadcastCluster : AbstractCluster
         IResult<T>? result = null;
         foreach (var invoker in invokers)
         {
+            var watch = Stopwatch.StartNew();
             try
             {
                 var client = await pool.GetClient(invoker);
                 try
                 {
                     var refer = await client.Refer();
-                    _source.WriteConsumerBefore(refer.Instance, invoker, invocation);
+                    _source.WriteConsumerBefore(client.System, Name, invoker, invocation);
                     result = await refer.Invoke<T>(invocation);
-                    _source.WriteConsumerAfter(invoker, invocation, result);
+                    result.ElapsedMilliseconds = watch.ElapsedMilliseconds;
+                    _source.WriteConsumerAfter(client.System, Name, invoker, invocation, result);
                     await pool.Recovery(client);
                     goodUrls.Add(invoker);
                 }
                 catch (Exception ex)
                 {
                     await pool.DestoryClient(client);
-                    _source.WriteConsumerError(invoker, invocation, ex);
+                    _source.WriteConsumerError(client.System, Name, invoker, invocation, ex, watch.ElapsedMilliseconds);
                     throw;
                 }
             }
@@ -49,6 +52,10 @@ public class BroadcastCluster : AbstractCluster
                 exception = e;
                 badUrls.Add(new BadUrl(invoker, exception));
                 Logger().LogWarning(e, e.Message);
+            }
+            finally
+            {
+                watch.Stop();
             }
         }
         if (exception != null)

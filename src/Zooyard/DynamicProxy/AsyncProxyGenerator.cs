@@ -142,7 +142,7 @@ public class AsyncProxyGenerator : IDisposable
         T? returnValue = default;
         try
         {
-            var icn = new RpcInvocation(_serviceName, _version, _url, context.Packed.DeclaringType, context.Method, context.Packed.Args);
+            var icn = new RpcInvocation(Guid.NewGuid().ToString("N"), _serviceName, _version, _url, context.Packed.DeclaringType, context.Method, context.Packed.Args);
             var result = await _zooyardPools.Invoke<T>(icn);
             if (result != null)
             {

@@ -63,20 +63,28 @@ public class FailbackCluster : AbstractCluster
         foreach (var invocation in failed.Keys)
         {
             var client = await pool.GetClient(failed[invocation]);
+            var watch = Stopwatch.StartNew();
             try
             {
                 var refer = await client.Refer();
-                _source.WriteConsumerBefore(refer.Instance, failed[invocation], invocation);
+                _source.WriteConsumerBefore(client.System, Name, failed[invocation], invocation);
                 var result = await refer.Invoke<T>(invocation);
-                _source.WriteConsumerAfter(failed[invocation], invocation, result);
+                watch.Stop();
+                result.ElapsedMilliseconds = watch.ElapsedMilliseconds;
+                _source.WriteConsumerAfter(client.System, Name, failed[invocation], invocation, result);
                 await pool.Recovery(client);
                 failed.TryRemove(invocation, out URL? cluster);
             }
             catch (Exception e)
             {
-                _source.WriteConsumerError(failed[invocation], invocation, e);
+                _source.WriteConsumerError(client.System, Name, failed[invocation], invocation, e, watch.ElapsedMilliseconds);
                 await pool.DestoryClient(client);
                 Logger().LogError(e, $"Failed retry to invoke method {invocation.MethodInfo.Name}, waiting again.");
+            }
+            finally
+            {
+                if (watch.IsRunning)
+                    watch.Stop();
             }
         }
     }
@@ -101,19 +109,21 @@ public class FailbackCluster : AbstractCluster
         try
         {
             var client = await pool.GetClient(invoker);
+
             try
             {
                 var refer = await client.Refer();
-                _source.WriteConsumerBefore(refer.Instance, invoker, invocation);
+                _source.WriteConsumerBefore(client.System, Name, invoker, invocation);
                 result = await refer.Invoke<T>(invocation);
-                _source.WriteConsumerAfter(invoker, invocation, result);
+                result.ElapsedMilliseconds = watch.ElapsedMilliseconds;
+                _source.WriteConsumerAfter(client.System, Name,invoker, invocation, result);
                 await pool.Recovery(client);
                 goodUrls.Add(invoker);
             }
             catch (Exception ex)
             {
                 await pool.DestoryClient(client).ConfigureAwait(false);
-                _source.WriteConsumerError(invoker, invocation, ex);
+                _source.WriteConsumerError(client.System, Name, invoker, invocation, ex, watch.ElapsedMilliseconds);
                 throw;
             }
         }
@@ -122,14 +132,16 @@ public class FailbackCluster : AbstractCluster
             Logger().LogError(e, $"Failback to invoke method {invocation.MethodInfo.Name}, wait for retry in background. Ignored exception:{e.Message}");
             AddFailed<T>(pool, invocation, invoker);
             watch.Stop();
-            result = new RpcResult<T>(watch.ElapsedMilliseconds); // ignore
+            result = new RpcResult<T>(e)
+            {
+                ElapsedMilliseconds = watch.ElapsedMilliseconds,
+            }; // ignore
             exception = e;
             badUrls.Add(new BadUrl(invoker, exception));
         }
-        finally 
+        finally
         {
-            if(watch.IsRunning)
-                watch.Stop();
+            watch.Stop();
         }
 
         return new ClusterResult<T>(result, 

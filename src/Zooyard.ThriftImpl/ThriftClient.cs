@@ -7,6 +7,7 @@ namespace Zooyard.ThriftImpl;
 public class ThriftClient : AbstractClient
 {
     private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ThriftClient));
+    public override string System => "zy_thrift";
     public override URL Url { get; }
     public override int ClientTimeout { get; }
     private readonly TBaseClient _thriftclient;

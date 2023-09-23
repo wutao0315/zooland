@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Security.Policy;
 using Zooyard.Diagnositcs;
 using Zooyard.Logging;
@@ -31,22 +32,25 @@ public class FailfastCluster : AbstractCluster
 
         var invoker = base.Select(loadbalance, invocation, invokers, disabledUrls);
 
+        var watch = Stopwatch.StartNew();
         try
         {
             var client = await pool.GetClient(invoker);
+
             try
             {
                 var refer = await client.Refer();
-                _source.WriteConsumerBefore(refer.Instance, invoker, invocation);
+                _source.WriteConsumerBefore(client.System, Name, invoker, invocation);
                 result = await refer.Invoke<T>(invocation);
-                _source.WriteConsumerAfter(invoker, invocation, result);
+                result.ElapsedMilliseconds = watch.ElapsedMilliseconds;
+                _source.WriteConsumerAfter(client.System, Name, invoker, invocation, result);
                 await pool.Recovery(client);
                 goodUrls.Add(invoker);
             }
             catch (Exception ex)
             {
                 await pool.DestoryClient(client);
-                _source.WriteConsumerError(invoker, invocation, ex);
+                _source.WriteConsumerError(client.System, Name, invoker, invocation, ex, watch.ElapsedMilliseconds);
                 throw;
             }
         }
@@ -73,6 +77,10 @@ public class FailfastCluster : AbstractCluster
             }
             Logger().LogError(exception, exception.Message);
             badUrls.Add(new BadUrl(invoker, exception));
+        }
+        finally
+        {
+            watch.Stop();
         }
 
         return new ClusterResult<T>(result, 

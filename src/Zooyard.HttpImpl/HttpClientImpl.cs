@@ -4,6 +4,7 @@ namespace Zooyard.HttpImpl;
 
 public class HttpClientImpl : AbstractClient
 {
+    public override string System => "zy_http";
     public override URL Url { get; }
     public override int ClientTimeout { get; }
     private readonly IHttpClientFactory _transport;

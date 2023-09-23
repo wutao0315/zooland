@@ -1,7 +1,9 @@
 ﻿using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Reflection;
 using Zooyard.DataAnnotations;
+using Zooyard.Diagnositcs;
 using Zooyard.Logging;
 using Zooyard.Rpc.Cache;
 using Zooyard.Rpc.Cluster;
@@ -19,7 +21,7 @@ namespace Zooyard.Rpc;
 public class ZooyardPools : IZooyardPools
 {
     private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ZooyardPools));
-
+    
     public const string CACHE_KEY = "cache";
     public const string CLUSTER_KEY = "cluster";
     public const string LOADBANCE_KEY = "loadbance";
@@ -238,7 +240,7 @@ public class ZooyardPools : IZooyardPools
         if (value != null)
         {
             Logger().LogInformation($"call from cache({cache.GetType().FullName}):{key}");
-            return new RpcResult<T>(value, 0);
+            return new RpcResult<T>(value);
         }
 
         var resultInner = await InvokeInner();
@@ -391,9 +393,9 @@ public class ZooyardPools : IZooyardPools
         // 执行调用
         async Task<IResult<T>?> InvokeInner() 
         {
+            
             //get cached route urls
             var routeUrls = GetRouteUrls();
-
             var header = new Dictionary<string, string>();
             var targetDescription = invocation.TargetType.GetCustomAttribute<RequestMappingAttribute>();
             if (targetDescription != null)
@@ -420,9 +422,9 @@ public class ZooyardPools : IZooyardPools
             var cluster = GetCluster(address, invocation);
             //bad urls
             var badUrls = _badUrls.GetOrAdd(invocation.TargetType.FullName!, new List<BadUrl>());
+
             //invoke
             var result = await cluster.Invoke<T>(pool, loadbalance, address, routeUrls, badUrls, invocation);
-
             try
             {
                 //get all bad url, insulate from good url
@@ -616,5 +618,7 @@ public class ZooyardPools : IZooyardPools
             item.Value.Clear();
         }
     }
+
+    
 }
 

@@ -31,7 +31,7 @@ public class HttpInvoker : AbstractInvoker
         var endStr = "Async";
         if (invocation.MethodInfo.Name.EndsWith(endStr, StringComparison.OrdinalIgnoreCase))
         {
-            methodName = methodName.Substring(0, methodName.Length- endStr.Length);
+            methodName = methodName[..^endStr.Length];
         }
         var pathList = _url.Path?.Split('/', StringSplitOptions.RemoveEmptyEntries)??new string[0];
         var pathUrl = new List<string>(pathList);
@@ -64,10 +64,7 @@ public class HttpInvoker : AbstractInvoker
         var client = _instance.CreateClient();
         client.BaseAddress = new Uri($"{_url.Protocol}://{_url.Host}:{_url.Port}");
 
-        Activity.Current?.SetTag("rpc.system", "zy_http");
-
         var stub = new HttpStub(client, _clientTimeout);
-        var watch = Stopwatch.StartNew();
         string? value = null;
         try
         {
@@ -81,40 +78,32 @@ public class HttpInvoker : AbstractInvoker
             if (genType == typeof(byte[]))
             {
                 byte[] bytes = new byte[stream.Length];
-                stream.Read(bytes, 0, bytes.Length);
+                await stream.ReadAsync(bytes, 0, bytes.Length);
                 // 设置当前流的位置为流的开始
                 stream.Seek(0, SeekOrigin.Begin);
-                watch.Stop();
-                return new RpcResult<T>((T)bytes.ChangeType(genType)!, watch.ElapsedMilliseconds);
+                return new RpcResult<T>((T)bytes.ChangeType(genType)!);
             }
             else 
             {
                 using var sr = new StreamReader(stream);
-                value = sr.ReadToEnd();
+                value = await sr.ReadToEndAsync();
             }
             
         }
         catch (Exception ex)
         {
-            Debug.Print(ex.StackTrace);
+            Logger().LogError(ex, ex.Message);
             throw;
-        }
-        finally
-        {
-            if(watch.IsRunning)
-               watch.Stop();
-
-            Logger().LogInformation($"Http Invoke {watch.ElapsedMilliseconds} ms");
         }
 
         if (invocation.MethodInfo.ReturnType == typeof(void) || invocation.MethodInfo.ReturnType == typeof(Task)) 
         {
-            return new RpcResult<T>(watch.ElapsedMilliseconds);
+            return new RpcResult<T>();
         }
 
         if (invocation.MethodInfo.ReturnType.IsValueType || invocation.MethodInfo.ReturnType == typeof(string))
         {
-            return new RpcResult<T>((T)value.ChangeType(typeof(T))!, watch.ElapsedMilliseconds);
+            return new RpcResult<T>((T)value.ChangeType(typeof(T))!);
         }
 
         if (invocation.MethodInfo.ReturnType.IsGenericType &&
@@ -124,14 +113,14 @@ public class HttpInvoker : AbstractInvoker
 
             if (tastGenericType.IsValueType || tastGenericType == typeof(string))
             {
-                return new RpcResult<T>((T)value.ChangeType(typeof(T))!, watch.ElapsedMilliseconds);
+                return new RpcResult<T>((T)value.ChangeType(typeof(T))!);
             }
 
             var genericData = value.DeserializeJson<T>();
-            return new RpcResult<T>(genericData, watch.ElapsedMilliseconds);
+            return new RpcResult<T>(genericData);
         }
 
-        var result = new RpcResult<T>(value.DeserializeJson<T>(), watch.ElapsedMilliseconds);
+        var result = new RpcResult<T>(value.DeserializeJson<T>());
         return result;
 
     }

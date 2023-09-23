@@ -15,7 +15,7 @@ public class NettyClient : AbstractClient
     //public const int DEFAULT_QUIETPERIOD = 100;
     //public const string TIMEOUT_KEY = "timeout";
     //public const int DEFAULT_TIMEOUT = 5000;
-
+    public override string System => "zy_netty";
     public override URL Url { get; }
     public override int ClientTimeout { get; }
     

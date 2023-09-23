@@ -1,4 +1,5 @@
-﻿using Zooyard.Diagnositcs;
+﻿using System.Diagnostics;
+using Zooyard.Diagnositcs;
 using Zooyard.Logging;
 
 namespace Zooyard.Rpc.Cluster;
@@ -24,15 +25,19 @@ public class FailsafeCluster : AbstractCluster
         CheckInvokers(invokers, invocation, address);
 
         var invoker = base.Select(loadbalance, invocation, invokers, disabledUrls);
+
+        var watch = Stopwatch.StartNew();
         try
         {
             var client = await pool.GetClient(invoker);
+
             try
             {
                 var refer = await client.Refer();
-                _source.WriteConsumerBefore(refer.Instance, invoker, invocation);
+                _source.WriteConsumerBefore(client.System, Name, invoker, invocation);
                 var result = await refer.Invoke<T>(invocation);
-                _source.WriteConsumerAfter(invoker, invocation, result);
+                result.ElapsedMilliseconds = watch.ElapsedMilliseconds;
+                _source.WriteConsumerAfter(client.System, Name, invoker, invocation, result);
                 await pool.Recovery(client);
                 goodUrls.Add(invoker);
                 return new ClusterResult<T>(result, 
@@ -42,7 +47,7 @@ public class FailsafeCluster : AbstractCluster
             catch (Exception ex)
             {
                 await pool.DestoryClient(client).ConfigureAwait(false);
-                _source.WriteConsumerError(invoker, invocation, ex);
+                _source.WriteConsumerError(client.System, Name, invoker, invocation, ex, watch.ElapsedMilliseconds);
                 throw;
             }
         }
@@ -51,10 +56,14 @@ public class FailsafeCluster : AbstractCluster
             exception = e;
             //badUrls.Add(new BadUrl { Url = invoker, BadTime = DateTime.Now, CurrentException = exception });
             Logger().LogError(e, $"Failsafe ignore exception: {e.Message}");
-            var result = new RpcResult<T>(e); // ignore
+            var result = new RpcResult<T>(e) { ElapsedMilliseconds = watch.ElapsedMilliseconds }; // ignore
             return new ClusterResult<T>(result, 
                 goodUrls, badUrls, 
                 exception, false);
+        }
+        finally
+        {
+            watch.Stop();
         }
     }
 }

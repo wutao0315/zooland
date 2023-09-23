@@ -4,6 +4,7 @@ public abstract class AbstractClient: IClient
 {
     public virtual string Version { get { return Url.GetParameter(URL.VERSION_KEY)!; } }
     public DateTime ActiveTime { get; set; } = DateTime.Now;
+    public abstract string System { get; }
     public abstract int ClientTimeout { get; }
     public abstract URL Url { get; }
     public abstract Task<IInvoker> Refer(CancellationToken cancellationToken = default);

@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Xml.Linq;
 
 namespace Zooyard.Diagnositcs;
 
@@ -18,28 +19,31 @@ public class Constant
 }
 public static class DiagnosticListenerExtensions
 {
-    public static void WriteConsumerBefore(this DiagnosticSource _this, object instance, URL url, IInvocation invocation)
+    public static void WriteConsumerBefore(this DiagnosticSource _this, string system, string clusterName, URL url, IInvocation invocation)
     {
         if (!_this.IsEnabled(Constant.ConsumerBefore))
         {
             return;
         }
-        _this.Write(Constant.ConsumerBefore, new { instance, url, invocation  });
+        var eventData = new EventDataStore(system, clusterName, url, invocation);
+        _this.Write(Constant.ConsumerBefore, eventData);
     }
-    public static void WriteConsumerAfter<T>(this DiagnosticSource _this, URL url, IInvocation invocation, IResult<T> result)
+    public static void WriteConsumerAfter<T>(this DiagnosticSource _this, string system, string clusterName, URL url, IInvocation invocation, IResult<T> result)
     {
         if (!_this.IsEnabled(Constant.ConsumerAfter))
         {
             return;
         }
-        _this.Write(Constant.ConsumerAfter, new { url, invocation, result });
+        var eventData = new EventDataStore(system, clusterName, url, invocation) { Elapsed = result.ElapsedMilliseconds, Result = result };
+        _this.Write(Constant.ConsumerAfter, eventData);
     }
-    public static void WriteConsumerError(this DiagnosticSource _this, URL url, IInvocation invocation, Exception exception)
+    public static void WriteConsumerError(this DiagnosticSource _this, string system, string clusterName, URL url, IInvocation invocation, Exception exception, long elapsed)
     {
         if (!_this.IsEnabled(Constant.ConsumerAfter))
         {
             return;
         }
-        _this.Write(Constant.ConsumerAfter, new { url, invocation, exception });
+        var eventData = new EventDataStore(system, clusterName, url, invocation) { Elapsed = elapsed,  Exception = exception };
+        _this.Write(Constant.ConsumerAfter, eventData);
     }
 }

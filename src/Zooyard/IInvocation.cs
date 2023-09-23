@@ -7,6 +7,7 @@ namespace Zooyard;
 
 public interface IInvocation
 {
+    public string Id { get; }
     string ServiceName { get; }
     string Version { get; }
     URL? Url { get; }
@@ -33,11 +34,12 @@ public interface IInvocation
 public class RpcInvocation : IInvocation
 {
     private readonly SemaphoreSlim attachmentLock = new(1, 1);
-    public RpcInvocation(string serviceName, string version, string url, Type targetType, MethodInfo methodInfo, object[]? arguments)
+    public RpcInvocation(string id, string serviceName, string version, string url, Type targetType, MethodInfo methodInfo, object[]? arguments)
     {
+        Id = id;
         ServiceName = serviceName;
         Version = version;
-        Url = string.IsNullOrWhiteSpace(url)? null: URL.ValueOf(url);
+        Url = URL.ValueOf(url);
         TargetType = targetType;
         MethodInfo = methodInfo;
         Arguments = arguments ?? Array.Empty<object>();
@@ -63,11 +65,12 @@ public class RpcInvocation : IInvocation
         }
     }
 
-    private IDictionary<string, object> attachments = new Dictionary<string, object>();
-    private IDictionary<object, object> attributes = new Dictionary<object, object>();
+    private Dictionary<string, object> attachments = new ();
+    private Dictionary<object, object> attributes = new ();
+    public string Id { get; }
     public string ServiceName { get; }
     public string Version { get;}
-    public URL? Url { get; }
+    public URL Url { get; }
     public Type TargetType { get; }
     public MethodInfo MethodInfo { get; }
     public object[] Arguments { get; }

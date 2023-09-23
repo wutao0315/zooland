@@ -32,8 +32,6 @@ public class GrpcInvoker : AbstractInvoker
         }
         paraTypes[invocation.Arguments.Length] = typeof(CallOptions);
 
-        Activity.Current?.SetTag("rpc.system", "zy_grpc");
-
         var callOption = new CallOptions();
         if (_clientTimeout > 0)
         {
@@ -51,7 +49,6 @@ public class GrpcInvoker : AbstractInvoker
         }
         var method = _instance.GetType().GetMethod(methodName, paraTypes);
 
-        var watch = Stopwatch.StartNew();
         try
         {
             if (method == null) 
@@ -83,7 +80,7 @@ public class GrpcInvoker : AbstractInvoker
 
             if (taskResult == null) 
             {
-                var result = new RpcResult<T>(default!, watch.ElapsedMilliseconds);
+                var result = new RpcResult<T>();
                 return result;
             }
 
@@ -91,30 +88,19 @@ public class GrpcInvoker : AbstractInvoker
                 && taskResult.GetType().GetGenericTypeDefinition() == typeof(AsyncUnaryCall<>))
             {
                 var resultData = await (AsyncUnaryCall<T>)taskResult;
-                watch.Stop();
-                var result = new RpcResult<T>(resultData, watch.ElapsedMilliseconds);
+                var result = new RpcResult<T>(resultData);
                 return result;
             }
             else
             {
-                watch.Stop();
-
-                var result = new RpcResult<T>((T)taskResult.ChangeType(typeof(T))!, watch.ElapsedMilliseconds);
+                var result = new RpcResult<T>((T)taskResult.ChangeType(typeof(T))!);
                 return result;
             }
         }
         catch (Exception ex)
         {
-            Debug.Print(ex.StackTrace);
+            Logger().LogError(ex, ex.Message);
             throw;
-        }
-        finally
-        {
-            if (watch.IsRunning) 
-            {
-                watch.Stop();
-            }
-            Logger().LogInformation($"Grpc Invoke {watch.ElapsedMilliseconds} ms");
         }
     }
 }
