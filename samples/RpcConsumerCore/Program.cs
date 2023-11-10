@@ -1,7 +1,11 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Grpc.Net.Client;
+using MemberGrpc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Zooyard;
 using Zooyard.DotNettyImpl;
+using Zooyard.HttpImpl;
+using static Grpc.Core.Metadata;
 //using Zooyard.Extensions;
 //using Zooyard.Rpc.AkkaImpl.Extensions;
 //using Zooyard.GrpcImpl.Extensions;
@@ -50,6 +54,7 @@ class Program
             , typeof(RpcContractGrpcNet.IHelloNetService)
             , typeof(RpcContractHttp.IHelloService)
             , typeof(RpcContractNetty.IHelloService)
+            , typeof(MemberGrpc.ISessionService)
             );
 
         using var bsp = services.BuildServiceProvider();
@@ -58,11 +63,12 @@ class Program
         var helloServiceGrpcNet = bsp.GetRequiredService<RpcContractGrpcNet.IHelloNetService>();
         var helloServiceHttp = bsp.GetRequiredService<RpcContractHttp.IHelloService>();
         var helloServiceNetty = bsp.GetRequiredService<RpcContractNetty.IHelloService>();
+        var sessionService = bsp.GetRequiredService<MemberGrpc.ISessionService>();
 
         while (true)
         {
             //Console.WriteLine("请选择:wcf | grpc | thrift | http | akka | netty | all");
-            Console.WriteLine("请选择:grpcnet | grpc | thrift | http | netty | all");
+            Console.WriteLine("请选择:grpcnet | grpc | grpcmember | thrift | http | netty | all");
             var mode = Console.ReadLine()?.ToLower()??"all";
             switch (mode)
             {
@@ -71,6 +77,9 @@ class Program
                 //    break;
                 case "grpcnet":
                     CallWhile(async (helloword) => { await GrpcNetHello(helloServiceGrpcNet, helloword); });
+                    break;
+                case "grpcmember":
+                    CallWhile(async (helloword) => { await GrpcNetMember(sessionService, helloword); });
                     break;
                 case "thrift":
                     CallWhile(async(helloword) => { await ThriftHello(helloServiceThrift, helloword); });
@@ -218,6 +227,43 @@ class Program
     //    var showResult = await helloServiceGrpc.ShowHello(helloResult);
     //    Console.WriteLine(showResult.Name);
     //}
+
+    private static async Task GrpcNetMember(ISessionService helloServiceGrpc, string helloword = "world")
+    {
+        Console.WriteLine("GrpcNetMember---------------------------------------------------------------------------");
+
+        var entity = new PrmSessionEntity
+        {
+            App = "test",
+            Remark = "[\r\n  \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0\"\r\n]",
+            UserHostAddress = "0.0.0.1:50667",
+            AppId = 3000000000,
+            OrgId = 2000000000,
+            ExtData = "test",
+            NowTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+        };
+
+        var req = new MemberLoginRequest
+        {
+            UserName = "admin",
+            Pwd = "123456",
+            RememberMe = true,
+            UserType = 0,
+            SessionEntity = entity
+        };
+        //var r = await client.MemberLoginAsync(req);
+
+        var response = await helloServiceGrpc.MemberLogin(req);
+        Console.WriteLine($"{response.Code}:{response.Msg}");
+        if (response.Code != 0)
+        {
+            throw new Exception(response.Msg);
+        }
+
+        var all = response.Data.Unpack<PrmAllSession>();
+
+        Console.WriteLine(all.ToJsonString("{}"));
+    }
 
     private static async Task GrpcNetHello(RpcContractGrpcNet.IHelloNetService helloServiceGrpc, string helloword = "world")
     {

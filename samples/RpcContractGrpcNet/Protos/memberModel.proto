@@ -1,0 +1,359 @@
+﻿syntax = "proto3";
+
+import "google/protobuf/any.proto";
+
+package MemberGrpc;
+
+message TouchRequest {
+    int64 Id = 1;
+    map<string, string> Cache = 2;
+    string UserHostAddress = 3;
+    int64 NowTime = 4;
+}
+
+message BasicTouchRequest {
+    string AppId = 1;
+    string AppSecret = 2;
+    map<string, string> Cache = 3;
+    string UserHostAddress = 4;
+    int64 NowTime = 5;
+}
+
+
+message GetApiRequest {
+    int64 OrgId = 1;
+    string ApiName = 2;
+}
+
+message MemberRefreshRequest {
+    int64 RefreshToken=1;
+    string UserHostAddress=2;
+}
+
+message MemberLogOutRequest {
+    int64 SessionId = 1;
+    int32 Status = 2;
+}
+
+message MemberLockRequest {
+    int64 SessionId = 1;
+}
+
+message MemberUnLockRequest {
+    int64 SessionId = 1;
+    string Pwd = 2;
+}
+
+message MemberQRCodeLoginRequest {
+    string QrCode=1;
+    int32 UserType=2;
+    bool RememberMe=3;
+    PrmSessionEntity SessionEntity=4;
+}
+
+message MemberSmsLoginRequest {
+    string Mobile=1;
+    string SmsCode=2;
+    int32 UserType=3;
+    bool RememberMe=4;
+    PrmSessionEntity SessionEntity=5;
+}
+
+message MemberThirdLoginRequest {
+    PrmOpenEntity Token = 1;
+    int32 UserType=2;
+    PrmSessionEntity SessionEntity = 3;
+    bool AutoReg = 4; //true，自动注册是 UserName 和 Pwd 不需要填写，false,需要录入用户绑定的后台账号用户名和密码
+    string UserName = 5;
+    string Pwd=6;
+    bool RememberMe=7;
+    bool MutiBind=8; //是否允许多个三方账号绑定同一个后台账号
+}
+
+message MemberLoginRequest {
+    string UserName=1;
+    int32 UserType=2;
+    string Pwd=3;
+    bool RememberMe=4;
+    PrmSessionEntity SessionEntity=5;
+}
+
+message MemberFrozenRequest {
+    string UserName=1;
+    string FrozenTime=2;
+    int32 UserType=3;
+}
+
+message PrmApiData {
+    repeated PrmApiEntity Apis = 1;
+}
+
+message PrmApiEntity {
+    string Path = 1;                  //路径
+    int32 Type = 2;                   //类型1接口;2操作日志;3既是接口也要记录操作日志
+    string Module = 3;                //模块
+    repeated string Permissions = 4;  //权限
+    string Ext1 = 5;
+    string Ext2 = 6;
+    string Ext3 = 7;
+}
+
+message PrmAppEntity {
+    int64 Id = 1;//应用ID
+    int64 OrgId=2;// 主体ID
+    string AppId = 3;//AppId
+    string AppName=4;// 应用名称
+    int32 AppType = 5; //类型:10.默认应用;20.第三放应用;30.自建应用
+    string GroupName=6;// 分组-EN
+    string Module=7;// 模块
+    bool IsExpire=8;// 是否过期
+    bool IsActive=9;// 是否激活状态
+    string Remark=10;// 备注
+    int64 CreateDt=11;
+    int64 ExpiredDt=12;
+    string Ext1=13;
+    string Ext2=14;
+    string Ext3=15;
+    string Ext4=16;
+    string Ext5=17;
+    string Ext6=18;
+}
+
+message PrmMenuEntity {
+    int64 Id = 1;// 菜单Id
+    int64 ParentId = 2;// 菜单父ID
+    string Name = 3;// 名称
+    string Url = 4;// 路径
+    string Icon = 5;// 图标
+    int32 OpenType = 6;// 打开类型
+    bool IsLeaf = 7;// 是否叶节点
+    repeated string Permissions = 8;// 授权码集合
+    string Ext1 = 9;
+    string Ext2 = 10;
+    string Ext3 = 11;
+}
+
+message PrmOpenEntity {
+    int32 OpenType= 1;
+    string OpenId= 2;
+    string AccessToken= 3;
+    string RefreshToken= 4;
+    int64 ExpiresIn= 5;
+    string Scope= 6;
+    string UnionCode= 7;
+    string ExtData= 8;
+}
+
+message PrmSessionEntity {
+    string App= 1;// 当前请求的应用
+    string Remark= 2;// 浏览器备注
+    string UserHostAddress= 3;// 登录ip
+    string ExtData= 4;// 前端透传数据
+    int64 PrmOrgId= 5;// 当前会话所在组织
+    int64 OrgId= 6;// 开发应用组织
+    int64 AppId= 7;// 开发应用编号
+    int64 NowTime = 8;
+}
+
+message PrmMineEntity
+{
+    int64 UserId= 1;// 全局用户外键
+    int64 EmpId= 2;// 员工外键,组织内部用户外键
+    int64 OpenId= 3;// 用户在应用内的唯一标识
+    int64 UnionId= 4;// 用户统一ID 用户关联主体ID; 同一个主体下的所有应用统一用一个
+    string Md5= 5;
+    PrmUserEntity User= 6;
+    PrmEmpEntity Emp= 7;
+    PrmOrgEntity Org= 8;
+    repeated PrmEmpEntity Emps= 9;
+    repeated PrmOrgEntity Orgs= 10;
+    repeated PrmDeptEntity Depts= 11;
+    repeated PrmGroupEntity Groups= 12;
+    repeated PrmRoleEntity Roles= 13;
+    map<string, string> Permissions= 14;
+}
+
+message PrmUserEntityList
+{
+    repeated PrmUserEntity Users= 1;
+}
+
+message PrmUserEntity
+{
+    int64 Id = 1;
+    string UserName= 2;// 用户名
+    string NickName= 3;// 名称
+    string Code= 4;// 工号
+    string IdCard= 5;// 身份证
+    string Avatar = 6;
+    string Phone= 7;// 电话
+    bool PhoneAudit = 8; //电话审核
+    string Email= 9;// 邮件地址
+    bool EmailAudit= 10;// 邮件地址审核
+    string GroupName= 11;// 分组-EN
+    bool IsActive= 12;// 是否激活状态
+    string Remark= 13;// 备注
+    int32 UserType= 14;// 用户类型
+    int64 FrozenDt= 15;// 冻结时间
+    int32 Status= 16;// 状态:10.正常;20.锁定
+    bool IsEdit= 17;// 编辑状态:1.可编辑;0.不可编辑
+    int64 CreateDt = 18;
+    int64 PassExpireDT = 19;
+    int64 ExpiredDt = 20;
+    string Ext1= 21;
+    string Ext2= 22;
+    string Ext3= 23;
+    string Ext4= 24;
+    string Ext5= 25;
+    string Ext6= 26;
+    
+}
+
+message PrmEmpEntity
+{
+    int64 Id = 1;// 用户在应用内的唯一标识
+    int64 OrgId = 2; // 组织ID
+    int64 UserId = 3;// 用户ID
+    string Phone= 4;// 电话
+    string Name= 5;// 名称
+    string Pinyin= 6;// 名称拼音
+    string NickName= 7;// 别名
+    string Email= 8;// 邮件地址
+    int32 Status = 9;// 状态:1、待确认;2、待激活;3、正常
+    string Code= 10;// 工号
+    string Position= 11;// 职位
+    int64 EntryDt = 12;// 入职时间
+    string Depts= 13;// 部门
+    string Roles= 14;// 角色
+    string Groups= 15;// 用户组
+    string Ext1= 16;// 扩展1
+    string Ext2= 17;// 扩展2
+    string Ext3= 18;// 扩展3
+    string Ext4= 19;// 扩展4
+    string Ext5= 20;// 扩展5
+    string Ext6= 21;// 扩展6
+}
+
+message PrmOrgEntity
+{
+    int64 Id = 1;// 组织外键
+    string Code= 2;
+    string Name= 3;
+    string Logo= 4;
+    string Module= 5;
+    string Remark= 6;
+    string Website=7;
+    string Address= 8;
+    string Email= 9;
+    string Phone= 10;
+    string Ext1= 11;
+    string Ext2= 12;
+    string Ext3= 13;
+    string Ext4= 14;
+    string Ext5= 15;
+    string Ext6= 16;
+}
+
+message PrmDeptEntity
+{
+    int64 Id = 1;
+    string Code= 2;
+    string Name= 3;
+    bool IsEnable = 4;
+    repeated int64 ParentIds= 5;
+    repeated string ParentNames= 6;
+}
+
+message PrmRoleEntity
+{
+    int64 Id = 1;
+    string Name= 2;
+}
+
+message PrmGroupEntity 
+{
+    int64 Id = 1;
+    int32 Type = 2;
+    repeated int64 Depts= 3;// 分组控制部门范围
+    string Name= 4;// 分组名称
+}
+
+message PrmDataSession 
+{
+	int64 Id = 1;
+    string Code = 2;
+	string Name = 3;
+	string DisplayName = 4;
+    int32 Type = 5;
+    PrmDataSessionType SessionType = 6;
+	map<string,string> Data = 7;
+}
+
+enum PrmDataSessionType 
+{
+    Anonymous = 0;
+    Default = 1;
+    User = 2;
+    App = 3;
+}
+
+message PrmRemoteSession 
+{
+	int64 Id = 1;
+	int64 DataId = 2;
+	bool Locked = 3;
+	map<string, string> Cache = 4;
+    int64 TokenExpireDt = 5;
+    bool IsTokenExpire = 6;
+}
+
+message PrmTokenSession
+{
+	string TokenName= 1;
+	int64 AccessToken =2;
+	int32 ExpireIn =3;
+	int64 RefreshToken =4;
+	int32 RefreshExpireIn=5;
+	
+}
+
+message PrmAllSession 
+{
+	PrmTouchSession Touch = 1;
+    PrmTokenSession Token = 2;
+	map<string, string> Data = 3;
+}
+
+message PrmEmployeeEntity
+{
+    int64 OpenId= 1;// 用户在应用内的唯一标识
+    int64 UnionId= 2;// 用户统一ID 用户关联主体ID; 同一个主体下的所有应用统一用一个
+    int32 Type = 3;//类型:10.超级管理员;20.管理员
+    bool IsOwner = 4;
+    PrmEmpEntity Emp= 5;
+    PrmOrgEntity Org= 6;
+    repeated PrmDeptEntity Depts= 7;
+    repeated PrmGroupEntity Groups= 8;
+    repeated PrmRoleEntity Roles= 9;
+    map<string, string> Permissions= 10;
+}
+
+message PrmTenantEntity {
+    int64 TenantId = 1;
+    map<string, string> Permissions= 2;
+}
+
+message PrmTouchSession
+{
+    int32 Type = 1;// 类型:1、只返回Remote缓存;2、用户会话恢复返回Remote和Data
+    PrmRemoteSession Remote = 2;
+    PrmDataSession Data = 3;
+    int64 NowTime = 4;
+}
+
+message ResponseMessage {
+	int32 Code = 1;
+	string Msg = 2;
+	string Trace = 3;
+	google.protobuf.Any Data = 4;
+}

@@ -1,0 +1,64 @@
+﻿syntax = "proto3";
+
+import "memberModel.proto";
+
+package MemberGrpc;
+
+
+// The Order service definition.
+service SessionService {
+	
+	/**
+	 * 创建用于应用访问的AccessToken
+	 */
+	rpc MemberRefresh (MemberRefreshRequest) returns (ResponseMessage);
+	/**
+	 * 用户冻结
+	 */
+	//rpc MemberFrozen (MemberFrozenRequest) returns (ResponseMessage);
+	/**
+	 * 登录
+	 */
+	rpc MemberLogin (MemberLoginRequest) returns (ResponseMessage);
+	/**
+	 * 登录 第三方OpenId登录
+	 */
+	rpc MemberThirdLogin (MemberThirdLoginRequest) returns (ResponseMessage);
+	
+	/**
+	 * 登录 短信码登录
+	 */
+	rpc MemberSmsLogin (MemberSmsLoginRequest) returns (ResponseMessage);
+	/**
+	 * 登录 二维码扫码登录
+	 */
+	rpc MemberQRCodeLogin (MemberQRCodeLoginRequest) returns (ResponseMessage);
+	/**
+	 * 用户锁定
+	 */
+	rpc MemberLock (MemberLockRequest) returns (ResponseMessage);
+	/**
+	 * 用户解除锁定
+	 */
+	rpc MemberUnLock (MemberUnLockRequest) returns (ResponseMessage);
+	/**
+	 * 登出
+	 */
+	rpc MemberLogOut (MemberLogOutRequest) returns (ResponseMessage);
+    /**
+	 * API list
+	 */
+	rpc GetApi (GetApiRequest) returns (ResponseMessage);
+    /**
+	 * User Touch Session Message
+	 */
+    rpc UserTouch (TouchRequest) returns (ResponseMessage);
+    /**
+	 * App Touch Session Message
+	 */
+    rpc AppTouch (TouchRequest) returns (ResponseMessage);
+    /**
+	 * BasicTouch Session Message
+	 */
+    rpc BasicTouch (BasicTouchRequest) returns (ResponseMessage);
+}

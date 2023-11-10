@@ -87,7 +87,8 @@ public class GrpcInvoker : AbstractInvoker
             if (taskResult.GetType().GetTypeInfo().IsGenericType 
                 && taskResult.GetType().GetGenericTypeDefinition() == typeof(AsyncUnaryCall<>))
             {
-                var resultData = await (AsyncUnaryCall<T>)taskResult;
+                var resultTask = (AsyncUnaryCall<T>)taskResult;
+                var resultData = await resultTask;
                 var result = new RpcResult<T>(resultData);
                 return result;
             }
@@ -100,7 +101,7 @@ public class GrpcInvoker : AbstractInvoker
         catch (Exception ex)
         {
             Logger().LogError(ex, ex.Message);
-            throw;
+            throw ex;
         }
     }
 }
