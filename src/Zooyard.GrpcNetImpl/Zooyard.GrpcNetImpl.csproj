@@ -1,20 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-	  <TargetFrameworks>net7.0</TargetFrameworks>
-	  <ImplicitUsings>enable</ImplicitUsings>
-	  <Nullable>enable</Nullable>
-	  <PackageLicenseUrl>https://github.com/wutao0315/zooland/blob/master/LICENSE</PackageLicenseUrl>
-	  <Copyright>MIT</Copyright>
-	  <PackageProjectUrl>https://github.com/wutao0315/zooland</PackageProjectUrl>
-	  <PackageReleaseNotes />
-	  <Description>Zooyard RPC Framework microservice</Description>
-	  <Authors>wutao0315</Authors>
-	  <Version>1.3.7</Version>
-	  <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-	  <NoWarn>$(NoWarn);1591</NoWarn>
-  </PropertyGroup>
-
   <ItemGroup>
     <Compile Remove="GrpcServer.cs" />
   </ItemGroup>
