@@ -71,10 +71,7 @@ public class ZooyardPools : IZooyardPools
     private readonly ConcurrentDictionary<string, (URL, IList<URL>)> _cacheUrl = new();
     private readonly ConcurrentDictionary<string, IList<URL>> _cacheRouteUrl = new();
     private readonly ConcurrentDictionary<string, List<BadUrl>> _badUrls = new();
-    /// <summary>
-    /// 构造函数
-    /// </summary>
-    /// <param name="pool"></param>
+    
     public ZooyardPools(
         IDictionary<string, IClientPool> pools,
         IEnumerable<ILoadBalance> loadbalances,

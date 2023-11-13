@@ -1,10 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <Compile Remove="GrpcServer.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
 	  <PackageReference Include="Grpc.Net.Client" Version="2.59.0" />
   </ItemGroup>
 

@@ -9,6 +9,12 @@
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<SatelliteResourceLanguages>zh-Hans</SatelliteResourceLanguages>
 		<NoWarn>$(NoWarn);1591</NoWarn>
-		
+		<PackageLicenseUrl>https://github.com/wutao0315/zooland/blob/master/LICENSE</PackageLicenseUrl>
+		<Copyright>MIT</Copyright>
+		<PackageProjectUrl>https://github.com/wutao0315/zooland</PackageProjectUrl>
+		<PackageReleaseNotes />
+		<Description>Zooyard RPC Framework microservice</Description>
+		<Authors>wutao0315</Authors>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	</PropertyGroup>
 </Project>

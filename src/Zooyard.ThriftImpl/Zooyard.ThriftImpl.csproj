@@ -1,10 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <Compile Remove="ThriftServer.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
 	  <PackageReference Include="ApacheThrift" Version="0.19.0" />
   </ItemGroup>
 

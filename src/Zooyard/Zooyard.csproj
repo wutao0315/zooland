@@ -1,19 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-	  <PackageLicenseUrl>https://github.com/wutao0315/zooland/blob/master/LICENSE</PackageLicenseUrl>
-	  <Copyright>MIT</Copyright>
-	  <PackageProjectUrl>https://github.com/wutao0315/zooland</PackageProjectUrl>
-	  <PackageReleaseNotes />
-	  <Description>Zooyard RPC Framework microservice</Description>
-	  <Authors>wutao0315</Authors>
-	  <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="BadUrl.cs" />
-  </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="Microsoft.ClearScript.V8" Version="7.4.4" />
     <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="7.0.0" />
