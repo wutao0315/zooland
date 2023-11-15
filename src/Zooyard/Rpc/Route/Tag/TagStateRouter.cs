@@ -1,6 +1,7 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Linq;
-using Zooyard.Logging;
+//using Zooyard.Logging;
 using Zooyard.Rpc.Route.State;
 using Zooyard.Rpc.Route.Tag.Model;
 using Zooyard.Utils;
@@ -11,15 +12,17 @@ public class TagStateRouter : AbstractStateRouter
 {
     public const string NAME = "TAG_ROUTER";
     private const string TAG_KEY = "tag";
-    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(TagStateRouter));
+    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(TagStateRouter));
+    private readonly ILogger _logger;
     //private static readonly string RULE_SUFFIX = ".tag-router";
 
     private TagRouterRule? tagRouterRule;
     private string? application;
     private readonly IOptionsMonitor<ZooyardOption> _zooyard;
 
-    public TagStateRouter(IOptionsMonitor<ZooyardOption> zooyard, URL address) : base(address)
+    public TagStateRouter(ILoggerFactory loggerFactory, IOptionsMonitor<ZooyardOption> zooyard, URL address) : base(address)
     {
+        _logger = loggerFactory.CreateLogger<TagStateRouter>();
         _zooyard = zooyard;
         _zooyard.OnChange(OnChanged);
     }
@@ -39,9 +42,9 @@ public class TagStateRouter : AbstractStateRouter
 
         serviceOption.Meta.TryGetValue("route.rule", out var ruleContent);
 
-        if (Logger().IsEnabled(LogLevel.Debug))
+        if (_logger.IsEnabled(LogLevel.Debug))
         {
-            Logger().LogDebug($"Notification of tag rule, change type is: {value}, raw rule is:\n {ruleContent}");
+            _logger.LogDebug($"Notification of tag rule, change type is: {value}, raw rule is:\n {ruleContent}");
         }
 
         try
@@ -57,7 +60,7 @@ public class TagStateRouter : AbstractStateRouter
         }
         catch (Exception e)
         {
-            Logger().LogError(e, "Failed to parse the raw tag router rule and it will not take effect, please check if the rule matches with the template, the raw rule is:\n ");
+            _logger.LogError(e, "Failed to parse the raw tag router rule and it will not take effect, please check if the rule matches with the template, the raw rule is:\n ");
         }
     }
 
@@ -271,7 +274,7 @@ public class TagStateRouter : AbstractStateRouter
             }
             catch (Exception e)
             {
-                Logger().LogError(e, "The format of ip address is invalid in tag route. Address :" + address);
+                _logger.LogError(e, "The format of ip address is invalid in tag route. Address :" + address);
             }
         }
         return false;

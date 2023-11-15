@@ -18,7 +18,6 @@ namespace Zooyard.DotNettyImpl;
 
 public class NettyClientPool : AbstractClientPool
 {
-    private readonly ILogger _logger;
     private readonly ILoggerFactory _loggerFactory;
     private readonly ITransportMessageEncoder _transportMessageEncoder;
     private readonly ITransportMessageDecoder _transportMessageDecoder;
@@ -32,13 +31,11 @@ public class NettyClientPool : AbstractClientPool
     public const int DEFAULT_TIMEOUT = 5000;
 
     public NettyClientPool(
-        ILogger<NettyClientPool> logger,
         ILoggerFactory loggerFactory,
-        ITransportMessageCodecFactory transportMessageCodecFactory)
+        ITransportMessageCodecFactory transportMessageCodecFactory):base(loggerFactory.CreateLogger<NettyClientPool>())
     {
         _transportMessageEncoder = transportMessageCodecFactory.GetEncoder();
         _transportMessageDecoder = transportMessageCodecFactory.GetDecoder();
-        _logger = logger;
         _loggerFactory = loggerFactory;
     }
 
@@ -73,7 +70,7 @@ public class NettyClientPool : AbstractClientPool
                 }
                 )).Value;//返回实例
             var timeout = url.GetParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
-            return new NettyClient(transportClient, timeout, url);
+            return new NettyClient(_loggerFactory.CreateLogger<NettyClient>(), transportClient, timeout, url);
         }
         catch
         {

@@ -1,5 +1,6 @@
-﻿using System.Text.RegularExpressions;
-using Zooyard.Logging;
+﻿using Microsoft.Extensions.Logging;
+using System.Text.RegularExpressions;
+//using Zooyard.Logging;
 using Zooyard.Rpc.Route.State;
 using Zooyard.Utils;
 
@@ -9,16 +10,18 @@ public class ConditionStateRouter : AbstractStateRouter
 {
     public static readonly string NAME = "condition";
 
-    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ConditionStateRouter));
+    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ConditionStateRouter));
+    private readonly ILogger _logger;
     protected static Regex ROUTE_PATTERN = new("([&!=,]*)\\s*([^&!=,\\s]+)", RegexOptions.Compiled);
     protected static Regex ARGUMENTS_PATTERN = new("arguments\\[([0-9]+)\\]", RegexOptions.Compiled);
     protected Dictionary<String, MatchPair>? whenCondition;
     protected Dictionary<String, MatchPair>? thenCondition;
 
     private readonly bool _enabled;
-    public ConditionStateRouter(URL address)
+    public ConditionStateRouter(ILoggerFactory loggerfactory, URL address)
         :base(address)
     {
+        _logger = loggerfactory.CreateLogger<ConditionStateRouter>();
         this.Force = address.GetParameter(Constants.FORCE_KEY, false);
         _enabled = address.GetParameter(Constants.ENABLED_KEY, true);
         if (_enabled)
@@ -26,7 +29,7 @@ public class ConditionStateRouter : AbstractStateRouter
             Init(address.GetParameterAndDecoded(Constants.RULE_KEY));
         }
     }
-    public ConditionStateRouter(URL address, string rule, bool force, bool enabled):this(address)
+    public ConditionStateRouter(ILoggerFactory loggerfactory, URL address, string rule, bool force, bool enabled):this(loggerfactory, address)
     {
         this.Force = force;
         _enabled = enabled;
@@ -174,7 +177,7 @@ public class ConditionStateRouter : AbstractStateRouter
             }
             if (thenCondition == null)
             {
-                Logger().LogWarning($"The current consumer in the service blacklist. consumer: {NetUtil.LocalHost}, service: {url.ServiceKey}");
+                _logger.LogWarning($"The current consumer in the service blacklist. consumer: {NetUtil.LocalHost}, service: {url.ServiceKey}");
                 if (needToPrintMessage)
                 {
                     messageHolder.Value = "Empty return. Reason: ThenCondition is empty.";
@@ -194,7 +197,7 @@ public class ConditionStateRouter : AbstractStateRouter
             }
             else if (this.Force)
             {
-                Logger().LogWarning($"The route result is empty and force execute. consumer: {NetUtil.LocalHost}, service: {url.ServiceKey}, router: {url.GetParameterAndDecoded(Constants.RULE_KEY)}");
+                _logger.LogWarning($"The route result is empty and force execute. consumer: {NetUtil.LocalHost}, service: {url.ServiceKey}, router: {url.GetParameterAndDecoded(Constants.RULE_KEY)}");
 
                 if (needToPrintMessage)
                 {
@@ -205,7 +208,7 @@ public class ConditionStateRouter : AbstractStateRouter
         }
         catch (Exception t)
         {
-            Logger().LogError(t, $"Failed to execute condition router rule: {Address}, invokers: {invokers}, cause: {t.Message}");
+            _logger.LogError(t, $"Failed to execute condition router rule: {Address}, invokers: {invokers}, cause: {t.Message}");
         }
         if (needToPrintMessage)
         {
@@ -335,7 +338,7 @@ public class ConditionStateRouter : AbstractStateRouter
         }
         catch (Exception e)
         {
-            Logger().LogWarning(e, $"Arguments match failed, matchPair[]{matchPair}] invocation[{invocation}]");
+            _logger.LogWarning(e, $"Arguments match failed, matchPair[]{matchPair}] invocation[{invocation}]");
         }
 
         return false;

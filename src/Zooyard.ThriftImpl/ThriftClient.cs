@@ -1,19 +1,21 @@
-﻿using Thrift;
-using Zooyard.Logging;
+﻿using Microsoft.Extensions.Logging;
+using Thrift;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.ThriftImpl;
 
 public class ThriftClient : AbstractClient
 {
-    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ThriftClient));
+    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ThriftClient));
     public override string System => "zy_thrift";
     public override URL Url { get; }
     public override int ClientTimeout { get; }
+    private readonly ILogger _logger;
     private readonly TBaseClient _thriftclient;
 
-    public ThriftClient(TBaseClient thriftclient, int clientTimeout, URL url)
+    public ThriftClient(ILogger logger, TBaseClient thriftclient, int clientTimeout, URL url)
     {
+        _logger = logger;
         _thriftclient = thriftclient;
         this.ClientTimeout = clientTimeout;
         this.Url = url;
@@ -24,7 +26,7 @@ public class ThriftClient : AbstractClient
     {
         await this.Open(cancellationToken);
         //thrift client service
-        return new ThriftInvoker(_thriftclient, this.ClientTimeout);
+        return new ThriftInvoker(_logger, _thriftclient, this.ClientTimeout);
     }
 
     public override async Task Open(CancellationToken cancellationToken = default)
@@ -37,7 +39,7 @@ public class ThriftClient : AbstractClient
         {
             await _thriftclient.InputProtocol.Transport.OpenAsync(cancellationToken);
         }
-        Logger().LogInformation("open");
+        _logger.LogInformation("open");
     }
 
 
@@ -52,13 +54,13 @@ public class ThriftClient : AbstractClient
             _thriftclient.InputProtocol.Transport.Close();
         }
         await Task.CompletedTask;
-        Logger().LogInformation("close");
+        _logger.LogInformation("close");
     }
 
     public override async ValueTask DisposeAsync()
     {
         await Close();
         _thriftclient.Dispose();
-        Logger().LogInformation("Dispose");
+        _logger.LogInformation("Dispose");
     }
 }

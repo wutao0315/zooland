@@ -1,11 +1,11 @@
-﻿using System.Net;
+﻿using Microsoft.Extensions.Logging;
+using System.Net;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using Thrift;
 using Thrift.Protocol;
 using Thrift.Transport;
 using Thrift.Transport.Client;
-using Zooyard.Logging;
 using Zooyard.Rpc;
 using Zooyard.Rpc.Support;
 using Zooyard.ThriftImpl.Header;
@@ -25,8 +25,12 @@ public class ThriftClientPool : AbstractClientPool
 
     public const int DEFAULT_TIMEOUT = 10000;
 
-    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ThriftClientPool));
-   
+    public ThriftClientPool(ILogger<ThriftClientPool> logger):base(logger)
+    {
+    }
+
+    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ThriftClientPool));
+
 
     protected override async Task<IClient> CreateClient(URL url)
     {
@@ -39,13 +43,13 @@ public class ThriftClientPool : AbstractClientPool
         config.RecursionLimit = url.GetParameter(RECURSIONLIMIT_KEY, config.RecursionLimit);
 
         var transport = GetTransport(url);
-        Logger().LogInformation($"Selected client transport: {transport}");
+        _logger.LogInformation($"Selected client transport: {transport}");
 
         var protocol = MakeProtocol(url, MakeTransport(url, config));
-        Logger().LogInformation($"Selected client protocol: {GetProtocol(url)}");
+        _logger.LogInformation($"Selected client protocol: {GetProtocol(url)}");
 
         var mplex = GetMultiplex(url);
-        Logger().LogInformation("Multiplex " + (mplex ? "yes" : "no"));
+        _logger.LogInformation("Multiplex " + (mplex ? "yes" : "no"));
 
         if (ProxyType == null)
         {
@@ -59,7 +63,7 @@ public class ThriftClientPool : AbstractClientPool
         var client = (TBaseClient)Activator.CreateInstance(ProxyType, protocol)!;
 
         await Task.CompletedTask;
-        return new ThriftClient(client, timeout, url);
+        return new ThriftClient(_logger, client, timeout, url);
     }
 
 

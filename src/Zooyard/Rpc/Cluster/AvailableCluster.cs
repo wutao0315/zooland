@@ -1,11 +1,13 @@
-﻿using System;
-using Zooyard.Logging;
+﻿using Microsoft.Extensions.Logging;
+using System;
+//using Zooyard.Logging;
 
 namespace Zooyard.Rpc.Cluster;
 
 public class AvailableCluster : AbstractCluster
 {
-    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(AvailableCluster));
+    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(AvailableCluster));
+    public AvailableCluster(ILogger<AvailableCluster> logger) : base(logger) { }
     public override string Name => NAME;
     public const string NAME = "available";
 

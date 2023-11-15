@@ -1,8 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <Compile Remove="Logging\**" />
+    <EmbeddedResource Remove="Logging\**" />
+    <None Remove="Logging\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.ClearScript.V8" Version="7.4.4" />
     <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="7.0.2" />
     <PackageReference Include="System.Reflection.Emit" Version="4.7.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />

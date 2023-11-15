@@ -1,12 +1,18 @@
-﻿using System.Diagnostics;
+﻿using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 using Zooyard.Diagnositcs;
-using Zooyard.Logging;
+//using Zooyard.Logging;
 
 namespace Zooyard.Rpc.Cluster;
 
 public abstract class AbstractCluster : ICluster
 {
-    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(BroadcastCluster));
+    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(BroadcastCluster));
+    protected readonly ILogger _logger;
+    public AbstractCluster(ILogger logger) 
+    {
+        _logger = logger;
+    }
 
     protected static DiagnosticSource _source = new DiagnosticListener(Constant.DiagnosticListenerName);
     public const string TIMEOUT_KEY = "timeout";
@@ -114,13 +120,13 @@ public abstract class AbstractCluster : ICluster
                     }
                     catch (Exception e)
                     {
-                        Logger().LogWarning(e, e.Message + " may because invokers list dynamic change, ignore.");
+                        _logger.LogWarning(e, e.Message + " may because invokers list dynamic change, ignore.");
                     }
                 }
             }
             catch (Exception t)
             {
-                Logger().LogError(t, $"clustor relselect fail reason is :{t.Message} if can not slove ,you can set cluster.availablecheck=false in url");
+                _logger.LogError(t, $"clustor relselect fail reason is :{t.Message} if can not slove ,you can set cluster.availablecheck=false in url");
             }
 
             return invoker;

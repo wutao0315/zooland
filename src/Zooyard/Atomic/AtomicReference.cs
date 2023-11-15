@@ -1,6 +1,6 @@
 ﻿namespace Zooyard.Atomic;
 
-public sealed record AtomicReference<T> where T : class
+internal sealed record AtomicReference<T> where T : class
 {
     T atomicValue;
 

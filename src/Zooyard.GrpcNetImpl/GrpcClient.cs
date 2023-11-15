@@ -1,7 +1,8 @@
 ﻿using Grpc.Core;
 using Grpc.Net.Client;
+using Microsoft.Extensions.Logging;
 using System.Threading.Channels;
-using Zooyard.Logging;
+//using Zooyard.Logging;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.GrpcNetImpl;
@@ -12,14 +13,17 @@ public class GrpcClient : AbstractClient
     public override URL Url { get; }
     public override int ClientTimeout { get; }
     private GrpcChannel _channel;
+    private readonly ILogger _logger;
     private readonly object _grpcClient;
     private readonly GrpcChannelOptions _grpcChannelOptions;
-    public GrpcClient(GrpcChannel channel, 
+    public GrpcClient(ILogger<GrpcClient> logger,
+        GrpcChannel channel, 
         object grpcClient, 
         URL url, 
         GrpcChannelOptions grpcChannelOptions,
         int clientTimeout)
     {
+        _logger = logger;
         this.Url = url;
         this.ClientTimeout = clientTimeout;
         _channel = channel;
@@ -38,7 +42,7 @@ public class GrpcClient : AbstractClient
         await Open(cancellationToken);
         //grpc client service
 
-        return new GrpcInvoker(_grpcClient, this.ClientTimeout);
+        return new GrpcInvoker(_logger, _grpcClient, this.ClientTimeout);
     }
 
     public override async Task Open(CancellationToken cancellationToken = default)

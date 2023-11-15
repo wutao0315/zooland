@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿//using Newtonsoft.Json;
 using System;
 using System.Linq;
 using System.Net;
@@ -8,14 +8,14 @@ using System.Numerics;
 using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
-using Zooyard.Logging;
+//using Zooyard.Logging;
 using Zooyard.Utils;
 
 namespace Zooyard.Utils;
 
 public class NetUtil
 {
-    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(NetUtil));
+    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(NetUtil));
 
     public const string LOCALHOST = "127.0.0.1";
 
@@ -133,7 +133,8 @@ public class NetUtil
             }
             catch (Exception e)
             {
-                Logger().LogWarning(e, "Failed to retriving ip address, " + e.Message);
+                Console.WriteLine("Failed to retriving ip address, " + e.Message+e.StackTrace);
+                //Logger().LogWarning(e, "Failed to retriving ip address, " + e.Message);
             }
             try
             {
@@ -152,16 +153,19 @@ public class NetUtil
                         }
                         catch (Exception e)
                         {
-                            Logger().LogWarning(e, "Failed to retriving ip address, " + e.Message);
+                            Console.WriteLine("Failed to retriving ip address, " + e.Message + e.StackTrace);
+                            //Logger().LogWarning(e, "Failed to retriving ip address, " + e.Message);
                         }
                     }
                 }
             }
             catch (Exception e)
             {
-                Logger().LogWarning(e, "Failed to retriving ip address, " + e.Message);
+                Console.WriteLine("Failed to retriving ip address, " + e.Message + e.StackTrace);
+                //Logger().LogWarning(e, "Failed to retriving ip address, " + e.Message);
             }
-            Logger().LogError("Could not get local host ip address, will use 127.0.0.1 instead.");
+            Console.WriteLine("Could not get local host ip address, will use 127.0.0.1 instead.");
+            //Logger().LogError("Could not get local host ip address, will use 127.0.0.1 instead.");
             return localAddress;
         }
     }

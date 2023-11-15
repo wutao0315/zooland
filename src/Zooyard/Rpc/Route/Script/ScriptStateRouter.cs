@@ -1,9 +1,10 @@
 ﻿using Microsoft.ClearScript;
 using Microsoft.ClearScript.V8;
+using Microsoft.Extensions.Logging;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using Zooyard.Logging;
+//using Zooyard.Logging;
 using Zooyard.Rpc.Route.State;
 using Zooyard.Utils;
 
@@ -13,7 +14,8 @@ public class ScriptStateRouter : AbstractStateRouter
 {
     public const string NAME = "SCRIPT_ROUTER";
     private const int SCRIPT_ROUTER_DEFAULT_PRIORITY = 0;
-    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ScriptStateRouter));
+    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ScriptStateRouter));
+    private readonly ILogger _logger;
 
     private static readonly ConcurrentDictionary<string, V8ScriptEngine> ENGINES = new ();
 
@@ -23,8 +25,9 @@ public class ScriptStateRouter : AbstractStateRouter
 
     private readonly V8Script _script;
 
-    public ScriptStateRouter(URL address) : base(address)
+    public ScriptStateRouter(ILoggerFactory loggerFactory, URL address) : base(address)
     {
+        _logger = loggerFactory.CreateLogger<ScriptStateRouter>();
         _engine = GetEngine(address);
         _rule = GetRule(address);
         try
@@ -47,7 +50,7 @@ public class ScriptStateRouter : AbstractStateRouter
         }
         catch(Exception e)
         {
-            Logger().LogError(e, $"route error, rule has been ignored. rule: {_rule}, url: {RpcContext.GetContext().Url}");
+            _logger.LogError(e, $"route error, rule has been ignored. rule: {_rule}, url: {RpcContext.GetContext().Url}");
             throw;
         }
     }
@@ -110,7 +113,7 @@ public class ScriptStateRouter : AbstractStateRouter
         }
         catch (Exception e)
         {
-            Logger().LogError(e, $"route error, rule has been ignored. rule: {_rule}, method:{invocation.MethodInfo.Name}, url: {RpcContext.GetContext().Url}");
+            _logger.LogError(e, $"route error, rule has been ignored. rule: {_rule}, method:{invocation.MethodInfo.Name}, url: {RpcContext.GetContext().Url}");
             return invokers;
         }
     }

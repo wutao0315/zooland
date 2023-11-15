@@ -96,6 +96,7 @@ public abstract class AbstractStateRouter: IStateRouter
     /// <param name="address">consumerUrl</param>
     /// <param name="invocation">invocation</param>
     /// <param name="needToPrintMessage">should current router print message</param>
+    /// <param name="nodeHolder">node holder</param>
     /// <returns></returns>
     protected abstract IList<URL> DoRoute(IList<URL> invokers, URL address, IInvocation invocation, bool needToPrintMessage, Holder<RouterSnapshotNode> nodeHolder,Holder<String> messageHolder);
 
@@ -103,10 +104,11 @@ public abstract class AbstractStateRouter: IStateRouter
     /// <summary>
     /// Call next router to get result
     /// </summary>
-    /// <typeparam name="invokers">current router filtered invokers</typeparam>
+    /// <param name="invokers">current router filtered invokers</param>
     /// <param name="address"></param>
     /// <param name="invocation"></param>
     /// <param name="needToPrintMessage"></param>
+    /// <param name="nodeHolder"></param>
     /// <returns></returns>
     protected IList<URL> ContinueRoute(IList<URL> invokers, URL address, IInvocation invocation, bool needToPrintMessage, Holder<RouterSnapshotNode> nodeHolder)
     {

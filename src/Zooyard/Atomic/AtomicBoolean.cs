@@ -2,7 +2,7 @@
 
 namespace Zooyard.Atomic;
 
-public sealed record AtomicBoolean
+internal sealed record AtomicBoolean
 {
     private int _value;
     private const int False = 0;

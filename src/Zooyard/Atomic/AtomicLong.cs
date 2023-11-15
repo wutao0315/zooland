@@ -1,6 +1,6 @@
 ﻿namespace Zooyard.Atomic;
 
-public sealed record AtomicLong
+internal sealed record AtomicLong
 {
     long atomicValue;
     public AtomicLong() { }

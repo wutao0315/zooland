@@ -1,6 +1,7 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Text;
-using Zooyard.Logging;
+//using Zooyard.Logging;
 using Zooyard.Rpc.Route.Condition.Config.Model;
 using Zooyard.Rpc.Route.State;
 using Zooyard.Rpc.Route.Tag.Model;
@@ -10,7 +11,9 @@ namespace Zooyard.Rpc.Route.Condition.Config;
 
 public abstract class ListenableStateRouter : AbstractStateRouter
 {
-    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ListenableStateRouter));
+    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ListenableStateRouter));
+    private readonly ILogger _logger;
+    private readonly ILoggerFactory _loggerFactory;
 
     public const string NAME = "LISTENABLE_ROUTER";
     private const string RULE_SUFFIX = ".condition-router";
@@ -19,8 +22,10 @@ public abstract class ListenableStateRouter : AbstractStateRouter
     private string ruleKey;
 
     private readonly IOptionsMonitor<ZooyardOption> _zooyard;
-    public ListenableStateRouter(IOptionsMonitor<ZooyardOption> zooyard, URL address, string ruleKey):base(address)
+    public ListenableStateRouter(ILoggerFactory loggerFactory, IOptionsMonitor<ZooyardOption> zooyard, URL address, string ruleKey):base(address)
     {
+        _loggerFactory = loggerFactory;
+        _logger = loggerFactory.CreateLogger<ListenableStateRouter>();
         _zooyard = zooyard;
         _zooyard.OnChange(OnChanged);
 
@@ -39,9 +44,9 @@ public abstract class ListenableStateRouter : AbstractStateRouter
 
         serviceOption.Meta.TryGetValue("route.rule", out var ruleContent);
 
-        if (Logger().IsEnabled(LogLevel.Debug))
+        if (_logger.IsEnabled(LogLevel.Debug))
         {
-            Logger().LogDebug($"Notification of tag rule, change type is: {value}, raw rule is:\n {ruleContent}");
+            _logger.LogDebug($"Notification of tag rule, change type is: {value}, raw rule is:\n {ruleContent}");
         }
 
 
@@ -59,7 +64,7 @@ public abstract class ListenableStateRouter : AbstractStateRouter
             }
             catch (Exception e)
             {
-                Logger().LogError(e, $"Failed to parse the raw condition rule and it will not take effect, please check if the condition rule matches with the template, the raw rule is:\n {ruleContent}");
+                _logger.LogError(e, $"Failed to parse the raw condition rule and it will not take effect, please check if the condition rule matches with the template, the raw rule is:\n {ruleContent}");
             }
         }
     }
@@ -127,7 +132,7 @@ public abstract class ListenableStateRouter : AbstractStateRouter
         if (rule != null && rule.Valid)
         {
             this.conditionRouters = (from a in rule.Conditions
-                                     select new ConditionStateRouter(Address, a, rule.Force, rule.Enabled)).ToList();
+                                     select new ConditionStateRouter(_loggerFactory, Address, a, rule.Force, rule.Enabled)).ToList();
 
             foreach (var conditionRouter in this.conditionRouters)
             {

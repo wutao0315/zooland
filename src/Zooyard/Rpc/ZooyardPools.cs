@@ -1,10 +1,11 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Reflection;
 using Zooyard.DataAnnotations;
 using Zooyard.Diagnositcs;
-using Zooyard.Logging;
+//using Zooyard.Logging;
 using Zooyard.Rpc.Cache;
 using Zooyard.Rpc.Cluster;
 using Zooyard.Rpc.LoadBalance;
@@ -20,7 +21,8 @@ namespace Zooyard.Rpc;
 /// </summary>
 public class ZooyardPools : IZooyardPools
 {
-    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ZooyardPools));
+    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ZooyardPools));
+    private readonly ILogger _logger;
     
     public const string CACHE_KEY = "cache";
     public const string CLUSTER_KEY = "cluster";
@@ -73,6 +75,7 @@ public class ZooyardPools : IZooyardPools
     private readonly ConcurrentDictionary<string, List<BadUrl>> _badUrls = new();
     
     public ZooyardPools(
+        ILoggerFactory loggerFactory,
         IDictionary<string, IClientPool> pools,
         IEnumerable<ILoadBalance> loadbalances,
         IEnumerable<ICluster> clusters,
@@ -80,6 +83,7 @@ public class ZooyardPools : IZooyardPools
         IEnumerable<IStateRouterFactory> routerFactories,
         IOptionsMonitor<ZooyardOption> zooyard)
     {
+        _logger = loggerFactory.CreateLogger<ZooyardPools>();
         this.Pools = new(pools);
 
         foreach (var item in loadbalances)
@@ -121,7 +125,7 @@ public class ZooyardPools : IZooyardPools
                 }
                 catch (Exception t)
                 {   // 防御性容错
-                    Logger().LogError(t, "Unexpected error occur at collect statistic");
+                    _logger.LogError(t, "Unexpected error occur at collect statistic");
                 }
             });
             cycleTimer.AutoReset = true;
@@ -140,7 +144,7 @@ public class ZooyardPools : IZooyardPools
                 }
                 catch (Exception t)
                 {   // 防御性容错
-                    Logger().LogError(t, "Unexpected error occur at collect statistic");
+                    _logger.LogError(t, "Unexpected error occur at collect statistic");
                 }
             });
             recoveryTimer.AutoReset = true;
@@ -175,7 +179,7 @@ public class ZooyardPools : IZooyardPools
                             {
                                 list.Add(badUrl);
                                 Console.WriteLine($"auto timer recovery url {badUrl.Url}");
-                                Logger().LogInformation($"recovery:{badUrl.Url.ToString()}");
+                                _logger.LogInformation($"recovery:{badUrl.Url.ToString()}");
                             }
                         }
                         foreach (var item in list)
@@ -186,7 +190,7 @@ public class ZooyardPools : IZooyardPools
                 }
                 catch (Exception ex)
                 {
-                    Logger().LogError(ex, ex.Message);
+                    _logger.LogError(ex, ex.Message);
                 }
             }
         }
@@ -204,7 +208,7 @@ public class ZooyardPools : IZooyardPools
             }
             catch (Exception ex)
             {
-                Logger().LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
             }
         }
     }
@@ -236,7 +240,7 @@ public class ZooyardPools : IZooyardPools
         var value = cache.Get<T>(key);
         if (value != null)
         {
-            Logger().LogInformation($"call from cache({cache.GetType().FullName}):{key}");
+            _logger.LogInformation($"call from cache({cache.GetType().FullName}):{key}");
             return new RpcResult<T>(value);
         }
 
@@ -436,7 +440,7 @@ public class ZooyardPools : IZooyardPools
                         continue;
                     }
 
-                    Logger().LogInformation(item.CurrentException, $"isolation url {item}");
+                    _logger.LogInformation(item.CurrentException, $"isolation url {item}");
                     badUrls.Add(item);
                 }
 
@@ -455,7 +459,7 @@ public class ZooyardPools : IZooyardPools
             }
             catch (Exception ex)
             {
-                Logger().LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
             }
 
             //是否有异常，并抛出异常

@@ -1,7 +1,8 @@
-﻿using System.Collections.Concurrent;
+﻿using Microsoft.Extensions.Logging;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using Zooyard.Diagnositcs;
-using Zooyard.Logging;
+//using Zooyard.Logging;
 
 namespace Zooyard.Rpc.Cluster;
 
@@ -10,8 +11,9 @@ namespace Zooyard.Rpc.Cluster;
 /// </summary>
 public class FailbackCluster : AbstractCluster
 {
-    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(FailbackCluster));
+    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(FailbackCluster));
     //public FailbackCluster(IEnumerable<ICache> caches) : base(caches) { }
+    public FailbackCluster(ILogger<FailbackCluster> logger) : base(logger) { }
     public override string Name => NAME;
     public const string NAME = "failback";
     private static readonly long RETRY_FAILED_PERIOD = 5 * 1000;
@@ -39,7 +41,7 @@ public class FailbackCluster : AbstractCluster
                         }
                         catch (Exception t)
                         { // 防御性容错
-                            Logger().LogError(t, $"Unexpected error occur at collect statistic {t.Message}");
+                            _logger.LogError(t, $"Unexpected error occur at collect statistic {t.Message}");
                         }
                     });
                     retryTimer.AutoReset = true;
@@ -79,7 +81,7 @@ public class FailbackCluster : AbstractCluster
             {
                 _source.WriteConsumerError(client.System, Name, failed[invocation], invocation, e, watch.ElapsedMilliseconds);
                 await pool.DestoryClient(client);
-                Logger().LogError(e, $"Failed retry to invoke method {invocation.MethodInfo.Name}, waiting again.");
+                _logger.LogError(e, $"Failed retry to invoke method {invocation.MethodInfo.Name}, waiting again.");
             }
             finally
             {
@@ -129,7 +131,7 @@ public class FailbackCluster : AbstractCluster
         }
         catch (Exception e)
         {
-            Logger().LogError(e, $"Failback to invoke method {invocation.MethodInfo.Name}, wait for retry in background. Ignored exception:{e.Message}");
+            _logger.LogError(e, $"Failback to invoke method {invocation.MethodInfo.Name}, wait for retry in background. Ignored exception:{e.Message}");
             AddFailed<T>(pool, invocation, invoker);
             watch.Stop();
             result = new RpcResult<T>(e)

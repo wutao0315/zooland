@@ -1,10 +1,17 @@
-﻿using Zooyard.Logging;
+﻿//using Zooyard.Logging;
+
+using Microsoft.Extensions.Logging;
 
 namespace Zooyard.Rpc.Support;
 
 public abstract class AbstractInvoker : IInvoker
 {
-    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(AbstractClientPool));
+    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(AbstractClientPool));
+    protected readonly ILogger _logger;
+    public AbstractInvoker(ILogger logger) 
+    {
+        _logger = logger;
+    }
     public abstract int ClientTimeout { get; }
     public abstract object Instance { get; }
     public virtual async Task<IResult<T>> Invoke<T>(IInvocation invocation)
@@ -26,7 +33,7 @@ public abstract class AbstractInvoker : IInvoker
             throw new TimeoutException($"time out {millisecondsDelay} when invoke {message}");
         }
 #endif
-        Logger().LogInformation(message);
+        _logger.LogInformation(message);
         return result;
     }
     protected abstract Task<IResult<T>> HandleInvoke<T>(IInvocation invocation);

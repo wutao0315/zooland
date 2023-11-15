@@ -1,6 +1,6 @@
 ﻿namespace Zooyard.Atomic;
 
-public sealed class AtomicInteger
+internal sealed class AtomicInteger
 {
     int atomicValue;
     public AtomicInteger() { }

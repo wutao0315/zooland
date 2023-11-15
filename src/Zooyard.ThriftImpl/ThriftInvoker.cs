@@ -1,17 +1,18 @@
-﻿using System.Diagnostics;
+﻿using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 using Thrift;
-using Zooyard.Logging;
+//using Zooyard.Logging;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.ThriftImpl;
 
 public class ThriftInvoker : AbstractInvoker
 {
-    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ThriftInvoker));
+    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ThriftInvoker));
     private readonly TBaseClient _instance;
     private readonly int _clientTimeout;
 
-    public ThriftInvoker(TBaseClient instance, int clientTimeout)
+    public ThriftInvoker(ILogger logger, TBaseClient instance, int clientTimeout):base(logger)
     {
         _instance = instance;
         _clientTimeout = clientTimeout;
@@ -58,7 +59,7 @@ public class ThriftInvoker : AbstractInvoker
         }
         catch (Exception ex)
         {
-            Logger().LogError(ex, ex.Message);
+            _logger.LogError(ex, ex.Message);
             throw;
         }
     }

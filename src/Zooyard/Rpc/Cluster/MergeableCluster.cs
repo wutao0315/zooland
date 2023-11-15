@@ -1,25 +1,26 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Diagnostics;
 using System.Reflection;
 using Zooyard.Diagnositcs;
-using Zooyard.Logging;
+//using Zooyard.Logging;
 using Zooyard.Rpc.Merger;
 
 namespace Zooyard.Rpc.Cluster;
 
 public class MergeableCluster : AbstractCluster
 {
-    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(MergeableCluster));
+    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(MergeableCluster));
     public override string Name => NAME;
     public const string NAME = "mergeable";
     public const string MERGER_KEY = "merger";
 
     private readonly IDictionary<Type, IMerger> _defaultMergers;
     private readonly IDictionary<string, IMerger> _mySelfMergers;
-    public MergeableCluster(
+    public MergeableCluster(ILogger<MergeableCluster> logger,
         IOptionsMonitor<ZooyardOption> zooyard,
-        IEnumerable<IMerger> defaultMergers)
+        IEnumerable<IMerger> defaultMergers):base(logger)
     {
         _defaultMergers = new Dictionary<Type, IMerger>();
         foreach (var merge in defaultMergers)
@@ -165,7 +166,7 @@ public class MergeableCluster : AbstractCluster
                 var r = await entry.Value;
                 if (r.HasException)
                 {
-                    Logger().LogError(r.Exception, $"Invoke {entry.Key} {GetGroupDescFromServiceKey(entry.Key)}  failed: {r.Exception?.Message}");
+                    _logger.LogError(r.Exception, $"Invoke {entry.Key} {GetGroupDescFromServiceKey(entry.Key)}  failed: {r.Exception?.Message}");
                     return new ClusterResult<T>(new RpcResult<T>(r.Exception) { ElapsedMilliseconds = watchAll.ElapsedMilliseconds }, 
                         goodUrls, badUrls, 
                         r.Exception, true);

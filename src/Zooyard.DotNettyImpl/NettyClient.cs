@@ -1,16 +1,17 @@
 ﻿using DotNetty.Transport.Channels;
 using System.Net;
 using System;
-using Zooyard.Logging;
+//using Zooyard.Logging;
 using Zooyard.Rpc.Support;
 using System.Threading.Channels;
 using Zooyard.DotNettyImpl.Transport;
+using Microsoft.Extensions.Logging;
 
 namespace Zooyard.DotNettyImpl;
 
 public class NettyClient : AbstractClient
 {
-    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(NettyClient));
+    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(NettyClient));
     //public const string QUIETPERIOD_KEY = "quietPeriod";
     //public const int DEFAULT_QUIETPERIOD = 100;
     //public const string TIMEOUT_KEY = "timeout";
@@ -21,8 +22,11 @@ public class NettyClient : AbstractClient
     
     private readonly ITransportClient _channel;
 
-    public NettyClient(ITransportClient channel, int clientTimeout, URL url)
+    private readonly ILogger _logger;
+
+    public NettyClient(ILogger<NettyClient> logger, ITransportClient channel, int clientTimeout, URL url)
     {
+        _logger = logger;
         _channel = channel;
         this.ClientTimeout = clientTimeout;
         this.Url = url;
@@ -33,7 +37,7 @@ public class NettyClient : AbstractClient
     {
         await this.Open(cancellationToken);
 
-        return new NettyInvoker(_channel, this.ClientTimeout);
+        return new NettyInvoker(_logger, _channel, this.ClientTimeout);
     }
 
     public override async Task Open(CancellationToken cancellationToken = default)

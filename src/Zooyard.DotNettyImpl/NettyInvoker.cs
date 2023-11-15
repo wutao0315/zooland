@@ -1,21 +1,22 @@
-﻿using System.Diagnostics;
+﻿using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 using System.Text.Json;
 using Zooyard.DotNettyImpl.Messages;
 using Zooyard.DotNettyImpl.Transport;
 using Zooyard.DotNettyImpl.Transport.Codec;
-using Zooyard.Logging;
+//using Zooyard.Logging;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.DotNettyImpl;
 
 public class NettyInvoker : AbstractInvoker
 {
-    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(NettyInvoker));
+    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(NettyInvoker));
 
     private readonly ITransportClient _channel;
     private readonly int _clientTimeout;
 
-    public NettyInvoker(ITransportClient channel, int clientTimeout)
+    public NettyInvoker(ILogger logger, ITransportClient channel, int clientTimeout):base(logger)
     {
         _channel = channel;
         _clientTimeout = clientTimeout;
@@ -69,7 +70,7 @@ public class NettyInvoker : AbstractInvoker
         }
         catch (Exception ex)
         {
-            Logger().LogError(ex.Message);
+            _logger.LogError(ex.Message);
             throw;
         }
     }

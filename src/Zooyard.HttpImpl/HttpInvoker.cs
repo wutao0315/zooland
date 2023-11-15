@@ -1,7 +1,8 @@
-﻿using System.Diagnostics;
+﻿using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 using System.Reflection;
 using Zooyard.DataAnnotations;
-using Zooyard.Logging;
+//using Zooyard.Logging;
 using Zooyard.Rpc;
 using Zooyard.Rpc.Support;
 
@@ -9,15 +10,14 @@ namespace Zooyard.HttpImpl;
 
 public class HttpInvoker : AbstractInvoker
 {
-    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(HttpInvoker));
-
+    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(HttpInvoker));
     public const string DEFAULT_CONTENTTYPE = "application/json";
     public const string DEFAULT_METHODTYPE = "post";
     private readonly URL _url;
     private readonly IHttpClientFactory _instance;
     private readonly int _clientTimeout;
 
-    public HttpInvoker(IHttpClientFactory instance, int clientTimeout, URL url)
+    public HttpInvoker(ILogger logger, IHttpClientFactory instance, int clientTimeout, URL url):base(logger)
     {
         _instance = instance;
         _clientTimeout = clientTimeout;
@@ -64,7 +64,7 @@ public class HttpInvoker : AbstractInvoker
         var client = _instance.CreateClient();
         client.BaseAddress = new Uri($"{_url.Protocol}://{_url.Host}:{_url.Port}");
 
-        var stub = new HttpStub(client, _clientTimeout);
+        var stub = new HttpStub(_logger, client, _clientTimeout);
         string? value = null;
         try
         {
@@ -92,7 +92,7 @@ public class HttpInvoker : AbstractInvoker
         }
         catch (Exception ex)
         {
-            Logger().LogError(ex, ex.Message);
+            _logger.LogError(ex, ex.Message);
             throw;
         }
 

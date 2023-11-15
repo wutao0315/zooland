@@ -1,16 +1,18 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Diagnostics;
 using System.Security.Policy;
 using Zooyard.Diagnositcs;
-using Zooyard.Logging;
+//using Zooyard.Logging;
 using Zooyard.Utils;
 
 namespace Zooyard.Rpc.Cluster;
 
 public class FailfastCluster : AbstractCluster
 {
-    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(FailfastCluster));
+    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(FailfastCluster));
     //public FailfastCluster(IEnumerable<ICache> caches) : base(caches) { }
+    public FailfastCluster(ILogger<FailfastCluster> logger) : base(logger) { }
     public override string Name => NAME;
     public const string NAME = "failfast";
 
@@ -75,7 +77,7 @@ public class FailfastCluster : AbstractCluster
                 + " use service version " + invocation.Version
                 + ", but no luck to perform the invocation. Last error is: " + e.Message+e.StackTrace, e.InnerException ?? e);
             }
-            Logger().LogError(exception, exception.Message);
+            _logger.LogError(exception, exception.Message);
             badUrls.Add(new BadUrl(invoker, exception));
         }
         finally

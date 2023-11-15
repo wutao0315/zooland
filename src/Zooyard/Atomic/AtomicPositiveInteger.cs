@@ -1,6 +1,6 @@
 ﻿namespace Zooyard.Atomic;
 
-public class AtomicPositiveInteger
+public sealed class AtomicPositiveInteger
 {
     private readonly AtomicInteger i;
 
@@ -138,32 +138,33 @@ public class AtomicPositiveInteger
         }
         return i.CompareAndSet(expect, update);
     }
-    public virtual byte ByteValue()
+
+    public byte ByteValue()
     {
         return (byte)i.Value;
     }
 
-    public virtual short ShortValue()
+    public short ShortValue()
     {
         return (short)i.Value;
     }
 
-    public virtual int IntValue()
+    public int IntValue()
     {
         return i.Value;
     }
 
-    public virtual long LongValue()
+    public long LongValue()
     {
         return i.Value;
     }
 
-    public virtual float FloatValue()
+    public float FloatValue()
     {
         return i.Value;
     }
 
-    public virtual double DoubleValue()
+    public double DoubleValue()
     {
         return i.Value;
     }

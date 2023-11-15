@@ -1,8 +1,9 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Diagnostics;
 using Zooyard.Atomic;
 using Zooyard.Diagnositcs;
-using Zooyard.Logging;
+//using Zooyard.Logging;
 
 namespace Zooyard.Rpc.Cluster;
 
@@ -11,8 +12,9 @@ namespace Zooyard.Rpc.Cluster;
 /// </summary>
 public class ForkingCluster : AbstractCluster
 {
-    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ForkingCluster));
+    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ForkingCluster));
     //public ForkingCluster(IEnumerable<ICache> caches) : base(caches) { }
+    public ForkingCluster(ILogger<ForkingCluster> logger) : base(logger) { }
     public override string Name => NAME;
     public const string NAME = "forking";
     public const string FORKS_KEY = "forks";

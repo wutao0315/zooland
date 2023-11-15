@@ -1,4 +1,4 @@
-﻿using Zooyard.Logging;
+﻿//using Zooyard.Logging;
 
 namespace Zooyard.Exceptions;
 
@@ -8,7 +8,7 @@ namespace Zooyard.Exceptions;
 /// </summary>
 public class FrameworkException : Exception
 {
-	private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(FrameworkException));
+	//private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(FrameworkException));
 	private readonly int _errcode;
 	/// <summary>
 	/// Instantiates a new Framework exception.
@@ -16,8 +16,6 @@ public class FrameworkException : Exception
 	public FrameworkException() : this("unkonwn error",500)
 	{
 	}
-
-
 
 	/// <summary>
 	/// Instantiates a new Framework exception.
@@ -88,7 +86,7 @@ public class FrameworkException : Exception
 	/// <returns> the framework exception </returns>
 	public static FrameworkException NestedException(string msg, Exception e)
 	{
-		Logger().LogError(e, msg + e.Message);
+		//Logger().LogError(e, msg + e.Message);
 		if (e is FrameworkException exception)
 		{
 			return exception;
@@ -104,7 +102,7 @@ public class FrameworkException : Exception
 	/// <returns> the sql exception </returns>
 	public static Exception NestedSQLException(Exception e)
 	{
-		return NestedSQLException("", e);
+		return NestedSQLException(e.Message, e);
 	}
 
 	/// <summary>
@@ -115,7 +113,7 @@ public class FrameworkException : Exception
 	/// <returns> the sql exception </returns>
 	public static Exception NestedSQLException(string msg, Exception e)
 	{
-		Logger().LogError(e, msg + e.Message);
+		//Logger().LogError(e, msg + e.Message);
 		return e;
 	}
 }

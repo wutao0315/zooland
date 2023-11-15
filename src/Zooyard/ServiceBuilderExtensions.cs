@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Reflection;
 using Zooyard.DataAnnotations;
-using Zooyard.Logging;
 using Zooyard.Rpc;
 using Zooyard.Rpc.Cache;
 using Zooyard.Rpc.Cluster;
@@ -21,7 +21,6 @@ namespace Zooyard;
 
 public static class ServiceBuilderExtensions
 {
-    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ServiceBuilderExtensions));
     public static void AddZoolandClient(this IServiceCollection services, params Type[] types)
     {
         services.AddSingleton<AdaptiveMetrics>();
@@ -34,12 +33,14 @@ public static class ServiceBuilderExtensions
         services.AddSingleton<ILoadBalance, AdaptiveLoadBalance>();
 
 
+        services.AddSingleton<ICluster, AvailableCluster>();
         services.AddSingleton<ICluster, BroadcastCluster>();
         services.AddSingleton<ICluster, FailbackCluster>();
         services.AddSingleton<ICluster, FailfastCluster>();
         services.AddSingleton<ICluster, FailoverCluster>();
         services.AddSingleton<ICluster, FailsafeCluster>();
         services.AddSingleton<ICluster, ForkingCluster>();
+        services.AddSingleton<ICluster, MergeableCluster>();
 
 
         services.AddSingleton<IMerger, ArrayMerger>();
@@ -76,6 +77,7 @@ public static class ServiceBuilderExtensions
 
         services.AddSingleton<IZooyardPools>((serviceProvder) =>
         {
+            var loggerfactory = serviceProvder.GetRequiredService<ILoggerFactory>();
             var option = serviceProvder.GetRequiredService<IOptionsMonitor<ZooyardOption>>();
 
             var clientPools = new Dictionary<string, IClientPool>();
@@ -100,7 +102,7 @@ public static class ServiceBuilderExtensions
             var caches = serviceProvder.GetServices<ICache>();
             var routeFactories = serviceProvder.GetServices<IStateRouterFactory>();
 
-            var zooyardPools = new ZooyardPools(clientPools, loadBalances, clusters, caches, routeFactories, option);
+            var zooyardPools = new ZooyardPools(loggerfactory, clientPools, loadBalances, clusters, caches, routeFactories, option);
             return zooyardPools;
         });
 
@@ -111,8 +113,9 @@ public static class ServiceBuilderExtensions
             var factoryType = genericType.MakeGenericType(new[] { serviceType });
             services.AddSingleton(factoryType, (serviceProvder) =>
             {
+                var loggerfactory = serviceProvder.GetRequiredService<ILoggerFactory>();
                 var pools = serviceProvder.GetRequiredService<IZooyardPools>();
-                var constructor = factoryType.GetConstructor(new[] { typeof(IZooyardPools), typeof(string), typeof(string), typeof(string) });
+                var constructor = factoryType.GetConstructor(new[] { typeof(ILoggerFactory), typeof(IZooyardPools), typeof(string), typeof(string), typeof(string) });
                 if (constructor == null)
                 {
                     throw new RpcException($"{nameof(constructor)} is not exists");
@@ -122,7 +125,7 @@ public static class ServiceBuilderExtensions
                 {
                     throw new RpcException($"{nameof(ZooyardAttribute)} is not exists");
                 }
-                var zooyardFactory = constructor.Invoke(new object[] { pools, zooyard.ServiceName, zooyard.Version, zooyard.Url });
+                var zooyardFactory = constructor.Invoke(new object[] { loggerfactory, pools, zooyard.ServiceName, zooyard.Version, zooyard.Url });
                 return zooyardFactory;
             });
 

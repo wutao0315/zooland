@@ -1,21 +1,19 @@
-﻿using System.Collections.Concurrent;
+﻿using Microsoft.Extensions.Logging;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
-using Zooyard.Logging;
+//using Zooyard.Logging;
 
 namespace Zooyard.DynamicProxy;
 
 public class AsyncProxyGenerator : IDisposable
 {
-    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(AsyncProxyGenerator));
+    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(AsyncProxyGenerator));
+    private readonly ILogger _logger;
     private readonly ConcurrentDictionary<Type, Dictionary<Type, Type>> _proxyTypeCaches;
 
     private readonly ProxyAssembly _proxyAssembly;
-
-    //private readonly MethodInfo _dispatchProxyInvokeMethod = typeof(ProxyExecutor).GetTypeInfo().GetDeclaredMethod("Invoke");
-    //private readonly MethodInfo _dispatchProxyInvokeAsyncMethod = typeof(ProxyExecutor).GetTypeInfo().GetDeclaredMethod("InvokeAsync");
-    //private readonly MethodInfo _dispatchProxyInvokeAsyncTMethod = typeof(ProxyExecutor).GetTypeInfo().GetDeclaredMethod("InvokeAsyncT");
 
 
     private readonly IZooyardPools _zooyardPools;
@@ -23,8 +21,9 @@ public class AsyncProxyGenerator : IDisposable
     private readonly string _version;
     private readonly string _url;
 
-    public AsyncProxyGenerator(IZooyardPools zooyardPools, string serviceName, string version, string url)
+    public AsyncProxyGenerator(ILoggerFactory loggerFactory, IZooyardPools zooyardPools, string serviceName, string version, string url)
     {
+        _logger = loggerFactory.CreateLogger<AsyncProxyGenerator>();
         _proxyTypeCaches = new ConcurrentDictionary<Type, Dictionary<Type, Type>>();
         _proxyAssembly = new ProxyAssembly();
         _zooyardPools = zooyardPools;
@@ -158,7 +157,7 @@ public class AsyncProxyGenerator : IDisposable
         {
             watch.Stop();
         }
-        Logger().LogInformation($"async proxy generator: {watch.ElapsedMilliseconds} ms");
+        _logger.LogInformation($"async proxy generator: {watch.ElapsedMilliseconds} ms");
         return returnValue;
     }
 

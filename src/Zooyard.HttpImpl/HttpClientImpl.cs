@@ -1,4 +1,5 @@
-﻿using Zooyard.Rpc.Support;
+﻿using Microsoft.Extensions.Logging;
+using Zooyard.Rpc.Support;
 
 namespace Zooyard.HttpImpl;
 
@@ -7,10 +8,12 @@ public class HttpClientImpl : AbstractClient
     public override string System => "zy_http";
     public override URL Url { get; }
     public override int ClientTimeout { get; }
+    private readonly ILogger _logger;
     private readonly IHttpClientFactory _transport;
     
-    public HttpClientImpl(IHttpClientFactory transport,URL url,int clientTimeout)
+    public HttpClientImpl(ILogger<HttpClientImpl> logger, IHttpClientFactory transport,URL url,int clientTimeout)
     {
+        _logger = logger;
         this.Url = url;
         this.ClientTimeout = clientTimeout;
         _transport = transport;
@@ -27,7 +30,7 @@ public class HttpClientImpl : AbstractClient
 
         result.EnsureSuccessStatusCode();
 
-        return new HttpInvoker(_transport, ClientTimeout, Url);
+        return new HttpInvoker(_logger, _transport, ClientTimeout, Url);
     }
     public override async Task Open(CancellationToken cancellationToken = default)
     {

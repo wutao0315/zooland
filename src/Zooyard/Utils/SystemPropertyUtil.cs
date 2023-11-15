@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics.Contracts;
-using Zooyard.Logging;
+//using Zooyard.Logging;
 
 namespace Zooyard.Utils;
 
@@ -8,7 +8,7 @@ namespace Zooyard.Utils;
 /// </summary>
 public static class SystemPropertyUtil
 {
-    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(SystemPropertyUtil));
+    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(SystemPropertyUtil));
     static bool loggedException;
 
     /// <summary>
@@ -175,7 +175,11 @@ public static class SystemPropertyUtil
         return result;
     }
 
-    static void Log(string msg) => Logger().LogWarning(msg);
+    //static void Log(string msg) => Logger().LogWarning(msg);
 
-    static void Log(string msg, Exception e) => Logger().LogWarning(e, msg);
+    //static void Log(string msg, Exception e) => Logger().LogWarning(e, msg);
+
+    static void Log(string msg) => Console.WriteLine(msg);
+    static void Log(string msg, Exception e) => Console.WriteLine(msg+e.StackTrace);
+
 }

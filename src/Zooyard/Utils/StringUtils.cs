@@ -2,13 +2,13 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using Zooyard.Logging;
+//using Zooyard.Logging;
 
 namespace Zooyard.Utils;
 
 public sealed class StringUtils
 {
-    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(StringUtils));
+    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(StringUtils));
 
     private static readonly Regex KVP_PATTERN = new ("([_.a-zA-Z0-9][-_.a-zA-Z0-9]*)[=](.*)", RegexOptions.Compiled);  //key value pair pattern.
 
@@ -68,7 +68,7 @@ public sealed class StringUtils
                 }
                 catch (Exception e)
                 {
-                    Logger().LogWarning(e, e.Message);
+                    //Logger().LogWarning(e, e.Message);
                     buf.Append(arg);
                 }
             }

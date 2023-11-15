@@ -1,10 +1,10 @@
-﻿using System.Collections;
+﻿using Microsoft.Extensions.Logging;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Linq.Expressions;
 using System.Net;
 using System.Reflection;
 using System.Text;
-using Zooyard.Logging;
 
 namespace Zooyard.HttpImpl;
 
@@ -13,7 +13,7 @@ namespace Zooyard.HttpImpl;
 /// </summary>
 public class HttpStub
 {
-    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(HttpStub));
+    private readonly ILogger _logger;
     /// <summary>
     /// http客户端
     /// </summary>
@@ -22,10 +22,12 @@ public class HttpStub
     /// <summary>
     /// 初始化
     /// </summary>
+    /// <param name="logger"></param>
     /// <param name="httpClient">http长连接客户端</param>
     /// <param name="timeout">超时时长</param>
-    public HttpStub(HttpClient httpClient, int timeout)
+    public HttpStub(ILogger logger, HttpClient httpClient, int timeout)
     {
+        _logger = logger;
         _httpClient = httpClient;
         _httpClient.Timeout = TimeSpan.FromMilliseconds(timeout);
     }
@@ -82,7 +84,7 @@ public class HttpStub
             if (!response.IsSuccessStatusCode)
             {
                 var responseBody = new StreamReader(data).ReadToEnd();
-                Logger().LogError($"statuscode:{response.StatusCode},{data}");
+                _logger.LogError($"statuscode:{response.StatusCode},{data}");
                 return null;
             }
 
@@ -90,7 +92,7 @@ public class HttpStub
         }
         catch(Exception ex)
         {
-            Logger().LogError(ex);
+            _logger.LogError(ex, ex.Message);
             throw;
         }
     }

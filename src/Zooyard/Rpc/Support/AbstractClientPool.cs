@@ -1,11 +1,17 @@
-﻿using System.Collections.Concurrent;
-using Zooyard.Logging;
+﻿using Microsoft.Extensions.Logging;
+using System.Collections.Concurrent;
+//using Zooyard.Logging;
 
 namespace Zooyard.Rpc.Support;
 
 public abstract class AbstractClientPool: IClientPool
 {
-    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(AbstractClientPool));
+    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(AbstractClientPool));
+    protected readonly ILogger _logger;
+    public AbstractClientPool(ILogger logger) 
+    {
+        _logger = logger;
+    }
     /// <summary>
     /// client pools
     /// </summary>
@@ -41,7 +47,7 @@ public abstract class AbstractClientPool: IClientPool
             {
                 throw new InvalidOperationException("connection access failed. please confirm call service status.");
             }
-            Logger().LogInformation($"create new client [{client.Version}:{url}]");
+            _logger.LogInformation($"create new client [{client.Version}:{url}]");
         }
 
         return client;
@@ -61,12 +67,12 @@ public abstract class AbstractClientPool: IClientPool
             clientBag ??= new();
             clientBag.Add(client);
             ClientsPool[client.Url] = clientBag;
-            Logger().LogInformation($"recovery to update:[{clientBag.Count}][{client.Version}:{client.Url}]");
+            _logger.LogInformation($"recovery to update:[{clientBag.Count}][{client.Version}:{client.Url}]");
             return;
         }
         //空闲连接数达到上限或者连接版本过期，不再返回线程池,直接销毁	
         await DestoryClient(client);
-        Logger().LogInformation($"recovery to destory idle full:[{clientBag.Count}][{client.Version}:{client.Url}]");
+        _logger.LogInformation($"recovery to destory idle full:[{clientBag.Count}][{client.Version}:{client.Url}]");
     }
     /// <summary>
     /// 销毁连接
@@ -76,7 +82,7 @@ public abstract class AbstractClientPool: IClientPool
     {
         await client.Close();
         await client.DisposeAsync();
-        Logger().LogInformation($"DestoryClient :[{client.Version}:{client.Url}]");
+        _logger.LogInformation($"DestoryClient :[{client.Version}:{client.Url}]");
     }
 
     public virtual void Dispose() 
@@ -91,7 +97,7 @@ public abstract class AbstractClientPool: IClientPool
             while (item.Value.TryTake(out IClient? client)) 
             {
                 await DestoryClient(client);
-                Logger().LogInformation($"Dispose :[{ClientsPool[item.Key].Count}][{client.Version}:{item.Key}]");
+                _logger.LogInformation($"Dispose :[{ClientsPool[item.Key].Count}][{client.Version}:{item.Key}]");
             }
         }
     }
@@ -133,7 +139,7 @@ public abstract class AbstractClientPool: IClientPool
         }
         catch (Exception e)
         {
-            Logger().LogError(e, e.Message);
+            _logger.LogError(e, e.Message);
         }
         return null;
     }
@@ -162,7 +168,7 @@ public abstract class AbstractClientPool: IClientPool
         }
         catch (Exception e)
         {
-            Logger().LogError(e, e.Message);
+            _logger.LogError(e, e.Message);
             return false;
         }
     }
@@ -181,7 +187,7 @@ public abstract class AbstractClientPool: IClientPool
             {
                 if (client.ActiveTime <= DateTime.MinValue || client.ActiveTime < overTime)
                 {
-                    Logger().LogInformation($"client time over:[{item.Value.Count}][{client.Version}:{item.Key}]");
+                    _logger.LogInformation($"client time over:[{item.Value.Count}][{client.Version}:{item.Key}]");
                     await DestoryClient(client);
                 }
                 else

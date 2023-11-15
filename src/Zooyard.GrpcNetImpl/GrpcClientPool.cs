@@ -2,7 +2,7 @@
 using Grpc.Core.Interceptors;
 using Grpc.Net.Client;
 using Microsoft.Extensions.Logging;
-using Zooyard.Logging;
+//using Zooyard.Logging;
 using Zooyard.Rpc;
 using Zooyard.Rpc.Support;
 
@@ -21,17 +21,15 @@ public class GrpcClientPool : AbstractClientPool
     private readonly IDictionary<string, ChannelCredentials> _credentials;
     private readonly IEnumerable<ClientInterceptor> _interceptors;
     private readonly ILoggerFactory _loggerFactory;
-    private readonly ILogger _logger;
 
 
     public GrpcClientPool(IDictionary<string, ChannelCredentials> credentials,
         IEnumerable<ClientInterceptor> interceptors,
-        ILoggerFactory loggerFactory)
+        ILoggerFactory loggerFactory):base(loggerFactory.CreateLogger<GrpcClientPool>())
     {
         _credentials = credentials;
         _interceptors = interceptors;
         _loggerFactory = loggerFactory;
-        _logger = loggerFactory.CreateLogger<GrpcClientPool>();
     }
 
     protected override async Task<IClient> CreateClient(URL url)
@@ -83,6 +81,6 @@ public class GrpcClientPool : AbstractClientPool
             throw new Exception($"grpc client is null");
         }
 
-        return new GrpcClient(channel, client, url, grpcChannelOption, timeout);
+        return new GrpcClient(_loggerFactory.CreateLogger<GrpcClient>(), channel, client, url, grpcChannelOption, timeout);
     }
 }

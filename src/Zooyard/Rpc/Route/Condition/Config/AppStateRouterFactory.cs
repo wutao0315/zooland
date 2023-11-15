@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Zooyard.Rpc.Route.State;
 
 namespace Zooyard.Rpc.Route.Condition.Config;
@@ -8,9 +9,11 @@ public class AppStateRouterFactory : IStateRouterFactory
     public const string NAME = "app";
 
     public string Name => NAME;
+    private readonly ILoggerFactory _loggerFactory;
     private readonly IOptionsMonitor<ZooyardOption> _zooyard;
-    public AppStateRouterFactory(IOptionsMonitor<ZooyardOption> zooyard)
+    public AppStateRouterFactory(ILoggerFactory loggerFactory, IOptionsMonitor<ZooyardOption> zooyard)
     {
+        _loggerFactory = loggerFactory;
         _zooyard = zooyard;
     }
     public void ClearCache() { }
@@ -32,6 +35,6 @@ public class AppStateRouterFactory : IStateRouterFactory
 
     private IStateRouter CreateRouter(URL address)
     {
-        return new AppStateRouter(_zooyard, address, address.GetParameter("rule", "application"));
+        return new AppStateRouter(_loggerFactory, _zooyard, address, address.GetParameter("rule", "application"));
     }
 }

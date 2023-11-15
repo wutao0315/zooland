@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Zooyard.Rpc.Route.State;
 
 namespace Zooyard.Rpc.Route.Condition.Config;
@@ -6,16 +7,17 @@ namespace Zooyard.Rpc.Route.Condition.Config;
 public class ServiceStateRouterFactory : CacheableStateRouterFactory
 {
     public const string NAME = "service";
-
     public override string Name => NAME;
+    private readonly ILoggerFactory _loggerFactory;
     private readonly IOptionsMonitor<ZooyardOption> _zooyard;
-    public ServiceStateRouterFactory(IOptionsMonitor<ZooyardOption> zooyard)
+    public ServiceStateRouterFactory(ILoggerFactory loggerFactory, IOptionsMonitor<ZooyardOption> zooyard)
     {
+        _loggerFactory = loggerFactory;
         _zooyard = zooyard;
     }
 
     protected override IStateRouter CreateRouter(Type interfaceClass, URL url)
     {
-        return new ServiceStateRouter(_zooyard, url);
+        return new ServiceStateRouter(_loggerFactory, _zooyard, url);
     }
 }

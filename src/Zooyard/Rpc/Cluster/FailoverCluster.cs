@@ -1,14 +1,16 @@
-﻿using System.Diagnostics;
+﻿using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 using Zooyard.Diagnositcs;
-using Zooyard.Logging;
+//using Zooyard.Logging;
 using Zooyard.Utils;
 
 namespace Zooyard.Rpc.Cluster;
 
 public class FailoverCluster : AbstractCluster
 {
-    private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(FailoverCluster));
+    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(FailoverCluster));
     //public FailoverCluster(IEnumerable<ICache> caches) : base(caches) { }
+    public FailoverCluster(ILogger<FailoverCluster> logger) : base(logger) { }
     public override string Name => NAME;
     public const string NAME = "failover";
     public const string RETRIES_KEY = "retries";
@@ -68,7 +70,7 @@ public class FailoverCluster : AbstractCluster
                     await pool.Recovery(client);
                     if (le != null)
                     {
-                        Logger().LogWarning(le, "Although retry the method " + invocation.MethodInfo.Name
+                        _logger.LogWarning(le, "Although retry the method " + invocation.MethodInfo.Name
                                 + " in the service " + invocation.TargetType.FullName
                                 + " was successful by the provider " + url.Address
                                 + ", but there have been failed providers " + string.Join(",", providers)
