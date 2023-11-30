@@ -1,39 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <Compile Remove="Configuration\MemoryProvider\**" />
-    <Compile Remove="Health\**" />
-    <Compile Remove="Logging\**" />
-    <Compile Remove="ServiceDiscovery\**" />
-    <EmbeddedResource Remove="Configuration\MemoryProvider\**" />
-    <EmbeddedResource Remove="Health\**" />
-    <EmbeddedResource Remove="Logging\**" />
-    <EmbeddedResource Remove="ServiceDiscovery\**" />
-    <None Remove="Configuration\MemoryProvider\**" />
-    <None Remove="Health\**" />
-    <None Remove="Logging\**" />
-    <None Remove="ServiceDiscovery\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="Configuration\ActiveHealthCheckConfig.cs" />
-    <Compile Remove="Configuration\ClusterConfig.cs" />
-    <Compile Remove="Configuration\DestinationConfig.cs" />
-    <Compile Remove="Configuration\GlobalConfig.cs" />
-    <Compile Remove="Configuration\HealthCheckConfig.cs" />
-    <Compile Remove="Configuration\PassiveHealthCheckConfig.cs" />
-    <Compile Remove="Configuration\RouteConfig.cs" />
-    <Compile Remove="Model\ClusterDestinationsState.cs" />
-    <Compile Remove="Model\ClusterModel.cs" />
-    <Compile Remove="Model\ClusterState.cs" />
-    <Compile Remove="Model\DestinationHealth.cs" />
-    <Compile Remove="Model\DestinationHealthState.cs" />
-    <Compile Remove="Model\DestinationModel.cs" />
-    <Compile Remove="Model\DestinationState.cs" />
-    <Compile Remove="Model\IClusterChangeListener.cs" />
-    <Compile Remove="Model\IServiceChangeListener.cs" />
-    <Compile Remove="Model\RouteModel.cs" />
-    <Compile Remove="Model\RouteState.cs" />
     <Compile Remove="ServiceBuilderExtensions.cs" />
     <Compile Remove="ZooyardOption.cs" />
   </ItemGroup>
@@ -80,15 +47,6 @@
 		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
 			<_Parameter1>Zooyard.Instrumentation.OpenTelemetry</_Parameter1>
 		</AssemblyAttribute>
-	</ItemGroup>
-
-
-	<ItemGroup>
-	  <Compile Include="ServiceDiscovery\DnsInstanceResolver.cs" />
-	  <Compile Include="ServiceDiscovery\DnsInstanceResolverOptions.cs" />
-	  <Compile Include="ServiceDiscovery\IInstanceResolver.cs" />
-	  <Compile Include="ServiceDiscovery\NoOpInstanceResolver.cs" />
-	  <Compile Include="ServiceDiscovery\ResolvedInstanceCollection.cs" />
 	</ItemGroup>
 
 </Project>

@@ -7,7 +7,7 @@ namespace RpcConsumerCore;
 
 class Program
 {
-    static void Main(string[] args)
+    static async Task Main(string[] args)
     {
         var basePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config");
 
@@ -49,99 +49,106 @@ class Program
 
         while (true)
         {
-            //Console.WriteLine("请选择:wcf | grpc | thrift | http | akka | netty | all");
-            Console.WriteLine("请选择:grpcnet | grpcmember | thrift | http | netty | all");
-            var mode = Console.ReadLine()?.ToLower()??"all";
-            switch (mode)
+            try
             {
-                case "grpcnet":
-                    CallWhile(async (helloword) => { await GrpcNetHello(helloServiceGrpcNet, helloword); });
-                    break;
-                case "grpcmember":
-                    CallWhile(async (helloword) => { await GrpcNetMember(sessionService, helloword); });
-                    break;
-                case "thrift":
-                    CallWhile(async(helloword) => { await ThriftHello(helloServiceThrift, helloword); });
-                    break;
-                case "http":
-                    CallWhile(async (helloword) => { await HttpHello(helloServiceHttp, helloword); });
-                    break;
-                case "netty":
-                    CallWhile(async (helloword) => { await NettyHello(helloServiceNetty, helloword); });
-                    break;
-                case "all":
-                    for (int i = 0; i < 3; i++)
-                    {
-                        Task.Run(async () =>
+                //Console.WriteLine("请选择:wcf | grpc | thrift | http | akka | netty | all");
+                Console.WriteLine("请选择:grpcnet | grpcmember | thrift | http | netty | all");
+                var mode = Console.ReadLine()?.ToLower() ?? "all";
+                switch (mode)
+                {
+                    case "grpcnet":
+                        await CallWhile(async (helloword) => { await GrpcNetHello(helloServiceGrpcNet, helloword); });
+                        break;
+                    case "grpcmember":
+                        await CallWhile(async (helloword) => { await GrpcNetMember(sessionService, helloword); });
+                        break;
+                    case "thrift":
+                        await CallWhile(async (helloword) => { await ThriftHello(helloServiceThrift, helloword); });
+                        break;
+                    case "http":
+                        await CallWhile(async (helloword) => { await HttpHello(helloServiceHttp, helloword); });
+                        break;
+                    case "netty":
+                        await CallWhile(async (helloword) => { await NettyHello(helloServiceNetty, helloword); });
+                        break;
+                    case "all":
+                        for (int i = 0; i < 3; i++)
                         {
-                            try
+                            _=Task.Run(async () =>
                             {
-                                await GrpcNetHello(helloServiceGrpcNet);
-                            }
-                            catch
+                                try
+                                {
+                                    await GrpcNetHello(helloServiceGrpcNet);
+                                }
+                                catch
+                                {
+                                    throw;
+                                }
+
+                            });
+                            _ = Task.Run(async () =>
                             {
-                                throw;
-                            }
+                                try
+                                {
+                                    await ThriftHello(helloServiceThrift);
+                                }
+                                catch (Exception)
+                                {
+                                    throw;
+                                }
 
-                        });
-                        Task.Run(async () =>
-                        {
-                            try
+                            });
+                            _ = Task.Run(async () =>
                             {
-                                await ThriftHello(helloServiceThrift);
-                            }
-                            catch (Exception)
+                                try
+                                {
+                                    await HttpHello(helloServiceHttp);
+                                }
+                                catch
+                                {
+
+                                    throw;
+                                }
+
+                            });
+                            //Task.Run(() =>
+                            //{
+
+                            //    try
+                            //    {
+                            //        AkkaHello(helloServiceAkka);
+                            //    }
+                            //    catch (Exception ex)
+                            //    {
+
+                            //        throw ex;
+                            //    }
+                            //});
+
+                            _ = Task.Run(async () =>
                             {
-                                throw;
-                            }
+                                try
+                                {
+                                    await NettyHello(helloServiceNetty);
+                                }
+                                catch
+                                {
 
-                        });
-                        Task.Run(async () =>
-                        {
-                            try
-                            {
-                                await HttpHello(helloServiceHttp);
-                            }
-                            catch
-                            {
+                                    throw;
+                                }
+                            });
+                        }
+                        break;
+                }
 
-                                throw;
-                            }
-
-                        });
-                        //Task.Run(() =>
-                        //{
-
-                        //    try
-                        //    {
-                        //        AkkaHello(helloServiceAkka);
-                        //    }
-                        //    catch (Exception ex)
-                        //    {
-
-                        //        throw ex;
-                        //    }
-                        //});
-
-                        Task.Run(async () =>
-                        {
-                            try
-                            {
-                                await NettyHello(helloServiceNetty);
-                            }
-                            catch
-                            {
-
-                                throw;
-                            }
-                        });
-                    }
+                if (mode == "end")
+                {
                     break;
+                }
             }
-
-            if (mode == "end")
+            catch (Exception e)
             {
-                break;
+                Console.WriteLine("ex"+e.Message);
             }
         }
     }
@@ -253,14 +260,14 @@ class Program
         var showResultNetty = await nettyService.ShowHelloAsync(helloResult);
         Console.WriteLine(showResultNetty);
     }
-    private static void CallWhile(Action<string> map)
+    private static async Task CallWhile(Func<string,Task> map)
     {
         var helloword = "world";
         while (true)
         {
             try
             {
-                map(helloword);
+                await map(helloword);
                 var mode = Console.ReadLine();
                 helloword = mode??"hello";
                 if (helloword == "end")
@@ -270,7 +277,8 @@ class Program
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.StackTrace);
+                Console.WriteLine(ex.Message);
+                break;
             }
         }
     }
