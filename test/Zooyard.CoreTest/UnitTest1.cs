@@ -27,18 +27,21 @@ namespace ZooyardTest
             //services.Configure<GrpcOption>(config.GetSection("grpc"));
             //services.Configure<NettyOption>(config.GetSection("netty"));
             //services.Configure<ThriftOption>(config.GetSection("thrift"));
-            services.Configure<ZooyardOption>(config.GetSection("zooyard"));
+            //services.Configure<ZooyardOption>(config.GetSection("zooyard"));
+            services.AddRpc()
+                .LoadFromConfig(config.GetSection("zooyard"))
+                .AddHttp();
             services.AddLogging();
             //services.AddAkkaClient();
             //services.AddZooyardGrpc();
-            services.AddZooyardHttp();
+            //services.AddZooyardHttp();
 
 
             //services.AddNettyImpl();
 
             //services.AddThriftClient();
             //services.AddWcfClient();
-            services.AddZoolandClient();
+            //services.AddZoolandClient();
 
             using var bsp = services.BuildServiceProvider();
             //var tgrpcHelloService = bsp.GetService<RpcContractGrpc.IHelloService>();

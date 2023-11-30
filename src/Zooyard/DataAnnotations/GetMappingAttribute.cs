@@ -46,13 +46,6 @@ public class RequestMappingAttribute : Attribute
     }
 }
 [AttributeUsage(AttributeTargets.Method)]
-public class GetMappingAttribute : RequestMappingAttribute
+public class GetMappingAttribute(string value) : RequestMappingAttribute(value, RequestMethod.GET)
 {
-
-    /// <summary>
-    /// 构造函数
-    /// </summary>
-    public GetMappingAttribute(string value) : base(value, RequestMethod.GET)
-    {
-    }
 }

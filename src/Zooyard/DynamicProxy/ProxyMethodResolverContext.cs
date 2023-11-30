@@ -2,14 +2,8 @@
 
 namespace Zooyard.DynamicProxy;
 
-internal class ProxyMethodResolverContext
+internal class ProxyMethodResolverContext(PackedArgs packed, MethodInfo method)
 {
-    public PackedArgs Packed { get; }
-    public MethodInfo Method { get; }
-
-    public ProxyMethodResolverContext(PackedArgs packed, MethodInfo method)
-    {
-        Packed = packed;
-        Method = method;
-    }
+    public PackedArgs Packed { get; } = packed;
+    public MethodInfo Method { get; } = method;
 }

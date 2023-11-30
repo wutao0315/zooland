@@ -1,20 +1,15 @@
-﻿namespace Zooyard.Diagnositcs;
+﻿using System;
+
+namespace Zooyard.Diagnositcs;
 
 
-public record EventDataStore
+public sealed record EventDataStore(string system, string clusterName, URL url, IInvocation invocation)
 {
-    public EventDataStore(string system, string clusterName, URL url, IInvocation invocation) 
-    {
-        System = system;
-        ClusterName = clusterName;
-        Url = url;
-        Invocation = invocation;
-    }
     public long ActiveTimestamp { get; init; } = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-    public string System { get; init; }
-    public string ClusterName { get; init; }
-    public URL Url { get; init; }
-    public IInvocation Invocation { get; init; }
+    public string System { get; init; } = system;
+    public string ClusterName { get; init; } = clusterName;
+    public URL Url { get; init; } = url;
+    public IInvocation Invocation { get; init; } = invocation;
     public object? Result { get; set; }
     public long? Elapsed { get; set; }
     public Exception? Exception { get; set; }

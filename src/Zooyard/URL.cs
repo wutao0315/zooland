@@ -291,19 +291,16 @@ public sealed record URL
     public URL SetProtocol(string protocol)
     {
         return this with { Protocol = protocol };
-        //return new URL(protocol, Host, Port, Path, Username, Password, Parameters);
     }
 
     public URL SetUsername(string username)
     {
         return this with { Username = username };
-        //return new URL(Protocol,  Host, Port, Path, username, Password, Parameters);
     }
 
     public URL SetPassword(string password)
     {
         return this with { Password = password };
-        //return new URL(Protocol,  Host, Port, Path, Username, password, Parameters);
     }
 
     public URL SetAddress(string address)
@@ -321,25 +318,21 @@ public sealed record URL
             host = address;
         }
         return this with { Host = host, Port = port };
-       // return new URL(Protocol, host, port, Path, Username, Password, Parameters);
     }
 
     public URL SetHost(string host)
     {
         return this with { Host = host };
-        //return new URL(Protocol,  host, Port, Path, Username, Password, Parameters);
     }
 
     public URL SetPort(int port)
     {
         return this with { Port = port };
-        //return new URL(Protocol, Host, port, Path, Username, Password, Parameters);
     }
 
     public URL SetPath(string path)
     {
         return this with { Path = path };
-        //return new URL(Protocol, Host, Port, path, Username, Password, Parameters);
     }
 
     public Dictionary<string, string> Parameters { get; init; } = new ();
@@ -718,7 +711,6 @@ public sealed record URL
             [key] = value
         };
         return this with { Parameters = map };
-        //return new URL(Protocol, Host, Port, Path, Username, Password, map);
     }
 
     public URL AddParameterIfAbsent(string? key, string? value)
@@ -737,7 +729,6 @@ public sealed record URL
         };
 
         return this with { Parameters = map };
-        //return new URL(Protocol, Host, Port, Path, Username, Password, map);
     }
 
     /// <summary>
@@ -773,7 +764,6 @@ public sealed record URL
         map.PutAll(parameters);
 
         return this with { Parameters = map };
-        //return new URL(Protocol, Host, Port, Path, Username, Password, map);
     }
 
     public URL AddParametersIfAbsent(IDictionary<string, string> parameters)
@@ -783,11 +773,11 @@ public sealed record URL
             return this;
         }
         var map = new Dictionary<string, string>(parameters);
+
         map.PutAll(Parameters);
 
 
         return this with { Parameters = map };
-        //return new URL(Protocol,  Host, Port, Path, Username, Password, map);
     }
 
     public URL AddParameters(params string[] pairs)
@@ -854,13 +844,11 @@ public sealed record URL
 
 
         return this with { Parameters = map };
-        //return new URL(Protocol, Host, Port, Path, Username, Password, map);
     }
 
     public URL ClearParameters()
     {
         return this with { Parameters = new() };
-        //return new URL(Protocol, Host, Port, Path, Username, Password);
     }
 
     
@@ -1183,6 +1171,20 @@ public sealed record URL
         }
     }
 
+
+    public override int GetHashCode()
+    {
+        var result = HashCode.Combine(
+            this.Protocol?.GetHashCode(StringComparison.OrdinalIgnoreCase),
+            this.Host?.GetHashCode(StringComparison.OrdinalIgnoreCase),
+            this.Port.GetHashCode(),
+            this.Username?.GetHashCode(StringComparison.OrdinalIgnoreCase),
+            this.Password?.GetHashCode(StringComparison.OrdinalIgnoreCase),
+            this.Path?.GetHashCode(StringComparison.OrdinalIgnoreCase),
+             CaseSensitiveEqualHelper.GetHashCode(this.Parameters)
+            );
+            return result;
+    }
     //public override int GetHashCode()
     //{
     //    const int prime = 31;

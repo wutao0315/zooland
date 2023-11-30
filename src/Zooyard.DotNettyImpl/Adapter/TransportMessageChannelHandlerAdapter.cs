@@ -7,15 +7,8 @@ using Zooyard.DotNettyImpl.Transport.Codec;
 
 namespace Zooyard.DotNettyImpl.Adapter;
 
-public class TransportMessageChannelHandlerAdapter : ChannelHandlerAdapter
+public class TransportMessageChannelHandlerAdapter(ITransportMessageDecoder _transportMessageDecoder) : ChannelHandlerAdapter
 {
-    private readonly ITransportMessageDecoder _transportMessageDecoder;
-
-    public TransportMessageChannelHandlerAdapter(ITransportMessageDecoder transportMessageDecoder)
-    {
-        _transportMessageDecoder = transportMessageDecoder;
-    }
-
     public override void ChannelRead(IChannelHandlerContext context, object message)
     {
         var buffer = (IByteBuffer)message;

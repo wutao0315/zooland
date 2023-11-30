@@ -1,11 +1,10 @@
 ﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using Zooyard.Management;
 
 namespace Zooyard.Rpc.Route.Condition.Config;
 
-public class ServiceStateRouter : ListenableStateRouter
+public class ServiceStateRouter(ILoggerFactory loggerFactory, IRpcStateLookup stateLookup, URL address)
+    : ListenableStateRouter(loggerFactory, stateLookup, address, address.GetParameter("rule", "service"))
 {
     public new const string NAME = "SERVICE_ROUTER";
-    public ServiceStateRouter(ILoggerFactory loggerFactory, IOptionsMonitor<ZooyardOption> zooyard, URL address)
-        : base(loggerFactory, zooyard, address, address.GetParameter("rule", "service")) { }
 }

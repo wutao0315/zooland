@@ -13,10 +13,10 @@ namespace Zooyard.Rpc;
 /// 注意：RpcContext是一个临时状态记录器，当接收到RPC请求，或发起RPC请求时，RpcContext的状态都会变化。
 /// 比如：A调B，B再调C，则B机器上，在B调C之前，RpcContext记录的是A调B的信息，在B调C之后，RpcContext记录的是B调C的信息。
 /// </summary>
-public class RpcContext
+public sealed record RpcContext
 {
     private static readonly AsyncLocal<RpcContext> LOCAL = new();
-    protected volatile IDictionary<string, object> attachments = new Dictionary<string, object>();
+    private volatile IDictionary<string, object> attachments = new Dictionary<string, object>();
 
     private IList<URL>? urls;
     
@@ -26,7 +26,7 @@ public class RpcContext
         return LOCAL.Value;
     }
 
-    public virtual IList<URL>? Urls
+    public IList<URL>? Urls
     {
         get
         {
@@ -39,14 +39,14 @@ public class RpcContext
     }
 
 
-    public virtual URL? Url { get; set; }
+    public URL? Url { get; set; }
 
 
     /// <summary>
     /// get method name.
     /// </summary>
     /// <returns> method name. </returns>
-    public virtual string? MethodName { get; set; }
+    public string? MethodName { get; set; }
 
 
     /// <summary>
@@ -54,14 +54,14 @@ public class RpcContext
     /// 
     /// @serial
     /// </summary>
-    public virtual Type[]? ParameterTypes { get; set; }
+    public Type[]? ParameterTypes { get; set; }
 
 
     /// <summary>
     /// get arguments.
     /// </summary>
     /// <returns> arguments. </returns>
-    public virtual object[]? Arguments { get; set; }
+    public object[]? Arguments { get; set; }
 
     public IDictionary<string, object> Attachments => attachments;
     public string? GetAttachment(string key)
@@ -141,7 +141,7 @@ public class RpcContext
         this.attachments.Clear();
     }
 
-    public virtual RpcContext SetInvokers(IList<URL>? invokers)
+    public RpcContext SetInvokers(IList<URL>? invokers)
     {
         //this.invokers = invokers;
         if (invokers != null && invokers.Count > 0)
@@ -151,7 +151,7 @@ public class RpcContext
         return this;
     }
 
-    public virtual RpcContext SetInvoker(URL invoker)
+    public RpcContext SetInvoker(URL invoker)
     {
         //this.invoker = invoker;
         if (invoker != null)
@@ -161,7 +161,7 @@ public class RpcContext
         return this;
     }
 
-    public virtual RpcContext SetInvocation(IInvocation invocation)
+    public RpcContext SetInvocation(IInvocation invocation)
     {
         //this.invocation = invocation;
         if (invocation != null)

@@ -1,12 +1,11 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
-//using Zooyard.Logging;
+using Zooyard.Utils;
 
 namespace Zooyard.Rpc.Support;
 
 public abstract class AbstractClientPool: IClientPool
 {
-    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(AbstractClientPool));
     protected readonly ILogger _logger;
     public AbstractClientPool(ILogger logger) 
     {
@@ -153,18 +152,8 @@ public abstract class AbstractClientPool: IClientPool
         try
         {
             using var cts = new CancellationTokenSource(client.ClientTimeout);
-            await Timeout(client.Open(cts.Token), client.ClientTimeout, cts, "open");
+            await TaskUtil.Timeout(client.Open(cts.Token), client.ClientTimeout, cts, $"time out {client.ClientTimeout} when invoke open");
             return true;
-
-            async Task Timeout(Task task, int millisecondsDelay, CancellationTokenSource cts, string message)
-            {
-                if (await Task.WhenAny(task, Task.Delay(millisecondsDelay, cts.Token)).ConfigureAwait(false) == task)
-                    return;
-
-                cts.Cancel();
-
-                throw new TimeoutException($"time out {millisecondsDelay} when invoke {message}");
-            }
         }
         catch (Exception e)
         {

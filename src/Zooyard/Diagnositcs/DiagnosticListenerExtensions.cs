@@ -3,7 +3,7 @@ using System.Xml.Linq;
 
 namespace Zooyard.Diagnositcs;
 
-public class Constant
+internal class Constant
 {
     public const string DiagnosticListenerName = "ZooyardDiagnosticListener";
 
@@ -17,9 +17,9 @@ public class Constant
     public const string ProviderAfter = ZooyardPrefix + nameof(ProviderAfter);
     public const string ProviderError = ZooyardPrefix + nameof(ProviderError);
 }
-public static class DiagnosticListenerExtensions
+internal static class DiagnosticListenerExtensions
 {
-    public static void WriteConsumerBefore(this DiagnosticSource _this, string system, string clusterName, URL url, IInvocation invocation)
+    internal static void WriteConsumerBefore(this DiagnosticSource _this, string system, string clusterName, URL url, IInvocation invocation)
     {
         if (!_this.IsEnabled(Constant.ConsumerBefore))
         {
@@ -28,7 +28,7 @@ public static class DiagnosticListenerExtensions
         var eventData = new EventDataStore(system, clusterName, url, invocation);
         _this.Write(Constant.ConsumerBefore, eventData);
     }
-    public static void WriteConsumerAfter<T>(this DiagnosticSource _this, string system, string clusterName, URL url, IInvocation invocation, IResult<T> result)
+    internal static void WriteConsumerAfter<T>(this DiagnosticSource _this, string system, string clusterName, URL url, IInvocation invocation, IResult<T> result)
     {
         if (!_this.IsEnabled(Constant.ConsumerAfter))
         {
@@ -37,7 +37,7 @@ public static class DiagnosticListenerExtensions
         var eventData = new EventDataStore(system, clusterName, url, invocation) { Elapsed = result.ElapsedMilliseconds, Result = result };
         _this.Write(Constant.ConsumerAfter, eventData);
     }
-    public static void WriteConsumerError(this DiagnosticSource _this, string system, string clusterName, URL url, IInvocation invocation, Exception exception, long elapsed)
+    internal static void WriteConsumerError(this DiagnosticSource _this, string system, string clusterName, URL url, IInvocation invocation, Exception exception, long elapsed)
     {
         if (!_this.IsEnabled(Constant.ConsumerAfter))
         {

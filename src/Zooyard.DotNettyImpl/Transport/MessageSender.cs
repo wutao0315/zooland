@@ -1,23 +1,15 @@
 ﻿using DotNetty.Buffers;
 using DotNetty.Transport.Channels;
 using System.Net;
-using System;
 using Zooyard.DotNettyImpl.Messages;
-using System.Threading.Channels;
-using Zooyard.DotNettyImpl.Transport.Codec;
 
 namespace Zooyard.DotNettyImpl.Transport;
 
 /// <summary>
 /// 基于DotNetty的消息发送者基类。
 /// </summary>
-public abstract class DotNettyMessageSender
+public abstract class DotNettyMessageSender(ITransportMessageEncoder _transportMessageEncoder)
 {
-    private readonly ITransportMessageEncoder _transportMessageEncoder;
-    public DotNettyMessageSender(ITransportMessageEncoder transportMessageEncoder) 
-    {
-        _transportMessageEncoder = transportMessageEncoder;
-    } 
     protected IByteBuffer GetByteBuffer(TransportMessage message)
     {
         var data = _transportMessageEncoder.Encode(message);
@@ -30,17 +22,9 @@ public abstract class DotNettyMessageSender
 /// <summary>
 /// 基于DotNetty客户端的消息发送者。
 /// </summary>
-public class DotNettyMessageClientSender : DotNettyMessageSender, IMessageSender, IDisposable
+public class DotNettyMessageClientSender(ITransportMessageEncoder transportMessageEncoder,
+        IChannel _channel) : DotNettyMessageSender(transportMessageEncoder), IMessageSender, IDisposable
 {
-    private readonly IChannel _channel;
-
-    public DotNettyMessageClientSender(
-        ITransportMessageEncoder transportMessageEncoder,
-        IChannel channel) 
-        : base(transportMessageEncoder)
-    {
-        _channel = channel;
-    }
     public async Task Open(URL url)
     {
         if (!_channel.Open)
@@ -85,17 +69,10 @@ public class DotNettyMessageClientSender : DotNettyMessageSender, IMessageSender
 /// <summary>
 /// 基于DotNetty服务端的消息发送者。
 /// </summary>
-public class DotNettyServerMessageSender : DotNettyMessageSender, IMessageSender
-{
-    private readonly IChannelHandlerContext _context;
-
-    public DotNettyServerMessageSender(
+public class DotNettyServerMessageSender(
         ITransportMessageEncoder transportMessageEncoder,
-        IChannelHandlerContext context)
-        : base(transportMessageEncoder)
-    {
-        _context = context;
-    }
+        IChannelHandlerContext _context) : DotNettyMessageSender(transportMessageEncoder), IMessageSender
+{
     public async Task Open(URL url)
     {
         if (!_context.Channel.Open)

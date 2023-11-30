@@ -6,18 +6,18 @@ using Zooyard.GrpcNetImpl;
 
 namespace Microsoft.Extensions.Configuration;
 
-public class GrpcNetOption
+public sealed record GrpcNetOption
 {
     public Dictionary<string, string> Credentials { get; set; } = new();
 }
 
 public static class ServiceBuilderExtensions
 {
-    public static void AddZooyardGrpcNet(this IServiceCollection services)
+    public static IRpcBuilder AddGrpcNet(this IRpcBuilder builder)
     {
-        services.AddSingleton<ClientInterceptor, ClientGrpcHeaderInterceptor>();
-        
-        services.AddTransient((serviceProvder) => 
+        builder.Services.AddSingleton<ClientInterceptor, ClientGrpcHeaderInterceptor>();
+
+        builder.Services.AddTransient((serviceProvder) => 
         {
             var option = serviceProvder.GetRequiredService<IOptionsMonitor<GrpcNetOption>>().CurrentValue;
             var loggerFactory = serviceProvder.GetRequiredService<ILoggerFactory>();
@@ -39,13 +39,15 @@ public static class ServiceBuilderExtensions
             var interceptors = serviceProvder.GetServices<ClientInterceptor>();
 
             var pool = new GrpcClientPool(
-                credentials:credentials,
-                interceptors: interceptors,
-                 loggerFactory: loggerFactory
+                _credentials:credentials,
+                _interceptors: interceptors,
+                 _loggerFactory: loggerFactory
             );
 
             return pool;
         });
 
+        return builder;
     }
+
 }

@@ -270,29 +270,6 @@ public class ObjectUtil
             }
             else
             {
-                //if (value is IDictionary dic) 
-                //{
-                //    var counter = 0;
-                //    foreach (var item in dic.Keys)
-                //    {
-                //        var itemKey = $"{key}[{counter++}].{item}";
-                //        var itemType = dic[item].GetType();
-                //        var itemValue = dic[item];
-                //        if (itemValue is byte[] itemBytes)
-                //        {
-                //            dictionaryBytes.Add(itemKey, itemBytes);
-                //        }
-                //        else if (itemType.IsValueTypeOrString())
-                //        {
-                //            dictionary.Add(itemKey, itemValue.ToStringValueType());
-                //        }
-                //        else
-                //        {
-                //            ExecuteInternal(itemValue, itemKey, dictionary, dictionaryBytes);
-                //        }
-                //    }
-                //}
-                //else 
                 if (value is IEnumerable enumerable)
                 {
                     var counter = 0;

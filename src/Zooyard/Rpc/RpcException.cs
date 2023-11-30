@@ -1,6 +1,6 @@
 ﻿namespace Zooyard.Rpc;
 
-public class RpcException : Exception
+public sealed class RpcException : Exception
 {
     public const int UNKNOWN_EXCEPTION = 0;
 

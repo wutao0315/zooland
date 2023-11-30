@@ -1,28 +1,15 @@
 ﻿using Microsoft.Extensions.Logging;
-using System.Diagnostics;
 using System.Reflection;
 using Zooyard.DataAnnotations;
-//using Zooyard.Logging;
 using Zooyard.Rpc;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.HttpImpl;
 
-public class HttpInvoker : AbstractInvoker
+public class HttpInvoker(ILogger logger, IHttpClientFactory _instance, int _clientTimeout, URL _url) : AbstractInvoker(logger)
 {
-    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(HttpInvoker));
     public const string DEFAULT_CONTENTTYPE = "application/json";
     public const string DEFAULT_METHODTYPE = "post";
-    private readonly URL _url;
-    private readonly IHttpClientFactory _instance;
-    private readonly int _clientTimeout;
-
-    public HttpInvoker(ILogger logger, IHttpClientFactory instance, int clientTimeout, URL url):base(logger)
-    {
-        _instance = instance;
-        _clientTimeout = clientTimeout;
-        _url = url;
-    }
     public override object Instance =>_instance;
     public override int ClientTimeout => _clientTimeout;
     protected override async Task<IResult<T>> HandleInvoke<T>(IInvocation invocation)

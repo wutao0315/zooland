@@ -1,27 +1,29 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
+using Zooyard.Management;
 
 namespace Zooyard.Rpc.Cache;
 
-public class LocalCache : ICache
+public class LocalCache(IMemoryCache _memoryCache, IRpcStateLookup _proxyState) : ICache
 {
-    private readonly IOptionsMonitor<ZooyardOption> _zooyard;
+    //private readonly IOptionsMonitor<ZooyardServiceOption> _zooyard;
     //private readonly MemoryCache _store = MemoryCache.Default;
-    private readonly IMemoryCache _memoryCache;
     private CancellationTokenSource _resetCacheToken = new();
 
     public const string NAME = "local";
     public string Name => NAME;
 
-    private int Timeout => _zooyard.CurrentValue.Meta.GetValue("cache.timeout", 60000);
-    
+    //private int Timeout => _zooyard.CurrentValue.Meta.GetValue("cache.timeout", 60000);
 
-    public LocalCache(IMemoryCache memoryCache, IOptionsMonitor<ZooyardOption> zooyard)
-    {
-        _memoryCache = memoryCache;
-        _zooyard = zooyard;
-    }
+    private int Timeout => _proxyState.GetMetadata().GetValue("cache.timeout", 60000);
+
+
+    //public LocalCache(IMemoryCache memoryCache, IOptionsMonitor<ZooyardOption> zooyard)
+    //{
+    //    _memoryCache = memoryCache;
+    //    _zooyard = zooyard;
+    //}
 
     public T? Get<T>(object key)
     {

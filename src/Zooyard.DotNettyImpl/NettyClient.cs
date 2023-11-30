@@ -9,35 +9,16 @@ using Microsoft.Extensions.Logging;
 
 namespace Zooyard.DotNettyImpl;
 
-public class NettyClient : AbstractClient
+public class NettyClient(ILogger<NettyClient> _logger, ITransportClient _channel, int clientTimeout, URL _url)
+    : AbstractClient(clientTimeout, _url)
 {
-    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(NettyClient));
-    //public const string QUIETPERIOD_KEY = "quietPeriod";
-    //public const int DEFAULT_QUIETPERIOD = 100;
-    //public const string TIMEOUT_KEY = "timeout";
-    //public const int DEFAULT_TIMEOUT = 5000;
     public override string System => "zy_netty";
-    public override URL Url { get; }
-    public override int ClientTimeout { get; }
-    
-    private readonly ITransportClient _channel;
-
-    private readonly ILogger _logger;
-
-    public NettyClient(ILogger<NettyClient> logger, ITransportClient channel, int clientTimeout, URL url)
-    {
-        _logger = logger;
-        _channel = channel;
-        this.ClientTimeout = clientTimeout;
-        this.Url = url;
-    }
-
 
     public override async Task<IInvoker> Refer(CancellationToken cancellationToken = default)
     {
         await this.Open(cancellationToken);
 
-        return new NettyInvoker(_logger, _channel, this.ClientTimeout);
+        return new NettyInvoker(_logger, _channel, ClientTimeout);
     }
 
     public override async Task Open(CancellationToken cancellationToken = default)

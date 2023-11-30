@@ -9,18 +9,8 @@ using Zooyard.Rpc.Support;
 
 namespace Zooyard.DotNettyImpl;
 
-public class NettyInvoker : AbstractInvoker
+public class NettyInvoker(ILogger _logger, ITransportClient _channel, int _clientTimeout) : AbstractInvoker(_logger)
 {
-    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(NettyInvoker));
-
-    private readonly ITransportClient _channel;
-    private readonly int _clientTimeout;
-
-    public NettyInvoker(ILogger logger, ITransportClient channel, int clientTimeout):base(logger)
-    {
-        _channel = channel;
-        _clientTimeout = clientTimeout;
-    }
     public override object Instance => _channel;
     public override int ClientTimeout => _clientTimeout;
 

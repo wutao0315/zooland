@@ -47,11 +47,11 @@ internal static class ConfigurationReadingExtensions
         return configuration[name] is string value && !string.IsNullOrEmpty(value) ? Version.Parse(value + (value.Contains('.') ? "" : ".0")) : null;
     }
 
-    internal static IReadOnlyDictionary<string, string>? ReadStringDictionary(this IConfigurationSection section)
+    internal static IReadOnlyDictionary<string, string> ReadStringDictionary(this IConfigurationSection section)
     {
         if (section.GetChildren() is var children && !children.Any())
         {
-            return null;
+            return new Dictionary<string, string>();
         }
 
         return new ReadOnlyDictionary<string, string>(children.ToDictionary(s => s.Key, s => s.Value!, StringComparer.OrdinalIgnoreCase));

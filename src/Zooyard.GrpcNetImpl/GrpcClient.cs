@@ -1,36 +1,18 @@
 ﻿using Grpc.Core;
 using Grpc.Net.Client;
 using Microsoft.Extensions.Logging;
-using System.Threading.Channels;
-//using Zooyard.Logging;
 using Zooyard.Rpc.Support;
+using Zooyard.Utils;
 
 namespace Zooyard.GrpcNetImpl;
 
-public class GrpcClient : AbstractClient
+public class GrpcClient(ILogger<GrpcClient> _logger,
+        GrpcChannel _channel,
+        object _grpcClient,
+        int clientTimeout,
+        URL url) : AbstractClient(clientTimeout, url)
 {
     public override string System => "zy_grpc";
-    public override URL Url { get; }
-    public override int ClientTimeout { get; }
-    private GrpcChannel _channel;
-    private readonly ILogger _logger;
-    private readonly object _grpcClient;
-    private readonly GrpcChannelOptions _grpcChannelOptions;
-    public GrpcClient(ILogger<GrpcClient> logger,
-        GrpcChannel channel, 
-        object grpcClient, 
-        URL url, 
-        GrpcChannelOptions grpcChannelOptions,
-        int clientTimeout)
-    {
-        _logger = logger;
-        this.Url = url;
-        this.ClientTimeout = clientTimeout;
-        _channel = channel;
-        _grpcChannelOptions = grpcChannelOptions;
-        _grpcClient = grpcClient;
-        
-    }
    
     public override async Task<IInvoker> Refer(CancellationToken cancellationToken = default)
     {
@@ -47,18 +29,9 @@ public class GrpcClient : AbstractClient
 
     public override async Task Open(CancellationToken cancellationToken = default)
     {
-        using var cts = new CancellationTokenSource(ClientTimeout);
-        await Timeout(_channel.ConnectAsync(cts.Token), ClientTimeout, cts);
-
-        async Task Timeout(Task task, int millisecondsDelay, CancellationTokenSource cts)
-        {
-            if (await Task.WhenAny(task, Task.Delay(millisecondsDelay, cts.Token)).ConfigureAwait(false) == task)
-                return;
-
-            cts.Cancel();
-
-            throw new TimeoutException($"{Url} connect timeout");
-        }
+        //using var cts =  new CancellationTokenSource(ClientTimeout);
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        await TaskUtil.Timeout(_channel.ConnectAsync(cts.Token), ClientTimeout, cts, $"{Url} connect timeout");
     }
 
     public override async Task Close(CancellationToken cancellationToken = default)

@@ -2,13 +2,14 @@
 using Grpc.Core.Interceptors;
 using Grpc.Net.Client;
 using Microsoft.Extensions.Logging;
-//using Zooyard.Logging;
 using Zooyard.Rpc;
 using Zooyard.Rpc.Support;
 
 namespace Zooyard.GrpcNetImpl;
 
-public class GrpcClientPool : AbstractClientPool
+public class GrpcClientPool(IDictionary<string, ChannelCredentials> _credentials,
+        IEnumerable<ClientInterceptor> _interceptors,
+        ILoggerFactory _loggerFactory) : AbstractClientPool(_loggerFactory.CreateLogger<GrpcClientPool>())
 {
     public const string TIMEOUT_KEY = "timeout";
     public const int DEFAULT_TIMEOUT = 10000;
@@ -17,20 +18,6 @@ public class GrpcClientPool : AbstractClientPool
     public const string CREDENTIALS_KEY = "credentials";
     public const string DEFAULT_CREDENTIALS = "Insecure";
 
-
-    private readonly IDictionary<string, ChannelCredentials> _credentials;
-    private readonly IEnumerable<ClientInterceptor> _interceptors;
-    private readonly ILoggerFactory _loggerFactory;
-
-
-    public GrpcClientPool(IDictionary<string, ChannelCredentials> credentials,
-        IEnumerable<ClientInterceptor> interceptors,
-        ILoggerFactory loggerFactory):base(loggerFactory.CreateLogger<GrpcClientPool>())
-    {
-        _credentials = credentials;
-        _interceptors = interceptors;
-        _loggerFactory = loggerFactory;
-    }
 
     protected override async Task<IClient> CreateClient(URL url)
     {
@@ -81,6 +68,6 @@ public class GrpcClientPool : AbstractClientPool
             throw new Exception($"grpc client is null");
         }
 
-        return new GrpcClient(_loggerFactory.CreateLogger<GrpcClient>(), channel, client, url, grpcChannelOption, timeout);
+        return new GrpcClient(_loggerFactory.CreateLogger<GrpcClient>(), channel, client, timeout, url);
     }
 }

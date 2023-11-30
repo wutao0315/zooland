@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
+using Zooyard.Management;
 using Zooyard.Rpc.Cache.Support;
 
 namespace Zooyard.Rpc.Cache;
@@ -9,9 +10,13 @@ public class LruCache : ICache
     public string Name => NAME;
     private readonly LruCacheData<object, object> _store;
 
-    public LruCache(IOptionsMonitor<ZooyardOption> zooyard)
+    //public LruCache(IOptionsMonitor<ZooyardOption> zooyard)
+    //{
+    //    _store = new LruCacheData<object,object>(zooyard);
+    //}
+    public LruCache(IRpcStateLookup stateLookup)
     {
-        _store = new LruCacheData<object,object>(zooyard);
+        _store = new LruCacheData<object, object>(stateLookup);
     }
 
     public T? Get<T>(object key)

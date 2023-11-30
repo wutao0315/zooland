@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using System.Diagnostics;
+using Zooyard.Management;
 
 namespace Zooyard.Rpc.Cache.Support;
 
@@ -12,19 +13,20 @@ public class LruCacheData<TKey, TValue>
     private static readonly ReaderWriterLockSlim rwl = new();
     private readonly Timer _cleanupTimer;
 
-    private readonly IOptionsMonitor<ZooyardOption> _zooyard;
-    private int _maxSize => _zooyard.CurrentValue.Meta.GetValue("cache.size", 1000);
-    private TimeSpan _timeOut=> TimeSpan.FromMilliseconds(_zooyard.CurrentValue.Meta.GetValue("cache.timeout", 60000));
+    //private readonly IOptionsMonitor<ZooyardOption> _zooyard;
+    //private int _maxSize => _zooyard.CurrentValue.Meta.GetValue("cache.size", 1000);
+    //private TimeSpan _timeOut=> TimeSpan.FromMilliseconds(_zooyard.CurrentValue.Meta.GetValue("cache.timeout", 60000));
+    private readonly IRpcStateLookup _stateLookup;
+    private int _maxSize => _stateLookup.GetMetadata().GetValue("cache.size", 1000);
+    private TimeSpan _timeOut => TimeSpan.FromMilliseconds(_stateLookup.GetMetadata().GetValue("cache.timeout", 60000));
 
-    
-
- 
-    public LruCacheData(IOptionsMonitor<ZooyardOption> zooyard)
+    //public LruCacheData(IOptionsMonitor<ZooyardOption> zooyard)
+    public LruCacheData(IRpcStateLookup stateLookup)
     {
         //int itemExpiryTimeout, int maxCacheSize = 100, int memoryRefreshInterval = 1000
-        _zooyard = zooyard;
+        _stateLookup = stateLookup;
         
-        var memoryRefreshInterval = zooyard.CurrentValue.Meta.GetValue("cache.interval", 1000);
+        var memoryRefreshInterval = _stateLookup.GetMetadata().GetValue("cache.interval", 1000);
 
         var autoEvent = new AutoResetEvent(false);
         TimerCallback tcb = this.RemoveExpiredElements;

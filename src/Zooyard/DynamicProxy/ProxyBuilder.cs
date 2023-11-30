@@ -205,7 +205,7 @@ internal class ProxyBuilder
         packedArr.EndSet(typeof(ProxyExecutor));
 
         // packed[PackedArgs.DeclaringTypePosition] = typeof(iface);
-        var typeGetTypeFromHandle = typeof(Type).GetRuntimeMethod("GetTypeFromHandle", new[] { typeof(RuntimeTypeHandle) });
+        var typeGetTypeFromHandle = typeof(Type).GetRuntimeMethod("GetTypeFromHandle", [typeof(RuntimeTypeHandle)]);
         _assembly.GetTokenForMethod(mi, out var declaringType, out var methodToken);
         packedArr.BeginSet(PackedArgs.DeclaringTypePosition);
         il.Emit(OpCodes.Ldtoken, declaringType);

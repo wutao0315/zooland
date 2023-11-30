@@ -13,7 +13,7 @@ using Zooyard.Utils;
 
 namespace Zooyard.ThriftImpl;
 
-public class ThriftClientPool : AbstractClientPool
+public class ThriftClientPool(ILogger<ThriftClientPool> logger) : AbstractClientPool(logger)
 {
     public const string TIMEOUT_KEY = "timeout";
     public const string MAXFRAMESIZE_KEY = "MaxFrameSize";
@@ -24,13 +24,6 @@ public class ThriftClientPool : AbstractClientPool
     public const string BUFFERING_KEY = "bf";
 
     public const int DEFAULT_TIMEOUT = 10000;
-
-    public ThriftClientPool(ILogger<ThriftClientPool> logger):base(logger)
-    {
-    }
-
-    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ThriftClientPool));
-
 
     protected override async Task<IClient> CreateClient(URL url)
     {

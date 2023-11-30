@@ -1,13 +1,7 @@
 ﻿namespace Zooyard.DynamicProxy;
 
-public class ProxyHandler
+public sealed class ProxyHandler(AsyncProxyGenerator _generator)
 {
-    private readonly AsyncProxyGenerator _generator;
-    public ProxyHandler(AsyncProxyGenerator generator)
-    {
-        _generator = generator;
-    }
-
     public object? InvokeHandle(object[] args)
     {
         return _generator.Invoke(args);

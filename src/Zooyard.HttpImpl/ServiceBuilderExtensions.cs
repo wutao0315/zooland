@@ -5,9 +5,10 @@ namespace Microsoft.Extensions.Configuration;
 
 public static class ServiceBuilderExtensions
 {
-    public static void AddZooyardHttp(this IServiceCollection services)
+    public static IRpcBuilder AddHttp(this IRpcBuilder builder)
     {
-        services.AddHttpClient();
-        services.AddTransient<HttpClientPool>();
+        builder.Services.AddHttpClient();
+        builder.Services.AddTransient<HttpClientPool>();
+        return builder;
     }
 }

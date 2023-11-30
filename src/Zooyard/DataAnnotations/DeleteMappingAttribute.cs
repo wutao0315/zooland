@@ -1,12 +1,7 @@
 ﻿namespace Zooyard.DataAnnotations;
 
 [AttributeUsage(AttributeTargets.Method)]
-public class DeleteMappingAttribute : RequestMappingAttribute
+public class DeleteMappingAttribute(string value) 
+    : RequestMappingAttribute(value, RequestMethod.DELETE)
 {
-    /// <summary>
-    /// 构造函数
-    /// </summary>
-    public DeleteMappingAttribute(string value) : base(value, RequestMethod.DELETE)
-    {
-    }
 }

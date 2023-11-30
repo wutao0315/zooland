@@ -173,7 +173,7 @@ public class AdaptiveLoadBalance : AbstractLoadBalance
 }
 
 
-public record AdaptiveMetrics
+public sealed record AdaptiveMetrics
 {
     private readonly ConcurrentDictionary<string, AdaptiveMetrics> _metricsStatistics = new();
     private long currentProviderTime = 0;

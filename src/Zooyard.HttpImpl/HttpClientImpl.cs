@@ -3,21 +3,10 @@ using Zooyard.Rpc.Support;
 
 namespace Zooyard.HttpImpl;
 
-public class HttpClientImpl : AbstractClient
+public class HttpClientImpl(ILogger<HttpClientImpl> _logger, IHttpClientFactory _transport, int clientTimeout, URL url) 
+    : AbstractClient(clientTimeout, url)
 {
     public override string System => "zy_http";
-    public override URL Url { get; }
-    public override int ClientTimeout { get; }
-    private readonly ILogger _logger;
-    private readonly IHttpClientFactory _transport;
-    
-    public HttpClientImpl(ILogger<HttpClientImpl> logger, IHttpClientFactory transport,URL url,int clientTimeout)
-    {
-        _logger = logger;
-        this.Url = url;
-        this.ClientTimeout = clientTimeout;
-        _transport = transport;
-    }
 
     public override async Task<IInvoker> Refer(CancellationToken cancellationToken = default)
     {

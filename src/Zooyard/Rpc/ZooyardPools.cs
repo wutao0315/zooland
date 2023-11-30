@@ -5,7 +5,7 @@ using System.Diagnostics;
 using System.Reflection;
 using Zooyard.DataAnnotations;
 using Zooyard.Diagnositcs;
-//using Zooyard.Logging;
+using Zooyard.Management;
 using Zooyard.Rpc.Cache;
 using Zooyard.Rpc.Cluster;
 using Zooyard.Rpc.LoadBalance;
@@ -21,7 +21,6 @@ namespace Zooyard.Rpc;
 /// </summary>
 public class ZooyardPools : IZooyardPools
 {
-    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ZooyardPools));
     private readonly ILogger _logger;
     
     public const string CACHE_KEY = "cache";
@@ -38,10 +37,11 @@ public class ZooyardPools : IZooyardPools
     public const int DEFAULT_RECOVERY_TIME = 5;
     public const string SERVIC_ENAME_KEY = "sn";
 
-    /// <summary>
-    /// 注册中心的配置
-    /// </summary>
-    private readonly IOptionsMonitor<ZooyardOption> _zooyard;
+    ///// <summary>
+    ///// 注册中心的配置
+    ///// </summary>
+    //private readonly IOptionsMonitor<ZooyardOption> _zooyard;
+    private readonly IRpcStateLookup _proxyStateLookup;
     /// <summary>
     /// the service pools
     /// key ApplicationName,
@@ -73,15 +73,17 @@ public class ZooyardPools : IZooyardPools
     private readonly ConcurrentDictionary<string, (URL, IList<URL>)> _cacheUrl = new();
     private readonly ConcurrentDictionary<string, IList<URL>> _cacheRouteUrl = new();
     private readonly ConcurrentDictionary<string, List<BadUrl>> _badUrls = new();
-    
+
     public ZooyardPools(
         ILoggerFactory loggerFactory,
         IDictionary<string, IClientPool> pools,
         IEnumerable<ILoadBalance> loadbalances,
         IEnumerable<ICluster> clusters,
         IEnumerable<ICache> caches,
-        IEnumerable<IStateRouterFactory> routerFactories,
-        IOptionsMonitor<ZooyardOption> zooyard)
+        IEnumerable<IStateRouterFactory> routerFactories
+        , IRpcStateLookup proxyStateLookup
+        //, IOptionsMonitor<ZooyardOption> zooyard
+        )
     {
         _logger = loggerFactory.CreateLogger<ZooyardPools>();
         this.Pools = new(pools);
@@ -106,14 +108,16 @@ public class ZooyardPools : IZooyardPools
         }
         //this.Urls = new ConcurrentDictionary<string, List<URL>>();
         //this.BadUrls = new ConcurrentDictionary<string, List<BadUrl>>();
-        _zooyard = zooyard;
-        _zooyard.OnChange(OnChanged);
+        //_zooyard = zooyard;
+        //_zooyard.OnChange(OnChanged);
+        _proxyStateLookup = proxyStateLookup;
+        _proxyStateLookup.OnChange(OnChanged);
         Init();
         // 初始化调用
         void Init()
         {
             // 定时或者在接收到推送的消息后  主动-维护Pools集合
-            var internalCycle = _zooyard.CurrentValue.Meta.GetValue(CYCLE_PERIOD_KEY, DEFAULT_CYCLE_PERIOD);
+            var internalCycle = _proxyStateLookup.GetMetadata().GetValue(CYCLE_PERIOD_KEY, DEFAULT_CYCLE_PERIOD);
 
             cycleTimer = new System.Timers.Timer(internalCycle);
             cycleTimer.Elapsed += new System.Timers.ElapsedEventHandler((object? sender, System.Timers.ElapsedEventArgs events) =>
@@ -132,7 +136,7 @@ public class ZooyardPools : IZooyardPools
             cycleTimer.Enabled = true;
 
             // 定时或者在接收到推送的消息后  主动-维护Pools集合
-            var internalRecovery = _zooyard.CurrentValue.Meta.GetValue(RECOVERY_PERIOD_KEY, DEFAULT_RECOVERY_PERIOD);
+            var internalRecovery = _proxyStateLookup.GetMetadata().GetValue(RECOVERY_PERIOD_KEY, DEFAULT_RECOVERY_PERIOD);
 
             recoveryTimer = new System.Timers.Timer(internalRecovery);
             recoveryTimer.Elapsed += new System.Timers.ElapsedEventHandler((object? sender, System.Timers.ElapsedEventArgs events) =>
@@ -153,7 +157,7 @@ public class ZooyardPools : IZooyardPools
             // 定时循环处理过期链接
             void CycleProcess()
             {
-                var overtime = _zooyard.CurrentValue.Meta.GetValue(OVER_TIME_KEY, DEFAULT_OVER_TIME);
+                var overtime = _proxyStateLookup.GetMetadata().GetValue(OVER_TIME_KEY, DEFAULT_OVER_TIME);
                 var overtimeDate = DateTime.Now.AddMinutes(-overtime);
                 foreach (var pool in Pools)
                 {
@@ -164,7 +168,7 @@ public class ZooyardPools : IZooyardPools
             // 定时循环恢复隔离区到正常区
             void RecoveryProcess()
             {
-                var recoverytime = _zooyard.CurrentValue.Meta.GetValue(RECOVERY_TIME_KEY, DEFAULT_RECOVERY_TIME);
+                var recoverytime = _proxyStateLookup.GetMetadata().GetValue(RECOVERY_TIME_KEY, DEFAULT_RECOVERY_TIME);
                 var recoverytimeDate = DateTime.Now.AddMinutes(-recoverytime);
 
                 try
@@ -195,12 +199,13 @@ public class ZooyardPools : IZooyardPools
             }
         }
         // 监听配置或者服务注册变化，清空缓存
-        void OnChanged(ZooyardOption value, string? name)
+        void OnChanged(IRpcStateLookup state)
         {
             try
             {
                 _cacheUrl.Clear();
                 _cacheRouteUrl.Clear();
+                _badUrls.Clear();
                 foreach (var item in _routeFoctories)
                 {
                     item.Value.ClearCache();
@@ -211,6 +216,26 @@ public class ZooyardPools : IZooyardPools
                 _logger.LogError(ex, ex.Message);
             }
         }
+
+        //// 监听配置或者服务注册变化，清空缓存
+        //void OnChanged(ZooyardOption value, string? name)
+        //{
+        //    try
+        //    {
+        //        _cacheUrl.Clear();
+        //        _cacheRouteUrl.Clear();
+        //        _badUrls.Clear();
+        //        foreach (var item in _routeFoctories)
+        //        {
+        //            item.Value.ClearCache();
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, ex.Message);
+        //    }
+        //}
+
     }
 
     /// <summary>
@@ -266,23 +291,26 @@ public class ZooyardPools : IZooyardPools
                 return val;
             }
 
-            var url = string.IsNullOrWhiteSpace(_zooyard.CurrentValue.Address) ? URL.ValueOf("zooyard://localhost") : URL.ValueOf(_zooyard.CurrentValue.Address);
+            var url =  URL.ValueOf("zooyard://localhost");
 
-            url = GetMetaUrl(url, _zooyard.CurrentValue.Meta);
+            url = GetMetaUrl(url, _proxyStateLookup.GetMetadata());
 
             url = GetUrl(url, invocation.Url);
 
             var result = new List<URL>();
-            if (_zooyard.CurrentValue.Services.TryGetValue(invocation.ServiceName, out var service))
+            if (_proxyStateLookup.GetServices().TryGetValue(invocation.ServiceName, out var service))
             {
-                url = GetMetaUrl(url, service.Meta);
+                url = GetMetaUrl(url, service.Model.Config.Metadata);
 
-                foreach (var item in service.Instances)
+                if (service.Instances!=null && service.Instances.Count>0) 
                 {
-                    var itemUrl = url.SetHost(item.Host);
-                    itemUrl = itemUrl.SetPort(item.Port);
-                    itemUrl = GetMetaUrl(itemUrl, item.Meta);
-                    result.Add(itemUrl);
+                    foreach (var item in service.Instances)
+                    {
+                        var itemUrl = url.SetHost(item.Value.Model.Config.Host);
+                        itemUrl = itemUrl.SetPort(item.Value.Model.Config.Port);
+                        itemUrl = GetMetaUrl(itemUrl, item.Value.Model.Config.Metadata);
+                        result.Add(itemUrl);
+                    }
                 }
             }
 
@@ -294,8 +322,12 @@ public class ZooyardPools : IZooyardPools
             _cacheUrl[cacheKey] = (url, result);
             return _cacheUrl[cacheKey];
 
-            URL GetMetaUrl(URL url, Dictionary<string, string> meta)
+            URL GetMetaUrl(URL url, IReadOnlyDictionary<string, string>? meta)
             {
+                if (meta == null) 
+                {
+                    return url;
+                }
                 foreach (var item in meta)
                 {
                     switch (item.Key)

@@ -4,7 +4,7 @@ namespace Zooyard.DynamicProxy;
 
 internal sealed class MethodInfoEqualityComparer : EqualityComparer<MethodInfo>
 {
-    public static readonly MethodInfoEqualityComparer Instance = new MethodInfoEqualityComparer();
+    public static readonly MethodInfoEqualityComparer Instance = new ();
 
     private MethodInfoEqualityComparer() { }
 

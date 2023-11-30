@@ -9,20 +9,11 @@ using Zooyard.Utils;
 
 namespace Zooyard;
 
-public class ServiceKey
+public class ServiceKey(string interfaceName, string version, string group)
 {
-    public ServiceKey(string interfaceName, string version, string group)
-    {
-        InterfaceName = interfaceName;
-        Group = group;
-        Version = version;
-    }
-
-    public string InterfaceName { get; init; }
-
-    public string Group { get; init; }
-
-    public string Version { get; init; }
+    public string InterfaceName { get; init; } = interfaceName;
+    public string Group { get; init; } = group;
+    public string Version { get; init; } = version;
 
     public override bool Equals(object? o)
     {

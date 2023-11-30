@@ -1,6 +1,5 @@
 ﻿using Grpc.Core;
 using Microsoft.Extensions.Logging;
-using System.Diagnostics;
 using System.Reflection;
 using Zooyard.DataAnnotations;
 using Zooyard.Rpc;
@@ -8,17 +7,8 @@ using Zooyard.Rpc.Support;
 
 namespace Zooyard.GrpcNetImpl;
 
-public class GrpcInvoker : AbstractInvoker
+public class GrpcInvoker(ILogger logger, object _instance, int _clientTimeout) : AbstractInvoker(logger)
 {
-    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(GrpcInvoker));
-    private readonly object _instance;
-    private readonly int _clientTimeout;
-
-    public GrpcInvoker(ILogger logger, object instance, int clientTimeout):base(logger)
-    {
-        _instance = instance;
-        _clientTimeout = clientTimeout;
-    }
     public override object Instance => _instance;
     public override int ClientTimeout => _clientTimeout;
     protected override async Task<IResult<T>> HandleInvoke<T>(IInvocation invocation)

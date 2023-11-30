@@ -3,16 +3,10 @@ using System.Reflection.Emit;
 
 namespace Zooyard.DynamicProxy;
 
-internal sealed class PropertyAccessorInfo
+internal sealed class PropertyAccessorInfo(MethodInfo interfaceGetMethod, MethodInfo interfaceSetMethod)
 {
-    public MethodInfo InterfaceGetMethod { get; }
-    public MethodInfo InterfaceSetMethod { get; }
+    public MethodInfo InterfaceGetMethod { get; } = interfaceGetMethod;
+    public MethodInfo InterfaceSetMethod { get; } = interfaceSetMethod;
     public MethodBuilder? GetMethodBuilder { get; set; }
     public MethodBuilder? SetMethodBuilder { get; set; }
-
-    public PropertyAccessorInfo(MethodInfo interfaceGetMethod, MethodInfo interfaceSetMethod)
-    {
-        InterfaceGetMethod = interfaceGetMethod;
-        InterfaceSetMethod = interfaceSetMethod;
-    }
 }

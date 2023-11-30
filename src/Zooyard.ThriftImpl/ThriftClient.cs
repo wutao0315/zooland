@@ -4,23 +4,9 @@ using Zooyard.Rpc.Support;
 
 namespace Zooyard.ThriftImpl;
 
-public class ThriftClient : AbstractClient
+public class ThriftClient(ILogger _logger, TBaseClient _thriftclient, int clientTimeout, URL url) : AbstractClient(clientTimeout, url)
 {
-    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ThriftClient));
     public override string System => "zy_thrift";
-    public override URL Url { get; }
-    public override int ClientTimeout { get; }
-    private readonly ILogger _logger;
-    private readonly TBaseClient _thriftclient;
-
-    public ThriftClient(ILogger logger, TBaseClient thriftclient, int clientTimeout, URL url)
-    {
-        _logger = logger;
-        _thriftclient = thriftclient;
-        this.ClientTimeout = clientTimeout;
-        this.Url = url;
-    }
-
 
     public override async Task<IInvoker> Refer(CancellationToken cancellationToken = default)
     {

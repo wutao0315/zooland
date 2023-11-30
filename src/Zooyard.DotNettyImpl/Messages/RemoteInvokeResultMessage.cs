@@ -3,7 +3,7 @@
 /// <summary>
 /// 远程调用结果消息。
 /// </summary>
-public record RemoteInvokeResultMessage
+public sealed record RemoteInvokeResultMessage
 {
     /// <summary>
     /// 异常消息。

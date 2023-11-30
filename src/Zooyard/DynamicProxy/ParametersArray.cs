@@ -3,16 +3,8 @@ using System.Reflection.Emit;
 
 namespace Zooyard.DynamicProxy;
 
-internal class ParametersArray
+internal class ParametersArray(ILGenerator _il, Type[] _paramTypes)
 {
-    private readonly ILGenerator _il;
-    private readonly Type[] _paramTypes;
-    internal ParametersArray(ILGenerator il, Type[] paramTypes)
-    {
-        _il = il;
-        _paramTypes = paramTypes;
-    }
-
     internal void Get(int i)
     {
         _il.Emit(OpCodes.Ldarg, i + 1);

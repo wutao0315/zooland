@@ -9,12 +9,10 @@ namespace Zooyard.DynamicProxy;
 
 public class AsyncProxyGenerator : IDisposable
 {
-    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(AsyncProxyGenerator));
     private readonly ILogger _logger;
     private readonly ConcurrentDictionary<Type, Dictionary<Type, Type>> _proxyTypeCaches;
 
     private readonly ProxyAssembly _proxyAssembly;
-
 
     private readonly IZooyardPools _zooyardPools;
     private readonly string _serviceName;

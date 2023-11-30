@@ -11,7 +11,6 @@ public sealed class JsonTransportMessageDecoder : ITransportMessageDecoder
 
     public TransportMessage Decode(byte[] data)
     {
-
         //var parser = new MessageParser<TransportMessage>(() => new TransportMessage());
         //return parser.ParseFrom(ms);
 

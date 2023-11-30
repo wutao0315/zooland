@@ -4,9 +4,8 @@ namespace Zooyard;
 
 public record ZooyardOption
 {
-    public string Address { get; set; } = String.Empty;
-    public Dictionary<string, string> Meta { get; set; } = new();
-    public List<string> Mergers { get; set; } = new();
+    public IReadOnlyDictionary<string, string> Meta { get; set; } = new Dictionary<string, string>();
+    //public List<string> Mergers { get; set; } = new();
     public Dictionary<string, ZooyardServiceOption> Services { get; set; } = new();
 }
 

@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Linq;
-//using Zooyard.Logging;
+using Zooyard.Management;
 using Zooyard.Rpc.Route.State;
 using Zooyard.Rpc.Route.Tag.Model;
 using Zooyard.Utils;
@@ -12,35 +12,43 @@ public class TagStateRouter : AbstractStateRouter
 {
     public const string NAME = "TAG_ROUTER";
     private const string TAG_KEY = "tag";
-    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(TagStateRouter));
     private readonly ILogger _logger;
     //private static readonly string RULE_SUFFIX = ".tag-router";
 
     private TagRouterRule? tagRouterRule;
     private string? application;
-    private readonly IOptionsMonitor<ZooyardOption> _zooyard;
+    //private readonly IOptionsMonitor<ZooyardOption> _zooyard;
 
-    public TagStateRouter(ILoggerFactory loggerFactory, IOptionsMonitor<ZooyardOption> zooyard, URL address) : base(address)
+    //public TagStateRouter(ILoggerFactory loggerFactory, IOptionsMonitor<ZooyardOption> zooyard, URL address) : base(address)
+    //{
+    //    _logger = loggerFactory.CreateLogger<TagStateRouter>();
+    //    _zooyard = zooyard;
+    //    _zooyard.OnChange(OnChanged);
+    //}
+
+    private readonly IRpcStateLookup _stateLookup;
+
+    public TagStateRouter(ILoggerFactory loggerFactory, IRpcStateLookup stateLookup, URL address) : base(address)
     {
         _logger = loggerFactory.CreateLogger<TagStateRouter>();
-        _zooyard = zooyard;
-        _zooyard.OnChange(OnChanged);
+        _stateLookup = stateLookup;
+        _stateLookup.OnChange(OnChanged);
     }
 
     // 监听配置或者服务注册变化，清空缓存
-    void OnChanged(ZooyardOption value, string? name)
+    void OnChanged(IRpcStateLookup value)
     {
         if (string.IsNullOrWhiteSpace(application)) 
         {
             return;
         }
 
-        if (!value.Services.TryGetValue(application, out var serviceOption)) 
+        if (!value.GetServices().TryGetValue(application, out var serviceOption)) 
         {
             return;
         }
 
-        serviceOption.Meta.TryGetValue("route.rule", out var ruleContent);
+        serviceOption.Model.Config.Metadata.TryGetValue("route.rule", out var ruleContent);
 
         if (_logger.IsEnabled(LogLevel.Debug))
         {

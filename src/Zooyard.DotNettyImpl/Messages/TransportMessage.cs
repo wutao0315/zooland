@@ -3,7 +3,7 @@
 /// <summary>
 /// 传输消息模型。
 /// </summary>
-public record TransportMessage
+public sealed record TransportMessage
 {
     public TransportMessage() { }
     public TransportMessage(object content)

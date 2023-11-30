@@ -5,8 +5,9 @@ namespace Microsoft.Extensions.Configuration;
 
 public static class ServiceBuilderExtensions
 {
-    public static void AddZooyardThrift(this IServiceCollection services)
+    public static IRpcBuilder AddThrift(this IRpcBuilder builder)
     {
-        services.AddTransient<ThriftClientPool>();
+        builder.Services.AddTransient<ThriftClientPool>();
+        return builder;
     }
 }

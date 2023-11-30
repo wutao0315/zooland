@@ -1,25 +1,22 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System;
 using System.Diagnostics;
 using System.Reflection;
 using Zooyard.Diagnositcs;
-//using Zooyard.Logging;
 using Zooyard.Rpc.Merger;
 
 namespace Zooyard.Rpc.Cluster;
 
 public class MergeableCluster : AbstractCluster
 {
-    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(MergeableCluster));
     public override string Name => NAME;
     public const string NAME = "mergeable";
     public const string MERGER_KEY = "merger";
 
     private readonly IDictionary<Type, IMerger> _defaultMergers;
-    private readonly IDictionary<string, IMerger> _mySelfMergers;
+    //private readonly IDictionary<string, IMerger> _mySelfMergers;
     public MergeableCluster(ILogger<MergeableCluster> logger,
-        IOptionsMonitor<ZooyardOption> zooyard,
+        //IOptionsMonitor<ZooyardOption> zooyard,
         IEnumerable<IMerger> defaultMergers):base(logger)
     {
         _defaultMergers = new Dictionary<Type, IMerger>();
@@ -28,22 +25,22 @@ public class MergeableCluster : AbstractCluster
             _defaultMergers.Add(merge.Type, merge);
         }
 
-        _mySelfMergers = new Dictionary<string, IMerger>();
-        foreach (var item in zooyard.CurrentValue.Mergers)
-        {
-            var merger = _defaultMergers.Values.FirstOrDefault(w=>w.Name == item);
-            if (merger == null) 
-            {
-                continue;
-            }
-            _mySelfMergers.Add(item, merger);
-        }
+        //_mySelfMergers = new Dictionary<string, IMerger>();
+        //foreach (var item in zooyard.CurrentValue.Mergers)
+        //{
+        //    var merger = _defaultMergers.Values.FirstOrDefault(w=>w.Name == item);
+        //    if (merger == null) 
+        //    {
+        //        continue;
+        //    }
+        //    _mySelfMergers.Add(item, merger);
+        //}
        
     }
 
     private string GetGroupDescFromServiceKey(string key)
     {
-        int index = key.IndexOf("/");
+        int index = key.IndexOf('/');
         if (index > 0)
         {
             return $"group [ {key.Substring(0, index)} ]";
@@ -197,7 +194,7 @@ public class MergeableCluster : AbstractCluster
                     null, false);
             }
 
-            if (merger.StartsWith("."))
+            if (merger.StartsWith('.'))
             {
                 merger = merger.Substring(1);
                 MethodInfo? method;
@@ -255,16 +252,16 @@ public class MergeableCluster : AbstractCluster
             }
             else
             {
-                IMerger? resultMerger;
+                IMerger? resultMerger = null;
                 if (bool.TrueString.Equals(merger, StringComparison.OrdinalIgnoreCase) 
                     || "default".Equals(merger, StringComparison.OrdinalIgnoreCase))
                 {
                     resultMerger = MergerFactory.GetMerger(returnType!, _defaultMergers);
                 }
-                else
-                {
-                    resultMerger = _mySelfMergers[merger];
-                }
+                //else
+                //{
+                //    resultMerger = _mySelfMergers[merger];
+                //}
 
                 if (resultMerger != null)
                 {

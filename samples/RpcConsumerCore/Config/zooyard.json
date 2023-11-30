@@ -24,17 +24,17 @@
   //  }
   //},
   "zooyard": {
-    "Address": "zooyard://localhost",
-    //"Meta": {
-    //  "Key": "val"
-    //},
+    //"Address": "zooyard://localhost",
+    "Metadata": {
+      "Key": "val"
+    },
     "Services": {
       "GrpcHelloService": {
-        "Meta": {
+        "Metadata": {
           "Ephemeral": "True"
         },
-        "Instances": [
-          {
+        "Instances": {
+          "localhost#10008": {
             "Host": "localhost",
             "Port": "10008",
             "Meta": {
@@ -42,10 +42,11 @@
               "Enabled": "true"
             }
           }
-        ]
+        }
       }
-    },
-    "Mergers": [ "array" ]
+    }
+    //,
+    //"Mergers": [ "array" ]
     //"Clients": {
     //  "thrift_helloservice": {
     //    "Version": "1.0",

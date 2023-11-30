@@ -3,7 +3,7 @@
 /// <summary>
 /// 远程调用消息。
 /// </summary>
-public record RemoteInvokeMessage
+public sealed record RemoteInvokeMessage
 {
     public string Method { get; set; } = string.Empty;
     public object[] Arguments { get; set; } = Array.Empty<object>();

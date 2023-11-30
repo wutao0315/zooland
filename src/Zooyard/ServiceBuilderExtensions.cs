@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Reflection;
 using Zooyard.DataAnnotations;
+using Zooyard.Management;
 using Zooyard.Rpc;
 using Zooyard.Rpc.Cache;
 using Zooyard.Rpc.Cluster;
@@ -33,15 +34,16 @@ public static class ServiceBuilderExtensions
         services.AddSingleton<ILoadBalance, AdaptiveLoadBalance>();
 
 
-        services.AddSingleton<ICluster, AvailableCluster>();
+
         services.AddSingleton<ICluster, BroadcastCluster>();
         services.AddSingleton<ICluster, FailbackCluster>();
         services.AddSingleton<ICluster, FailfastCluster>();
         services.AddSingleton<ICluster, FailoverCluster>();
         services.AddSingleton<ICluster, FailsafeCluster>();
         services.AddSingleton<ICluster, ForkingCluster>();
-        services.AddSingleton<ICluster, MergeableCluster>();
 
+        //services.AddSingleton<ICluster, MergeableCluster>();
+        //services.AddSingleton<ICluster, AvailableCluster>();
 
         services.AddSingleton<IMerger, ArrayMerger>();
         services.AddSingleton<IMerger, BooleanArrayMerger>();
@@ -78,7 +80,8 @@ public static class ServiceBuilderExtensions
         services.AddSingleton<IZooyardPools>((serviceProvder) =>
         {
             var loggerfactory = serviceProvder.GetRequiredService<ILoggerFactory>();
-            var option = serviceProvder.GetRequiredService<IOptionsMonitor<ZooyardOption>>();
+            //var option = serviceProvder.GetRequiredService<IOptionsMonitor<ZooyardOption>>();
+            var aa = serviceProvder.GetRequiredService<IRpcStateLookup>();
 
             var clientPools = new Dictionary<string, IClientPool>();
             foreach (var serviceType in types)
@@ -101,8 +104,7 @@ public static class ServiceBuilderExtensions
             var clusters = serviceProvder.GetServices<ICluster>();
             var caches = serviceProvder.GetServices<ICache>();
             var routeFactories = serviceProvder.GetServices<IStateRouterFactory>();
-
-            var zooyardPools = new ZooyardPools(loggerfactory, clientPools, loadBalances, clusters, caches, routeFactories, option);
+            var zooyardPools = new ZooyardPools(loggerfactory, clientPools, loadBalances, clusters, caches, routeFactories, aa);
             return zooyardPools;
         });
 
