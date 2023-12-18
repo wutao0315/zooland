@@ -22,16 +22,14 @@ public class GrpcClient(ILogger<GrpcClient> _logger,
         //}
 
         await Open(cancellationToken);
-        //grpc client service
 
+        //grpc client service
         return new GrpcInvoker(_logger, _grpcClient, this.ClientTimeout);
     }
 
     public override async Task Open(CancellationToken cancellationToken = default)
     {
-        //using var cts =  new CancellationTokenSource(ClientTimeout);
-        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        await TaskUtil.Timeout(_channel.ConnectAsync(cts.Token), ClientTimeout, cts, $"{Url} connect timeout");
+        await _channel.ConnectAsync(cancellationToken);
     }
 
     public override async Task Close(CancellationToken cancellationToken = default)

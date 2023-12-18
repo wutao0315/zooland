@@ -41,9 +41,9 @@ namespace Zooyard.DotNettyImpl.Transport
             _messageListener.Received += MessageListener_Received;
         }
 
-        public async Task Open(URL url)
+        public async Task Open(URL url, CancellationToken cancellationToken)
         {
-            await _messageSender.Open(url);
+            await _messageSender.Open(url, cancellationToken);
         }
         /// <summary>
         /// 发送消息。

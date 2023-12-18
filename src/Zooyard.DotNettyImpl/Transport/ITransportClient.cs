@@ -7,7 +7,7 @@ namespace Zooyard.DotNettyImpl.Transport;
 /// </summary>
 public interface ITransportClient: IDisposable
 {
-    Task Open(URL url);
+    Task Open(URL url, CancellationToken cancellationToken);
     /// <summary>
     /// 发送消息。
     /// </summary>

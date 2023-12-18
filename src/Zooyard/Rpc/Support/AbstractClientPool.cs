@@ -152,6 +152,7 @@ public abstract class AbstractClientPool: IClientPool
         try
         {
             using var cts = new CancellationTokenSource(client.ClientTimeout);
+
             await TaskUtil.Timeout(client.Open(cts.Token), client.ClientTimeout, cts, $"time out {client.ClientTimeout} when invoke open");
             return true;
         }

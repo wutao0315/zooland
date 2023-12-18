@@ -57,6 +57,7 @@ public class NettyClientPool : AbstractClientPool
                     var messageListener = new MessageListener();
                     //设置监听
                     channel.GetAttribute(messageListenerKey).Set(messageListener);
+
                     //实例化发送者
                     var messageSender = new DotNettyMessageClientSender(
                         _transportMessageEncoder,
@@ -187,6 +188,11 @@ public class NettyClientPool : AbstractClientPool
             var messageListener = context.Channel.GetAttribute(messageListenerKey).Get();
             var messageSender = context.Channel.GetAttribute(messageSenderKey).Get();
             messageListener.OnReceived(messageSender, transportMessage);
+        }
+        public override void ExceptionCaught(IChannelHandlerContext context, Exception exception)
+        {
+            Console.WriteLine("Exception: " + exception);
+            context.CloseAsync();
         }
     }
 }

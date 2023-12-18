@@ -23,8 +23,7 @@ public class NettyClient(ILogger<NettyClient> _logger, ITransportClient _channel
 
     public override async Task Open(CancellationToken cancellationToken = default)
     {
-        await _channel.Open(Url);
-        await Task.CompletedTask;
+        await _channel.Open(Url, cancellationToken);
     }
 
     public override async Task Close(CancellationToken cancellationToken = default)
