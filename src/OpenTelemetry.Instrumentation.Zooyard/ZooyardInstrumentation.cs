@@ -1,4 +1,4 @@
-﻿namespace Zooyard.Instrumentation.OpenTelemetry;
+﻿namespace OpenTelemetry.Instrumentation.Zooyard;
 
 /// <summary>
 /// instrumentation.

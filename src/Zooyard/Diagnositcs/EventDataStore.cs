@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Zooyard.Diagnositcs;
+﻿namespace Zooyard.Diagnositcs;
 
 
 public sealed record EventDataStore(string system, string clusterName, URL url, IInvocation invocation)

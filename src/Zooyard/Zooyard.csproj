@@ -45,8 +45,13 @@
 			<_Parameter1>Zooyard.ThriftImpl</_Parameter1>
 		</AssemblyAttribute>
 		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-			<_Parameter1>Zooyard.Instrumentation.OpenTelemetry</_Parameter1>
+			<_Parameter1>OpenTelemetry.Instrumentation.Zooyard</_Parameter1>
 		</AssemblyAttribute>
+	</ItemGroup>
+
+
+	<ItemGroup>
+	  <Folder Include="Properties\" />
 	</ItemGroup>
 
 </Project>

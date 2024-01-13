@@ -1,7 +1,9 @@
 ﻿using DotNetty.Buffers;
 using DotNetty.Transport.Channels;
 using System.Net;
+using System.Threading.Channels;
 using Zooyard.DotNettyImpl.Messages;
+using Zooyard.Exceptions;
 
 namespace Zooyard.DotNettyImpl.Transport;
 
@@ -25,13 +27,18 @@ public abstract class DotNettyMessageSender(ITransportMessageEncoder _transportM
 public class DotNettyMessageClientSender(ITransportMessageEncoder transportMessageEncoder,
         IChannel _channel) : DotNettyMessageSender(transportMessageEncoder), IMessageSender, IDisposable
 {
-    public async Task Open(URL url)
+    public async Task Open(URL url, CancellationToken cancellationToken)
     {
+        await Task.CompletedTask;
         if (!_channel.Open)
         {
-            var host = new IPEndPoint(IPAddress.Parse(url.Host), url.Port);
-            await _channel.ConnectAsync(host);
+            throw new FrameworkException($"url {url} already closed");
         }
+        //if (!_channel.Open)
+        //{
+        //    var host = new IPEndPoint(IPAddress.Parse(url.Host), url.Port);
+        //    await _channel.ConnectAsync(host);
+        //}
     }
 
     /// <summary>
@@ -73,7 +80,7 @@ public class DotNettyServerMessageSender(
         ITransportMessageEncoder transportMessageEncoder,
         IChannelHandlerContext _context) : DotNettyMessageSender(transportMessageEncoder), IMessageSender
 {
-    public async Task Open(URL url)
+    public async Task Open(URL url, CancellationToken cancellationToken)
     {
         if (!_context.Channel.Open)
         {

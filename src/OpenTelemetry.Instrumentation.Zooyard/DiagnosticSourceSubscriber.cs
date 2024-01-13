@@ -1,4 +1,6 @@
-﻿namespace Zooyard.Instrumentation.OpenTelemetry;
+﻿using Zooyard.Diagnositcs;
+
+namespace OpenTelemetry.Instrumentation.Zooyard;
 
 internal class DiagnosticSourceSubscriber : IDisposable, IObserver<System.Diagnostics.DiagnosticListener>
 {
@@ -13,7 +15,7 @@ internal class DiagnosticSourceSubscriber : IDisposable, IObserver<System.Diagno
         DiagnosticListener handler,
         Func<string, object?, object?, bool>? isEnabledFilter)
         : this(_ => handler,
-            value => Diagnositcs.Constant.DiagnosticListenerName == value.Name,
+            value => Constant.DiagnosticListenerName == value.Name,
             isEnabledFilter)
     {
     }

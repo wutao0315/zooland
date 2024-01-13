@@ -57,9 +57,9 @@ internal sealed class ConfigurationConfigProvider : IRpcConfigProvider, IDisposa
             ConfigurationSnapshot newSnapshot;
             try
             {
-                var contracts = CreateContracts(_configuration.GetSection("Contracts"));
-                var metadata = CreateMetadata(_configuration.GetSection("Metadata"));
-                var services = CreateServices(_configuration.GetSection("Services"));
+                var contracts = CreateContracts(_configuration.GetSection(nameof(ConfigurationSnapshot.Contracts)));
+                var metadata = CreateMetadata(_configuration.GetSection(nameof(ConfigurationSnapshot.Metadata)));
+                var services = CreateServices(_configuration.GetSection(nameof(ConfigurationSnapshot.Services)));
                 newSnapshot = new ConfigurationSnapshot 
                 {
                     Contracts = contracts,

@@ -1,4 +1,4 @@
-﻿using Zooyard.Instrumentation.OpenTelemetry;
+﻿using OpenTelemetry.Instrumentation.Zooyard;
 
 namespace OpenTelemetry.Trace
 {

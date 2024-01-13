@@ -45,7 +45,7 @@ public static class RpcServiceCollectionExtensions
             throw new ArgumentNullException(nameof(config));
         }
 
-        builder.Services.AddSingleton<IRpcConfigProvider>(sp =>
+        builder.Services.TryAddSingleton<IRpcConfigProvider>(sp =>
         {
             // This is required because we're capturing the configuration via a closure
             return new ConfigurationConfigProvider(sp.GetRequiredService<ILogger<ConfigurationConfigProvider>>(), config);
@@ -54,9 +54,15 @@ public static class RpcServiceCollectionExtensions
         return builder;
     }
 
-    public static IRpcBuilder AddContracts(this IRpcBuilder builder, params Type[] types) 
+    public static IRpcBuilder AddContracts(this IRpcBuilder builder, params Type[] types)
     {
-        builder.Services.TryAddSingleton<IZooyardPools>((serviceProvder) =>
+        builder.Services.AddContracts(types);
+        return builder;
+    }
+
+    public static void AddContracts(this IServiceCollection service, params Type[] types) 
+    {
+        service.TryAddSingleton<IZooyardPools>((serviceProvder) =>
         {
             var loggerfactory = serviceProvder.GetRequiredService<ILoggerFactory>();
             //var option = serviceProvder.GetRequiredService<IOptionsMonitor<ZooyardOption>>();
@@ -92,7 +98,7 @@ public static class RpcServiceCollectionExtensions
         {
             var genericType = typeof(ZooyardFactory<>);
             var factoryType = genericType.MakeGenericType(new[] { serviceType });
-            builder.Services.AddSingleton(factoryType, (serviceProvder) =>
+            service.TryAddSingleton(factoryType, (serviceProvder) =>
             {
                 var loggerfactory = serviceProvder.GetRequiredService<ILoggerFactory>();
                 var pools = serviceProvder.GetRequiredService<IZooyardPools>();
@@ -111,7 +117,7 @@ public static class RpcServiceCollectionExtensions
             });
 
 
-            builder.Services.AddTransient(serviceType, (serviceProvder) =>
+            service.TryAddTransient(serviceType, (serviceProvder) =>
             {
                 var factory = serviceProvder.GetRequiredService(factoryType);
                 var createYardMethod = factoryType.GetMethod("CreateYard");
@@ -127,7 +133,6 @@ public static class RpcServiceCollectionExtensions
                 return result;
             });
         }
-        return builder;
     }
 
     /// <summary>
@@ -146,43 +151,12 @@ public static class RpcServiceCollectionExtensions
     }
 
 
-    ///// <summary>
-    ///// Provides a callback to customize <see cref="SocketsHttpHandler"/> settings used for proxying requests.
-    ///// This will be called each time a cluster is added or changed. Cluster settings are applied to the handler before
-    ///// the callback. Custom data can be provided in the cluster metadata.
-    ///// </summary>
-    //public static IReverseProxyBuilder ConfigureHttpClient(this IReverseProxyBuilder builder, Action<ForwarderHttpClientContext, SocketsHttpHandler> configure)
-    //{
-    //    if (configure is null)
-    //    {
-    //        throw new ArgumentNullException(nameof(configure));
-    //    }
-
-    //    // Avoid overriding any other custom factories. This does not handle the case where a IForwarderHttpClientFactory
-    //    // is registered after this call.
-    //    var service = builder.Services.FirstOrDefault(service => service.ServiceType == typeof(IForwarderHttpClientFactory));
-    //    if (service is not null)
-    //    {
-    //        if (service.ImplementationType != typeof(ForwarderHttpClientFactory))
-    //        {
-    //            throw new InvalidOperationException($"ConfigureHttpClient will override the custom IForwarderHttpClientFactory type.");
-    //        }
-    //    }
-
-    //    builder.Services.AddSingleton<IForwarderHttpClientFactory>(services =>
-    //    {
-    //        var logger = services.GetRequiredService<ILogger<ForwarderHttpClientFactory>>();
-    //        return new CallbackHttpClientFactory(logger, configure);
-    //    });
-    //    return builder;
-    //}
-
     /// <summary>
     /// Provides a <see cref="IInstanceResolver"/> implementation which uses <see cref="System.Net.Dns"/> to resolve destinations.
     /// </summary>
     public static IRpcBuilder AddDnsInstanceResolver(this IRpcBuilder builder, Action<DnsInstanceResolverOptions>? configureOptions = null)
     {
-        builder.Services.AddSingleton<IInstanceResolver, DnsInstanceResolver>();
+        builder.Services.TryAddSingleton<IInstanceResolver, DnsInstanceResolver>();
         if (configureOptions is not null)
         {
             builder.Services.Configure(configureOptions);

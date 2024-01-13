@@ -4,10 +4,8 @@ using Microsoft.Extensions.Primitives;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using Zooyard.Configuration;
 using Zooyard.Model;
-using Zooyard.Rpc;
 using Zooyard.ServiceDiscovery;
 using Zooyard.Utils;
 

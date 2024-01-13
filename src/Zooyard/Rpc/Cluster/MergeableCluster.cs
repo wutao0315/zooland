@@ -22,7 +22,7 @@ public class MergeableCluster : AbstractCluster
         _defaultMergers = new Dictionary<Type, IMerger>();
         foreach (var merge in defaultMergers)
         {
-            _defaultMergers.Add(merge.Type, merge);
+            _defaultMergers[merge.Type] = merge;
         }
 
         //_mySelfMergers = new Dictionary<string, IMerger>();

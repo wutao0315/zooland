@@ -6,17 +6,6 @@ namespace ZooyardClient;
 
 public class DefaultYardConfigMapper : IYardConfigMapper
 {
-    //public IReadOnlyDictionary<string, string> CreateMetadata(IConfiguration configuration)
-    //{
-    //    var metadataPrefix = $"{ServiceExtensions.YardKey}:Metadata";
-    //    var metadataConfig = configuration.GetSection(metadataPrefix).Get<Dictionary<string, string>>();
-    //    if (metadataConfig == null)
-    //    {
-    //        return new Dictionary<string, string>();
-    //    }
-
-    //    return metadataConfig;
-    //}
 
     public ServiceConfig CreateServiceConfig(string serviceName, NamingOption nameOption, IReadOnlyDictionary<string, InstanceConfig> instances)
     {

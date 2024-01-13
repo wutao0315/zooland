@@ -1,11 +1,10 @@
-﻿using OpenTelemetry;
-using OpenTelemetry.Context.Propagation;
+﻿using OpenTelemetry.Context.Propagation;
 using OpenTelemetry.Trace;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using Zooyard.Diagnositcs;
 
-namespace Zooyard.Instrumentation.OpenTelemetry;
+namespace OpenTelemetry.Instrumentation.Zooyard;
 
 internal class DiagnosticListener : IObserver<KeyValuePair<string, object?>>
 {
@@ -27,7 +26,7 @@ internal class DiagnosticListener : IObserver<KeyValuePair<string, object?>>
     {
         switch (evt.Key)
         {
-            case Diagnositcs.Constant.ConsumerBefore:
+            case Constant.ConsumerBefore:
                 {
                     var eventData = (EventDataStore)evt.Value!;
 
@@ -67,7 +66,7 @@ internal class DiagnosticListener : IObserver<KeyValuePair<string, object?>>
                     }
                 }
                 break;
-            case Diagnositcs.Constant.ConsumerAfter:
+            case Constant.ConsumerAfter:
                 {
                     var eventData = (EventDataStore)evt.Value!;
                     if (Activity.Current is { } activity)
@@ -80,7 +79,7 @@ internal class DiagnosticListener : IObserver<KeyValuePair<string, object?>>
                     }
                 }
                 break;
-            case Diagnositcs.Constant.ConsumerError:
+            case Constant.ConsumerError:
                 {
                     var eventData = (EventDataStore)evt.Value!;
                     if (Activity.Current is { } activity)
