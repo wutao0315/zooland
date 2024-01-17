@@ -91,7 +91,7 @@ public class GrpcInvoker(ILogger logger, object _instance, int _clientTimeout) :
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            throw ex;
+            throw;
         }
     }
 }

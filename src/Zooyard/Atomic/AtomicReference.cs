@@ -1,15 +1,15 @@
 ﻿namespace Zooyard.Atomic;
 
-internal sealed record AtomicReference<T> where T : class
+internal sealed class AtomicReference<T> where T : class
 {
-    T atomicValue;
+    T? _atomicValue;
 
     /// <summary>
-    ///     Sets the initial value of this <see cref="AtomicReference{T}" /> to <see cref="originalValue" />.
+    /// Sets the initial value of this <see cref="AtomicReference{T}" /> to .
     /// </summary>
     public AtomicReference(T originalValue)
     {
-        this.atomicValue = originalValue;
+        _atomicValue = originalValue;
     }
 
     /// <summary>
@@ -17,32 +17,31 @@ internal sealed record AtomicReference<T> where T : class
     /// </summary>
     public AtomicReference()
     {
-        this.atomicValue = default!;
+        _atomicValue = default;
     }
 
     /// <summary>
     ///     The current value of this <see cref="AtomicReference{T}" />
     /// </summary>
-    public T Value
+    public T? Value
     {
-        get { return Volatile.Read(ref this.atomicValue); }
-        set { Volatile.Write(ref this.atomicValue, value); }
+        get { return Volatile.Read(ref _atomicValue); }
+        set { Volatile.Write(ref _atomicValue, value); }
     }
 
     /// <summary>
-    ///     If <see cref="Value" /> equals <see cref="expected" />, then set the Value to
-    ///     <see cref="newValue" />.
-    ///     Returns true if <see cref="newValue" /> was set, false otherwise.
+    ///     If Value equals expected, then set the Value to
+    ///     newValue.
+    ///     Returns true if newValue was set, false otherwise.
     /// </summary>
-    public bool CompareAndSet(T expected, T newValue) => Interlocked.CompareExchange(ref this.atomicValue, newValue, expected) == expected;
+    public bool CompareAndSet(T expected, T newValue) => Interlocked.CompareExchange(ref _atomicValue, newValue, expected) == expected;
 
     #region Conversion operators
 
     /// <summary>
     ///     Implicit conversion operator = automatically casts the <see cref="AtomicReference{T}" /> to an instance of
-    ///     <typeparam name="T"></typeparam>
     /// </summary>
-    public static implicit operator T(AtomicReference<T> aRef) => aRef.Value;
+    public static implicit operator T?(AtomicReference<T> aRef) => aRef.Value;
 
     /// <summary>
     ///     Implicit conversion operator = allows us to cast any type directly into a <see cref="AtomicReference{T}" />
@@ -50,7 +49,7 @@ internal sealed record AtomicReference<T> where T : class
     /// </summary>
     /// <param name="newValue"></param>
     /// <returns></returns>
-    public static implicit operator AtomicReference<T>(T newValue) => new AtomicReference<T>(newValue);
+    public static implicit operator AtomicReference<T>(T newValue) => new(newValue);
 
     #endregion
 }

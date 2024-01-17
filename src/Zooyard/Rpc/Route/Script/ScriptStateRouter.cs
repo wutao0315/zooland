@@ -58,7 +58,7 @@ public class ScriptStateRouter : AbstractStateRouter
     /// <summary>
     /// get rule from url parameters.
     /// </summary>
-    /// <param name="url"></param>
+    /// <param name="address"></param>
     /// <returns></returns>
     private string GetRule(URL address)
     {

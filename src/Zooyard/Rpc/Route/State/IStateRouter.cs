@@ -9,11 +9,6 @@ namespace Zooyard.Rpc.Route.State
 {
     public interface IStateRouter
     {
-        ///// <summary>
-        ///// Get the router url.
-        ///// </summary>
-        //URL Url { get; }
-
         /// <summary>
         /// Filter invokers with current routing rule and only return the invokers that comply with the rule.
         /// Caching address lists in BitMap mode improves routing performance.
@@ -22,7 +17,7 @@ namespace Zooyard.Rpc.Route.State
         /// <param name="url">refer url</param>
         /// <param name="invocation">invocation</param>
         /// <param name="needToPrintMessage">whether to print router state. Such as `use router branch a`.</param>
-        ///// <param name="nodeHolder"></param>
+        /// <param name="nodeHolder"></param>
         /// <returns>with route result</returns>
         IList<URL> Route(IList<URL> invokers, URL url, IInvocation invocation, bool needToPrintMessage, Holder<RouterSnapshotNode>? nodeHolder);
 

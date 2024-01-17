@@ -4,7 +4,7 @@ namespace RpcProviderCore;
 
 public class HelloServiceThriftImpl : HelloService.IAsync
 {
-    public string ServiceName { get; set; } = String.Empty;
+    public string ServiceName { get; set; } = string.Empty;
 
     public async Task CallName(string name, CancellationToken cancellationToken)
     {

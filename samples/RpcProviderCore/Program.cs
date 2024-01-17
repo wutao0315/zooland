@@ -1125,9 +1125,9 @@ public class ThriftServer
 
 public class ThriftServerOption
 {
-    public string Transport { get; set; } = String.Empty;
-    public string Buffering { get; set; } = String.Empty;
-    public string Protocol { get; set; } = String.Empty;
+    public string Transport { get; set; } = string.Empty;
+    public string Buffering { get; set; } = string.Empty;
+    public string Protocol { get; set; } = string.Empty;
     public bool Multiplex { get; set; } = false;
     public int Port { get; set; }
     public TConfiguration Configuration { get; set; } = new TConfiguration();

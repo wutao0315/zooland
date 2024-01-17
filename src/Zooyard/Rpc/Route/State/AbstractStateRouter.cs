@@ -97,8 +97,9 @@ public abstract class AbstractStateRouter: IStateRouter
     /// <param name="invocation">invocation</param>
     /// <param name="needToPrintMessage">should current router print message</param>
     /// <param name="nodeHolder">node holder</param>
+    /// <param name="messageHolder">message holder</param>
     /// <returns></returns>
-    protected abstract IList<URL> DoRoute(IList<URL> invokers, URL address, IInvocation invocation, bool needToPrintMessage, Holder<RouterSnapshotNode> nodeHolder,Holder<String> messageHolder);
+    protected abstract IList<URL> DoRoute(IList<URL> invokers, URL address, IInvocation invocation, bool needToPrintMessage, Holder<RouterSnapshotNode> nodeHolder,Holder<string> messageHolder);
 
 
     /// <summary>
@@ -145,7 +146,7 @@ public abstract class AbstractStateRouter: IStateRouter
     //        nextRouter.BuildSnapshot();
     //}
 
-    //protected String DoBuildSnapshot()
+    //protected string DoBuildSnapshot()
     //{
     //    return this.GetType().Name+ " not support\n";
     //}

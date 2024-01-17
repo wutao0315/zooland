@@ -48,18 +48,18 @@ public sealed record URL
         {
             throw new ArgumentException("Invalid url, password without username!");
         }
-        this.Protocol = protocol;
-        this.Username = username;
-        this.Password = password;
-        this.Host = host;
-        this.Port = (port < 0 ? 0 : port);
+        Protocol = protocol;
+        Username = username;
+        Password = password;
+        Host = host;
+        Port = (port < 0 ? 0 : port);
         // trim the beginning "/"
-        while (path.StartsWith("/"))
+        while (path.StartsWith('/'))
         {
             path = path[1..];
         }
-        this.Path = path;
-        this.Parameters = parameters == null ? new Dictionary<string, string>() : new Dictionary<string, string>(parameters);
+        Path = path;
+        Parameters = parameters == null ? [] : new Dictionary<string, string>(parameters);
     }
 
     /// <summary>
@@ -67,25 +67,25 @@ public sealed record URL
     /// </summary>
     /// <param name="url"> URL string </param>
     /// <returns> URL instance </returns>
-    /// <seealso cref= URL </seealso>
+    /// <seealso cref="URL"> </seealso>
     public static URL ValueOf(string url)
     {
         if (string.IsNullOrWhiteSpace(url))
         {
             throw new ArgumentException("url == null");
         }
-        string protocol = String.Empty;
-        string username = String.Empty;
-        string password = String.Empty;
-        string host = String.Empty;
+        string protocol = string.Empty;
+        string username = string.Empty;
+        string password = string.Empty;
+        string host = string.Empty;
         int port = 0;
-        string path = String.Empty;
+        string path = string.Empty;
         var parameters = new Dictionary<string, string>();
-        int i = url.IndexOf("?"); // seperator between body and parameters
+        int i = url.IndexOf('?'); // seperator between body and parameters
         if (i >= 0)
         {
-            var parts = url.Substring(i + 1).Split(new[] { "&" }, StringSplitOptions.RemoveEmptyEntries);
-            parameters = new Dictionary<string, string>();
+            var parts = url[(i + 1)..].Split('&', StringSplitOptions.RemoveEmptyEntries);
+            parameters = [];
             foreach (var part in parts)
             {
                 var partinner = part.Trim();
@@ -94,7 +94,7 @@ public sealed record URL
                     int j = partinner.IndexOf('=');
                     if (j >= 0)
                     {
-                        parameters[partinner.Substring(0, j)] = partinner.Substring(j + 1);
+                        parameters[partinner[..j]] = partinner[(j + 1)..];
                     }
                     else
                     {
@@ -102,7 +102,7 @@ public sealed record URL
                     }
                 }
             }
-            url = url.Substring(0, i);
+            url = url[..i];
         }
         i = url.IndexOf("://");
         if (i >= 0)
@@ -111,8 +111,8 @@ public sealed record URL
             {
                 throw new Exception("url missing protocol: \"" + url + "\"");
             }
-            protocol = url.Substring(0, i);
-            url = url.Substring(i + 3);
+            protocol = url[..i];
+            url = url[(i + 3)..];
         }
         else
         {
@@ -123,34 +123,34 @@ public sealed record URL
                 {
                     throw new Exception("url missing protocol: \"" + url + "\"");
                 }
-                protocol = url.Substring(0, i);
-                url = url.Substring(i + 1);
+                protocol = url[..i];
+                url = url[(i + 1)..];
             }
         }
 
-        i = url.IndexOf("/");
+        i = url.IndexOf('/');
         if (i >= 0)
         {
-            path = url.Substring(i + 1);
-            url = url.Substring(0, i);
+            path = url[(i + 1)..];
+            url = url[..i];
         }
-        i = url.IndexOf("@");
+        i = url.IndexOf('@');
         if (i >= 0)
         {
-            username = url.Substring(0, i);
-            int j = username.IndexOf(":");
+            username = url[..i];
+            int j = username.IndexOf(':');
             if (j >= 0)
             {
-                password = username.Substring(j + 1);
-                username = username.Substring(0, j);
+                password = username[(j + 1)..];
+                username = username[..j];
             }
-            url = url.Substring(i + 1);
+            url = url[(i + 1)..];
         }
-        i = url.IndexOf(":");
+        i = url.IndexOf(':');
         if (i >= 0 && i < url.Length - 1)
         {
-            port = Convert.ToInt32(url.Substring(i + 1));
-            url = url.Substring(0, i);
+            port = Convert.ToInt32(url[(i + 1)..]);
+            url = url[..i];
         }
         if (url.Length > 0)
         {
@@ -159,11 +159,11 @@ public sealed record URL
         return new URL(protocol,  host, port, path, username, password, parameters);
     }
 
-    public string Protocol { get; init; } = String.Empty;
+    public string Protocol { get; init; } = string.Empty;
 
-    public string Username { get; init; } = String.Empty;
+    public string Username { get; init; } = string.Empty;
 
-    public string Password { get; init; } = String.Empty;
+    public string Password { get; init; } = string.Empty;
 
     public string Authority
     {
@@ -178,7 +178,7 @@ public sealed record URL
         }
     }
 
-    public string Host { get; private set; } = String.Empty;
+    public string Host { get; private set; } = string.Empty;
 
     /// <summary>
     /// 获取IP地址.
@@ -245,12 +245,12 @@ public sealed record URL
             {
                 this
             };
-            string[]? backups = GetParameter(BACKUP_KEY, new string[0]);
+            string[]? backups = GetParameter(BACKUP_KEY, Array.Empty<string>());
             if (backups?.Length > 0)
             {
                 foreach (var backup in backups)
                 {
-                    urls.Add(this.SetAddress(backup));
+                    urls.Add(SetAddress(backup));
                 }
             }
             return urls;
@@ -266,21 +266,21 @@ public sealed record URL
             {
                 return address + ":" + defaultPort;
             }
-            else if (Convert.ToInt32(address.Substring(i + 1)) == 0)
+            else if (Convert.ToInt32(address[(i + 1)..]) == 0)
             {
-                return address.Substring(0, i + 1) + defaultPort;
+                return address[..(i + 1)] + defaultPort;
             }
         }
         return address;
     }
 
-    public string Path { get; init; } = String.Empty;
+    public string Path { get; init; } = string.Empty;
 
     public string? AbsolutePath
     {
         get
         {
-            if (Path != null && !Path.StartsWith("/"))
+            if (Path != null && !Path.StartsWith('/'))
             {
                 return "/" + Path;
             }
@@ -307,11 +307,11 @@ public sealed record URL
     {
         int i = address.LastIndexOf(':');
         string host;
-        int port = this.Port;
+        int port = Port;
         if (i >= 0)
         {
-            host = address.Substring(0, i);
-            port = Convert.ToInt32(address.Substring(i + 1));
+            host = address[..i];
+            port = Convert.ToInt32(address[(i + 1)..]);
         }
         else
         {
@@ -335,7 +335,7 @@ public sealed record URL
         return this with { Path = path };
     }
 
-    public Dictionary<string, string> Parameters { get; init; } = new ();
+    public Dictionary<string, string> Parameters { get; init; } = [];
 
     public string GetParameterAndDecoded(string key)
     {
@@ -349,18 +349,18 @@ public sealed record URL
 
     public string? GetParameter(string key)
     {
-        if (this.Parameters == null) 
+        if (Parameters == null) 
         {
             return null;
         }
-        if (this.Parameters.ContainsKey(key))
+        if (Parameters.ContainsKey(key))
         {
-            return this.Parameters[key];
+            return Parameters[key];
         }
 
-        if (this.Parameters.ContainsKey(DEFAULT_KEY_PREFIX + key))
+        if (Parameters.ContainsKey(DEFAULT_KEY_PREFIX + key))
         {
-            return this.Parameters[DEFAULT_KEY_PREFIX + key];
+            return Parameters[DEFAULT_KEY_PREFIX + key];
         }
         return null;
     }
@@ -497,9 +497,9 @@ public sealed record URL
 
         var interfaceKey = $"interface.{interfaceName}.{key}";
         
-        if (this.Parameters!= null && this.Parameters.ContainsKey(interfaceKey))
+        if (Parameters!= null && Parameters.ContainsKey(interfaceKey))
         {
-            value = this.Parameters[interfaceKey];
+            value = Parameters[interfaceKey];
         }
         if (string.IsNullOrWhiteSpace(value))
         {
@@ -523,9 +523,9 @@ public sealed record URL
     {
         var methodKey = method + "." + key;
         string? value = null;
-        if (this.Parameters!=null && this.Parameters.ContainsKey(methodKey))
+        if (Parameters!=null && Parameters.ContainsKey(methodKey))
         {
-            value = this.Parameters[methodKey];
+            value = Parameters[methodKey];
         }
         if (string.IsNullOrWhiteSpace(value))
         {
@@ -601,12 +601,12 @@ public sealed record URL
     {
         if (method == null)
         {
-            if (this.Parameters == null) 
+            if (Parameters == null) 
             {
                 return false;
             }
             var suffix = "." + key;
-            foreach (var fullKey in this.Parameters.Keys)
+            foreach (var fullKey in Parameters.Keys)
             {
                 if (fullKey.EndsWith(suffix))
                 {
@@ -617,12 +617,12 @@ public sealed record URL
         }
         if (key == null)
         {
-            if (this.Parameters == null)
+            if (Parameters == null)
             {
                 return false;
             }
             var prefix = method + ".";
-            foreach (var fullKey in this.Parameters.Keys)
+            foreach (var fullKey in Parameters.Keys)
             {
                 if (fullKey.StartsWith(prefix))
                 {
@@ -699,14 +699,14 @@ public sealed record URL
             return this;
         }
         //如果没有修改，直接返回。
-        if (this.Parameters!=null 
-            && this.Parameters.ContainsKey(key) 
+        if (Parameters!=null 
+            && Parameters.ContainsKey(key) 
             && Parameters[key] == value) // value != null
         {
             return this;
         }
 
-        var map = new Dictionary<string, string>(Parameters ?? new Dictionary<string, string>())
+        var map = new Dictionary<string, string>(Parameters ?? [])
         {
             [key] = value
         };
@@ -723,7 +723,7 @@ public sealed record URL
         {
             return this;
         }
-        var map = new Dictionary<string, string>(Parameters??new Dictionary<string,string>()) 
+        var map = new Dictionary<string, string>(Parameters ?? [])
         {
             [key] = value
         };
@@ -760,7 +760,7 @@ public sealed record URL
             return this;
         }
 
-        var map = new Dictionary<string, string>(Parameters??new Dictionary<string,string>());
+        var map = new Dictionary<string, string>(Parameters ?? []);
         map.PutAll(parameters);
 
         return this with { Parameters = map };
@@ -823,7 +823,7 @@ public sealed record URL
         {
             return this;
         }
-        return RemoveParameters(keys.ToArray());
+        return RemoveParameters([.. keys]);
     }
 
     public URL RemoveParameters(params string[] keys)
@@ -832,7 +832,7 @@ public sealed record URL
         {
             return this;
         }
-        var map = new Dictionary<string, string>(Parameters ?? new Dictionary<string, string>());
+        var map = new Dictionary<string, string>(Parameters ?? []);
         foreach (string key in keys)
         {
             map.Remove(key);
@@ -848,7 +848,7 @@ public sealed record URL
 
     public URL ClearParameters()
     {
-        return this with { Parameters = new() };
+        return this with { Parameters = [] };
     }
 
     
@@ -884,7 +884,7 @@ public sealed record URL
 
     public IDictionary<string, string> ToMap()
     {
-        var map = new Dictionary<string, string>(this.Parameters??new Dictionary<string,string>());
+        var map = new Dictionary<string, string>(Parameters ?? []);
         if (Protocol != null)
         {
             map[PROTOCOL_KEY] = Protocol;
@@ -964,7 +964,7 @@ public sealed record URL
         {
             return parameter;
         }
-        return parameter = ToParameterString(new string[0]);
+        return parameter = ToParameterString(Array.Empty<string>());
     }
 
     public string ToParameterString(params string[] parameters)
@@ -1175,13 +1175,13 @@ public sealed record URL
     public override int GetHashCode()
     {
         var result = HashCode.Combine(
-            this.Protocol?.GetHashCode(StringComparison.OrdinalIgnoreCase),
-            this.Host?.GetHashCode(StringComparison.OrdinalIgnoreCase),
-            this.Port.GetHashCode(),
-            this.Username?.GetHashCode(StringComparison.OrdinalIgnoreCase),
-            this.Password?.GetHashCode(StringComparison.OrdinalIgnoreCase),
-            this.Path?.GetHashCode(StringComparison.OrdinalIgnoreCase),
-             CaseSensitiveEqualHelper.GetHashCode(this.Parameters)
+            Protocol?.GetHashCode(StringComparison.OrdinalIgnoreCase),
+            Host?.GetHashCode(StringComparison.OrdinalIgnoreCase),
+            Port.GetHashCode(),
+            Username?.GetHashCode(StringComparison.OrdinalIgnoreCase),
+            Password?.GetHashCode(StringComparison.OrdinalIgnoreCase),
+            Path?.GetHashCode(StringComparison.OrdinalIgnoreCase),
+             CaseSensitiveEqualHelper.GetHashCode(Parameters)
             );
             return result;
     }

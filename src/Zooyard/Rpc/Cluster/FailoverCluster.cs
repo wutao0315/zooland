@@ -100,7 +100,7 @@ public class FailoverCluster : AbstractCluster
             {
                 if (e.Biz)
                 { // biz exception.
-                    throw e;
+                    throw;
                 }
                 le = e;
             }

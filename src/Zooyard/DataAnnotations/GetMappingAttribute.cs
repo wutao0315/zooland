@@ -6,7 +6,7 @@ public class RequestMappingAttribute : Attribute
     /// <summary>
     /// 指定请求的实际地址
     /// </summary>
-    public string Value { get; init; } = String.Empty;
+    public string Value { get; init; } = string.Empty;
     /// <summary>
     /// 指定请求的method类型（GET,POST,PUT,DELETE）等。
     /// </summary>
@@ -14,11 +14,11 @@ public class RequestMappingAttribute : Attribute
     /// <summary>
     /// 指定处理请求的提交内容类型（Context-Type）。
     /// </summary>
-    public string Consumes { get; init; } = String.Empty;
+    public string Consumes { get; init; } = string.Empty;
     /// <summary>
     /// 指定返回的内容类型，还可以设置返回值的字符编码
     /// </summary>
-    public string Produces { get; init; } = String.Empty;
+    public string Produces { get; init; } = string.Empty;
     /// <summary>
     /// 指定request中必须包含某些参数值，才让该方法处理。
     /// </summary>

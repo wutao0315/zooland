@@ -15,7 +15,6 @@ public const string TYPENAME = "Zooyard.HttpImpl.HttpClientPool, Zooyard.HttpImp
     /// 构造函数
     /// </summary>
     /// <param name="serviceName"></param>
-    /// <param name="baseUrl"></param>
     public ZooyardHttpAttribute(string serviceName) : base(TYPENAME, serviceName)
     {
     }

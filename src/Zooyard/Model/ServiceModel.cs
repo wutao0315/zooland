@@ -2,7 +2,7 @@
 
 namespace Zooyard.Model;
 
-public sealed class ServiceModel(ServiceConfig config, HttpMessageInvoker httpClient)
+public sealed class ServiceModel(ServiceConfig config, HttpMessageInvoker? httpClient)
 {
     /// <summary>
     /// The config for this cluster.

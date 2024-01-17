@@ -51,7 +51,7 @@ public class RpcStatus
     public static void RemoveStatus(URL url)
     {
         var uri = url.ToIdentityString();
-        SERVICE_STATISTICS.TryRemove(uri,out RpcStatus _);
+        SERVICE_STATISTICS.TryRemove(uri,out _);
     }
 
     /// <summary>

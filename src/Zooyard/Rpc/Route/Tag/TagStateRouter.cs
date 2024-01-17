@@ -204,10 +204,10 @@ public class TagStateRouter : AbstractStateRouter
     /// <summary>
     /// 
     /// If there's no dynamic tag rule being set, use static tag in URL.
-    /// <p>
+    /// 
     /// A typical scenario is a Consumer using version 2.7.x calls Providers using version 2.6.x or lower,
     /// the Consumer should always respect the tag in provider URL regardless of whether a dynamic tag rule has been set to it or not.
-    /// <p>
+    /// 
     /// TODO, to guarantee consistent behavior of interoperability between 2.6- and 2.7+, this method should has the same logic with the TagRouter in 2.6.x.
     /// 
     /// </summary>

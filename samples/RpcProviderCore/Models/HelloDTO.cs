@@ -4,8 +4,8 @@ public class HelloDTO
 {
     public class HelloModel
     {
-        public string Name { get; set; } = String.Empty;
-        public string Gender { get; set; } = String.Empty;
-        public string Head { get; set; }= String.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Gender { get; set; } = string.Empty;
+        public string Head { get; set; }= string.Empty;
     }
 }

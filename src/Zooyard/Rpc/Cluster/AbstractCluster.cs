@@ -7,7 +7,6 @@ namespace Zooyard.Rpc.Cluster;
 
 public abstract class AbstractCluster : ICluster
 {
-    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(BroadcastCluster));
     protected readonly ILogger _logger;
     public AbstractCluster(ILogger logger) 
     {
@@ -33,8 +32,8 @@ public abstract class AbstractCluster : ICluster
     public abstract string Name { get; }
 
     /// <summary>
-    /// 使用loadbalance选择invoker.</br>
-    /// a)先lb选择，如果在selected列表中 或者 不可用且做检验时，进入下一步(重选),否则直接返回</br>
+    /// 使用loadbalance选择invoker.
+    /// a)先lb选择，如果在selected列表中 或者 不可用且做检验时，进入下一步(重选),否则直接返回
     ///  b)重选验证规则：selected > available .保证重选出的结果尽量不在select中，并且是可用的
     /// </summary>
     /// <param name="loadbalance"></param>

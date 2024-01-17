@@ -125,7 +125,7 @@ internal class ProxyAssembly
         // Find the property to set AllowMultiple
         PropertyInfo allowMultipleProperty =
             attributeUsageTypeInfo.DeclaredProperties
-                .Single(f => String.Equals(f.Name, "AllowMultiple"));
+                .Single(f => string.Equals(f.Name, "AllowMultiple"));
 
         // Create a builder to construct the instance via the ctor and property
         CustomAttributeBuilder customAttributeBuilder =

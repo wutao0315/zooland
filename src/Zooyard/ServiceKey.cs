@@ -118,7 +118,7 @@ public class ServiceKey(string interfaceName, string version, string group)
             if (!CommonConstants.ANY_VALUE.Equals(rule.Group))
             {
                 // 3.2. if rule group is null, target group should be null
-                if (string.IsNullOrWhiteSpace(rule.Group) && !String.IsNullOrWhiteSpace(target.Group))
+                if (string.IsNullOrWhiteSpace(rule.Group) && !string.IsNullOrWhiteSpace(target.Group))
                 {
                     return false;
                 }

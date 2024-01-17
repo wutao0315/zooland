@@ -223,7 +223,7 @@ namespace RpcContractThrift
       }
     }
 
-    public override bool Equals(object that)
+    public override bool Equals(object? that)
     {
       if (!(that is HelloData other)) return false;
       if (ReferenceEquals(this, other)) return true;

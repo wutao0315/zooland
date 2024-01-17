@@ -12,6 +12,7 @@ public interface ITransportClient: IDisposable
     /// 发送消息。
     /// </summary>
     /// <param name="message">远程调用消息模型。</param>
+    /// <param name="cancellationToken">cancellationToken</param>
     /// <returns>远程调用消息的传输消息。</returns>
     Task<RemoteInvokeResultMessage> SendAsync(RemoteInvokeMessage message, CancellationToken cancellationToken);
 }

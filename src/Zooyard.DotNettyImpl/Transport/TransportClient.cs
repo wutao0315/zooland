@@ -49,6 +49,7 @@ namespace Zooyard.DotNettyImpl.Transport
         /// 发送消息。
         /// </summary>
         /// <param name="message">远程调用消息模型。</param>
+        /// <param name="cancellationToken">cancellationToken</param>
         /// <returns>远程调用消息的传输消息。</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<RemoteInvokeResultMessage> SendAsync(RemoteInvokeMessage message, CancellationToken cancellationToken)
@@ -103,6 +104,7 @@ namespace Zooyard.DotNettyImpl.Transport
         /// 注册指定消息的回调任务。
         /// </summary>
         /// <param name="id">消息Id。</param>
+        /// <param name="cancellationToken">cancellationToken</param>
         /// <returns>远程调用结果消息模型。</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private async Task<RemoteInvokeResultMessage> RegisterResultCallbackAsync(string id, CancellationToken cancellationToken)

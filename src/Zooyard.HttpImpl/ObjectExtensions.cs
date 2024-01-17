@@ -31,6 +31,7 @@ public static class ObjectExtensions
     /// Convert an object to a JSON string with camelCase formatting
     /// </summary>
     /// <param name="obj"></param>
+    /// <param name="empty"></param>
     /// <returns></returns>
     public static string ToJsonString(this object obj, string empty = "")
     {
@@ -47,6 +48,7 @@ public static class ObjectExtensions
     /// Deserializes the json.
     /// </summary>
     /// <param name="str">The STR.</param>
+    /// <param name="defaultValue">The STR.</param>
     /// <returns></returns>
     public static T DeserializeJson<T>(this string str, T defaultValue = default!)
     {
@@ -71,6 +73,7 @@ public static class ObjectExtensions
     /// Deserializes the json.
     /// </summary>
     /// <param name="str">The STR.</param>
+    /// <param name="returnType">The returnType.</param>
     /// <returns></returns>
     public static object DeserializeJson(this string str, Type returnType)
     {
