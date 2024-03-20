@@ -73,7 +73,7 @@ public class ThriftClientPool(ILogger<ThriftClientPool> logger) : AbstractClient
         if (string.IsNullOrEmpty(protocol))
             return Protocol.Binary;
 
-        protocol = protocol.Substring(0, 1).ToUpperInvariant() + protocol.Substring(1).ToLowerInvariant();
+        protocol = protocol[..1].ToUpperInvariant() + protocol.Substring(1).ToLowerInvariant();
         if (Enum.TryParse(protocol, true, out Protocol selectedProtocol))
             return selectedProtocol;
         else
@@ -86,7 +86,7 @@ public class ThriftClientPool(ILogger<ThriftClientPool> logger) : AbstractClient
         if (string.IsNullOrEmpty(buffering))
             return Buffering.None;
 
-        buffering = buffering.Substring(0, 1).ToUpperInvariant() + buffering.Substring(1).ToLowerInvariant();
+        buffering = buffering[..1].ToUpperInvariant() + buffering.Substring(1).ToLowerInvariant();
         if (Enum.TryParse<Buffering>(buffering, out var selectedBuffering))
             return selectedBuffering;
         else
@@ -99,7 +99,7 @@ public class ThriftClientPool(ILogger<ThriftClientPool> logger) : AbstractClient
         if (string.IsNullOrEmpty(transport))
             return Transport.Tcp;
 
-        transport = transport.Substring(0, 1).ToUpperInvariant() + transport.Substring(1).ToLowerInvariant();
+        transport = transport[..1].ToUpperInvariant() + transport.Substring(1).ToLowerInvariant();
         if (Enum.TryParse(transport, true, out Transport selectedTransport))
             return selectedTransport;
         else

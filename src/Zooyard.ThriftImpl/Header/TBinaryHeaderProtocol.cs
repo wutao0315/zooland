@@ -1,4 +1,5 @@
-﻿using Thrift;
+﻿using System.Net.Sockets;
+using Thrift;
 using Thrift.Protocol;
 using Thrift.Protocol.Entities;
 using Thrift.Transport;
@@ -22,8 +23,7 @@ public class TBinaryHeaderProtocol : TBinaryProtocol
 
         string methodName = message.Name;
         //TraceUtils.submitAdditionalAnnotation(Constants.TRACE_THRIFT_METHOD, methodName);
-        TTransport transport = this.Transport;
-
+        TTransport transport = Transport;
 
         //string hostAddress = ((TSocket)transport).getSocket().getRemoteSocketAddress().toString();
         //TraceUtils.submitAdditionalAnnotation(Constants.TRACE_THRIFT_SERVER, hostAddress);

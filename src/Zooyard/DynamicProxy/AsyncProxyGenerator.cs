@@ -1,33 +1,20 @@
-﻿using Microsoft.Extensions.Logging;
-using System.Collections.Concurrent;
-using System.Diagnostics;
+﻿using System.Collections.Concurrent;
 using System.Reflection;
-using System.Runtime.ExceptionServices;
-//using Zooyard.Logging;
 
 namespace Zooyard.DynamicProxy;
 
 public class AsyncProxyGenerator : IDisposable
 {
-    private readonly ILogger _logger;
     private readonly ConcurrentDictionary<Type, Dictionary<Type, Type>> _proxyTypeCaches;
-
     private readonly ProxyAssembly _proxyAssembly;
+    private readonly ZooyardInvoker _zooyardInvoker;
 
-    private readonly IZooyardPools _zooyardPools;
-    private readonly string _serviceName;
-    private readonly string _version;
-    private readonly string _url;
-
-    public AsyncProxyGenerator(ILoggerFactory loggerFactory, IZooyardPools zooyardPools, string serviceName, string version, string url)
+    public AsyncProxyGenerator(ZooyardInvoker zooyardInvoker)
     {
-        _logger = loggerFactory.CreateLogger<AsyncProxyGenerator>();
         _proxyTypeCaches = new ConcurrentDictionary<Type, Dictionary<Type, Type>>();
         _proxyAssembly = new ProxyAssembly();
-        _zooyardPools = zooyardPools;
-        _serviceName = serviceName;
-        _version = version;
-        _url = url;
+
+        _zooyardInvoker = zooyardInvoker;
     }
     /// <summary> 创建代理 </summary>
     /// <param name="interfaceType"></param>
@@ -35,19 +22,6 @@ public class AsyncProxyGenerator : IDisposable
     public object CreateProxy(Type interfaceType)
     {
         var proxiedType = GetProxyType(typeof(ProxyExecutor), interfaceType);
-        return Activator.CreateInstance(proxiedType, new ProxyHandler(this))!;
-    }
-
-    /// <summary> 创建代理 </summary>
-    /// <param name="interfaceType"></param>
-    /// <param name="baseType"></param>
-    /// <param name="zooyardPools"></param>
-    /// <param name="app"></param>
-    /// <param name="version"></param>
-    /// <returns></returns>
-    public object CreateProxy(Type interfaceType, Type baseType, IZooyardPools zooyardPools, string app, string version)
-    {
-        var proxiedType = GetProxyType(baseType, interfaceType);
         return Activator.CreateInstance(proxiedType, new ProxyHandler(this))!;
     }
 
@@ -59,7 +33,7 @@ public class AsyncProxyGenerator : IDisposable
     {
         if (!_proxyTypeCaches.TryGetValue(baseType, out var interfaceToProxy))
         {
-            interfaceToProxy = new Dictionary<Type, Type>();
+            interfaceToProxy = [];
             _proxyTypeCaches[baseType] = interfaceToProxy;
         }
 
@@ -108,7 +82,7 @@ public class AsyncProxyGenerator : IDisposable
     private ProxyMethodResolverContext Resolve(object[] args)
     {
         var packed = new PackedArgs(args);
-        var method = _proxyAssembly.ResolveMethodToken(packed.DeclaringType, packed.MethodToken);
+        var method = _proxyAssembly.ResolveMethodToken(packed.MethodToken);
         if (method.IsGenericMethodDefinition)
             method = method.MakeGenericMethod(packed.GenericTypes);
 
@@ -117,46 +91,28 @@ public class AsyncProxyGenerator : IDisposable
 
     public object? Invoke(object[] args)
     {
-        var returnValue = InvokeAsync<object>(args).GetAwaiter().GetResult();
+        var context = Resolve(args);
+        var returnValue = _zooyardInvoker.Invoke(context);
         return returnValue;
     }
     public T? Invoke<T>(object[] args)
     {
-        var returnValue = InvokeAsync<T>(args).GetAwaiter().GetResult();
+        var context = Resolve(args);
+        var returnValue = _zooyardInvoker.Invoke<T>(context);
         return returnValue;
     }
 
     public async Task InvokeAsync(object[] args)
     {
-        await InvokeAsync<object>(args);
+        var context = Resolve(args);
+        await _zooyardInvoker.InvokeAsync(context);
     }
 
     public async Task<T?> InvokeAsync<T>(object[] args)
     {
-        var watch = Stopwatch.StartNew();
         var context = Resolve(args);
-
-        T? returnValue = default;
-        try
-        {
-            var icn = new RpcInvocation(Guid.NewGuid().ToString("N"), _serviceName, _version, _url, context.Packed.DeclaringType, context.Method, context.Packed.Args);
-            var result = await _zooyardPools.Invoke<T>(icn);
-            if (result != null)
-            {
-                returnValue = result.Value;
-                context.Packed.ReturnValue = returnValue;
-            }
-        }
-        catch (TargetInvocationException tie)
-        {
-            ExceptionDispatchInfo.Capture(tie).Throw();
-        }
-        finally
-        {
-            watch.Stop();
-        }
-        _logger.LogInformation($"async proxy generator: {watch.ElapsedMilliseconds} ms");
-        return returnValue;
+        var result = await _zooyardInvoker.InvokeAsync<T>(context);
+        return result;
     }
 
     public void Dispose()

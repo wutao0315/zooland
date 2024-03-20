@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using Zooyard.Configuration;
+﻿using Zooyard.Configuration;
 
 namespace ZooyardClient;
 

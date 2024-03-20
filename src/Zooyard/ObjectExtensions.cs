@@ -18,7 +18,7 @@ public static class ObjectExtensions
         {
             Type innerType = type.GetGenericArguments()[0];
             object? innerValue = ChangeType(value, innerType);
-            return Activator.CreateInstance(type, new object?[] { innerValue });
+            return Activator.CreateInstance(type, [innerValue]);
         }
         if (type == typeof(string))
         {

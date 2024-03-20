@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+	  <PackageReference Include="DotNetty.Codecs" Version="0.7.5" />
+	  <PackageReference Include="DotNetty.Transport.Libuv" Version="0.7.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Zooyard.Realtime.MessagePack\Zooyard.Realtime.MessagePack.csproj" />
+    <ProjectReference Include="..\Zooyard.Realtime.NewtonsoftJson\Zooyard.Realtime.NewtonsoftJson.csproj" />
+    <ProjectReference Include="..\Zooyard.Realtime\Zooyard.Realtime.csproj" />
+    <ProjectReference Include="..\Zooyard\Zooyard.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+
+</Project>

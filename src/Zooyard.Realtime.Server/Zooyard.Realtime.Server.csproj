@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<ItemGroup>
+	  <Compile Remove="Authorization\**" />
+	  <EmbeddedResource Remove="Authorization\**" />
+	  <None Remove="Authorization\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Remove="Builder\HubEndpointConventionBuilder.cs" />
+	  <Compile Remove="Builder\HubEndpointRouteBuilderExtensions.cs" />
+	  <Compile Remove="Builder\IHubEndpointConventionBuilder.cs" />
+	  <Compile Remove="SerializedRpcMessage.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="8.0.2" />
+	  <PackageReference Include="Microsoft.AspNetCore.Connections.Abstractions" Version="8.0.2" />
+	  <PackageReference Include="Microsoft.AspNetCore.Http.Connections.Common" Version="8.0.2" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Zooyard.Realtime.Connections\Zooyard.Realtime.Connections.csproj" />
+		<ProjectReference Include="..\Zooyard.Realtime\Zooyard.Realtime.csproj" />
+		<ProjectReference Include="..\Zooyard\Zooyard.csproj" />
+	</ItemGroup>
+
+</Project>

@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Primitives;
-using System.Collections.Generic;
+﻿using Microsoft.Extensions.Primitives;
 using Zooyard.Configuration;
 
 namespace ZooyardClient;

@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace Zooyard.HttpImpl;
 
-public static class ObjectExtensions
+internal static class ObjectExtensions
 {
     public readonly static JsonSerializerOptions _option = new()
     {
@@ -24,7 +24,11 @@ public static class ObjectExtensions
             new BoolNullableConverter(),
             new GuidConverter(),
             new GuidNullableConverter(),
-            new DictionaryLongStringJsonConverter()
+            new DecimalConverter(),
+            new DecimalNullableConverter(),
+            new DictionaryLongStringJsonConverter(),
+            new JsonStringEnumConverter(),
+            new StringConverter()
         }
     };
     /// <summary>
@@ -106,7 +110,7 @@ public static class ObjectExtensions
     }
 }
 
-public class BoolConverter : JsonConverter<bool>
+internal class BoolConverter : JsonConverter<bool>
 {
     public override bool Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
@@ -146,7 +150,7 @@ public class BoolConverter : JsonConverter<bool>
         writer.WriteBooleanValue(value);
     }
 }
-public class BoolNullableConverter : JsonConverter<bool?>
+internal class BoolNullableConverter : JsonConverter<bool?>
 {
     public override bool? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
@@ -192,7 +196,85 @@ public class BoolNullableConverter : JsonConverter<bool?>
         }
     }
 }
-public class LongNullableConverter : JsonConverter<long?>
+internal class DecimalConverter : JsonConverter<decimal>
+{
+    public override decimal Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.Null)
+        {
+            return 0;
+        }
+
+        if (reader.TokenType == JsonTokenType.String)
+        {
+            var readStr = reader.GetString();
+            if (string.IsNullOrWhiteSpace(readStr))
+            {
+                return 0;
+            }
+
+            if (decimal.TryParse(readStr, out decimal val))
+            {
+                return val;
+            }
+        }
+
+        if (reader.TryGetDecimal(out decimal val2))
+        {
+            return val2;
+        }
+        return 0;
+    }
+
+    public override void Write(Utf8JsonWriter writer, decimal value, JsonSerializerOptions options)
+    {
+        writer.WriteNumberValue(value);
+    }
+}
+internal class DecimalNullableConverter : JsonConverter<decimal?>
+{
+    public override decimal? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.Null)
+        {
+            return null;
+        }
+
+        if (reader.TokenType == JsonTokenType.String)
+        {
+            var readStr = reader.GetString();
+            if (string.IsNullOrWhiteSpace(readStr))
+            {
+                return null;
+            }
+
+            if (decimal.TryParse(readStr, out decimal val))
+            {
+                return val;
+            }
+        }
+
+
+        if (reader.TryGetDecimal(out decimal val2))
+        {
+            return val2;
+        }
+        return null;
+    }
+
+    public override void Write(Utf8JsonWriter writer, decimal? value, JsonSerializerOptions options)
+    {
+        if (value == null)
+        {
+            writer.WriteStringValue("");
+        }
+        else
+        {
+            writer.WriteNumberValue(value.Value);
+        }
+    }
+}
+internal class LongNullableConverter : JsonConverter<long?>
 {
     public override long? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
@@ -228,7 +310,7 @@ public class LongNullableConverter : JsonConverter<long?>
         writer.WriteStringValue(value?.ToString()??"");
     }
 }
-public class LongConverter : JsonConverter<long>
+internal class LongConverter : JsonConverter<long>
 {
     public override long Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
@@ -259,7 +341,7 @@ public class LongConverter : JsonConverter<long>
         writer.WriteStringValue(value.ToString());
     }
 }
-public class IntNullableConverter : JsonConverter<int?>
+internal class IntNullableConverter : JsonConverter<int?>
 {
     public override int? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
@@ -301,7 +383,7 @@ public class IntNullableConverter : JsonConverter<int?>
         }
     }
 }
-public class IntConverter : JsonConverter<int>
+internal class IntConverter : JsonConverter<int>
 {
     public override int Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
@@ -332,7 +414,7 @@ public class IntConverter : JsonConverter<int>
         writer.WriteNumberValue(value);
     }
 }
-public class DateTimeNullableConverter : JsonConverter<DateTime?>
+internal class DateTimeNullableConverter : JsonConverter<DateTime?>
 {
     public override DateTime? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
@@ -364,7 +446,7 @@ public class DateTimeNullableConverter : JsonConverter<DateTime?>
         writer.WriteStringValue(value?.ToString("yyyy-MM-dd HH:mm:ss")??"");
     }
 }
-public class DateTimeConverter : JsonConverter<DateTime>
+internal class DateTimeConverter : JsonConverter<DateTime>
 {
     public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
@@ -387,7 +469,7 @@ public class DateTimeConverter : JsonConverter<DateTime>
         writer.WriteStringValue(value.ToString("yyyy-MM-dd HH:mm:ss"));
     }
 }
-class GuidConverter : JsonConverter<Guid>
+internal class GuidConverter : JsonConverter<Guid>
 {
     public override Guid Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
@@ -423,7 +505,7 @@ class GuidConverter : JsonConverter<Guid>
         writer.WriteStringValue(value.ToString("N"));
     }
 }
-class GuidNullableConverter : JsonConverter<Guid?>
+internal class GuidNullableConverter : JsonConverter<Guid?>
 {
     public override Guid? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
@@ -465,7 +547,7 @@ class GuidNullableConverter : JsonConverter<Guid?>
         }
     }
 }
-public class DictionaryLongStringJsonConverter : JsonConverter<Dictionary<long, string>>
+internal class DictionaryLongStringJsonConverter : JsonConverter<Dictionary<long, string>>
 {
     public override Dictionary<long, string> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
@@ -515,4 +597,56 @@ public class DictionaryLongStringJsonConverter : JsonConverter<Dictionary<long, 
 
         writer.WriteEndObject();
     }
+}
+internal class StringConverter : JsonConverter<string>
+{
+    public override string Read(
+        ref Utf8JsonReader reader,
+        Type typeToConvert,
+        JsonSerializerOptions options) => reader.TokenType switch
+        {
+            JsonTokenType.Null => string.Empty,
+            JsonTokenType.True => bool.TrueString,
+            JsonTokenType.False => bool.FalseString,
+            JsonTokenType.Number when reader.TryGetInt16(out short s) => s.ToString(),
+            JsonTokenType.Number when reader.TryGetInt32(out int i) => i.ToString(),
+            JsonTokenType.Number when reader.TryGetInt64(out long l) => l.ToString(),
+            JsonTokenType.Number when reader.TryGetDecimal(out decimal d) => d.ToString(),
+            JsonTokenType.Number when reader.TryGetUInt16(out ushort us) => us.ToString(),
+            JsonTokenType.Number when reader.TryGetUInt32(out uint ui) => ui.ToString(),
+            JsonTokenType.Number when reader.TryGetUInt64(out ulong ul) => ul.ToString(),
+            JsonTokenType.Number when reader.TryGetSingle(out float f) => f.ToString(),
+            JsonTokenType.Number => reader.GetDouble().ToString(),
+            JsonTokenType.String when reader.TryGetDateTime(out DateTime datetime) => datetime.ToString("yyyy-MM-dd HH:mm:ss.fff"),
+            JsonTokenType.String => reader.GetString()!,
+            _ => throw new System.Text.Json.JsonException("String Converter err")
+        };
+
+    public override void Write(Utf8JsonWriter writer, string value, JsonSerializerOptions options)
+    {
+        writer.WriteStringValue(value.ToString());
+    }
+}
+
+internal class ObjectToInferredTypesConverter : JsonConverter<object>
+{
+    public override object Read(
+        ref Utf8JsonReader reader,
+        Type typeToConvert,
+        JsonSerializerOptions options) => reader.TokenType switch
+        {
+            JsonTokenType.True => true,
+            JsonTokenType.False => false,
+            JsonTokenType.Number when reader.TryGetInt64(out long l) => l,
+            JsonTokenType.Number => reader.GetDouble(),
+            JsonTokenType.String when reader.TryGetDateTime(out DateTime datetime) => datetime,
+            JsonTokenType.String => reader.GetString()!,
+            _ => JsonDocument.ParseValue(ref reader).RootElement.Clone()
+        };
+
+    public override void Write(
+        Utf8JsonWriter writer,
+        object objectToWrite,
+        JsonSerializerOptions options) =>
+        JsonSerializer.Serialize(writer, objectToWrite, objectToWrite.GetType(), options);
 }

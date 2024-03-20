@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using System.Collections.ObjectModel;
-using Zooyard.Configuration;
+﻿using Zooyard.Configuration;
 
 namespace ZooyardClient;
 

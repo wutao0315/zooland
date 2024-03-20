@@ -1,6 +1,6 @@
 ﻿namespace Zooyard.Atomic;
 
-public sealed class AtomicPositiveInteger
+internal sealed class AtomicPositiveInteger
 {
     private readonly AtomicInteger i;
 

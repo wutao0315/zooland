@@ -12,9 +12,9 @@ internal class ProxyAssembly
 
     // Maintain a MethodBase-->int, int-->MethodBase mapping to permit generated code
     // to pass methods by token
-    private readonly Dictionary<MethodInfo, int> _methodToToken = new Dictionary<MethodInfo, int>();
-    private readonly List<MethodInfo> _methodsByToken = new List<MethodInfo>();
-    private readonly HashSet<string> _ignoresAccessAssemblyNames = new HashSet<string>();
+    private readonly Dictionary<MethodInfo, int> _methodToToken = new();
+    private readonly List<MethodInfo> _methodsByToken = new();
+    private readonly HashSet<string> _ignoresAccessAssemblyNames = new();
     private ConstructorInfo? _ignoresAccessChecksToAttributeConstructor;
 
     public ProxyAssembly()
@@ -70,13 +70,13 @@ internal class ProxyAssembly
         // Create backing field as:
         // private string assemblyName;
         FieldBuilder assemblyNameField =
-            attributeTypeBuilder.DefineField("assemblyName", typeof(String), FieldAttributes.Private);
+            attributeTypeBuilder.DefineField("assemblyName", typeof(string), FieldAttributes.Private);
 
         // Create ctor as:
         // public IgnoresAccessChecksToAttribute(string)
         ConstructorBuilder constructorBuilder = attributeTypeBuilder.DefineConstructor(MethodAttributes.Public,
                                                      CallingConventions.HasThis,
-                                                     new Type[] { assemblyNameField.FieldType });
+                                                     [assemblyNameField.FieldType]);
 
         ILGenerator il = constructorBuilder.GetILGenerator();
 
@@ -95,14 +95,14 @@ internal class ProxyAssembly
                                                "AssemblyName",
                                                PropertyAttributes.None,
                                                CallingConventions.HasThis,
-                                               returnType: typeof(String),
+                                               returnType: typeof(string),
                                                parameterTypes: null);
 
         MethodBuilder getterMethodBuilder = attributeTypeBuilder.DefineMethod(
                                                "get_AssemblyName",
                                                MethodAttributes.Public,
                                                CallingConventions.HasThis,
-                                               returnType: typeof(String),
+                                               returnType: typeof(string),
                                                parameterTypes: null);
 
         // Generate body:
@@ -130,9 +130,9 @@ internal class ProxyAssembly
         // Create a builder to construct the instance via the ctor and property
         CustomAttributeBuilder customAttributeBuilder =
             new CustomAttributeBuilder(attributeUsageConstructorInfo,
-                                        new object[] { AttributeTargets.Assembly },
+                                        [AttributeTargets.Assembly],
                                         new PropertyInfo[] { allowMultipleProperty },
-                                        new object[] { true });
+                                        [true]);
 
         // Attach this attribute instance to the newly defined attribute type
         attributeTypeBuilder.SetCustomAttribute(customAttributeBuilder);
@@ -150,7 +150,7 @@ internal class ProxyAssembly
         // [assembly: System.Runtime.CompilerServices.IgnoresAccessChecksToAttribute(assemblyName)]
         ConstructorInfo attributeConstructor = IgnoresAccessChecksAttributeConstructor;
         CustomAttributeBuilder customAttributeBuilder =
-            new CustomAttributeBuilder(attributeConstructor, new object[] { assemblyName });
+            new CustomAttributeBuilder(attributeConstructor, [assemblyName]);
         _ab.SetCustomAttribute(customAttributeBuilder);
     }
 
@@ -174,7 +174,6 @@ internal class ProxyAssembly
     internal void GetTokenForMethod(MethodInfo method, out Type type, out int token)
     {
         type = method.DeclaringType!;
-        token = 0;
         if (!_methodToToken.TryGetValue(method, out token))
         {
             _methodsByToken.Add(method);
@@ -183,7 +182,7 @@ internal class ProxyAssembly
         }
     }
 
-    internal MethodInfo ResolveMethodToken(Type type, int token)
+    internal MethodInfo ResolveMethodToken(int token)
     {
         Debug.Assert(token >= 0 && token < _methodsByToken.Count);
         return _methodsByToken[token];

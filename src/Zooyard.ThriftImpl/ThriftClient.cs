@@ -10,9 +10,9 @@ public class ThriftClient(ILogger _logger, TBaseClient _thriftclient, int client
 
     public override async Task<IInvoker> Refer(CancellationToken cancellationToken = default)
     {
-        await this.Open(cancellationToken);
+        await Open(cancellationToken);
         //thrift client service
-        return new ThriftInvoker(_logger, _thriftclient, this.ClientTimeout);
+        return new ThriftInvoker(_logger, _thriftclient, ClientTimeout);
     }
 
     public override async Task Open(CancellationToken cancellationToken = default)

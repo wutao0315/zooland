@@ -1,64 +1,87 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
-	<PropertyGroup>
-		<IsPackable>false</IsPackable>
-		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-	</PropertyGroup>
-  <ItemGroup>
-    <Compile Remove="HelloServiceAkkaImpl.cs" />
-    <Compile Remove="HelloServiceGrpcImpl.cs" />
-    <Compile Remove="HelloServiceWcfImpl.cs" />
-  </ItemGroup>
+	<ItemGroup>
+		<Compile Remove="HelloServiceAkkaImpl.cs" />
+		<Compile Remove="HelloServiceGrpcImpl.cs" />
+		<Compile Remove="HelloServiceWcfImpl.cs" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <None Remove="App_Data\Config\service.akka.json" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Remove="App_Data\Config\service.akka.json" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="DotNetty.Transport" Version="0.7.5" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
-    <PackageReference Include="NLog" Version="5.2.8" />
-    <PackageReference Include="NLog.Extensions.Hosting" Version="5.3.8" />
-    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.8" />
-    <PackageReference Include="SoapCore" Version="1.1.0.41" />
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
-    <PackageReference Include="ApacheThrift" Version="0.19.0" />
-	  <PackageReference Include="Grpc.AspNetCore" Version="2.60.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="DotNetty.Transport" Version="0.7.5" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+		<PackageReference Include="NLog" Version="5.2.8" />
+		<PackageReference Include="NLog.Extensions.Hosting" Version="5.3.8" />
+		<PackageReference Include="NLog.Extensions.Logging" Version="5.3.8" />
+		<PackageReference Include="SoapCore" Version="1.1.0.47" />
+		<PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
+		<PackageReference Include="ApacheThrift" Version="0.19.0" />
+		<PackageReference Include="Grpc.AspNetCore" Version="2.61.0" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\Zooyard.DotNettyImpl\Zooyard.DotNettyImpl.csproj" />
-    <ProjectReference Include="..\..\src\Zooyard\Zooyard.csproj" />
-    <ProjectReference Include="..\..\src\Zooyard.HttpImpl\Zooyard.HttpImpl.csproj" />
-    <ProjectReference Include="..\..\src\Zooyard.ThriftImpl\Zooyard.ThriftImpl.csproj" />
-    <ProjectReference Include="..\RpcContractGrpcNet\RpcContractGrpcNet.csproj" />
-    <ProjectReference Include="..\RpcContractHttp\RpcContractHttp.csproj" />
-    <ProjectReference Include="..\RpcContractNetty\RpcContractNetty.csproj" />
-    <ProjectReference Include="..\RpcContractThrift\RpcContractThrift.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\Zooyard.DotNettyImpl\Zooyard.DotNettyImpl.csproj" />
+		<ProjectReference Include="..\..\src\Zooyard\Zooyard.csproj" />
+		<ProjectReference Include="..\..\src\Zooyard.HttpImpl\Zooyard.HttpImpl.csproj" />
+		<ProjectReference Include="..\..\src\Zooyard.ThriftImpl\Zooyard.ThriftImpl.csproj" />
+		<ProjectReference Include="..\RpcContractGrpcNet\RpcContractGrpcNet.csproj" />
+		<ProjectReference Include="..\RpcContractHttp\RpcContractHttp.csproj" />
+		<ProjectReference Include="..\RpcContractNetty\RpcContractNetty.csproj" />
+		<ProjectReference Include="..\RpcContractThrift\RpcContractThrift.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <None Update="App_Data\Config\nlog.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="App_Data\Config\service.http.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="App_Data\Config\service.grpc.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="App_Data\Config\service.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="App_Data\Config\service.netty.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="App_Data\Config\service.thrift.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="ThriftTest.pfx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+	<ItemGroup>
+	  <Content Update="App_Data\Config\appsettings.json">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
+	  <Content Update="App_Data\Config\nlog.json">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
+	  <Content Update="App_Data\Config\service.akka.json">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
+	  <Content Update="App_Data\Config\service.grpc.json">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
+	  <Content Update="App_Data\Config\service.http.json">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
+	  <Content Update="App_Data\Config\service.json">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
+	  <Content Update="App_Data\Config\service.netty.json">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
+	  <Content Update="App_Data\Config\service.thrift.json">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="App_Data\Config\nlog.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="App_Data\Config\service.http.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="App_Data\Config\service.grpc.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="App_Data\Config\service.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="App_Data\Config\service.netty.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="App_Data\Config\service.thrift.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="ThriftTest.pfx">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
 
 </Project>

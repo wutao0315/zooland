@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using System.Diagnostics;
 using Thrift;
 using Zooyard.Rpc.Support;
 

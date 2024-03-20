@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.2" />
+		<PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="8.0.2" />
+		<PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.NewtonsoftJson" Version="8.0.2" />
+	</ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Zooyard\Zooyard.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+
+</Project>

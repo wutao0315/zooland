@@ -914,10 +914,6 @@ public sealed record URL
 
     public override string ToString()
     {
-        //if (@string != null)
-        //{
-        //    return @string;
-        //}
         // no show username and password
         return BuildString(false, true); 
     }
@@ -1185,107 +1181,6 @@ public sealed record URL
             );
             return result;
     }
-    //public override int GetHashCode()
-    //{
-    //    const int prime = 31;
-    //    int result = 1;
-    //    result = prime * result + ((Host == null) ? 0 : Host.GetHashCode());
-    //    result = prime * result + ((this.Parameters == null) ? 0 : this.Parameters.GetHashCode());
-    //    result = prime * result + ((Password == null) ? 0 : Password.GetHashCode());
-    //    result = prime * result + ((Path == null) ? 0 : Path.GetHashCode());
-    //    result = prime * result + Port;
-    //    result = prime * result + ((Protocol == null) ? 0 : Protocol.GetHashCode());
-    //    result = prime * result + ((Username == null) ? 0 : Username.GetHashCode());
-    //    return result;
-    //}
-
-    //public override bool Equals(object? obj)
-    //{
-    //    if (this == obj)
-    //    {
-    //        return true;
-    //    }
-    //    if (obj == null)
-    //    {
-    //        return false;
-    //    }
-    //    if (this.GetType() != obj.GetType())
-    //    {
-    //        return false;
-    //    }
-    //    URL other = (URL)obj;
-    //    if (Host == null)
-    //    {
-    //        if (other.Host != null)
-    //        {
-    //            return false;
-    //        }
-    //    }
-    //    else if (!Host.Equals(other.Host))
-    //    {
-    //        return false;
-    //    }
-    //    if (this.Parameters == null)
-    //    {
-    //        if (other.Parameters != null)
-    //        {
-    //            return false;
-    //        }
-    //    }
-    //    else if (!this.Parameters.Equals(other.Parameters))
-    //    {
-    //        return false;
-    //    }
-    //    if (Password == null)
-    //    {
-    //        if (other.Password != null)
-    //        {
-    //            return false;
-    //        }
-    //    }
-    //    else if (!Password.Equals(other.Password))
-    //    {
-    //        return false;
-    //    }
-    //    if (Path == null)
-    //    {
-    //        if (other.Path != null)
-    //        {
-    //            return false;
-    //        }
-    //    }
-    //    else if (!Path.Equals(other.Path))
-    //    {
-    //        return false;
-    //    }
-    //    if (Port != other.Port)
-    //    {
-    //        return false;
-    //    }
-    //    if (Protocol == null)
-    //    {
-    //        if (other.Protocol != null)
-    //        {
-    //            return false;
-    //        }
-    //    }
-    //    else if (!Protocol.Equals(other.Protocol))
-    //    {
-    //        return false;
-    //    }
-    //    if (Username == null)
-    //    {
-    //        if (other.Username != null)
-    //        {
-    //            return false;
-    //        }
-    //    }
-    //    else if (!Username.Equals(other.Username))
-    //    {
-    //        return false;
-    //    }
-    //    return true;
-    //}
 }
 
 public sealed record BadUrl 

@@ -1,6 +1,6 @@
 ﻿namespace Zooyard.Rpc;
 
-public interface IClient : IDisposable, IAsyncDisposable
+public interface IClient : IAsyncDisposable
 {
     string System { get; }
     URL Url { get; }

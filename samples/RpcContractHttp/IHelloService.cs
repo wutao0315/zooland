@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using Zooyard;
 using Zooyard.DataAnnotations;
 
 namespace RpcContractHttp;
@@ -7,15 +8,24 @@ namespace RpcContractHttp;
 public interface IHelloService
 {
     [GetMapping("CallNameVoid")]
-    Task<string> CallNameVoid();
+    Task<string?> CallNameVoid();
+
     [GetMapping("CallName")]
-    Task CallName(string name);
+    void CallName(string name);
+
     [GetMapping("CallVoid")]
     Task CallVoid();
+
     [GetMapping("Hello/{name}")]
-    Task<string> Hello(string name);
+    Task<string?> Hello(string name);
+
     [GetMapping("SayHello/{name}")]
-    Task<HelloResult> SayHello(string name);
-    [PostMapping("ShowHello",Consumes = "application/json")]
-    Task<string> ShowHello(HelloResult name);
+    Task<HelloResult?> SayHello(string name);
+
+    [PostMapping("ShowHello", Consumes = "application/json")]
+    Task<string?> ShowHello(HelloResult name);
+
+    [PostMapping("getpage", Consumes = "application/json")]
+    Task<Result<HelloResult>> GetPage(string name);
+    
 }

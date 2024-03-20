@@ -2,7 +2,7 @@
 
 public abstract class AbstractClient(int clientTimeout, URL url) : IClient
 {
-    public virtual string Version { get { return Url.GetParameter(URL.VERSION_KEY)!; } }
+    public virtual string Version => Url.GetParameter(URL.VERSION_KEY, "1.0.0");
     public DateTime ActiveTime { get; set; } = DateTime.Now;
     public abstract string System { get; }
     public int ClientTimeout { get; } = clientTimeout;
@@ -11,9 +11,5 @@ public abstract class AbstractClient(int clientTimeout, URL url) : IClient
     public abstract Task Open(CancellationToken cancellationToken = default);
     public abstract Task Close(CancellationToken cancellationToken = default);
     public abstract ValueTask DisposeAsync();
-    public virtual void Dispose()
-    {
-        DisposeAsync().GetAwaiter().GetResult();
-    }
     public virtual void Reset() { }
 }

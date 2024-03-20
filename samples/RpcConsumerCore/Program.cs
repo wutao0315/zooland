@@ -1,7 +1,5 @@
 ﻿using MemberGrpc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Zooyard.HttpImpl;
+using RpcContractHttp;
 
 namespace RpcConsumerCore;
 
@@ -9,45 +7,85 @@ class Program
 {
     static async Task Main(string[] args)
     {
-        var basePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config");
+        CreateHostBuilder(args).Build().Run();
+    }
 
-        var builder = new ConfigurationBuilder()
-            .SetBasePath(basePath)
-            .AddJsonFile("zooyard.grpc.json", false, true)
-            .AddJsonFile("zooyard.netty.json", false, true)
-            .AddJsonFile("zooyard.thrift.json", false, true)
-            .AddJsonFile("zooyard.json", false, true)
-            .AddJsonFile("nlog.json", false, true);
+    public static IHostBuilder CreateHostBuilder(string[] args) =>
+   Host.CreateDefaultBuilder(args)
+       .ConfigureAppConfiguration((hostingContext, config) => {
+           hostingContext.HostingEnvironment.ApplicationName = "RpcConsumerCore";
+           hostingContext.HostingEnvironment.ContentRootPath = Directory.GetCurrentDirectory();
+           var env = hostingContext.HostingEnvironment;
+       })
+       .ConfigureServices((hostingContext, services) =>
+       {
+           var env = hostingContext.HostingEnvironment;
 
-        var config = builder.Build();
-        //ZooyardLogManager.UseConsoleLogging(Zooyard.Logging.LogLevel.Debug);
+           var basePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "Config");
+           var builder = new ConfigurationBuilder()
+               .SetBasePath(basePath)
+               //.AddJsonFile("service.akka.json", false, true)
+               .AddJsonFile("service.grpc.json", true, true)
+               .AddJsonFile("service.netty.json", true, true)
+               .AddJsonFile("service.thrift.json", true, true)
+               .AddJsonFile("service.http.json", true, true)
+               .AddJsonFile("service.json", true, true)
+               .AddJsonFile("nlog.json", true, true);
 
-        IServiceCollection services = new ServiceCollection();
-        services.Configure<GrpcNetOption>(config.GetSection("grpc"));
-        services.AddLogging();
+           var config = builder.Build();
 
-        services.AddMemoryCache();
-        services.AddRpc()
-            .LoadFromConfig(config.GetSection("zooyard"))
-            .AddHttp()
-            .AddDotNetty()
-            .AddThrift()
-            .AddGrpcNet()
-            .AddContracts(typeof(RpcContractThrift.IHelloService)
-            , typeof(RpcContractGrpcNet.IHelloNetService)
-            , typeof(RpcContractHttp.IHelloService)
-            , typeof(RpcContractNetty.IHelloService)
-            , typeof(MemberGrpc.ISessionService))
-            ;
+           services.AddLogging();
 
-        using var bsp = services.BuildServiceProvider();
-        var helloServiceThrift = bsp.GetRequiredService<RpcContractThrift.IHelloService>();
-        var helloServiceGrpcNet = bsp.GetRequiredService<RpcContractGrpcNet.IHelloNetService>();
-        var helloServiceHttp = bsp.GetRequiredService<RpcContractHttp.IHelloService>();
-        var helloServiceNetty = bsp.GetRequiredService<RpcContractNetty.IHelloService>();
-        var sessionService = bsp.GetRequiredService<MemberGrpc.ISessionService>();
 
-        while (true)
+           services.Configure<GrpcNetOption>(config.GetSection("grpc"));
+           services.AddLogging();
+
+           services.AddMemoryCache();
+           services.AddRpc()
+               .LoadFromConfig(config.GetSection("zooyard"))
+               .AddHttp()
+               //.AddDotNetty()
+               //.AddThrift()
+               //.AddGrpcNet()
+               .AddContracts(
+               //typeof(RpcContractThrift.IHelloService)
+               //, typeof(RpcContractGrpcNet.IHelloNetService)
+               //, 
+               typeof(RpcContractHttp.IHelloService)
+               //, typeof(RpcContractNetty.IHelloService)
+               //, typeof(MemberGrpc.ISessionService)
+               )
+               ;
+
+           //services.AddSingleton<IHelloService, RpcContractHttp.HelloServiceClientTest>();
+           services.AddSingleton<IHelloService, RpcContractHttp.HelloServiceClient>();
+
+           //using var bsp = services.BuildServiceProvider();
+           //var helloServiceThrift = bsp.GetRequiredService<RpcContractThrift.IHelloService>();
+           //var helloServiceGrpcNet = bsp.GetRequiredService<RpcContractGrpcNet.IHelloNetService>();
+           //var helloServiceHttp = bsp.GetRequiredService<RpcContractHttp.IHelloService>();
+           //var helloServiceNetty = bsp.GetRequiredService<RpcContractNetty.IHelloService>();
+           //var sessionService = bsp.GetRequiredService<MemberGrpc.ISessionService>();
+
+           services.AddHostedService<TestHostedService>();
+           
+
+       })
+       .ConfigureWebHostDefaults(webBuilder =>
+       {
+           // webBuilder.UseStartup<Startup>();
+       });
+
+   
+}
+
+public class TestHostedService(RpcContractHttp.IHelloService helloServiceHttp) : IHostedService
+{
+
+    public async Task StartAsync(CancellationToken cancellationToken)
+    {
+
+        while (!cancellationToken.IsCancellationRequested)
         {
             try
             {
@@ -56,88 +94,93 @@ class Program
                 var mode = Console.ReadLine()?.ToLower() ?? "all";
                 switch (mode)
                 {
-                    case "grpcnet":
-                        await CallWhile(async (helloword) => { await GrpcNetHello(helloServiceGrpcNet, helloword); });
-                        break;
-                    case "grpcmember":
-                        await CallWhile(async (helloword) => { await GrpcNetMember(sessionService, helloword); });
-                        break;
-                    case "thrift":
-                        await CallWhile(async (helloword) => { await ThriftHello(helloServiceThrift, helloword); });
-                        break;
+                    //case "grpcnet":
+                    //    await CallWhile(async (helloword) => { await GrpcNetHello(helloServiceGrpcNet, helloword); });
+                    //    break;
+                    //case "grpcmember":
+                    //    await CallWhile(async (helloword) => { await GrpcNetMember(sessionService, helloword); });
+                    //    break;
+                    //case "thrift":
+                    //    await CallWhile(async (helloword) => { await ThriftHello(helloServiceThrift, helloword); });
+                    //    break;
                     case "http":
+                        helloServiceHttp.CallName("test");
+
                         await CallWhile(async (helloword) => { await HttpHello(helloServiceHttp, helloword); });
+
+                        var callNameVoid = await helloServiceHttp.CallNameVoid();
+                        Console.WriteLine(callNameVoid);
                         break;
-                    case "netty":
-                        await CallWhile(async (helloword) => { await NettyHello(helloServiceNetty, helloword); });
-                        break;
+                    //case "netty":
+                    //    await CallWhile(async (helloword) => { await NettyHello(helloServiceNetty, helloword); });
+                    //    break;
                     case "all":
-                        for (int i = 0; i < 3; i++)
-                        {
-                            _=Task.Run(async () =>
-                            {
-                                try
-                                {
-                                    await GrpcNetHello(helloServiceGrpcNet);
-                                }
-                                catch
-                                {
-                                    throw;
-                                }
+                        //for (int i = 0; i < 3; i++)
+                        //{
+                        //    _=Task.Run(async () =>
+                        //    {
+                        //        try
+                        //        {
+                        //            await GrpcNetHello(helloServiceGrpcNet);
+                        //        }
+                        //        catch
+                        //        {
+                        //            throw;
+                        //        }
 
-                            });
-                            _ = Task.Run(async () =>
-                            {
-                                try
-                                {
-                                    await ThriftHello(helloServiceThrift);
-                                }
-                                catch (Exception)
-                                {
-                                    throw;
-                                }
+                        //    });
+                        //    _ = Task.Run(async () =>
+                        //    {
+                        //        try
+                        //        {
+                        //            await ThriftHello(helloServiceThrift);
+                        //        }
+                        //        catch (Exception)
+                        //        {
+                        //            throw;
+                        //        }
 
-                            });
-                            _ = Task.Run(async () =>
-                            {
-                                try
-                                {
-                                    await HttpHello(helloServiceHttp);
-                                }
-                                catch
-                                {
+                        //    });
+                        //    _ = Task.Run(async () =>
+                        //    {
+                        //        try
+                        //        {
+                        //            await HttpHello(helloServiceHttp);
+                        //        }
+                        //        catch
+                        //        {
 
-                                    throw;
-                                }
+                        //            throw;
+                        //        }
 
-                            });
-                            //Task.Run(() =>
-                            //{
+                        //    });
+                        //    //Task.Run(() =>
+                        //    //{
 
-                            //    try
-                            //    {
-                            //        AkkaHello(helloServiceAkka);
-                            //    }
-                            //    catch (Exception ex)
-                            //    {
+                        //    //    try
+                        //    //    {
+                        //    //        AkkaHello(helloServiceAkka);
+                        //    //    }
+                        //    //    catch (Exception ex)
+                        //    //    {
 
-                            //        throw ex;
-                            //    }
-                            //});
+                        //    //        throw ex;
+                        //    //    }
+                        //    //});
 
-                            _ = Task.Run(async () =>
-                            {
-                                try
-                                {
-                                    await NettyHello(helloServiceNetty);
-                                }
-                                catch
-                                {
+                        //    _ = Task.Run(async () =>
+                        //    {
+                        //        try
+                        //        {
+                        //            await NettyHello(helloServiceNetty);
+                        //        }
+                        //        catch
+                        //        {
 
-                                    throw;
-                                }
-                            });
-                        }
+                        //            throw;
+                        //        }
+                        //    });
+                        //}
                         break;
                 }
 
@@ -148,9 +191,14 @@ class Program
             }
             catch (Exception e)
             {
-                Console.WriteLine("ex"+e.Message);
+                Console.WriteLine("ex" + e.Message);
             }
         }
+    }
+
+    public async Task StopAsync(CancellationToken cancellationToken)
+    {
+     
     }
 
     private static async Task ThriftHello(RpcContractThrift.IHelloService helloServiceThrift, string helloword = "world")
@@ -205,7 +253,7 @@ class Program
 
         var all = response.Data.Unpack<PrmAllSession>();
 
-        Console.WriteLine(all.ToJsonString("{}"));
+        Console.WriteLine(all);
     }
 
     private static async Task GrpcNetHello(RpcContractGrpcNet.IHelloNetService helloServiceGrpc, string helloword = "world")
@@ -231,7 +279,7 @@ class Program
         Console.WriteLine("HttpHello---------------------------------------------------------------------------");
         var callNameVoid = await helloServiceHttp.CallNameVoid();
         Console.WriteLine(callNameVoid);
-        await helloServiceHttp.CallName(helloword);
+        helloServiceHttp.CallName(helloword);
         Console.WriteLine("CallName called");
         await helloServiceHttp.CallVoid();
         Console.WriteLine("CallVoid called");
@@ -260,7 +308,7 @@ class Program
         var showResultNetty = await nettyService.ShowHelloAsync(helloResult);
         Console.WriteLine(showResultNetty);
     }
-    private static async Task CallWhile(Func<string,Task> map)
+    private static async Task CallWhile(Func<string, Task> map)
     {
         var helloword = "world";
         while (true)
@@ -269,7 +317,7 @@ class Program
             {
                 await map(helloword);
                 var mode = Console.ReadLine();
-                helloword = mode??"hello";
+                helloword = mode ?? "hello";
                 if (helloword == "end")
                 {
                     break;

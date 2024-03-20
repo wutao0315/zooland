@@ -11,6 +11,7 @@ using Zooyard.Management;
 using Zooyard.Rpc.Route.State;
 using Zooyard.Rpc;
 using Zooyard.ServiceDiscovery;
+using Microsoft.Extensions.Hosting;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -54,6 +55,12 @@ public static class RpcServiceCollectionExtensions
         return builder;
     }
 
+    public static IRpcBuilder AddInterceptor(this IRpcBuilder builder, IInterceptor interceptor)
+    {
+        builder.Services.TryAddSingleton(interceptor);
+        return builder;
+    }
+
     public static IRpcBuilder AddContracts(this IRpcBuilder builder, params Type[] types)
     {
         builder.Services.AddContracts(types);
@@ -89,50 +96,48 @@ public static class RpcServiceCollectionExtensions
             var clusters = serviceProvder.GetServices<ICluster>();
             var caches = serviceProvder.GetServices<ICache>();
             var routeFactories = serviceProvder.GetServices<IStateRouterFactory>();
-            var zooyardPools = new ZooyardPools(loggerfactory, clientPools, loadBalances, clusters, caches, routeFactories, aa);
+            var appLifetime = serviceProvder.GetRequiredService<IHostApplicationLifetime>();
+            var zooyardPools = new ZooyardPools(loggerfactory, appLifetime, clientPools, loadBalances, clusters, caches, routeFactories, aa);
             return zooyardPools;
         });
 
 
-        foreach (var serviceType in types)
-        {
-            var genericType = typeof(ZooyardFactory<>);
-            var factoryType = genericType.MakeGenericType(new[] { serviceType });
-            service.TryAddSingleton(factoryType, (serviceProvder) =>
-            {
-                var loggerfactory = serviceProvder.GetRequiredService<ILoggerFactory>();
-                var pools = serviceProvder.GetRequiredService<IZooyardPools>();
-                var constructor = factoryType.GetConstructor(new[] { typeof(ILoggerFactory), typeof(IZooyardPools), typeof(string), typeof(string), typeof(string) });
-                if (constructor == null)
-                {
-                    throw new RpcException($"{nameof(constructor)} is not exists");
-                }
-                var zooyard = serviceType.GetCustomAttribute<ZooyardAttribute>();
-                if (zooyard == null)
-                {
-                    throw new RpcException($"{nameof(ZooyardAttribute)} is not exists");
-                }
-                var zooyardFactory = constructor.Invoke(new object[] { loggerfactory, pools, zooyard.ServiceName, zooyard.Version, zooyard.Url });
-                return zooyardFactory;
-            });
+        //foreach (var serviceType in types)
+        //{
+        //    var genericType = typeof(ZooyardFactory<>);
+        //    var factoryType = genericType.MakeGenericType([serviceType]);
+        //    service.TryAddSingleton(factoryType, (serviceProvder) =>
+        //    {
+        //        var loggerfactory = serviceProvder.GetRequiredService<ILoggerFactory>();
+        //        var pools = serviceProvder.GetRequiredService<IZooyardPools>();
+        //        var interceptors = serviceProvder.GetServices<IInterceptor>().OrderBy(w=>w.Order);
+        //        var constructor = factoryType.GetConstructor([typeof(ILoggerFactory), typeof(IZooyardPools), typeof(IEnumerable<IInterceptor>), typeof(ZooyardAttribute)]);
+        //        if (constructor == null)
+        //        {
+        //            throw new RpcException($"{nameof(constructor)} is not exists");
+        //        }
+        //        var zooyard = serviceType.GetCustomAttribute<ZooyardAttribute>();
+        //        var zooyardFactory = constructor.Invoke([loggerfactory, pools, interceptors, zooyard]);
+        //        return zooyardFactory;
+        //    });
 
 
-            service.TryAddTransient(serviceType, (serviceProvder) =>
-            {
-                var factory = serviceProvder.GetRequiredService(factoryType);
-                var createYardMethod = factoryType.GetMethod("CreateYard");
-                if (createYardMethod == null)
-                {
-                    throw new RpcException($"{nameof(createYardMethod)} is not exists");
-                }
-                var result = createYardMethod.Invoke(factory, null);
-                if (result == null)
-                {
-                    throw new RpcException($"{nameof(createYardMethod)} is not null");
-                }
-                return result;
-            });
-        }
+        //    service.TryAddSingleton(serviceType, (serviceProvder) =>
+        //    {
+        //        var factory = serviceProvder.GetRequiredService(factoryType);
+        //        var createYardMethod = factoryType.GetMethod("CreateYard");
+        //        if (createYardMethod == null)
+        //        {
+        //            throw new RpcException($"{nameof(createYardMethod)} is not exists");
+        //        }
+        //        var result = createYardMethod.Invoke(factory, null);
+        //        if (result == null)
+        //        {
+        //            throw new RpcException($"{nameof(createYardMethod)} is not null");
+        //        }
+        //        return result;
+        //    });
+        //}
     }
 
     /// <summary>

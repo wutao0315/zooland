@@ -39,18 +39,18 @@ public class TJsonHeaderProtocol : TJsonProtocol
 
     public async Task WriteFieldZero(CancellationToken cancellationToken)
     {
-        TField TRACE_HEAD = new TField("traceHeader", TType.Map, (short)0);
-        await this.WriteFieldBeginAsync(TRACE_HEAD, cancellationToken);
+        var TRACE_HEAD = new TField("traceHeader", TType.Map, (short)0);
+        await WriteFieldBeginAsync(TRACE_HEAD, cancellationToken);
         {
             IDictionary<string, string> traceInfo = GenTraceInfo();
-            await this.WriteMapBeginAsync(new TMap(TType.String, TType.String, traceInfo.Count), cancellationToken);
+            await WriteMapBeginAsync(new TMap(TType.String, TType.String, traceInfo.Count), cancellationToken);
             foreach (var entry in traceInfo) {
-                await this.WriteStringAsync(entry.Key, cancellationToken);
-                await this.WriteStringAsync(entry.Value, cancellationToken);
+                await WriteStringAsync(entry.Key, cancellationToken);
+                await WriteStringAsync(entry.Value, cancellationToken);
             }
-            await this.WriteMapEndAsync(cancellationToken);
+            await WriteMapEndAsync(cancellationToken);
         }
-        await this.WriteFieldEndAsync(cancellationToken);
+        await WriteFieldEndAsync(cancellationToken);
     }
 
     private IDictionary<string, string> GenTraceInfo()

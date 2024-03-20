@@ -98,8 +98,8 @@ public class AdaptiveLoadBalance : AbstractLoadBalance
         int getTimeout(URL url, string methodName, RpcContext context, IInvocation invocation, int defaultTimeout)
         {
             var timeout = defaultTimeout;
-            object? timeoutFromContext = context.GetObjectAttachment(CommonConstants.TIMEOUT_KEY);
-            object? timeoutFromInvocation = invocation.GetObjectAttachment(CommonConstants.TIMEOUT_KEY);
+            var timeoutFromContext = context.GetAttachment(CommonConstants.TIMEOUT_KEY);
+            var timeoutFromInvocation = invocation.GetAttachment(CommonConstants.TIMEOUT_KEY);
 
             if (timeoutFromContext != null)
             {

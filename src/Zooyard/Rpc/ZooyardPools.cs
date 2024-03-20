@@ -1,10 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Reflection;
 using Zooyard.DataAnnotations;
-using Zooyard.Diagnositcs;
 using Zooyard.Management;
 using Zooyard.Rpc.Cache;
 using Zooyard.Rpc.Cluster;
@@ -64,25 +62,26 @@ public class ZooyardPools : IZooyardPools
     /// <summary>
     /// 计时器用于处理过期的链接和链接池
     /// </summary>
-    private System.Timers.Timer? cycleTimer;
+    private readonly PeriodicTimer _cycleTimer;
+    
     /// <summary>
     /// 计时器用于处理隔离区域自动恢复到正常区域
     /// </summary>
-    private System.Timers.Timer? recoveryTimer;
+    private readonly PeriodicTimer _recoveryTimer;
     private readonly ConcurrentDictionary<string, IStateRouterFactory> _routeFoctories = new();
     private readonly ConcurrentDictionary<string, (URL, IList<URL>)> _cacheUrl = new();
     private readonly ConcurrentDictionary<string, IList<URL>> _cacheRouteUrl = new();
     private readonly ConcurrentDictionary<string, List<BadUrl>> _badUrls = new();
 
     public ZooyardPools(
-        ILoggerFactory loggerFactory,
-        IDictionary<string, IClientPool> pools,
-        IEnumerable<ILoadBalance> loadbalances,
-        IEnumerable<ICluster> clusters,
-        IEnumerable<ICache> caches,
-        IEnumerable<IStateRouterFactory> routerFactories
+        ILoggerFactory loggerFactory
+        , IHostApplicationLifetime appLifetime
+        , IDictionary<string, IClientPool> pools
+        , IEnumerable<ILoadBalance> loadbalances
+        , IEnumerable<ICluster> clusters
+        , IEnumerable<ICache> caches
+        , IEnumerable<IStateRouterFactory> routerFactories
         , IRpcStateLookup proxyStateLookup
-        //, IOptionsMonitor<ZooyardOption> zooyard
         )
     {
         _logger = loggerFactory.CreateLogger<ZooyardPools>();
@@ -112,92 +111,15 @@ public class ZooyardPools : IZooyardPools
         //_zooyard.OnChange(OnChanged);
         _proxyStateLookup = proxyStateLookup;
         _proxyStateLookup.OnChange(OnChanged);
-        Init();
-        // 初始化调用
-        void Init()
-        {
-            // 定时或者在接收到推送的消息后  主动-维护Pools集合
-            var internalCycle = _proxyStateLookup.GetMetadata().GetValue(CYCLE_PERIOD_KEY, DEFAULT_CYCLE_PERIOD);
 
-            cycleTimer = new System.Timers.Timer(internalCycle);
-            cycleTimer.Elapsed += new System.Timers.ElapsedEventHandler((object? sender, System.Timers.ElapsedEventArgs events) =>
-            {
-                // 定时循环处理过期链接
-                try
-                {
-                    CycleProcess();
-                }
-                catch (Exception t)
-                {   // 防御性容错
-                    _logger.LogError(t, "Unexpected error occur at collect statistic");
-                }
-            });
-            cycleTimer.AutoReset = true;
-            cycleTimer.Enabled = true;
+        // 定时或者在接收到推送的消息后  主动-维护Pools集合
+        var internalCycle = _proxyStateLookup.GetMetadata().GetValue(CYCLE_PERIOD_KEY, DEFAULT_CYCLE_PERIOD);
+        _cycleTimer = new PeriodicTimer(TimeSpan.FromMicroseconds(internalCycle));
 
-            // 定时或者在接收到推送的消息后  主动-维护Pools集合
-            var internalRecovery = _proxyStateLookup.GetMetadata().GetValue(RECOVERY_PERIOD_KEY, DEFAULT_RECOVERY_PERIOD);
+        // 定时或者在接收到推送的消息后  主动-维护Pools集合
+        var internalRecovery = _proxyStateLookup.GetMetadata().GetValue(RECOVERY_PERIOD_KEY, DEFAULT_RECOVERY_PERIOD);
+        _recoveryTimer = new PeriodicTimer(TimeSpan.FromMicroseconds(internalRecovery));
 
-            recoveryTimer = new System.Timers.Timer(internalRecovery);
-            recoveryTimer.Elapsed += new System.Timers.ElapsedEventHandler((object? sender, System.Timers.ElapsedEventArgs events) =>
-            {
-                // 定时循环恢复隔离区到正常区
-                try
-                {
-                    RecoveryProcess();
-                }
-                catch (Exception t)
-                {   // 防御性容错
-                    _logger.LogError(t, "Unexpected error occur at collect statistic");
-                }
-            });
-            recoveryTimer.AutoReset = true;
-            recoveryTimer.Enabled = true;
-
-            // 定时循环处理过期链接
-            void CycleProcess()
-            {
-                var overtime = _proxyStateLookup.GetMetadata().GetValue(OVER_TIME_KEY, DEFAULT_OVER_TIME);
-                var overtimeDate = DateTime.Now.AddMinutes(-overtime);
-                foreach (var pool in Pools)
-                {
-                    pool.Value.TimeOver(overtimeDate);
-                }
-            }
-
-            // 定时循环恢复隔离区到正常区
-            void RecoveryProcess()
-            {
-                var recoverytime = _proxyStateLookup.GetMetadata().GetValue(RECOVERY_TIME_KEY, DEFAULT_RECOVERY_TIME);
-                var recoverytimeDate = DateTime.Now.AddMinutes(-recoverytime);
-
-                try
-                {
-                    var keyList = new List<string>();
-                    foreach (var badUrls in _badUrls)
-                    {
-                        var list = new List<BadUrl>();
-                        foreach (var badUrl in badUrls.Value)
-                        {
-                            if (badUrl.BadTime < recoverytimeDate)
-                            {
-                                list.Add(badUrl);
-                                Console.WriteLine($"auto timer recovery url {badUrl.Url}");
-                                _logger.LogInformation($"recovery:{badUrl.Url.ToString()}");
-                            }
-                        }
-                        foreach (var item in list)
-                        {
-                            badUrls.Value.Remove(item);
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, ex.Message);
-                }
-            }
-        }
         // 监听配置或者服务注册变化，清空缓存
         void OnChanged(IRpcStateLookup state)
         {
@@ -217,27 +139,106 @@ public class ZooyardPools : IZooyardPools
             }
         }
 
-        //// 监听配置或者服务注册变化，清空缓存
-        //void OnChanged(ZooyardOption value, string? name)
-        //{
-        //    try
-        //    {
-        //        _cacheUrl.Clear();
-        //        _cacheRouteUrl.Clear();
-        //        _badUrls.Clear();
-        //        foreach (var item in _routeFoctories)
-        //        {
-        //            item.Value.ClearCache();
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, ex.Message);
-        //    }
-        //}
-
+        // Register these last as the callbacks could run immediately
+        appLifetime.ApplicationStarted.Register(Start);
+        appLifetime.ApplicationStopping.Register(Close);
     }
 
+    public void Start()
+    {
+        // Start the timer loop
+        _ = CycleTimerLoop();
+        _ = RecoveryTimerLoop();
+    }
+
+    private async Task CycleTimerLoop() 
+    {
+        using (_cycleTimer)
+        {
+            // The TimerAwaitable will return true until Stop is called
+            while (await _cycleTimer.WaitForNextTickAsync())
+            {
+                try
+                {
+                    CycleProcess();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unexpected error occur at collect statistic");
+                }
+            }
+        }
+
+        // 定时循环处理过期链接
+        void CycleProcess()
+        {
+            var overtime = _proxyStateLookup.GetMetadata().GetValue(OVER_TIME_KEY, DEFAULT_OVER_TIME);
+            var overtimeDate = DateTime.Now.AddMinutes(-overtime);
+            foreach (var pool in Pools)
+            {
+                pool.Value.TimeOver(overtimeDate);
+            }
+        }
+    }
+
+    private async Task RecoveryTimerLoop() 
+    {
+        using (_recoveryTimer)
+        {
+            // The TimerAwaitable will return true until Stop is called
+            while (await _recoveryTimer.WaitForNextTickAsync())
+            {
+                try
+                {
+                    RecoveryProcess();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unexpected error occur at collect statistic");
+                }
+            }
+        }
+
+        // 定时循环恢复隔离区到正常区
+        void RecoveryProcess()
+        {
+            var recoverytime = _proxyStateLookup.GetMetadata().GetValue(RECOVERY_TIME_KEY, DEFAULT_RECOVERY_TIME);
+            var recoverytimeDate = DateTime.Now.AddMinutes(-recoverytime);
+
+            try
+            {
+                var keyList = new List<string>();
+                foreach (var badUrls in _badUrls)
+                {
+                    var list = new List<BadUrl>();
+                    foreach (var badUrl in badUrls.Value)
+                    {
+                        if (badUrl.BadTime < recoverytimeDate)
+                        {
+                            list.Add(badUrl);
+                            Console.WriteLine($"auto timer recovery url {badUrl.Url}");
+                            _logger.LogInformation($"recovery:{badUrl.Url.ToString()}");
+                        }
+                    }
+                    foreach (var item in list)
+                    {
+                        badUrls.Value.Remove(item);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+            }
+        }
+    }
+
+    public void Close()
+    {
+        // Stop firing the timer
+        _cycleTimer.Dispose();
+        _recoveryTimer.Dispose();
+    }
     /// <summary>
     /// exec rpc
     /// </summary>
@@ -245,8 +246,6 @@ public class ZooyardPools : IZooyardPools
     /// <returns></returns>
     public async Task<IResult<T>?> Invoke<T>(IInvocation invocation)
     {
-        RpcContext.GetContext().SetInvocation(invocation);
-
         var (address, urls) = GetUrls();
 
         //cache
@@ -651,7 +650,5 @@ public class ZooyardPools : IZooyardPools
             item.Value.Clear();
         }
     }
-
-    
 }
 

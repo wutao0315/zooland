@@ -7,7 +7,7 @@ namespace Zooyard.DataAnnotations;
 /// 接口代理
 /// </summary>
 [AttributeUsage(AttributeTargets.Interface)]
-public class ZooyardAttribute : Attribute
+public abstract class ZooyardAttribute : Attribute
 {
     /// <summary>
     /// 类型名称

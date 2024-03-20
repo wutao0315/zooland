@@ -1,11 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Net;
-using Zooyard.Utils;
-
-namespace Zooyard.Rpc;
+﻿namespace Zooyard.Rpc;
 
 /// <summary>
 /// Thread local context. (API, ThreadLocal, ThreadSafe)
@@ -16,7 +9,7 @@ namespace Zooyard.Rpc;
 public sealed record RpcContext
 {
     private static readonly AsyncLocal<RpcContext> LOCAL = new();
-    private volatile IDictionary<string, object> attachments = new Dictionary<string, object>();
+    private volatile Dictionary<string, string> attachments = new ();
 
     private IList<URL>? urls;
     
@@ -63,7 +56,7 @@ public sealed record RpcContext
     /// <returns> arguments. </returns>
     public object[]? Arguments { get; set; }
 
-    public IDictionary<string, object> Attachments => attachments;
+    public IDictionary<string, string> Attachments => attachments;
     public string? GetAttachment(string key)
     {
         if (attachments.TryGetValue(key, out var value) && value is string val)
@@ -73,23 +66,13 @@ public sealed record RpcContext
         return null;
     }
 
-    public object? GetObjectAttachment(string key)
-    {
-        attachments.TryGetValue(key, out var obj);
-        return obj;
-    }
+    //public object? GetObjectAttachment(string key)
+    //{
+    //    attachments.TryGetValue(key, out var obj);
+    //    return obj;
+    //}
 
     public RpcContext SetAttachment(string key, string value)
-    {
-        return SetObjectAttachment(key, value);
-    }
-
-    public RpcContext SetAttachment(string key, object value)
-    {
-        return SetObjectAttachment(key, value);
-    }
-
-    public RpcContext SetObjectAttachment(string key, object value)
     {
         if (value == null)
         {
@@ -102,16 +85,34 @@ public sealed record RpcContext
         return this;
     }
 
+    //public RpcContext SetAttachment(string key, object value)
+    //{
+    //    return SetObjectAttachment(key, value);
+    //}
+
+    //public RpcContext SetObjectAttachment(string key, object value)
+    //{
+    //    if (value == null)
+    //    {
+    //        attachments.Remove(key);
+    //    }
+    //    else
+    //    {
+    //        attachments[key] = value;
+    //    }
+    //    return this;
+    //}
+
     public RpcContext RemoveAttachment(string key)
     {
         attachments.Remove(key);
         return this;
     }
 
-    public IDictionary<string, object> GetObjectAttachments()
-    {
-        return attachments;
-    }
+    //public IDictionary<string, object> GetObjectAttachments()
+    //{
+    //    return attachments;
+    //}
 
     public RpcContext SetAttachments(IDictionary<string, string> attachment)
     {
@@ -126,15 +127,15 @@ public sealed record RpcContext
         return this;
     }
 
-    public RpcContext SetObjectAttachments(IDictionary<string, object> attachment)
-    {
-        this.attachments.Clear();
-        if (attachment.Count > 0)
-        {
-            this.attachments = attachment;
-        }
-        return this;
-    }
+    //public RpcContext SetObjectAttachments(IDictionary<string, object> attachment)
+    //{
+    //    this.attachments.Clear();
+    //    if (attachment.Count > 0)
+    //    {
+    //        this.attachments = attachment;
+    //    }
+    //    return this;
+    //}
 
     public void ClearAttachments()
     {

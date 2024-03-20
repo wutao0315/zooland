@@ -1,16 +1,15 @@
 ﻿namespace Zooyard.DynamicProxy;
 
-internal class PackedArgs
+public record PackedArgs
 {
-    internal const int DispatchProxyPosition = 0;
-    internal const int DeclaringTypePosition = 1;
-    internal const int MethodTokenPosition = 2;
-    internal const int ArgsPosition = 3;
-    internal const int GenericTypesPosition = 4;
-    internal const int ReturnValuePosition = 5;
+    public const int DispatchProxyPosition = 0;
+    public const int DeclaringTypePosition = 1;
+    public const int MethodTokenPosition = 2;
+    public const int ArgsPosition = 3;
+    public const int GenericTypesPosition = 4;
+    public const int ReturnValuePosition = 5;
 
-    internal static readonly Type[] PackedTypes =
-        {typeof(object), typeof(Type), typeof(int), typeof(object[]), typeof(Type[]), typeof(object)};
+    public static readonly Type[] PackedTypes = [typeof(object), typeof(Type), typeof(int), typeof(object[]), typeof(Type[]), typeof(object)];
 
     private readonly object[] _args;
 
@@ -18,12 +17,11 @@ internal class PackedArgs
     {
     }
 
-    internal PackedArgs(object[] args)
+    public PackedArgs(object[] args)
     {
         _args = args;
     }
 
-    //internal ProxyExecutor DispatchProxy => (ProxyExecutor)_args[DispatchProxyPosition];
     internal ProxyExecutor DispatchProxy => (ProxyExecutor)_args[DispatchProxyPosition];
     internal Type DeclaringType => (Type)_args[DeclaringTypePosition];
     internal int MethodToken => (int)_args[MethodTokenPosition];

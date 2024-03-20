@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <Compile Remove="Connections\Internal\LongPollingTransport.cs" />
+    <Compile Remove="Connections\Internal\LongPollingTransport.Log.cs" />
+    <Compile Remove="Connections\Internal\ServerSentEventsMessageParser.cs" />
+    <Compile Remove="Connections\Internal\ServerSentEventsTransport.cs" />
+    <Compile Remove="Connections\Internal\ServerSentEventsTransport.Log.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Zooyard.Realtime.MessagePack\Zooyard.Realtime.MessagePack.csproj" />
+    <ProjectReference Include="..\Zooyard.Realtime.NewtonsoftJson\Zooyard.Realtime.NewtonsoftJson.csproj" />
+    <ProjectReference Include="..\Zooyard.Realtime\Zooyard.Realtime.csproj" />
+    <ProjectReference Include="..\Zooyard\Zooyard.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+
+</Project>

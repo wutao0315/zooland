@@ -156,7 +156,9 @@ internal class ProxyBuilder
         }
     }
 
-    /// <summary> 添加方法实现 </summary>
+    /// <summary> 
+    /// 添加方法实现 
+    /// </summary>
     /// <param name="mi"></param>
     /// <returns></returns>
     private MethodBuilder AddMethodImpl(MethodInfo mi)

@@ -6,13 +6,7 @@ using DotNetty.Transport.Channels.Sockets;
 using DotNetty.Transport.Libuv;
 using Grpc.Core;
 using Grpc.Core.Interceptors;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NLog;
 using NLog.Extensions.Hosting;
@@ -62,7 +56,6 @@ public class Program
             var basePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "config");
             var builder = new ConfigurationBuilder()
                 .SetBasePath(basePath)
-                //.AddJsonFile("service.akka.json", false, true)
                 .AddJsonFile("service.grpc.json", false, true)
                 .AddJsonFile("service.netty.json", false, true)
                 .AddJsonFile("service.thrift.json", false, true)
@@ -205,7 +198,9 @@ public class Program
 
 public abstract class ServerInterceptor : Interceptor
 {
+
 }
+
 public class ServerGrpcInterceptor : ServerInterceptor
 {
     public override TResponse BlockingUnaryCall<TRequest, TResponse>(TRequest request, ClientInterceptorContext<TRequest, TResponse> context, BlockingUnaryCallContinuation<TRequest, TResponse> continuation)
@@ -1091,7 +1086,7 @@ public class ThriftServer
 
         public class Startup
         {
-            public Startup(Microsoft.Extensions.Hosting.IHostEnvironment env)
+            public Startup(IHostEnvironment env)
             {
                 var builder = new ConfigurationBuilder()
                     .SetBasePath(env.ContentRootPath)
