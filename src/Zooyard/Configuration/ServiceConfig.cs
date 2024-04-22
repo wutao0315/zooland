@@ -4,9 +4,9 @@ namespace Zooyard.Configuration;
 
 public sealed record ServiceConfig
 {
-    public string ServiceName { get; init; } = default!;
-    public IReadOnlyDictionary<string, InstanceConfig> Instances { get; init; } = default!;
-    public IReadOnlyDictionary<string, string> Metadata { get; init; } = default!;
+    public string ServiceId { get; init; } = string.Empty;
+    public IDictionary<string, InstanceConfig> Instances { get; init; } = new Dictionary<string, InstanceConfig>();
+    public IDictionary<string, string> Metadata { get; init; } = new Dictionary<string, string>();
 
     public bool Equals(ServiceConfig? other)
     {
@@ -26,14 +26,14 @@ public sealed record ServiceConfig
             return false;
         }
 
-        return string.Equals(ServiceName, other.ServiceName, StringComparison.OrdinalIgnoreCase)
+        return string.Equals(ServiceId, other.ServiceId, StringComparison.OrdinalIgnoreCase)
             && CaseSensitiveEqualHelper.Equals(Metadata, other.Metadata);
     }
 
     public override int GetHashCode()
     {
         return HashCode.Combine(
-            ServiceName?.GetHashCode(StringComparison.OrdinalIgnoreCase),
+            ServiceId?.GetHashCode(StringComparison.OrdinalIgnoreCase),
             CollectionEqualityHelper.GetHashCode(Instances),
             CaseSensitiveEqualHelper.GetHashCode(Metadata));
     }

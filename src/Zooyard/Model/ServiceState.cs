@@ -15,9 +15,9 @@ public sealed class ServiceState
     /// Creates a new instance. This constructor is for tests and infrastructure, this type is normally constructed by the configuration
     /// loading infrastructure.
     /// </summary>
-    public ServiceState(string serviceName)
+    public ServiceState(string serviceId)
     {
-        ServiceName = serviceName ?? throw new ArgumentNullException(nameof(serviceName));
+        ServiceId = serviceId ?? throw new ArgumentNullException(nameof(serviceId));
     }
 
     /// <summary>
@@ -32,7 +32,7 @@ public sealed class ServiceState
     /// <summary>
     /// The cluster's unique id.
     /// </summary>
-    public string ServiceName { get; }
+    public string ServiceId { get; }
 
     /// <summary>
     /// Encapsulates parts of a cluster that can change atomically in reaction to config changes.

@@ -2,7 +2,7 @@
 
 internal static class CollectionEqualityHelper
 {
-    public static bool Equals<T>(IReadOnlyList<T>? list1, IReadOnlyList<T>? list2, IEqualityComparer<T>? valueComparer = null)
+    public static bool Equals<T>(IList<T>? list1, IList<T>? list2, IEqualityComparer<T>? valueComparer = null)
     {
         if (ReferenceEquals(list1, list2))
         {
@@ -32,7 +32,7 @@ internal static class CollectionEqualityHelper
         return true;
     }
 
-    public static bool Equals<T>(IReadOnlyDictionary<string, T>? dictionary1, IReadOnlyDictionary<string, T>? dictionary2, IEqualityComparer<T>? valueComparer = null)
+    public static bool Equals<T>(IDictionary<string, T>? dictionary1, IDictionary<string, T>? dictionary2, IEqualityComparer<T>? valueComparer = null)
     {
         if (ReferenceEquals(dictionary1, dictionary2))
         {
@@ -74,7 +74,7 @@ internal static class CollectionEqualityHelper
         return true;
     }
 
-    public static bool Equals<T>(IReadOnlyList<IReadOnlyDictionary<string, T>>? dictionaryList1, IReadOnlyList<IReadOnlyDictionary<string, T>>? dictionaryList2, IEqualityComparer<T>? valueComparer = null)
+    public static bool Equals<T>(IList<IDictionary<string, T>>? dictionaryList1, IList<IDictionary<string, T>>? dictionaryList2, IEqualityComparer<T>? valueComparer = null)
     {
         if (ReferenceEquals(dictionaryList1, dictionaryList2))
         {
@@ -102,7 +102,7 @@ internal static class CollectionEqualityHelper
         return true;
     }
 
-    public static int GetHashCode<T>(IReadOnlyList<T>? values, IEqualityComparer<T>? valueComparer = null)
+    public static int GetHashCode<T>(IList<T>? values, IEqualityComparer<T>? valueComparer = null)
     {
         if (values is null)
         {
@@ -119,7 +119,7 @@ internal static class CollectionEqualityHelper
         return hashCode.ToHashCode();
     }
 
-    public static int GetHashCode<T>(IReadOnlyDictionary<string, T>? dictionary, IEqualityComparer<T>? valueComparer = null)
+    public static int GetHashCode<T>(IDictionary<string, T>? dictionary, IEqualityComparer<T>? valueComparer = null)
     {
         if (dictionary is null)
         {
@@ -150,7 +150,7 @@ internal static class CollectionEqualityHelper
         return hashCode.ToHashCode();
     }
 
-    public static int GetHashCode<T>(IReadOnlyList<IReadOnlyDictionary<string, T>>? dictionaryList, IEqualityComparer<T>? valueComparer = null)
+    public static int GetHashCode<T>(IList<IDictionary<string, T>>? dictionaryList, IEqualityComparer<T>? valueComparer = null)
     {
         if (dictionaryList is null)
         {

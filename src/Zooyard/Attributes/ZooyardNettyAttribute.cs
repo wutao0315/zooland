@@ -1,4 +1,4 @@
-﻿namespace Zooyard.DataAnnotations;
+﻿namespace Zooyard.Attributes;
 
 /// <summary>
 /// 反向代理GRPC客户端

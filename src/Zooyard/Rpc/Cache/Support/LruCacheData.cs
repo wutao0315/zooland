@@ -17,8 +17,8 @@ public class LruCacheData<TKey, TValue>
     //private int _maxSize => _zooyard.CurrentValue.Meta.GetValue("cache.size", 1000);
     //private TimeSpan _timeOut=> TimeSpan.FromMilliseconds(_zooyard.CurrentValue.Meta.GetValue("cache.timeout", 60000));
     private readonly IRpcStateLookup _stateLookup;
-    private int _maxSize => _stateLookup.GetMetadata().GetValue("cache.size", 1000);
-    private TimeSpan _timeOut => TimeSpan.FromMilliseconds(_stateLookup.GetMetadata().GetValue("cache.timeout", 60000));
+    private int _maxSize => _stateLookup.GetGlobalMataValue("cache.size", 1000);
+    private TimeSpan _timeOut => TimeSpan.FromMilliseconds(_stateLookup.GetGlobalMataValue("cache.timeout", 60000));
 
     //public LruCacheData(IOptionsMonitor<ZooyardOption> zooyard)
     public LruCacheData(IRpcStateLookup stateLookup)
@@ -26,7 +26,7 @@ public class LruCacheData<TKey, TValue>
         //int itemExpiryTimeout, int maxCacheSize = 100, int memoryRefreshInterval = 1000
         _stateLookup = stateLookup;
         
-        var memoryRefreshInterval = _stateLookup.GetMetadata().GetValue("cache.interval", 1000);
+        var memoryRefreshInterval = _stateLookup.GetGlobalMataValue("cache.interval", 1000);
 
         var autoEvent = new AutoResetEvent(false);
         TimerCallback tcb = this.RemoveExpiredElements;

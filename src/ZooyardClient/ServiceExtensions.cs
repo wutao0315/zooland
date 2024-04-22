@@ -2,7 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Zooyard.Configuration;
 
-namespace ZooyardClient;
+namespace Zooyard.ConfigurationMapper;
 
 public static class ServiceExtensions
 {
@@ -23,8 +23,8 @@ public static class ServiceExtensions
         YardKey = yardKey;
         builder.Services.Configure<ZooyardServiceOption>(configuration.GetSection(yardKey));
         builder.Services.Configure<ServiceOption>(configuration.GetSection(serviceKey));
-        builder.Services.AddSingleton<IYardConfigMapper, DefaultYardConfigMapper>();
-        builder.Services.AddSingleton<IRpcConfigProvider, YardRpcConfigProvider>();
+        builder.Services.AddSingleton<IRpcConfigMapper, DefaultRpcConfigMapper>();
+        builder.Services.AddSingleton<IRpcConfigProvider, DefaultRpcConfigProvider>();
 
        return builder;
     }

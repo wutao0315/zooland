@@ -1,4 +1,4 @@
-﻿namespace Zooyard.DataAnnotations;
+﻿namespace Zooyard.Attributes;
 
 public enum RequestMethod
 {

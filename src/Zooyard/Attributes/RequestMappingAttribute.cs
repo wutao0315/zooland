@@ -1,4 +1,5 @@
-﻿namespace Zooyard.DataAnnotations;
+﻿namespace Zooyard.Attributes;
+
 
 [AttributeUsage(AttributeTargets.Interface | AttributeTargets.Method)]
 public class RequestMappingAttribute : Attribute
@@ -28,6 +29,11 @@ public class RequestMappingAttribute : Attribute
     /// </summary>
     public Dictionary<string, string> Headers { get; init; } = new();
     /// <summary>
+    /// 该参数在Rest接口中，代表通用返回类型封装 ResultInfo 代表当前接口的返回类型
+    /// 该属性空代表不起作用，该属性设置后影响当前接口，并覆盖接口上的设置
+    /// </summary>
+    public Type? BaseReturnType { get; set; }
+    /// <summary>
     /// 构造函数
     /// </summary>
     /// <param name="value"></param>
@@ -44,8 +50,4 @@ public class RequestMappingAttribute : Attribute
     {
         Method = method;
     }
-}
-[AttributeUsage(AttributeTargets.Method)]
-public class GetMappingAttribute(string value) : RequestMappingAttribute(value, RequestMethod.GET)
-{
 }

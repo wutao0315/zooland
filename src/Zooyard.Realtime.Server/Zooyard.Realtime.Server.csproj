@@ -14,9 +14,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="8.0.2" />
-	  <PackageReference Include="Microsoft.AspNetCore.Connections.Abstractions" Version="8.0.2" />
-	  <PackageReference Include="Microsoft.AspNetCore.Http.Connections.Common" Version="8.0.2" />
+	  <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="8.0.4" />
+	  <PackageReference Include="Microsoft.AspNetCore.Connections.Abstractions" Version="8.0.4" />
+	  <PackageReference Include="Microsoft.AspNetCore.Http.Connections.Common" Version="8.0.4" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -1,13 +1,14 @@
-﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+﻿using Zooyard.Configuration;
+using Zooyard.Model;
+using Zooyard.ServiceDiscovery;
+using Zooyard.Utils;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using Zooyard.Configuration;
-using Zooyard.Model;
-using Zooyard.ServiceDiscovery;
-using Zooyard.Utils;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Zooyard.Management;
 
@@ -22,36 +23,32 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
     private readonly ILogger<RpcConfigManager> _logger;
     private readonly IRpcConfigProvider[] _providers;
     private readonly ConfigState[] _configs;
-    //private readonly IServiceChangeListener[] _serviceChangeListeners;
 
-    private readonly ConcurrentStack<string> _contracts = new();
-    private readonly ConcurrentDictionary<string, string> _metadata = new(StringComparer.OrdinalIgnoreCase);
+    //private readonly IClusterChangeListener[] _clusterChangeListeners;
     private readonly ConcurrentDictionary<string, ServiceState> _services = new(StringComparer.OrdinalIgnoreCase);
-    
+    private readonly ConcurrentDictionary<string, RouteState> _routes = new(StringComparer.OrdinalIgnoreCase);
 
     private readonly IRpcConfigFilter[] _filters;
     private readonly IConfigValidator _configValidator;
-    //private readonly IClusterDestinationsUpdater _clusterDestinationsUpdater;
+    //private readonly IServiceInstancesUpdater _clusterDestinationsUpdater;
     private readonly IInstanceResolver _instanceResolver;
     private readonly IConfigChangeListener[] _configChangeListeners;
-    private CancellationTokenSource _endpointsChangeSource = new();
     private IChangeToken _endpointsChangeToken;
 
     private CancellationTokenSource _configChangeSource = new();
 
     public RpcConfigManager(
-        ILogger<RpcConfigManager> logger,
-        IEnumerable<IRpcConfigProvider> providers,
-        IEnumerable<IRpcConfigFilter> filters,
-        IConfigValidator configValidator,
-        //IClusterDestinationsUpdater clusterDestinationsUpdater,
-        IEnumerable<IConfigChangeListener> configChangeListeners,
-        IInstanceResolver instanceResolver)
+        ILogger<RpcConfigManager> logger
+        , IHostApplicationLifetime appLifetime
+        , IEnumerable<IRpcConfigProvider> providers
+        , IEnumerable<IRpcConfigFilter> filters
+        , IConfigValidator configValidator
+        , IEnumerable<IConfigChangeListener> configChangeListeners //IServiceInstancesUpdater clusterDestinationsUpdater,
+        , IInstanceResolver instanceResolver
+        )
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _providers = providers?.ToArray() ?? throw new ArgumentNullException(nameof(providers));
-        //_serviceChangeListeners = (serviceChangeListeners as IServiceChangeListener[])
-            //?? serviceChangeListeners?.ToArray() ?? throw new ArgumentNullException(nameof(serviceChangeListeners));
         _filters = (filters as IRpcConfigFilter[]) ?? filters?.ToArray() ?? throw new ArgumentNullException(nameof(filters));
         _configValidator = configValidator ?? throw new ArgumentNullException(nameof(configValidator));
         //_clusterDestinationsUpdater = clusterDestinationsUpdater ?? throw new ArgumentNullException(nameof(clusterDestinationsUpdater));
@@ -65,7 +62,19 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
 
         _configs = new ConfigState[_providers.Length];
 
-        _endpointsChangeToken = new CancellationChangeToken(_endpointsChangeSource.Token);
+        // Register these last as the callbacks could run immediately
+        appLifetime.ApplicationStarted.Register(Start);
+        appLifetime.ApplicationStopping.Register(Close);
+    }
+
+    public void Start()
+    {
+        _ = InitialLoadAsync();
+    }
+
+    public void Close()
+    {
+        Dispose();
     }
 
     private static IReadOnlyList<IRpcConfig> ExtractListOfProxyConfigs(IEnumerable<ConfigState> configStates)
@@ -79,8 +88,8 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
         // We intend this to crash the app so we don't try listening for further changes.
         try
         {
-            var metadata = new Dictionary<string, string>();
-            var services = new Dictionary<string, ServiceConfig>();
+            var routes = new List<RouteConfig>();
+            var services = new List<ServiceConfig>();
 
             // Begin resolving config providers concurrently.
             var resolvedConfigs = new List<(int Index, IRpcConfigProvider Provider, ValueTask<IRpcConfig> Config)>(_providers.Length);
@@ -96,8 +105,9 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
             {
                 var config = await configLoadTask;
                 _configs[i] = new ConfigState(provider, config);
-                metadata.PutAll(config.Metadata);
-                services.PutAll(config.Services);
+
+                routes.AddRangeCombined(config.Routes);
+                services.AddRangeCombined(config.Services);
             }
 
             var proxyConfigs = ExtractListOfProxyConfigs(_configs);
@@ -107,7 +117,7 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
                 configChangeListener.ConfigurationLoaded(proxyConfigs);
             }
 
-            await ApplyConfigAsync(metadata, services);
+            await ApplyConfigAsync(routes, services);
 
             foreach (var configChangeListener in _configChangeListeners)
             {
@@ -127,13 +137,15 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
         return this;
     }
 
+
+
     private async Task ReloadConfigAsync()
     {
         _configChangeSource.Dispose();
 
         var sourcesChanged = false;
-        var metadata = new Dictionary<string, string>();
-        var services = new Dictionary<string, ServiceConfig>();
+        var routes = new List<RouteConfig>();
+        var services = new List<ServiceConfig>();
         var reloadedConfigs = new List<(ConfigState Config, ValueTask<IRpcConfig> ResolveTask)>();
 
         // Start reloading changed configurations.
@@ -171,14 +183,14 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
         // Extract the routes and clusters from the configs, regardless of whether they were reloaded.
         foreach (var instance in _configs)
         {
-            if (instance.LatestConfig.Metadata is { Count: > 0 } updatedMetadatas)
+            if (instance.LatestConfig.Routes is { Count: > 0 } updatedMetadatas)
             {
-                metadata.PutAll(updatedMetadatas);
+                routes.AddRangeCombined(updatedMetadatas);
             }
 
             if (instance.LatestConfig.Services is { Count: > 0 } updatedServices)
             {
-                services.PutAll(updatedServices);
+                services.AddRangeCombined(updatedServices);
             }
         }
 
@@ -193,7 +205,7 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
             // Only reload if at least one provider changed.
             if (sourcesChanged)
             {
-                var hasChanged = await ApplyConfigAsync(metadata, services);
+                var hasChanged = await ApplyConfigAsync(routes, services);
                 //lock (_syncRoot)
                 //{
                 //    //// Skip if changes are signaled before the endpoints are initialized for the first time.
@@ -263,12 +275,12 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
     private async ValueTask<IRpcConfig> LoadConfigAsyncCore(IRpcConfig config, CancellationToken cancellationToken)
     {
         List<(int Index, ValueTask<ResolvedInstanceCollection> Task)> resolverTasks = new();
-        Dictionary<string, ServiceConfig> services = new(config.Services);
+        List<ServiceConfig> services = new(config.Services);
         List<IChangeToken>? changeTokens = null;
         for (var i = 0; i < services.Count; i++)
         {
-            var service = services.ElementAt(i);
-            if (service.Value.Instances is { Count: > 0 } instances)
+            var service = services[i];
+            if (service.Instances is { Count: > 0 } instances)
             {
                 // Resolve destinations if there are any.
                 var task = _instanceResolver.ResolveInstancesAsync(instances, cancellationToken);
@@ -281,17 +293,17 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
             foreach (var (i, task) in resolverTasks)
             {
                 ResolvedInstanceCollection resolvedInstances;
-                var service = services.ElementAt(i);
                 try
                 {
                     resolvedInstances = await task;
                 }
                 catch (Exception exception)
                 {
-                    throw new InvalidOperationException($"Error resolving destinations for cluster {service.Key}", exception);
+                    var service = services[i];
+                    throw new InvalidOperationException($"Error resolving destinations for service {service.ServiceId}", exception);
                 }
 
-                services[service.Key] = services[service.Key] with { Instances = resolvedInstances.Instances };
+                services[i] = services[i] with { Instances = resolvedInstances.Instances };
                 if (resolvedInstances.ChangeToken is { } token)
                 {
                     changeTokens ??= new();
@@ -318,12 +330,14 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
         return config;
     }
 
-    private sealed class ResolvedProxyConfig(IRpcConfig _innerConfig, IReadOnlyDictionary<string, ServiceConfig> services, IChangeToken changeToken) : IRpcConfig
+    private sealed class ResolvedProxyConfig(IRpcConfig _innerConfig
+        , IReadOnlyList<ServiceConfig> services
+        , IChangeToken changeToken)
+        : IRpcConfig
     {
-        public IReadOnlyList<string> Contracts => _innerConfig.Contracts;
-        public IReadOnlyDictionary<string, string> Metadata => _innerConfig.Metadata;
+        public IReadOnlyList<RouteConfig> Routes => _innerConfig.Routes;
 
-        public IReadOnlyDictionary<string, ServiceConfig> Services { get; } = services;
+        public IReadOnlyList<ServiceConfig> Services { get; } = services;
 
         public IChangeToken ChangeToken { get; } = changeToken;
 
@@ -385,28 +399,79 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
     }
 
     // Throws for validation failures
-    private async Task<bool> ApplyConfigAsync(IReadOnlyDictionary<string, string> metadata, IReadOnlyDictionary<string, ServiceConfig> services)
+    private async Task<bool> ApplyConfigAsync(IReadOnlyList<RouteConfig> routes, IReadOnlyList<ServiceConfig> services)
     {
         var (configuredServices, serviceErrors) = await VerifyServicesAsync(services, cancellation: default);
-        //var (configuredRoutes, routeErrors) = await VerifyMetadataAsync(metadata, configuredClusters, cancellation: default);
+        var (configuredRoutes, publicErrors) = await VerifyRoutesAsync(routes, cancellation: default);
 
-        //if (routeErrors.Count > 0 || clusterErrors.Count > 0)
-        //{
-        //    throw new AggregateException("The proxy config is invalid.", routeErrors.Concat(clusterErrors));
-        //}
-        if (serviceErrors.Count > 0)
+        if (publicErrors.Count > 0 || serviceErrors.Count > 0)
         {
-            throw new AggregateException("The proxy config is invalid.", serviceErrors);
+            throw new AggregateException("The rpc config is invalid.", publicErrors.Concat(serviceErrors));
         }
         // Update clusters first because routes need to reference them.
-        UpdateRuntimeServices(configuredServices);
-        //var routesChanged = UpdateRuntimeMetadata(metadata);
-        //return routesChanged;
-        return true;
+        UpdateRuntimeServices(configuredServices.Values);
+        var routesChanged = UpdateRuntimeRoutes(configuredRoutes);
+        return routesChanged;
+    }
+
+    private async Task<(IList<RouteConfig>, IList<Exception>)> VerifyRoutesAsync(IReadOnlyList<RouteConfig> routes, CancellationToken cancellation)
+    {
+        if (routes is null)
+        {
+            return (Array.Empty<RouteConfig>(), Array.Empty<Exception>());
+        }
+
+        var seenRouteIds = new HashSet<string>(routes.Count, StringComparer.OrdinalIgnoreCase);
+        var configuredRoutes = new List<RouteConfig>(routes.Count);
+        var errors = new List<Exception>();
+
+        foreach (var r in routes)
+        {
+            if (seenRouteIds.Contains(r.RouteId))
+            {
+                errors.Add(new ArgumentException($"Duplicate route '{r.RouteId}'"));
+                continue;
+            }
+
+            var pub = r;
+
+            try
+            {
+                if (_filters.Length != 0)
+                {
+                    foreach (var filter in _filters)
+                    {
+                        pub = await filter.ConfigureRouteAsync(pub, cancellation);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                errors.Add(new Exception($"An exception was thrown from the configuration callbacks for route '{r.RouteId}'.", ex));
+                continue;
+            }
+
+            var publicErrors = await _configValidator.ValidateRouteAsync(pub);
+            if (publicErrors.Count > 0)
+            {
+                errors.AddRange(publicErrors);
+                continue;
+            }
+
+            seenRouteIds.Add(pub.RouteId);
+            configuredRoutes.Add(pub);
+        }
+
+        if (errors.Count > 0)
+        {
+            return (Array.Empty<RouteConfig>(), errors);
+        }
+
+        return (configuredRoutes, errors);
     }
 
 
-    private async Task<(IReadOnlyDictionary<string, ServiceConfig>, IList<Exception>)> VerifyServicesAsync(IReadOnlyDictionary<string, ServiceConfig> services, CancellationToken cancellation)
+    private async Task<(IReadOnlyDictionary<string, ServiceConfig>, IList<Exception>)> VerifyServicesAsync(IReadOnlyList<ServiceConfig> services, CancellationToken cancellation)
     {
         if (services is null)
         {
@@ -420,14 +485,14 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
         {
             try
             {
-                if (configuredServices.ContainsKey(c.Key))
+                if (configuredServices.ContainsKey(c.ServiceId))
                 {
-                    errors.Add(new ArgumentException($"Duplicate service '{c.Key}'."));
+                    errors.Add(new ArgumentException($"Duplicate service '{c.ServiceId}'."));
                     continue;
                 }
 
                 // Don't modify the original
-                var service = c.Value;
+                var service = c;
 
                 foreach (var filter in _filters)
                 {
@@ -440,11 +505,11 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
                     errors.AddRange(serviceErrors);
                     continue;
                 }
-                configuredServices.Add(c.Key, service);
+                configuredServices.Add(c.ServiceId, service);
             }
             catch (Exception ex)
             {
-                errors.Add(new ArgumentException($"An exception was thrown from the configuration callbacks for cluster '{c.Key}'.", ex));
+                errors.Add(new ArgumentException($"An exception was thrown from the configuration callbacks for service '{c.ServiceId}'.", ex));
             }
         }
 
@@ -455,18 +520,18 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
 
         return (configuredServices, errors);
     }
-    private void UpdateRuntimeServices(IReadOnlyDictionary<string, ServiceConfig> incomingServices)
+    private void UpdateRuntimeServices(IEnumerable<ServiceConfig> incomingServices)
     {
         var desiredServices = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var incomingService in incomingServices)
         {
-            var added = desiredServices.Add(incomingService.Key);
+            var added = desiredServices.Add(incomingService.ServiceId);
             Debug.Assert(added);
 
-            if (_services.TryGetValue(incomingService.Key, out var currentService))
+            if (_services.TryGetValue(incomingService.ServiceId, out var currentService))
             {
-                var instancesChanged = UpdateRuntimeInstances(incomingService.Value.Instances, currentService.Instances);
+                var instancesChanged = UpdateRuntimeInstances(incomingService.Instances, currentService.Instances);
 
                 var currentServiceModel = currentService.Model;
 
@@ -480,14 +545,14 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
                 //    NewMetadata = incomingCluster.Metadata
                 //});
 
-                var newServiceModel = new ServiceModel(incomingService.Value, null);
+                var newServiceModel = new ServiceModel(incomingService);//, null);
 
                 // Excludes destination changes, they're tracked separately.
                 var configChanged = currentServiceModel.HasConfigChanged(newServiceModel);
                 if (configChanged)
                 {
                     currentService.Revision++;
-                    Log.ServiceChanged(_logger, incomingService.Key);
+                    Log.ServiceChanged(_logger, incomingService.ServiceId);
                 }
 
                 if (instancesChanged || configChanged)
@@ -495,19 +560,19 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
                     // Config changed, so update runtime cluster
                     currentService.Model = newServiceModel;
 
-                    //_clusterDestinationsUpdater.UpdateAllDestinations(currentCluster);
+                    //_clusterDestinationsUpdater.UpdateAllDestinations(currentService);
 
-                    //foreach (var listener in _clusterChangeListeners)
+                    //foreach (var listener in _serviceChangeListeners)
                     //{
-                    //    listener.OnClusterChanged(currentCluster);
+                    //    listener.OnClusterChanged(currentService);
                     //}
                 }
             }
             else
             {
-                var newServiceState = new ServiceState(incomingService.Key);
+                var newServiceState = new ServiceState(incomingService.ServiceId);
 
-                UpdateRuntimeInstances(incomingService.Value.Instances, newServiceState.Instances);
+                UpdateRuntimeInstances(incomingService.Instances, newServiceState.Instances);
 
                 //var httpClient = _httpClientFactory.CreateClient(new ForwarderHttpClientContext
                 //{
@@ -516,13 +581,13 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
                 //    NewMetadata = incomingCluster.Metadata
                 //});
 
-                newServiceState.Model = new ServiceModel(incomingService.Value, null);
+                newServiceState.Model = new ServiceModel(incomingService);//, null);
                 newServiceState.Revision++;
-                Log.ServiceAdded(_logger, incomingService.Key);
+                Log.ServiceAdded(_logger, incomingService.ServiceId);
 
                 //_clusterDestinationsUpdater.UpdateAllDestinations(newClusterState);
 
-                added = _services.TryAdd(incomingService.Key, newServiceState);
+                added = _services.TryAdd(incomingService.ServiceId, newServiceState);
                 Debug.Assert(added);
 
                 //foreach (var listener in _clusterChangeListeners)
@@ -533,18 +598,18 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
         }
 
         // Directly enumerate the ConcurrentDictionary to limit locking and copying.
-        foreach (var existingServicePairKey in _services.Keys)
+        foreach (var existingClusterPair in _services)
         {
-            var existingService = _services[existingServicePairKey];
-            if (!desiredServices.Contains(existingService.ServiceName))
+            var existingService = existingClusterPair.Value;
+            if (!desiredServices.Contains(existingService.ServiceId))
             {
                 // NOTE 1: Remove is safe to do within the `foreach` loop on ConcurrentDictionary
                 //
                 // NOTE 2: Removing the cluster from _clusters is safe and existing
                 // ASP .NET Core endpoints will continue to work with their existing behavior (until those endpoints are updated)
                 // and the Garbage Collector won't destroy this cluster object while it's referenced elsewhere.
-                Log.ServiceRemoved(_logger, existingService.ServiceName);
-                var removed = _services.TryRemove(existingService.ServiceName, out var _);
+                Log.ServiceRemoved(_logger, existingService.ServiceId);
+                var removed = _services.TryRemove(existingService.ServiceId, out var _);
                 Debug.Assert(removed);
 
                 //foreach (var listener in _serviceChangeListeners)
@@ -555,7 +620,7 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
         }
     }
 
-    private bool UpdateRuntimeInstances(IReadOnlyDictionary<string, InstanceConfig>? incomingInstances, ConcurrentDictionary<string, InstanceState> currentInstances)
+    private bool UpdateRuntimeInstances(IDictionary<string, InstanceConfig>? incomingInstances, ConcurrentDictionary<string, InstanceState> currentInstances)
     {
         var desiredInstances = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var changed = false;
@@ -611,6 +676,108 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
         return changed;
     }
 
+    private bool UpdateRuntimeRoutes(IList<RouteConfig> incomingRoutes)
+    {
+        var desiredRoutes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var changed = false;
+
+        foreach (var incomingRoute in incomingRoutes)
+        {
+            desiredRoutes.Add(incomingRoute.RouteId);
+
+            //// Note that this can be null, and that is fine. The resulting route may match
+            //// but would then fail to route, which is exactly what we were instructed to do in this case
+            //// since no valid cluster was specified.
+            //_services.TryGetValue(incomingRoute.ClusterId ?? string.Empty, out var cluster);
+
+            if (_routes.TryGetValue(incomingRoute.RouteId, out var currentRoute))
+            {
+                if (currentRoute.Model.HasConfigChanged(incomingRoute))
+                {
+                    //currentRoute.CachedEndpoint = null; // Recreate endpoint
+                    var newModel = BuildRouteModel(incomingRoute);//, cluster);
+                    currentRoute.Model = newModel;
+                    //currentRoute.ClusterRevision = cluster?.Revision;
+                    changed = true;
+                    Log.RouteChanged(_logger, currentRoute.RouteId);
+                }
+            }
+            else
+            {
+                var newModel = BuildRouteModel(incomingRoute);//, cluster);
+                var newState = new RouteState(incomingRoute.RouteId)
+                {
+                    Model = newModel,
+                    //ClusterRevision = cluster?.Revision,
+                };
+                var added = _routes.TryAdd(newState.RouteId, newState);
+                Debug.Assert(added);
+                changed = true;
+                Log.RouteAdded(_logger, newState.RouteId);
+            }
+        }
+
+        // Directly enumerate the ConcurrentDictionary to limit locking and copying.
+        foreach (var existingRoutePair in _routes)
+        {
+            var routeId = existingRoutePair.Value.RouteId;
+            if (!desiredRoutes.Contains(routeId))
+            {
+                // NOTE 1: Remove is safe to do within the `foreach` loop on ConcurrentDictionary
+                //
+                // NOTE 2: Removing the route from _routes is safe and existing
+                // ASP.NET Core endpoints will continue to work with their existing behavior since
+                // their copy of `RouteModel` is immutable and remains operational in whichever state is was in.
+                Log.RouteRemoved(_logger, routeId);
+                var removed = _routes.TryRemove(routeId, out var _);
+                Debug.Assert(removed);
+                changed = true;
+            }
+        }
+
+        return changed;
+    }
+
+    private RouteModel BuildRouteModel(RouteConfig source)//, ServiceState? cluster)
+    {
+        //var transforms = _transformBuilder.Build(source, cluster?.Model?.Config);
+
+        return new RouteModel(source);//, cluster, transforms);
+    }
+
+    public bool TryGetRoute(string id, [NotNullWhen(true)] out RouteModel? route)
+    {
+        if (_routes.TryGetValue(id, out var routeState))
+        {
+            route = routeState.Model;
+            return true;
+        }
+
+        route = null;
+        return false;
+    }
+
+    public IEnumerable<RouteModel> GetRoutes()
+    {
+        foreach (var (_, route) in _routes)
+        {
+            yield return route.Model;
+        }
+    }
+
+    public bool TryGetService(string id, [NotNullWhen(true)] out ServiceState? service)
+    {
+        return _services.TryGetValue(id, out service!);
+    }
+
+    public IEnumerable<ServiceState> GetServices()
+    {
+        foreach (var (_, service) in _services)
+        {
+            yield return service;
+        }
+    }
+
     public void Dispose()
     {
         _configChangeSource.Dispose();
@@ -620,17 +787,13 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
         }
     }
 
-    public IReadOnlyCollection<string> GetContracts() => _contracts;
-
-    public IReadOnlyDictionary<string, string> GetMetadata() => _metadata;
-
-    public IReadOnlyDictionary<string, ServiceState> GetServices()
-    {
-        return _services;
-    }
-
     internal event Action<IRpcStateLookup>? _onChange;
-    public IDisposable? OnChange(Action<IRpcStateLookup> listener)
+    /// <summary>
+    /// 注册修改事件
+    /// </summary>
+    /// <param name="listener"></param>
+    /// <returns></returns>
+    public IDisposable OnChange(Action<IRpcStateLookup> listener)
     {
         var changeTrackerDisposable = new ChangeTrackerDisposable(this, listener);
         _onChange += changeTrackerDisposable.OnChange;
@@ -669,9 +832,9 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
     {
         public IRpcConfigProvider Provider { get; } = provider;
 
-    public IRpcConfig LatestConfig { get; set; } = config;
+        public IRpcConfig LatestConfig { get; set; } = config;
 
-    public bool LoadFailed { get; set; }
+        public bool LoadFailed { get; set; }
 
         public IDisposable? CallbackCleanup { get; set; }
     }
@@ -846,6 +1009,67 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
         public static void ErrorApplyingConfig(ILogger logger, Exception ex)
         {
             _errorApplyingConfig(logger, ex);
+        }
+    }
+}
+
+
+
+public static class RpcConfigManagerExtend
+{
+    public static void AddRangeCombined(this List<RouteConfig> _this, IEnumerable<RouteConfig>? other) 
+    {
+        if (other == null) { return; }
+        foreach (var item in other) 
+        {
+            var config = _this.FirstOrDefault(w => w.RouteId == item.RouteId);
+            if (config == null) 
+            {
+                _this.Add(item);
+                continue;
+            }
+
+            config.ServicePattern = item.ServicePattern;
+
+            foreach (var meta in item.Metadata)
+            {
+                config.Metadata[meta.Key] = meta.Value;
+            }
+        }
+    }
+    public static void AddRangeCombined(this List<ServiceConfig> _this, IEnumerable<ServiceConfig>? other)
+    {
+        if (other == null) { return; }
+        foreach (var item in other)
+        {
+            var config = _this.FirstOrDefault(w => w.ServiceId == item.ServiceId);
+            if (config == null)
+            {
+                _this.Add(item);
+                continue;
+            }
+
+
+            foreach (var instance in item.Instances)
+            {
+                if (!config.Instances.ContainsKey(instance.Key))
+                {
+                    config.Instances.Add(instance.Key, instance.Value);
+                }
+
+                config.Instances[instance.Key].Host = instance.Value.Host;
+                config.Instances[instance.Key].Port = instance.Value.Port;
+
+                foreach (var meta in instance.Value.Metadata)
+                {
+                    config.Instances[instance.Key].Metadata[meta.Key] = meta.Value;
+                }
+            }
+
+            foreach (var meta in item.Metadata)
+            {
+                config.Metadata[meta.Key] = meta.Value;
+            }
         }
     }
 }

@@ -242,11 +242,11 @@ public class ObjectUtil
     private static (Dictionary<string, string>,Dictionary<string, byte[]> dictionaryBytes) ExecuteInternal(
         object obj,
         string prefix = "",
-        Dictionary<string, string> dictionary = default!,
-        Dictionary<string, byte[]> dictionaryBytes = default!)
+        Dictionary<string, string>? dictionary = default,
+        Dictionary<string, byte[]>? dictionaryBytes = default)
     {
-        dictionary ??= new Dictionary<string, string>();
-        dictionaryBytes ??= new Dictionary<string, byte[]>();
+        dictionary ??= [];
+        dictionaryBytes ??= [];
         var type = obj.GetType();
         var properties = GetProperties(type);
 

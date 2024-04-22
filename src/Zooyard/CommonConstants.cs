@@ -6,6 +6,7 @@ public record CommonConstants
     public const string REMOTE_APPLICATION_KEY = "remote.application";
     public const string GROUP_KEY = "group";
     public const string DEFAULT_GROUP = "default_group";
+    public const string BASE_KEY = "base";
     public const string PATH_KEY = "path";
     public const string ADDRESS_KEY = "address";
     public const string INTERFACE_KEY = "interface";

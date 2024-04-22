@@ -40,7 +40,7 @@ public abstract class ListenableStateRouter : AbstractStateRouter
     void OnChanged(IRpcStateLookup value)
     {
         var applicationName = Environment.GetEnvironmentVariable("applicationName") ?? "system_name";
-        if (!value.GetServices().TryGetValue(applicationName, out var serviceOption))
+        if (!_stateLookup.TryGetService(applicationName, out var serviceOption))
         {
             return;
         }

@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Reflection;
-using Zooyard.DataAnnotations;
+using Zooyard.Attributes;
 using Zooyard.Rpc;
 using Zooyard.Rpc.Support;
 
@@ -20,7 +20,7 @@ public class HttpInvoker(ILogger logger, IHttpClientFactory _instance, int _clie
         {
             methodName = methodName[..^endStr.Length];
         }
-        var pathList = _url.Path?.Split('/', StringSplitOptions.RemoveEmptyEntries)??new string[0];
+        var pathList = _url.Path?.Split('/', StringSplitOptions.RemoveEmptyEntries) ?? [];
         var pathUrl = new List<string>(pathList);
         var method = DEFAULT_METHODTYPE;
         var contentType = DEFAULT_CONTENTTYPE;

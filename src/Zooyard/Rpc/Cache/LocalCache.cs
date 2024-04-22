@@ -16,7 +16,7 @@ public class LocalCache(IMemoryCache _memoryCache, IRpcStateLookup _proxyState) 
 
     //private int Timeout => _zooyard.CurrentValue.Meta.GetValue("cache.timeout", 60000);
 
-    private int Timeout => _proxyState.GetMetadata().GetValue("cache.timeout", 60000);
+    private int Timeout => _proxyState.GetGlobalMataValue("cache.timeout", 60000);
 
 
     //public LocalCache(IMemoryCache memoryCache, IOptionsMonitor<ZooyardOption> zooyard)

@@ -1,7 +1,7 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Zooyard.Configuration;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 using System.Net;
-using Zooyard.Configuration;
 
 namespace Zooyard.ServiceDiscovery;
 
@@ -22,7 +22,7 @@ internal class DnsInstanceResolver : IInstanceResolver
     }
 
     /// <inheritdoc/>
-    public async ValueTask<ResolvedInstanceCollection> ResolveInstancesAsync(IReadOnlyDictionary<string, InstanceConfig> instances, CancellationToken cancellationToken)
+    public async ValueTask<ResolvedInstanceCollection> ResolveInstancesAsync(IDictionary<string, InstanceConfig> instances, CancellationToken cancellationToken)
     {
         var options = _options.CurrentValue;
         Dictionary<string, InstanceConfig> results = new();

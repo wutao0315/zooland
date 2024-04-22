@@ -1,14 +1,19 @@
 ﻿namespace Zooyard;
 
-public interface IResult<T>
+public interface IResult
 {
-    T? Value { get; }
-    long ElapsedMilliseconds{ get; set; }
+    long ElapsedMilliseconds { get; set; }
     bool HasException { get; }
     Exception? Exception { get; }
 }
 
-public class RpcResult<T> : IResult<T>
+
+public interface IResult<T> : IResult
+{
+    T? Value { get; }
+}
+
+public record RpcResult<T> : IResult<T>
 {
     public T? Value { get; private set; }
     public long ElapsedMilliseconds { get; set; }
@@ -18,13 +23,18 @@ public class RpcResult<T> : IResult<T>
     {
     }
 
-    public RpcResult(T result)
+    public RpcResult(T? result)
     {
         Value = result;
     }
 
     public RpcResult(Exception? exception)
     {
+        Exception = exception;
+    }
+    public RpcResult(T? result, Exception? exception)
+    {
+        Value = result;
         Exception = exception;
     }
     public bool HasException => Exception != null;
@@ -39,7 +49,7 @@ public interface IClusterResult<T>
     bool IsThrow { get; }
 }
 
-public class ClusterResult<T> : IClusterResult<T>
+public record ClusterResult<T> : IClusterResult<T>
 {
     public IResult<T>? Result { get; private set; }
 
@@ -52,7 +62,7 @@ public class ClusterResult<T> : IClusterResult<T>
     public bool IsThrow { get; private set; }
 
     public ClusterResult(IResult<T>? result,
-        IList<URL> urls, 
+        IList<URL> urls,
         IList<BadUrl> badUrls,
         Exception? clusterException, bool isThrow)
     {
@@ -61,5 +71,27 @@ public class ClusterResult<T> : IClusterResult<T>
         BadUrls = badUrls;
         ClusterException = clusterException;
         IsThrow = isThrow;
+    }
+}
+
+public interface IBaseReturnResult
+{
+    T? Translate<T>();
+}
+
+public record ResponseDataResult
+{
+    public int Code { get; set; }
+    public string Msg { get; set; } = string.Empty;
+}
+public record ResponseDataResult<T> : ResponseDataResult, IBaseReturnResult
+    where T : class
+{
+    public T? Data { get; set; }
+
+    public T1? Translate<T1>()
+    {
+        var result = (T1?)Data.ChangeType(typeof(T1));
+        return result;
     }
 }

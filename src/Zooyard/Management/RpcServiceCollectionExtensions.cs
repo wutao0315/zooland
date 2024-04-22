@@ -1,17 +1,16 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Zooyard;
+using Zooyard.Attributes;
+using Zooyard.Configuration;
+using Zooyard.Configuration.ConfigProvider;
+using Zooyard.Management;
+using Zooyard.Rpc;
+using Zooyard.Rpc.Support;
+using Zooyard.ServiceDiscovery;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using Zooyard;
-using Zooyard.Configuration;
-using Zooyard.Configuration.ConfigProvider;
-using Zooyard.DataAnnotations;
-using Zooyard.Management;
-using Zooyard.Rpc.Route.State;
-using Zooyard.Rpc;
-using Zooyard.ServiceDiscovery;
-using Microsoft.Extensions.Hosting;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -55,28 +54,24 @@ public static class RpcServiceCollectionExtensions
         return builder;
     }
 
-    public static IRpcBuilder AddInterceptor(this IRpcBuilder builder, IInterceptor interceptor)
+    public static IRpcBuilder AddInterceptor<T>(this IRpcBuilder builder)
+        where T: class, IInterceptor
     {
-        builder.Services.TryAddSingleton(interceptor);
+        builder.Services.TryAddSingleton<IInterceptor, T>();
         return builder;
     }
 
-    public static IRpcBuilder AddContracts(this IRpcBuilder builder, params Type[] types)
+    public static IRpcBuilder AddContract<T>(this IRpcBuilder builder)
     {
-        builder.Services.AddContracts(types);
+        builder.Services.AddContracts(typeof(T));
         return builder;
     }
 
     public static void AddContracts(this IServiceCollection service, params Type[] types) 
     {
-        service.TryAddSingleton<IZooyardPools>((serviceProvder) =>
+        foreach (var serviceType in types)
         {
-            var loggerfactory = serviceProvder.GetRequiredService<ILoggerFactory>();
-            //var option = serviceProvder.GetRequiredService<IOptionsMonitor<ZooyardOption>>();
-            var aa = serviceProvder.GetRequiredService<IRpcStateLookup>();
-
-            var clientPools = new Dictionary<string, IClientPool>();
-            foreach (var serviceType in types)
+            service.AddSingleton<IClientPool>((s) => 
             {
                 var zooyard = serviceType.GetCustomAttribute<ZooyardAttribute>();
                 if (zooyard == null)
@@ -86,58 +81,13 @@ public static class RpcServiceCollectionExtensions
 
                 var poolType = Type.GetType(zooyard.TypeName)!;
 
-                var pool = (IClientPool)serviceProvder.GetRequiredService(poolType);
+                var pool = (AbstractClientPool)s.GetRequiredService(poolType);
                 pool.ServiceName = zooyard.ServiceName;
                 pool.ProxyType = zooyard.ProxyType;
-                clientPools.Add(serviceType.FullName!, pool);
-            }
-
-            var loadBalances = serviceProvder.GetServices<ILoadBalance>();
-            var clusters = serviceProvder.GetServices<ICluster>();
-            var caches = serviceProvder.GetServices<ICache>();
-            var routeFactories = serviceProvder.GetServices<IStateRouterFactory>();
-            var appLifetime = serviceProvder.GetRequiredService<IHostApplicationLifetime>();
-            var zooyardPools = new ZooyardPools(loggerfactory, appLifetime, clientPools, loadBalances, clusters, caches, routeFactories, aa);
-            return zooyardPools;
-        });
-
-
-        //foreach (var serviceType in types)
-        //{
-        //    var genericType = typeof(ZooyardFactory<>);
-        //    var factoryType = genericType.MakeGenericType([serviceType]);
-        //    service.TryAddSingleton(factoryType, (serviceProvder) =>
-        //    {
-        //        var loggerfactory = serviceProvder.GetRequiredService<ILoggerFactory>();
-        //        var pools = serviceProvder.GetRequiredService<IZooyardPools>();
-        //        var interceptors = serviceProvder.GetServices<IInterceptor>().OrderBy(w=>w.Order);
-        //        var constructor = factoryType.GetConstructor([typeof(ILoggerFactory), typeof(IZooyardPools), typeof(IEnumerable<IInterceptor>), typeof(ZooyardAttribute)]);
-        //        if (constructor == null)
-        //        {
-        //            throw new RpcException($"{nameof(constructor)} is not exists");
-        //        }
-        //        var zooyard = serviceType.GetCustomAttribute<ZooyardAttribute>();
-        //        var zooyardFactory = constructor.Invoke([loggerfactory, pools, interceptors, zooyard]);
-        //        return zooyardFactory;
-        //    });
-
-
-        //    service.TryAddSingleton(serviceType, (serviceProvder) =>
-        //    {
-        //        var factory = serviceProvder.GetRequiredService(factoryType);
-        //        var createYardMethod = factoryType.GetMethod("CreateYard");
-        //        if (createYardMethod == null)
-        //        {
-        //            throw new RpcException($"{nameof(createYardMethod)} is not exists");
-        //        }
-        //        var result = createYardMethod.Invoke(factory, null);
-        //        if (result == null)
-        //        {
-        //            throw new RpcException($"{nameof(createYardMethod)} is not null");
-        //        }
-        //        return result;
-        //    });
-        //}
+                pool.Name = serviceType.FullName!;
+                return pool;
+            });
+        }
     }
 
     /// <summary>

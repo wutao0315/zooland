@@ -1,4 +1,4 @@
-﻿namespace Zooyard.DataAnnotations
+﻿namespace Zooyard.Attributes
 {
     /// <summary>
     /// 接口代理

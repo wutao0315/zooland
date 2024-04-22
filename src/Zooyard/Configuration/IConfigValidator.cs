@@ -5,16 +5,12 @@
 /// </summary>
 public interface IConfigValidator
 {
-    ///// <summary>
-    ///// Validates a route and returns all errors
-    ///// </summary>
-    //ValueTask<IList<Exception>> ValidateRouteAsync(RouteConfig route);
-
-    ///// <summary>
-    ///// Validates a cluster and returns all errors.
-    ///// </summary>
-    //ValueTask<IList<Exception>> ValidateClusterAsync(ClusterConfig cluster);
-
+    /// <summary>
+    /// Validates a public and returns all errors
+    /// </summary>
+    ValueTask<IList<Exception>> ValidateRouteAsync(RouteConfig route);
+    /// <summary>
+    /// Validates a service and returns all errors.
+    /// </summary>
     ValueTask<IList<Exception>> ValidateServiceAsync(ServiceConfig service);
-
 }

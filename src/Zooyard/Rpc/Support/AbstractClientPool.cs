@@ -15,10 +15,15 @@ public abstract class AbstractClientPool: IClientPool
     /// client pools
     /// </summary>
     protected readonly ConcurrentDictionary<URL, ConcurrentBag<IClient>> ClientsPool = new ();
+    public string Name { get; internal set; } = string.Empty;
+    public string ServiceName { get; internal set; } = string.Empty;
+    //public string Version { get; internal set; } = string.Empty;
+    public Type? ProxyType { get; internal set; }
 
-    public string ServiceName { get; set; } = string.Empty;
-    public string Version { get; set; } = string.Empty;
-    public Type? ProxyType { get; set; }
+    string IClientPool.Name { get => Name; set => Name = value; }
+    string IClientPool.ServiceName { get => ServiceName; set => ServiceName = value; }
+    Type? IClientPool.ProxyType { get => ProxyType; set => ProxyType = value; }
+
     public int MaxIdle { protected set; get; } = Environment.ProcessorCount * 2;
 
     /// <summary>

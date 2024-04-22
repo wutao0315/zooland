@@ -1,7 +1,7 @@
-﻿//using Zooyard.Logging;
-
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
+#if !DEBUG
 using Zooyard.Utils;
+#endif
 
 namespace Zooyard.Rpc.Support;
 

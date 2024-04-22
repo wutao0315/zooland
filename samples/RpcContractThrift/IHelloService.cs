@@ -1,4 +1,4 @@
-﻿using Zooyard.DataAnnotations;
+﻿using Zooyard.Attributes;
 
 namespace RpcContractThrift;
 

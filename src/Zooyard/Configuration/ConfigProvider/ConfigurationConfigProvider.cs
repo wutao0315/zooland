@@ -1,9 +1,8 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Zooyard.Utils;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using System.Diagnostics.CodeAnalysis;
-using System.Security.Authentication;
-using Zooyard.Utils;
 
 namespace Zooyard.Configuration.ConfigProvider;
 
@@ -57,15 +56,18 @@ internal sealed class ConfigurationConfigProvider : IRpcConfigProvider, IDisposa
             ConfigurationSnapshot newSnapshot;
             try
             {
-                var contracts = CreateContracts(_configuration.GetSection(nameof(ConfigurationSnapshot.Contracts)));
-                var metadata = CreateMetadata(_configuration.GetSection(nameof(ConfigurationSnapshot.Metadata)));
-                var services = CreateServices(_configuration.GetSection(nameof(ConfigurationSnapshot.Services)));
-                newSnapshot = new ConfigurationSnapshot 
+                newSnapshot = new ConfigurationSnapshot();
+
+                foreach (var section in _configuration.GetSection("Services").GetChildren())
                 {
-                    Contracts = contracts,
-                    Metadata = metadata,
-                    Services = services,
-                };
+                    newSnapshot.Services.Add(CreateService(section));
+                }
+
+                foreach (var section in _configuration.GetSection("Routes").GetChildren())
+                {
+                    newSnapshot.Routes.Add(CreateRoute(section));
+                }
+               
             }
             catch (Exception ex)
             {
@@ -96,30 +98,7 @@ internal sealed class ConfigurationConfigProvider : IRpcConfigProvider, IDisposa
         }
     }
 
-    private IReadOnlyList<string> CreateContracts(IConfigurationSection section)
-    {
-        var result = section.ReadStringArray();
-        return result?? Array.Empty<string>();
-    }
-
-    private IReadOnlyDictionary<string, string> CreateMetadata(IConfigurationSection section)
-    {
-        var metadata = section.ReadStringDictionary();
-        return metadata;
-    }
-
-    private IReadOnlyDictionary<string, ServiceConfig> CreateServices(IConfigurationSection section)
-    {
-        var services = new Dictionary<string, ServiceConfig>(StringComparer.OrdinalIgnoreCase);
-        foreach (var service in section.GetChildren())
-        {
-            services.Add(service.Key, CreateService(service));
-        }
-
-        return services;
-    }
-
-    private static ServiceConfig CreateService(IConfigurationSection section)
+    private ServiceConfig CreateService(IConfigurationSection section)
     {
         var instances = new Dictionary<string, InstanceConfig>(StringComparer.OrdinalIgnoreCase);
         foreach (var instance in section.GetSection(nameof(ServiceConfig.Instances)).GetChildren())
@@ -129,9 +108,25 @@ internal sealed class ConfigurationConfigProvider : IRpcConfigProvider, IDisposa
 
         return new ServiceConfig
         {
-            ServiceName = section[nameof(ServiceConfig.ServiceName)]!,
+            ServiceId =section.Key,
             Metadata = section.GetSection(nameof(ServiceConfig.Metadata)).ReadStringDictionary(),
-            Instances = instances
+            Instances = instances,
+        };
+    }
+
+    private static RouteConfig CreateRoute(IConfigurationSection section)
+    {
+        if (!string.IsNullOrEmpty(section[nameof(RouteConfig.RouteId)]))
+        {
+            throw new Exception("The route config format has changed, routes are now objects instead of an array. The public id must be set as the object name, not with the 'RouteId' field.");
+        }
+
+        return new RouteConfig
+        {
+            RouteId = section.Key,
+            ServicePattern = section[nameof(RouteConfig.ServicePattern)],
+            Metadata = section.GetSection(nameof(RouteConfig.Metadata)).ReadStringDictionary(),
+            Order = section.ReadInt32(nameof(RouteConfig.Order)),
         };
     }
 
@@ -145,21 +140,20 @@ internal sealed class ConfigurationConfigProvider : IRpcConfigProvider, IDisposa
         };
     }
 
-
     private static class Log
     {
         private static readonly Action<ILogger, Exception> _errorSignalingChange = LoggerMessage.Define(
-            Microsoft.Extensions.Logging.LogLevel.Error,
+            LogLevel.Error,
             EventIds.ErrorSignalingChange,
             "An exception was thrown from the change notification.");
 
         private static readonly Action<ILogger, Exception?> _loadData = LoggerMessage.Define(
-            Microsoft.Extensions.Logging.LogLevel.Information,
+            LogLevel.Information,
             EventIds.LoadData,
-            "Loading proxy data from config.");
+            "Loading rpc data from config.");
 
         private static readonly Action<ILogger, Exception> _configurationDataConversionFailed = LoggerMessage.Define(
-            Microsoft.Extensions.Logging.LogLevel.Error,
+            LogLevel.Error,
             EventIds.ConfigurationDataConversionFailed,
             "Configuration data conversion failed.");
 

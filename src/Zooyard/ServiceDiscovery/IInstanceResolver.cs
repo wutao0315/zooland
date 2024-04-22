@@ -13,6 +13,6 @@ public interface IInstanceResolver
     /// The resolved destinations and a change token used to indicate when resolution should be performed again.
     /// </returns>
     ValueTask<ResolvedInstanceCollection> ResolveInstancesAsync(
-        IReadOnlyDictionary<string, InstanceConfig> instances,
+        IDictionary<string, InstanceConfig> instances,
         CancellationToken cancellationToken);
 }

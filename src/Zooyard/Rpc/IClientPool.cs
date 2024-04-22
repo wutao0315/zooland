@@ -1,12 +1,10 @@
 ﻿namespace Zooyard.Rpc;
 
-public interface IClientPool: IDisposable,IAsyncDisposable
+public interface IClientPool: IAsyncDisposable
 {
-    string ServiceName { get; set; }
-    //string Version { get; set; }
-    //URL Address { get; set; }
-    //URL Url { get; set; }
-    Type? ProxyType { get; set; }
+    string Name { get; internal set; }
+    string ServiceName { get; internal set; }
+    Type? ProxyType { get; internal set; }
 
     Task<IClient> GetClient(URL url);
 

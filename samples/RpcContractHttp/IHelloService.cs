@@ -1,10 +1,10 @@
 ﻿using System.ComponentModel;
 using Zooyard;
-using Zooyard.DataAnnotations;
+using Zooyard.Attributes;
 
 namespace RpcContractHttp;
 
-[ZooyardHttp("HttpHelloService", Url = "http://127.0.0.1:10010/hello")]
+[ZooyardHttp("HttpHelloService", Url = "http://127.0.0.1:10010/{domain}/hello", Config ="domain=Appsettings:Domain@testdomain")]
 public interface IHelloService
 {
     [GetMapping("CallNameVoid")]

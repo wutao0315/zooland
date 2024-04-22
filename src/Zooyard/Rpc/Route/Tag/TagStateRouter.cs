@@ -43,7 +43,7 @@ public class TagStateRouter : AbstractStateRouter
             return;
         }
 
-        if (!value.GetServices().TryGetValue(application, out var serviceOption)) 
+        if (!_stateLookup.TryGetService(application, out var serviceOption))
         {
             return;
         }

@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using System.Threading;
+using Zooyard.Attributes;
 using Zooyard.Rpc;
 using Zooyard.Utils;
 
@@ -16,6 +17,7 @@ public interface IInvocation
     object[] Arguments { get; }
     Type[] ArgumentTypes { get; }
     ProtocolServiceKey ProtocolServiceKey { get; }
+    ZooyardAttribute Attribute { get; }
     object Put(object key, object value);
 
     object? Get(object key);
@@ -34,20 +36,35 @@ public interface IInvocation
 public class RpcInvocation : IInvocation
 {
     private readonly SemaphoreSlim attachmentLock = new(1, 1);
-    public RpcInvocation(string id, string serviceName, string version, string url, Type targetType, MethodInfo methodInfo, object[]? arguments)
+    public RpcInvocation(string id, ZooyardAttribute zooyardAttribute, string url, Type targetType, MethodInfo methodInfo, object[]? arguments)
     {
-        Id = id;
-        ServiceName = serviceName;
-        Version = version;
+        //兼容只传后面路径的问题
+        if (url.IndexOf("://")<=0 || url.IndexOf(":/") <= 0) 
+        {
+            if (url.StartsWith('/'))
+            {
+                url = "http://127.0.0.1" + url;
+            }
+            else 
+            {
+                url = "http://127.0.0.1/" + url;
+            }
+        }
+
         Url = URL.ValueOf(url);
+        Id = id;
+        ServiceName = zooyardAttribute.ServiceName;
+        Version = zooyardAttribute.Version;
         TargetType = targetType;
         MethodInfo = methodInfo;
         Arguments = arguments ?? Array.Empty<object>();
         ArgumentTypes = arguments == null ? Array.Empty<Type>() : (from item in arguments select item.GetType()).ToArray();
         var group = Url.GetParameter(CommonConstants.GROUP_KEY, CommonConstants.DEFAULT_GROUP);
-        ProtocolServiceKey = new ProtocolServiceKey(targetType.FullName!, version, group, Url.Protocol);
+        ProtocolServiceKey = new ProtocolServiceKey(targetType.FullName!, zooyardAttribute.Version, group, Url.Protocol);
+        Attribute = zooyardAttribute;
+
         SetAttachment(CommonConstants.PATH_KEY, Url.Path);
-        SetAttachment(CommonConstants.VERSION_KEY, version);
+        SetAttachment(CommonConstants.VERSION_KEY, zooyardAttribute.Version);
         SetAttachment(CommonConstants.INTERFACE_KEY, targetType.FullName!);
         SetAttachment(CommonConstants.GROUP_KEY, group);
 
@@ -76,7 +93,7 @@ public class RpcInvocation : IInvocation
     public object[] Arguments { get; }
     public Type[] ArgumentTypes { get; }
     public ProtocolServiceKey ProtocolServiceKey { get; }
-
+    public ZooyardAttribute Attribute { get; }
     public object Put(object key, object value)
     {
         return attributes[key] = value;

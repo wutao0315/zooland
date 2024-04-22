@@ -1,4 +1,4 @@
-﻿namespace Zooyard.DataAnnotations;
+﻿namespace Zooyard.Attributes;
 
 [AttributeUsage(AttributeTargets.Method)]
 public class DeleteMappingAttribute(string value) 

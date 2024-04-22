@@ -1,6 +1,6 @@
 ﻿using Zooyard.Configuration;
 
-namespace ZooyardClient;
+namespace Zooyard.ConfigurationMapper;
 
 public sealed record ServiceOption
 {

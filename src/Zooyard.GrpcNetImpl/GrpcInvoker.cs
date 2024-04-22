@@ -1,7 +1,7 @@
 ﻿using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
-using Zooyard.DataAnnotations;
+using Zooyard.Attributes;
 using Zooyard.Rpc;
 using Zooyard.Rpc.Support;
 
