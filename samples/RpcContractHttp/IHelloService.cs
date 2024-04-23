@@ -26,6 +26,6 @@ public interface IHelloService
     Task<string?> ShowHello(HelloResult name);
 
     [PostMapping("getpage", Consumes = "application/json")]
-    Task<Result<HelloResult>> GetPage(string name);
+    Task<Result<HelloResult>?> GetPage(string name);
     
 }

@@ -93,13 +93,15 @@ public class RpcClientGenerator : ISourceGenerator
             stringBuilder.AppendLine("         private readonly ZooyardInvoker _invoker;");
             stringBuilder.AppendLine("         private readonly Type _declaringType;");
             stringBuilder.AppendLine();
-            stringBuilder.AppendLine($"         public {className}(ILogger<{interfaceName}> logger, IZooyardPools zooyardPools, IEnumerable<IInterceptor> interceptors)");
+            stringBuilder.AppendLine($"         public {className}(ILogger<{interfaceName}> logger, IServiceProvider serviceProvider)");
             stringBuilder.AppendLine("         {");
             stringBuilder.AppendLine($"             _declaringType = typeof({interfaceName});");
             stringBuilder.AppendLine("             var zooyardAttr = _declaringType.GetCustomAttribute<ZooyardAttribute>();");
-            stringBuilder.AppendLine("             _invoker = new ZooyardInvoker(logger, zooyardPools, interceptors, zooyardAttr);");
+            stringBuilder.AppendLine("             _invoker = new ZooyardInvoker(logger, serviceProvider, zooyardAttr);");
             stringBuilder.AppendLine("             _interfaceMapping = this.GetType().GetInterfaceMap(_declaringType);");
             stringBuilder.AppendLine("         }");
+
+            
 
             // Assume all methods return Task or Task<T>
             foreach (var member in symbol.GetMembers().OfType<IMethodSymbol>())
@@ -193,8 +195,11 @@ public class RpcClientGenerator : ISourceGenerator
                 stringBuilder.AppendLine("        [ZooyardImpl]");
                 stringBuilder.AppendLine($"        public {returnType} {methodName}({parameters})");
                 stringBuilder.AppendLine("        {");
-                stringBuilder.AppendLine("             var stackTrace = new StackTrace(true);");
-                stringBuilder.AppendLine("             var (mi, mtoken) = _invoker.GetInterfaceMethod(stackTrace,_interfaceMapping);");
+                //stringBuilder.AppendLine("             var stackTrace = new StackTrace(true);");
+                //stringBuilder.AppendLine("             var (mi, mtoken) = _invoker.GetInterfaceMethod(stackTrace,_interfaceMapping);");
+
+                stringBuilder.AppendLine("             var method = MethodBase.GetCurrentMethod();");
+                stringBuilder.AppendLine("             var (mi, mtoken) = _invoker.GetInterfaceMethodBase(method, _interfaceMapping);");
                 stringBuilder.AppendLine($"             object[] args = [{callParameters}];");
                 stringBuilder.AppendLine("             var context = _invoker.GetMethodResolverContext(this, _declaringType, mi, mtoken, args);");
 

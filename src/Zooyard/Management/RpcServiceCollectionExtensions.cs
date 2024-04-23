@@ -63,15 +63,15 @@ public static class RpcServiceCollectionExtensions
 
     public static IRpcBuilder AddContract<T>(this IRpcBuilder builder)
     {
-        builder.Services.AddContracts(typeof(T));
+        builder.AddContracts(typeof(T));
         return builder;
     }
 
-    public static void AddContracts(this IServiceCollection service, params Type[] types) 
+    public static void AddContracts(this IRpcBuilder builder, params Type[] types) 
     {
         foreach (var serviceType in types)
         {
-            service.AddSingleton<IClientPool>((s) => 
+            builder.Services.AddSingleton<IClientPool>((s) => 
             {
                 var zooyard = serviceType.GetCustomAttribute<ZooyardAttribute>();
                 if (zooyard == null)

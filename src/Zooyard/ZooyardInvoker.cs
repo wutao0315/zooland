@@ -116,6 +116,39 @@ public class ZooyardInvoker
         throw new ArgumentNullException("not a impl method");
     }
 
+
+
+    /// <summary>
+    /// get interface method from impl method body
+    /// </summary>
+    /// <param name="methodBase"></param>
+    /// <param name="interfaceMapping"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentNullException"></exception>
+    public (MethodInfo, int) GetInterfaceMethodBase(MethodBase? methodBase, InterfaceMapping interfaceMapping)
+    {
+        if (methodBase == null)
+        {
+            throw new ArgumentNullException("method base is null");
+        }
+
+        if (methodBase is not MethodInfo md) 
+        {
+            throw new ArgumentNullException($"method base is not a MethodInfo:{methodBase.GetType().FullName}");
+        }
+
+        var index = Array.IndexOf(interfaceMapping.TargetMethods, md);
+
+        if (index == -1)
+        {
+            throw new ArgumentNullException($"index not exists{md}");
+        }
+
+        var im = interfaceMapping.InterfaceMethods[index];
+
+        return (im, index);
+    }
+
     // object[] args = new object[paramCount];
     // object[] packed = new object[PackedArgs.PackedTypes.Length];
     // packed[PackedArgs.DispatchProxyPosition] = this;

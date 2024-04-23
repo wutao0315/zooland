@@ -47,18 +47,19 @@ class Program
                //.AddDotNetty()
                //.AddThrift()
                //.AddGrpcNet()
-               .AddContracts(
-               //typeof(RpcContractThrift.IHelloService)
-               //, typeof(RpcContractGrpcNet.IHelloNetService)
-               //, 
-               typeof(RpcContractHttp.IHelloService)
-               //, typeof(RpcContractNetty.IHelloService)
-               //, typeof(MemberGrpc.ISessionService)
-               )
+               .AddContract<RpcContractHttp.IHelloService>()
+               //.AddContracts(
+               ////typeof(RpcContractThrift.IHelloService)
+               ////, typeof(RpcContractGrpcNet.IHelloNetService)
+               ////, 
+               //typeof(RpcContractHttp.IHelloService)
+               ////, typeof(RpcContractNetty.IHelloService)
+               ////, typeof(MemberGrpc.ISessionService)
+               //)
                ;
 
-           //services.AddSingleton<IHelloService, RpcContractHttp.HelloServiceClientTest>();
-           services.AddSingleton<IHelloService, RpcContractHttp.HelloServiceClient>();
+           services.AddSingleton<IHelloService, RpcContractHttp.HelloServiceClientTest>();
+           //services.AddSingleton<IHelloService, RpcContractHttp.HelloServiceClient>();
 
            //using var bsp = services.BuildServiceProvider();
            //var helloServiceThrift = bsp.GetRequiredService<RpcContractThrift.IHelloService>();
