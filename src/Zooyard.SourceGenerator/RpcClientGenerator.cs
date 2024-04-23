@@ -106,7 +106,7 @@ public class RpcClientGenerator : ISourceGenerator
             // Assume all methods return Task or Task<T>
             foreach (var member in symbol.GetMembers().OfType<IMethodSymbol>())
             {
-
+                var parameterTypes = string.Join(", ", member.Parameters.Select(p => $"typeof({p.Type})"));
                 var parameters = string.Join(", ", member.Parameters.Select(p => $"{p.Type} {p.Name}"));
                 var callParameters = string.Join(",", member.Parameters.Select(p => p.Name));
                 var methodName = member.Name;
@@ -198,7 +198,9 @@ public class RpcClientGenerator : ISourceGenerator
                 //stringBuilder.AppendLine("             var stackTrace = new StackTrace(true);");
                 //stringBuilder.AppendLine("             var (mi, mtoken) = _invoker.GetInterfaceMethod(stackTrace,_interfaceMapping);");
 
-                stringBuilder.AppendLine("             var method = MethodBase.GetCurrentMethod();");
+                //var method = this.GetType().GetMethod(nameof(CallName), new[] { typeof(string) });
+                stringBuilder.AppendLine($"             var method = this.GetType().GetMethod(nameof({methodName}), new Type[] {{{parameterTypes}}});");
+                //stringBuilder.AppendLine("             var method = MethodBase.GetCurrentMethod();");
                 stringBuilder.AppendLine("             var (mi, mtoken) = _invoker.GetInterfaceMethodBase(method, _interfaceMapping);");
                 stringBuilder.AppendLine($"             object[] args = [{callParameters}];");
                 stringBuilder.AppendLine("             var context = _invoker.GetMethodResolverContext(this, _declaringType, mi, mtoken, args);");

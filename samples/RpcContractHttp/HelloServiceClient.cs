@@ -91,7 +91,8 @@ public class HelloServiceClientTest : ProxyExecutor, IHelloService
         //var stackTrace = new StackTrace(true);
         //var (mi, mtoken) = _invoker.GetInterfaceMethod(stackTrace, _interfaceMapping);
 
-        var method = MethodBase.GetCurrentMethod();
+        var method = this.GetType().GetMethod(nameof(CallName), new Type[] { typeof(string) });
+
         var (mi,mtoken) = _invoker.GetInterfaceMethodBase(method, _interfaceMapping);
 
         object[] args = [name];
