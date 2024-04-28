@@ -58,7 +58,7 @@ public class RpcInvocation : IInvocation
         TargetType = targetType;
         MethodInfo = methodInfo;
         Arguments = arguments ?? Array.Empty<object>();
-        ArgumentTypes = arguments == null ? Array.Empty<Type>() : (from item in arguments select item.GetType()).ToArray();
+        ArgumentTypes = arguments == null ? Array.Empty<Type>() : (from item in methodInfo.GetParameters() select item.ParameterType).ToArray();
         var group = Url.GetParameter(CommonConstants.GROUP_KEY, CommonConstants.DEFAULT_GROUP);
         ProtocolServiceKey = new ProtocolServiceKey(targetType.FullName!, zooyardAttribute.Version, group, Url.Protocol);
         Attribute = zooyardAttribute;
