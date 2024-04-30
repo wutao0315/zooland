@@ -132,8 +132,7 @@ public class RpcClientGenerator : ISourceGenerator
                     }
                     else
                     {
-                        //return member.ReturnType.ToString();
-                        return GetTypeArguments(((INamedTypeSymbol)member.ReturnType).TypeArguments[0]);
+                        return member.ReturnType.ToString();
                     }
                 }
 
@@ -157,8 +156,7 @@ public class RpcClientGenerator : ISourceGenerator
                     }
                     else
                     {
-                        //return member.ReturnType.ToString();
-                        return $"return _invoker.Invoke<{GetTypeArguments(((INamedTypeSymbol)member.ReturnType).TypeArguments[0])}> ";
+                        return $"return _invoker.Invoke<{member.ReturnType}>";
                     }
                 }
                 string GetTypeArguments(ITypeSymbol returnType)
