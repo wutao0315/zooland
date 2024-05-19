@@ -63,7 +63,31 @@ public abstract class AbstractCluster : ICluster
                 return stickyInvoker;
             }
         }
-        var invoker = DoSelect(loadbalance, invocation, invokers, selected);
+
+        IList<URL> invokerList = new List<URL>();
+        //如果可用集合有多个时过滤隔离集合
+        if (invokers?.Count > 1)
+        {
+            foreach (var item in invokers)
+            {
+                if (disabledUrls.Any(w => w.Url == item))
+                {
+                    continue;
+                }
+                invokerList.Add(item);
+            }
+
+            if (invokerList.Count <= 0)
+            {
+                invokerList = invokers;
+            }
+        }
+        else if (invokers != null)
+        {
+            invokerList = invokers;
+        }
+
+        var invoker = DoSelect(loadbalance, invocation, invokerList, selected);
 
         if (invoker == null) 
             throw new Exception("invoker is null load balance err");

@@ -83,28 +83,31 @@ public class HttpInvoker(ILogger logger, IHttpClientFactory _instance, int _clie
             throw;
         }
 
-        if (invocation.MethodInfo.ReturnType == typeof(void) || invocation.MethodInfo.ReturnType == typeof(Task)) 
+        if (invocation.MethodInfo.ReturnType == typeof(T))
         {
-            return new RpcResult<T>();
-        }
+            if (invocation.MethodInfo.ReturnType == typeof(void) || invocation.MethodInfo.ReturnType == typeof(Task))
+            {
+                return new RpcResult<T>();
+            }
 
-        if (invocation.MethodInfo.ReturnType.IsValueType || invocation.MethodInfo.ReturnType == typeof(string))
-        {
-            return new RpcResult<T>((T)value.ChangeType(typeof(T))!);
-        }
-
-        if (invocation.MethodInfo.ReturnType.IsGenericType &&
-           invocation.MethodInfo.ReturnType.GetGenericTypeDefinition() == typeof(Task<>)) 
-        {
-            var tastGenericType = invocation.MethodInfo.ReturnType.GenericTypeArguments[0];
-
-            if (tastGenericType.IsValueType || tastGenericType == typeof(string))
+            if (invocation.MethodInfo.ReturnType.IsValueType || invocation.MethodInfo.ReturnType == typeof(string))
             {
                 return new RpcResult<T>((T)value.ChangeType(typeof(T))!);
             }
 
-            var genericData = value.DeserializeJson<T>();
-            return new RpcResult<T>(genericData);
+            if (invocation.MethodInfo.ReturnType.IsGenericType &&
+               invocation.MethodInfo.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
+            {
+                var tastGenericType = invocation.MethodInfo.ReturnType.GenericTypeArguments[0];
+
+                if (tastGenericType.IsValueType || tastGenericType == typeof(string))
+                {
+                    return new RpcResult<T>((T)value.ChangeType(typeof(T))!);
+                }
+
+                var genericData = value.DeserializeJson<T>();
+                return new RpcResult<T>(genericData);
+            }
         }
 
         var result = new RpcResult<T>(value.DeserializeJson<T>());

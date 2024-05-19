@@ -89,7 +89,16 @@ public class ForkingCluster : AbstractCluster
                 }
                 catch (Exception e)
                 {
-                    badUrls.Add(new BadUrl(invoker, e));
+                    var badUrl = badUrls.FirstOrDefault(w => w.Url == invoker);
+                    if (badUrl != null)
+                    {
+                        badUrl.BadTime = DateTime.Now;
+                        badUrl.CurrentException = e;
+                    }
+                    else
+                    {
+                        badUrls.Add(new BadUrl(invoker, e));
+                    }
                     int value = count.IncrementAndGet();
                     if (value >= selected.Count)
                     {

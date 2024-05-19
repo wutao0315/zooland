@@ -139,7 +139,16 @@ public class FailbackCluster : AbstractCluster
                 ElapsedMilliseconds = watch.ElapsedMilliseconds,
             }; // ignore
             exception = e;
-            badUrls.Add(new BadUrl(invoker, exception));
+            var badUrl = badUrls.FirstOrDefault(w => w.Url == invoker);
+            if (badUrl != null)
+            {
+                badUrl.BadTime = DateTime.Now;
+                badUrl.CurrentException = e;
+            }
+            else
+            {
+                badUrls.Add(new BadUrl(invoker, e));
+            }
         }
         finally
         {

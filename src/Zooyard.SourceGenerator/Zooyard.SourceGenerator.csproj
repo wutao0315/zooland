@@ -5,7 +5,14 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-		<LangVersion>11.0</LangVersion>
+		<LangVersion>latest</LangVersion>
+
+		<IncludeBuildOutput>false</IncludeBuildOutput>
+		<NoPackageAnalysis>true</NoPackageAnalysis>
+		<GenerateDocumentationFile>false</GenerateDocumentationFile>
+		<IsShippingPackage>false</IsShippingPackage>
+		<ExcludeFromSourceBuild>false</ExcludeFromSourceBuild>
+		<IsProjectReferenceProvider>false</IsProjectReferenceProvider>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -14,6 +21,10 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.9.2" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="$(TargetPath)" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 	</ItemGroup>
 
 </Project>

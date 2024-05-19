@@ -52,7 +52,16 @@ public class BroadcastCluster : AbstractCluster
             catch (Exception e)
             {
                 exception = e;
-                badUrls.Add(new BadUrl(invoker, exception));
+                var badUrl = badUrls.FirstOrDefault(w => w.Url == invoker);
+                if (badUrl != null)
+                {
+                    badUrl.BadTime = DateTime.Now;
+                    badUrl.CurrentException = e;
+                }
+                else
+                {
+                    badUrls.Add(new BadUrl(invoker, e));
+                }
                 _logger.LogWarning(e, e.Message);
             }
             finally

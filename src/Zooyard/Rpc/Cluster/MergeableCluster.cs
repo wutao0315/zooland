@@ -90,7 +90,16 @@ public class MergeableCluster : AbstractCluster
                 }
                 catch (Exception e)
                 {
-                    badUrls.Add(new BadUrl(invoker, e));
+                    var badUrl = badUrls.FirstOrDefault(w => w.Url == invoker);
+                    if (badUrl != null)
+                    {
+                        badUrl.BadTime = DateTime.Now;
+                        badUrl.CurrentException = e;
+                    }
+                    else
+                    {
+                        badUrls.Add(new BadUrl(invoker, e));
+                    }
                     return new ClusterResult<T>(new RpcResult<T>(e) { ElapsedMilliseconds = watchInner.ElapsedMilliseconds },
                         goodUrls, badUrls,
                         e, true);
@@ -143,7 +152,16 @@ public class MergeableCluster : AbstractCluster
                     }
                     catch (Exception e)
                     {
-                        badUrls.Add(new BadUrl(invoker, e));
+                        var badUrl = badUrls.FirstOrDefault(w => w.Url == invoker);
+                        if (badUrl != null)
+                        {
+                            badUrl.BadTime = DateTime.Now;
+                            badUrl.CurrentException = e;
+                        }
+                        else
+                        {
+                            badUrls.Add(new BadUrl(invoker, e));
+                        }
                         return new RpcResult<T>(e) { ElapsedMilliseconds = watchInner.ElapsedMilliseconds };
                     }
                     finally

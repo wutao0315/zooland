@@ -57,6 +57,16 @@ public class FailsafeCluster : AbstractCluster
         {
             exception = e;
             //badUrls.Add(new BadUrl { Url = invoker, BadTime = DateTime.Now, CurrentException = exception });
+            var badUrl = badUrls.FirstOrDefault(w => w.Url == invoker);
+            if (badUrl != null)
+            {
+                badUrl.BadTime = DateTime.Now;
+                badUrl.CurrentException = e;
+            }
+            else
+            {
+                badUrls.Add(new BadUrl(invoker, e));
+            }
             _logger.LogError(e, $"Failsafe ignore exception: {e.Message}");
             var result = new RpcResult<T>(e) { ElapsedMilliseconds = watch.ElapsedMilliseconds }; // ignore
             return new ClusterResult<T>(result, 

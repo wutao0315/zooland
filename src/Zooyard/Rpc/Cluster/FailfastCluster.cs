@@ -78,7 +78,16 @@ public class FailfastCluster : AbstractCluster
                 + ", but no luck to perform the invocation. Last error is: " + e.Message+e.StackTrace, e.InnerException ?? e);
             }
             _logger.LogError(exception, exception.Message);
-            badUrls.Add(new BadUrl(invoker, exception));
+            var badUrl = badUrls.FirstOrDefault(w => w.Url == invoker);
+            if (badUrl != null)
+            {
+                badUrl.BadTime = DateTime.Now;
+                badUrl.CurrentException = e;
+            }
+            else
+            {
+                badUrls.Add(new BadUrl(invoker, e));
+            }
         }
         finally
         {

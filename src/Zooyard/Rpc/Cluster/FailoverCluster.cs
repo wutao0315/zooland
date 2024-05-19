@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Diagnostics;
+using System.Reflection;
+using Zooyard.Attributes;
 using Zooyard.Diagnositcs;
 //using Zooyard.Logging;
 using Zooyard.Utils;
@@ -25,6 +27,7 @@ public class FailoverCluster : AbstractCluster
     {
         var goodUrls = new List<URL>();
         var badUrls = new List<BadUrl>();
+        var methodAttr = invocation.MethodInfo.GetCustomAttribute<RequestMappingAttribute>();
 
         CheckInvokers(invokers, invocation, address);
 
@@ -75,7 +78,7 @@ public class FailoverCluster : AbstractCluster
                                 + " was successful by the provider " + url.Address
                                 + ", but there have been failed providers " + string.Join(",", providers)
                                 + " (" + providers.Count + "/" + invokers.Count
-                                + ") from the registry " + address.Address
+                                + ") from the registry " + address.ToString().TrimEnd('/') + "/" + methodAttr?.Value?.TrimStart('/')
                                 + " on the consumer " + Local.HostName
                                 + " using the service version " + invocation.Version
                                 + ". Last error is: " + le.Message);
@@ -108,12 +111,23 @@ public class FailoverCluster : AbstractCluster
             {
                 le = new RpcException(e.Message, e);
 
-                var badUrl = badUrls.FirstOrDefault(w => w.Url == url);
-                if (badUrl != null)
+                //var badUrl = badUrls.FirstOrDefault(w => w.Url == url);
+                //if (badUrl != null)
+                //{
+                //    badUrls.Remove(badUrl);
+                //}
+                //badUrls.Add(new BadUrl(url, le));
+
+                var badUrlBase = disabledUrls.FirstOrDefault(w => w.Url == url);
+                if (badUrlBase != null)
                 {
-                    badUrls.Remove(badUrl);
+                    badUrlBase.BadTime = DateTime.Now;
+                    badUrlBase.CurrentException = le;
                 }
-                badUrls.Add(new BadUrl(url, le));
+                else
+                {
+                    disabledUrls.Add(new BadUrl(url, le));
+                }
 
             }
             finally
@@ -127,8 +141,8 @@ public class FailoverCluster : AbstractCluster
                + invocation.MethodInfo.Name + " in the service " + invocation.TargetType.FullName
                + ". Tried " + len + " times of the providers " + string.Join(",", providers)
                + " (" + providers.Count + "/" + invokers.Count
-               + ") from the registry " + address
-               //+ " on the consumer " + NetUtils.getLocalHost() 
+               + ") from the registry " + address.ToString().TrimEnd('/') + "/" + methodAttr?.Value?.TrimStart('/')
+                + " on the consumer " + Local.HostName
                + " using the service version " + invocation.Version 
                + ". Last error is: "
                + (le != null ? le.Message : ""), le != null && le.InnerException != null ? le.InnerException : le);
