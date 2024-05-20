@@ -6,6 +6,7 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Numerics;
 using System.Runtime.Serialization;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 //using Zooyard.Logging;
@@ -62,6 +63,26 @@ public class NetUtil
             IPAddress? address = LocalAddress;
             return address == null ? LOCALHOST : address.MapToIPv4().ToString();
         }
+    }
+
+    /// <summary>  
+    /// 是否能 Ping 通指定的主机  
+    /// </summary>  
+    /// <param name="ip">ip 地址或主机名或域名</param>  
+    /// <param name="timeOut">超时时长毫秒</param>  
+    /// <returns>true 通，false 不通</returns>  
+    public static async Task<bool> Ping(string ip, int timeOut = 1000)
+    {
+        var options = new PingOptions { DontFragment = true };
+        var data = "Test Data!";
+        var buffer = Encoding.ASCII.GetBytes(data);
+        // Timeout 时间，单位：毫秒  
+        using var p = new Ping();
+        var reply = await p.SendPingAsync(ip, timeOut, buffer, options);
+        if (reply.Status == IPStatus.Success)
+            return true;
+        else
+            return false;
     }
 
     public static string FilterLocalHost(string host)

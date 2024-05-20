@@ -4,7 +4,7 @@ using Zooyard.Rpc.Support;
 
 namespace Zooyard.ThriftImpl;
 
-public class ThriftClient(ILogger _logger, TBaseClient _thriftclient, int clientTimeout, URL url) : AbstractClient(clientTimeout, url)
+public class ThriftClient(ILogger _logger, TBaseClient _thriftclient, URL url) : AbstractClient(url)
 {
     public override string System => "zy_thrift";
 

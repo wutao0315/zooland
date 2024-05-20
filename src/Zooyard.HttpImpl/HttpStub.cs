@@ -1,11 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Collections;
-using System.Collections.Concurrent;
-using System.Linq.Expressions;
 using System.Net;
-using System.Net.Http;
 using System.Reflection;
 using System.Text;
+using Zooyard.Utils;
 
 namespace Zooyard.HttpImpl;
 
@@ -33,7 +31,7 @@ public class HttpStub
         _httpClient.Timeout = TimeSpan.FromMilliseconds(timeout);
     }
 
-    public async Task<Stream?> Request(IList<string> path, string contentType, string method, ParameterInfo[] parameters, object[] paras, IDictionary<string, string> headers)
+    public async Task<Stream> Request(IList<string> path, string contentType, string method, ParameterInfo[] parameters, object[] paras, IDictionary<string, string> headers)
     {
         try
         {
@@ -66,7 +64,7 @@ public class HttpStub
 
             var httpMethod = new HttpMethod(method);
             var relatedUrl = requestUri;
-            if (httpMethod == HttpMethod.Get) 
+            if (httpMethod == HttpMethod.Get)
             {
                 relatedUrl = $"{requestUri}?{string.Join("&", paraDic.Select(para => para.Key + "=" + WebUtility.UrlEncode(para.Value)))}";
             }
@@ -84,25 +82,26 @@ public class HttpStub
 
             if (!response.IsSuccessStatusCode)
             {
-                var responseBody = new StreamReader(data).ReadToEnd();
-                _logger.LogError($"statuscode:{response.StatusCode},{data}");
-                return null;
+                var responseBody = await new StreamReader(data).ReadToEndAsync();
+                string errorMsg = $"statuscode:{response.StatusCode},{content},{data}";
+                _logger.LogError(errorMsg);
+                throw new Exception(errorMsg);
             }
 
             return data;
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
             throw;
         }
     }
 
-    private HttpContent? GetContent(string contentType, 
-        ParameterInfo[] parameters, 
-        object[] paras, 
-        IDictionary<string, string> paraItems, 
-        IDictionary<string, byte[]> fileItems) 
+    private HttpContent? GetContent(string contentType,
+        ParameterInfo[] parameters,
+        object[] paras,
+        IDictionary<string, string> paraItems,
+        IDictionary<string, byte[]> fileItems)
     {
         HttpContent? content = null;
         switch (contentType)
@@ -133,7 +132,7 @@ public class HttpStub
         return content;
     }
 
-    private string GetJson(ParameterInfo[] parameterInfos, object[] paras) 
+    private string GetJson(ParameterInfo[] parameterInfos, object[] paras)
     {
         var paraDic = new Dictionary<string, object>();
         for (int i = 0; i < paras.Length; i++)
@@ -142,7 +141,7 @@ public class HttpStub
             var paraType = para.GetType();
             var paraInfo = parameterInfos[i];
 
-            if (string.IsNullOrWhiteSpace(paraInfo.Name)) 
+            if (string.IsNullOrWhiteSpace(paraInfo.Name))
             {
                 continue;
             }
@@ -151,7 +150,7 @@ public class HttpStub
             {
                 paraDic.Add(paraInfo.Name, para.ToStringValueType());
             }
-            else 
+            else
             {
                 var paraPairs = ObjectUtil.ExecuteObj(para);
                 foreach (var paraPair in paraPairs)
@@ -163,7 +162,7 @@ public class HttpStub
         return paraDic.ToJsonString("{}");
     }
 
-    private (IDictionary<string, string>, IDictionary<string, byte[]>) GetDic(ParameterInfo[] parameterInfos, object[] paras) 
+    private (IDictionary<string, string>, IDictionary<string, byte[]>) GetDic(ParameterInfo[] parameterInfos, object[] paras)
     {
         var paraDic = new Dictionary<string, string>();
         var paraFileDic = new Dictionary<string, byte[]>();
@@ -206,13 +205,6 @@ public class HttpStub
 
 public class ObjectUtil
 {
-    private static readonly ConcurrentDictionary<Type, Dictionary<PropertyInfo, Func<object, object>>> CachedProperties;
-
-    static ObjectUtil()
-    {
-        CachedProperties = new ConcurrentDictionary<Type, Dictionary<PropertyInfo, Func<object, object>>>();
-    }
-
     public static (Dictionary<string, string>, Dictionary<string, byte[]>) Execute(object obj, string prefix = "")
     {
         return ExecuteInternal(obj, prefix: prefix);
@@ -221,12 +213,14 @@ public class ObjectUtil
     {
         var dictionary = new Dictionary<string, object>();
         var type = obj.GetType();
-        var properties = GetProperties(type);
+        var properties = type.GetProperties();
 
-        foreach (var (property, getter) in properties)
+        foreach (var property in properties)
         {
             var key = string.IsNullOrWhiteSpace(prefix) ? property.Name : $"{prefix}.{property.Name}";
-            var value = getter(obj);
+
+            var fastProp = FastProperty.GetOrCreate(property);
+            var value = fastProp.Get(obj);
 
             if (value == null)
             {
@@ -239,21 +233,23 @@ public class ObjectUtil
 
         return dictionary;
     }
-    private static (Dictionary<string, string>,Dictionary<string, byte[]> dictionaryBytes) ExecuteInternal(
+    private static (Dictionary<string, string>, Dictionary<string, byte[]> dictionaryBytes) ExecuteInternal(
         object obj,
         string prefix = "",
-        Dictionary<string, string>? dictionary = default,
-        Dictionary<string, byte[]>? dictionaryBytes = default)
+        Dictionary<string, string> dictionary = default!,
+        Dictionary<string, byte[]> dictionaryBytes = default!)
     {
-        dictionary ??= [];
-        dictionaryBytes ??= [];
+        dictionary ??= new Dictionary<string, string>();
+        dictionaryBytes ??= new Dictionary<string, byte[]>();
         var type = obj.GetType();
-        var properties = GetProperties(type);
+        var properties = type.GetProperties();
 
-        foreach (var (property, getter) in properties)
+        foreach (var property in properties)
         {
             var key = string.IsNullOrWhiteSpace(prefix) ? property.Name : $"{prefix}.{property.Name}";
-            var value = getter(obj);
+
+            var fastProp = FastProperty.GetOrCreate(property);
+            var value = fastProp.Get(obj);
 
             if (value == null)
             {
@@ -301,80 +297,6 @@ public class ObjectUtil
         }
 
         return (dictionary, dictionaryBytes);
-    }
-
-    
-
-    private static Dictionary<PropertyInfo, Func<object, object>> GetProperties(Type type)
-    {
-        if (CachedProperties.TryGetValue(type, out var properties))
-        {
-            return properties;
-        }
-
-        CacheProperties(type);
-        return CachedProperties[type];
-    }
-
-    private static void CacheProperties(Type type)
-    {
-        if (CachedProperties.ContainsKey(type))
-        {
-            return;
-        }
-
-        CachedProperties[type] = new Dictionary<PropertyInfo, Func<object, object>>();
-        // Get all the properties with reflection
-        var properties = type.GetProperties().Where(x => x.CanRead);
-        foreach (var propertyInfo in properties)
-        {
-            // Create a delegate for the property getter method
-            var getter = CompilePropertyGetter(propertyInfo);
-            // Cache the delegate
-            CachedProperties[type].Add(propertyInfo, getter);
-            // If it's not a string or value type...
-            if (!propertyInfo.PropertyType.IsValueTypeOrString())
-            {
-                if (propertyInfo.PropertyType.IsIEnumerable())
-                {
-                    // Get all types for the IEnumerable
-                    var types = propertyInfo.PropertyType.GetGenericArguments();
-                    foreach (var genericType in types)
-                    {
-                        // If it's a "reference type", cache the properties for said type
-                        if (!genericType.IsValueTypeOrString())
-                        {
-                            CacheProperties(genericType);
-                        }
-                    }
-                }
-                else
-                {
-                    // It's a reference type, cache the properties for said type
-                    CacheProperties(propertyInfo.PropertyType);
-                }
-            }
-        }
-    }
-
-    // Inspired by Zanid Haytam
-    // https://blog.zhaytam.com/2020/11/17/expression-trees-property-getter/
-    private static Func<object, object> CompilePropertyGetter(PropertyInfo property)
-    {
-        var objectType = typeof(object);
-        // This is the type that we will pass to the delegate (object)
-        var objectParameter = Expression.Parameter(objectType);
-        // Casts the passed in object to the properties type
-        var castExpression = Expression.TypeAs(objectParameter, property.DeclaringType!);
-        // Gets the value from the property and converts it to object
-        var convertExpression = Expression.Convert(
-            Expression.Property(castExpression, property),
-            objectType);
-
-        // Creates a compiled lambda that we will cache.
-        return Expression.Lambda<Func<object, object>>(
-            convertExpression,
-            objectParameter).Compile();
     }
 }
 internal static class Extensions

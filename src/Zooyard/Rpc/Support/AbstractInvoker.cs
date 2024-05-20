@@ -7,7 +7,6 @@ namespace Zooyard.Rpc.Support;
 
 public abstract class AbstractInvoker : IInvoker
 {
-    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(AbstractClientPool));
     protected readonly ILogger _logger;
     public AbstractInvoker(ILogger logger) 
     {

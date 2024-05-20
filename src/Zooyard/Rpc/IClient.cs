@@ -6,7 +6,8 @@ public interface IClient : IAsyncDisposable
     URL Url { get; }
     Task<IInvoker> Refer(CancellationToken cancellationToken = default);
     string Version { get; }
-    int ClientTimeout{get;}
+    int ClientTimeout{get; }
+    int CheckTimeout { get; }
     DateTime ActiveTime { get; set; }
     Task Open(CancellationToken cancellationToken = default);
     Task Close(CancellationToken cancellationToken = default);

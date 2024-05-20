@@ -3,6 +3,7 @@ using System.Reflection;
 using Zooyard.Attributes;
 using Zooyard.Rpc;
 using Zooyard.Rpc.Support;
+using Zooyard.Utils;
 
 namespace Zooyard.HttpImpl;
 
@@ -105,12 +106,12 @@ public class HttpInvoker(ILogger logger, IHttpClientFactory _instance, int _clie
                     return new RpcResult<T>((T)value.ChangeType(typeof(T))!);
                 }
 
-                var genericData = value.DeserializeJson<T>();
+                var genericData = value.DeserializeJsonThrow<T>();
                 return new RpcResult<T>(genericData);
             }
         }
 
-        var result = new RpcResult<T>(value.DeserializeJson<T>());
+        var result = new RpcResult<T>(value.DeserializeJsonThrow<T>());
         return result;
 
     }

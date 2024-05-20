@@ -79,6 +79,31 @@ internal static class ObjectExtensions
     /// Deserializes the json.
     /// </summary>
     /// <param name="str">The STR.</param>
+    /// <param name="defaultValue">The STR.</param>
+    /// <returns></returns>
+    public static T DeserializeJsonThrow<T>(this string str, T defaultValue = default!)
+    {
+        if (!string.IsNullOrEmpty(str))
+        {
+            try
+            {
+                var result = JsonSerializer.Deserialize<T>(str, _option);
+
+                return result!;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+
+        }
+        return defaultValue;
+    }
+
+    /// <summary>
+    /// Deserializes the json.
+    /// </summary>
+    /// <param name="str">The STR.</param>
     /// <param name="returnType">The returnType.</param>
     /// <returns></returns>
     public static object DeserializeJson(this string str, Type returnType)

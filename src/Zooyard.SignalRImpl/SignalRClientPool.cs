@@ -8,16 +8,14 @@ namespace Zooyard.SignalRImpl;
 
 public class SignalRClientPool(ILoggerFactory _loggerFactory) : AbstractClientPool(_loggerFactory.CreateLogger<SignalRClientPool>())
 {
-    public const string TIMEOUT_KEY = "signalr_timeout";
     public const string AUTH_NAME = "auth_name";
     public const string AUTH_VALUE = "auth_value";
     public const string PROTOCOL_KEY = "protocol";
 
-    public const int DEFAULT_TIMEOUT = 10000;
 
     protected override async Task<IClient> CreateClient(URL url)
     {
-        var timeout = url.GetParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
+       
         var authNames = url.GetParameter(AUTH_NAME, Array.Empty<string>());
         var authValues = url.GetParameter(AUTH_VALUE, Array.Empty<string>());
 
@@ -52,6 +50,6 @@ public class SignalRClientPool(ILoggerFactory _loggerFactory) : AbstractClientPo
 
         await connection.StartAsync();
 
-        return new SignalRClientImpl(_loggerFactory.CreateLogger<SignalRClientImpl>(), connection, timeout, url);
+        return new SignalRClientImpl(_loggerFactory.CreateLogger<SignalRClientImpl>(), connection, url);
     }
 }

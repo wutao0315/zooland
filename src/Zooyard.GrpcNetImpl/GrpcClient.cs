@@ -9,8 +9,7 @@ namespace Zooyard.GrpcNetImpl;
 public class GrpcClient(ILogger<GrpcClient> _logger,
         GrpcChannel _channel,
         object _grpcClient,
-        int clientTimeout,
-        URL url) : AbstractClient(clientTimeout, url)
+        URL url) : AbstractClient(url)
 {
     public override string System => "zy_grpc";
    

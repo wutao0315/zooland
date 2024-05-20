@@ -1,16 +1,11 @@
-﻿using DotNetty.Transport.Channels;
-using System.Net;
-using System;
-//using Zooyard.Logging;
-using Zooyard.Rpc.Support;
-using System.Threading.Channels;
+﻿using Microsoft.Extensions.Logging;
 using Zooyard.DotNettyImpl.Transport;
-using Microsoft.Extensions.Logging;
+using Zooyard.Rpc.Support;
 
 namespace Zooyard.DotNettyImpl;
 
-public class NettyClient(ILogger<NettyClient> _logger, ITransportClient _channel, int clientTimeout, URL _url)
-    : AbstractClient(clientTimeout, _url)
+public class NettyClient(ILogger<NettyClient> _logger, ITransportClient _channel, URL _url)
+    : AbstractClient(_url)
 {
     public override string System => "zy_netty";
 

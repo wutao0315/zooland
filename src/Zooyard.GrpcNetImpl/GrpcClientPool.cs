@@ -11,8 +11,6 @@ public class GrpcClientPool(IDictionary<string, ChannelCredentials> _credentials
         IEnumerable<ClientInterceptor> _interceptors,
         ILoggerFactory _loggerFactory) : AbstractClientPool(_loggerFactory.CreateLogger<GrpcClientPool>())
 {
-    public const string TIMEOUT_KEY = "timeout";
-    public const int DEFAULT_TIMEOUT = 10000;
     public const string MAXLENGTH_KEY = "maxlength";
     public const int DEFAULT_MAXLENGTH = int.MaxValue;
     public const string CREDENTIALS_KEY = "credentials";
@@ -23,7 +21,6 @@ public class GrpcClientPool(IDictionary<string, ChannelCredentials> _credentials
     {
         //实例化TheTransport
         //获得transport参数,用于反射实例化
-        var timeout = url.GetParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
 
         if (base.ProxyType == null) 
         {
@@ -68,6 +65,6 @@ public class GrpcClientPool(IDictionary<string, ChannelCredentials> _credentials
             throw new Exception($"grpc client is null");
         }
 
-        return new GrpcClient(_loggerFactory.CreateLogger<GrpcClient>(), channel, client, timeout, url);
+        return new GrpcClient(_loggerFactory.CreateLogger<GrpcClient>(), channel, client, url);
     }
 }

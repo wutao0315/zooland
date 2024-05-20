@@ -27,9 +27,6 @@ public class NettyClientPool : AbstractClientPool
     private static readonly AttributeKey<IMessageListener> messageListenerKey = AttributeKey<IMessageListener>.ValueOf(typeof(NettyClientPool), nameof(IMessageListener));
     private static readonly AttributeKey<EndPoint> origEndPointKey = AttributeKey<EndPoint>.ValueOf(typeof(NettyClientPool), nameof(EndPoint));
 
-    public const string TIMEOUT_KEY = "http_timeout";
-    public const int DEFAULT_TIMEOUT = 5000;
-
     public NettyClientPool(
         ILoggerFactory loggerFactory,
         ITransportMessageCodecFactory transportMessageCodecFactory):base(loggerFactory.CreateLogger<NettyClientPool>())
@@ -70,8 +67,7 @@ public class NettyClientPool : AbstractClientPool
                     return client;
                 }
                 )).Value;//返回实例
-            var timeout = url.GetParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
-            return new NettyClient(_loggerFactory.CreateLogger<NettyClient>(), transportClient, timeout, url);
+            return new NettyClient(_loggerFactory.CreateLogger<NettyClient>(), transportClient, url);
         }
         catch
         {

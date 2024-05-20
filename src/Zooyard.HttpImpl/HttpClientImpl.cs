@@ -1,29 +1,94 @@
 ﻿using Microsoft.Extensions.Logging;
+using Zooyard.Exceptions;
 using Zooyard.Rpc.Support;
+using Zooyard.Utils;
 
 namespace Zooyard.HttpImpl;
 
-public class HttpClientImpl(ILogger<HttpClientImpl> _logger, IHttpClientFactory _transport, int clientTimeout, URL url) 
-    : AbstractClient(clientTimeout, url)
+public class HttpClientImpl(ILogger<HttpClientImpl> _logger, IHttpClientFactory _transport, URL url) 
+    : AbstractClient(url)
 {
     public override string System => "zy_http";
 
     public override async Task<IInvoker> Refer(CancellationToken cancellationToken = default)
     {
-        var client = _transport.CreateClient();
-        var result = await client.SendAsync(new HttpRequestMessage
-        {
-            Method = new HttpMethod("GET"),
-            RequestUri = new Uri($"{this.Url.Protocol}://{this.Url.Host}:{this.Url.Port}/health"),
-        }, cancellationToken);
 
-        result.EnsureSuccessStatusCode();
+        var healthcheck = url.GetParameter("healthcheck", false);
+        if (healthcheck)
+        {
+            var checkType = url.GetParameter("checktype", "ping");
+            if (checkType.Equals("ping", StringComparison.OrdinalIgnoreCase))
+            {
+                var opencheckTimeout = url.GetParameter("checktimeout", 1000);
+                var isPingSuccess = await NetUtil.Ping(url.Host, opencheckTimeout);
+                if (!isPingSuccess)
+                {
+                    throw new FrameworkException($"{url.Host} ping fail");
+                }
+            }
+            else
+            {
+                var uri = $"{Url.Protocol}://{Url.Host}:{Url.Port}/health";
+                try
+                {
+                    var client = _transport.CreateClient();
+                    var opencheckTimeout = url.GetParameter("checktimeout", 1000);
+                    client.Timeout = TimeSpan.FromMicroseconds(opencheckTimeout);
+                    var result = await client.SendAsync(new HttpRequestMessage
+                    {
+                        Method = HttpMethod.Get,
+                        RequestUri = new Uri(uri),
+                    }, cancellationToken);
+
+                    result.EnsureSuccessStatusCode();
+                }
+                catch (Exception ex)
+                {
+                    throw new FrameworkException(ex, $"health chek from {uri} error");
+                }
+            }
+        }
+
 
         return new HttpInvoker(_logger, _transport, ClientTimeout, Url);
     }
     public override async Task Open(CancellationToken cancellationToken = default)
     {
-        await Task.CompletedTask;
+        var opencheck = url.GetParameter("opencheck", false);
+        if (opencheck)
+        {
+            var checkType = url.GetParameter("checktype", "ping");
+            if (checkType.Equals("ping", StringComparison.OrdinalIgnoreCase))
+            {
+                var opencheckTimeout = url.GetParameter("checktimeout", 1000);
+                var isPingSuccess = await NetUtil.Ping(url.Host, opencheckTimeout);
+                if (!isPingSuccess)
+                {
+                    throw new FrameworkException($"{url.Host} ping fail");
+                }
+            }
+            else
+            {
+                var uri = $"{Url.Protocol}://{Url.Host}:{Url.Port}/health";
+                try
+                {
+                    var client = _transport.CreateClient();
+                    var opencheckTimeout = url.GetParameter("checktimeout", 1000);
+                    client.Timeout = TimeSpan.FromMicroseconds(opencheckTimeout);
+                    var result = await client.SendAsync(new HttpRequestMessage
+                    {
+                        Method = HttpMethod.Get,
+                        RequestUri = new Uri(uri),
+                    }, cancellationToken);
+
+                    result.EnsureSuccessStatusCode();
+                }
+                catch (Exception ex)
+                {
+                    throw new FrameworkException(ex, $"health chek from {uri} error");
+                }
+            }
+        }
     }
 
     public override async Task Close(CancellationToken cancellationToken = default)

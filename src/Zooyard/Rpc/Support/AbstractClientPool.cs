@@ -45,11 +45,11 @@ public abstract class AbstractClientPool: IClientPool
             }
             
             //然后重新初始化
-            client = await InitializeClient(url);
+            (client,var ex) = await InitializeClient(url);
 
             if (client == null)
             {
-                throw new InvalidOperationException("connection access failed. please confirm call service status.");
+                throw new InvalidOperationException($"{url} connection access failed. please confirm call service status.", ex);
             }
             _logger.LogInformation($"create new client [{client.Version}:{url}]");
         }
@@ -130,22 +130,24 @@ public abstract class AbstractClientPool: IClientPool
     /// 初始化连接，隐藏创建细节
     /// </summary>
     /// <returns>连接</returns>
-    protected async Task<IClient?> InitializeClient(URL url)
+    protected async Task<(IClient?, Exception?)> InitializeClient(URL url)
     {
+        Exception? ex = null;
         try
         {
             var client = await CreateClient(url);
             if (await ValidateClient(client))
             {
                 client.Reset();
-                return client;
+                return (client, null);
             }
         }
         catch (Exception e)
         {
+            ex = e;
             _logger.LogError(e, e.Message);
         }
-        return null;
+        return (null, ex);
     }
 
     /// <summary>
@@ -156,9 +158,9 @@ public abstract class AbstractClientPool: IClientPool
     {
         try
         {
-            using var cts = new CancellationTokenSource(client.ClientTimeout);
+            using var cts = new CancellationTokenSource(client.CheckTimeout);
 
-            await TaskUtil.Timeout(client.Open(cts.Token), client.ClientTimeout, cts, $"time out {client.ClientTimeout} when invoke open");
+            await TaskUtil.Timeout(client.Open(cts.Token), client.CheckTimeout, cts, $"time out {client.CheckTimeout} when invoke open");
             return true;
         }
         catch (Exception e)

@@ -4,8 +4,8 @@ using Zooyard.Rpc.Support;
 
 namespace Zooyard.SignalRImpl;
 
-public class SignalRClientImpl(ILogger<SignalRClientImpl> _logger, HubConnection _transport, int clientTimeout, URL url) 
-    : AbstractClient(clientTimeout, url)
+public class SignalRClientImpl(ILogger<SignalRClientImpl> _logger, HubConnection _transport, URL url) 
+    : AbstractClient(url)
 {
     public override string System => "zy_signalr";
 

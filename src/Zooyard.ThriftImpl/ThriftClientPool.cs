@@ -15,7 +15,6 @@ namespace Zooyard.ThriftImpl;
 
 public class ThriftClientPool(ILogger<ThriftClientPool> logger) : AbstractClientPool(logger)
 {
-    public const string TIMEOUT_KEY = "timeout";
     public const string MAXFRAMESIZE_KEY = "MaxFrameSize";
     public const string MAXMESSAGESIZE_KEY = "MaxMessageSize";
     public const string RECURSIONLIMIT_KEY = "RecursionLimit";
@@ -23,13 +22,17 @@ public class ThriftClientPool(ILogger<ThriftClientPool> logger) : AbstractClient
     public const string TRANSPORT_KEY = "tr";
     public const string BUFFERING_KEY = "bf";
 
-    public const int DEFAULT_TIMEOUT = 10000;
+    public const string RPC_TIMEOUT_KEY = "rpc_timeout";
+    public const int DEFAULT_RPC_TIMEOUT = 5000;
+
+    public const string CHECK_TIMEOUT_KEY = "check_timeout";
+    public const int DEFAULT_CHECK_TIMEOUT = 1000;
 
     protected override async Task<IClient> CreateClient(URL url)
     {
         //实例化TheTransport
         //获得transport参数,用于反射实例化
-        var timeout = url.GetParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
+        
         var config = new TConfiguration();
         config.MaxFrameSize = url.GetParameter(MAXFRAMESIZE_KEY, config.MaxFrameSize);
         config.MaxMessageSize = url.GetParameter(MAXMESSAGESIZE_KEY, config.MaxMessageSize);
@@ -56,7 +59,7 @@ public class ThriftClientPool(ILogger<ThriftClientPool> logger) : AbstractClient
         var client = (TBaseClient)Activator.CreateInstance(ProxyType, protocol)!;
 
         await Task.CompletedTask;
-        return new ThriftClient(_logger, client, timeout, url);
+        return new ThriftClient(_logger, client, url);
     }
 
 
