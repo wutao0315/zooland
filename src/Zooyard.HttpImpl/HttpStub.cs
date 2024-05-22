@@ -83,7 +83,7 @@ public class HttpStub
             if (!response.IsSuccessStatusCode)
             {
                 var responseBody = await new StreamReader(data).ReadToEndAsync();
-                string errorMsg = $"statuscode:{response.StatusCode},{content},{data}";
+                string errorMsg = $"statuscode:{response.StatusCode},{content},{responseBody}";
                 _logger.LogError(errorMsg);
                 throw new Exception(errorMsg);
             }
