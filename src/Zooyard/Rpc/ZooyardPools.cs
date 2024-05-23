@@ -311,13 +311,17 @@ public class ZooyardPools : IZooyardPools
                 }
             }
 
-            if (result.Count == 0)
+            if (result.Count > 0)
+            {
+                _cacheUrl[cacheKey] = (url, result);
+                return _cacheUrl[cacheKey];
+            }
+            else 
             {
                 result.Add(url);
+                return (url, result);
             }
-
-            _cacheUrl[cacheKey] = (url, result);
-            return _cacheUrl[cacheKey];
+            
             URL GetRouteMetaUrl(URL url, string serviceId)
             {
                 foreach (var item in _proxyStateLookup.GetRoutes().OrderBy(w => w.Config.Order))

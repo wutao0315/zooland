@@ -62,8 +62,9 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
 
         _configs = new ConfigState[_providers.Length];
 
+        AsyncHelper.RunSync(InitialLoadAsync);
         // Register these last as the callbacks could run immediately
-        appLifetime.ApplicationStarted.Register(Start);
+        //appLifetime.ApplicationStarted.Register(Start);
         appLifetime.ApplicationStopping.Register(Close);
     }
 
