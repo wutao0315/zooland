@@ -282,7 +282,7 @@ public class ZooyardPools : IZooyardPools
         (URL, IList<URL>) GetUrls()
         {
             //读取缓存
-            var cacheKey = $"{invocation.ServiceName}{invocation.PointVersion()}";
+            var cacheKey = $"{invocation.ServiceName}{invocation.TargetType.FullName}{invocation.PointVersion()}";
 
             if (_cacheUrl.TryGetValue(cacheKey, out (URL, IList<URL>) val))
             {
@@ -530,7 +530,7 @@ public class ZooyardPools : IZooyardPools
         //执行路由逻辑
         IList<URL> GetRouteUrls()
         {
-            var cacheKey = $"{invocation.ServiceName}{invocation.PointVersion()}";
+            var cacheKey = $"{invocation.ServiceName}{invocation.TargetType.FullName}{invocation.PointVersion()}";
 
             if (_cacheRouteUrl.TryGetValue(cacheKey, out IList<URL>? val) && val != null)
             {
