@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -77,7 +76,6 @@ public class ZooyardPools : IZooyardPools
 
 
     public ZooyardPools(ILoggerFactory loggerFactory
-        , IHostApplicationLifetime appLifetime
         , IDictionary<string, IClientPool> pools
         , IEnumerable<ILoadBalance> loadbalances
         , IEnumerable<ICluster> clusters
@@ -138,15 +136,14 @@ public class ZooyardPools : IZooyardPools
         }
 
         // Register these last as the callbacks could run immediately
-        appLifetime.ApplicationStarted.Register(Start);
-        appLifetime.ApplicationStopping.Register(Close);
+        Start();
     }
 
     public void Start()
     {
         // Start the timer loop
-        _ = CycleTimerLoop();
-        _ = RecoveryTimerLoop();
+        _ = Task.Factory.StartNew(async() => await CycleTimerLoop(), TaskCreationOptions.LongRunning);
+        _ = Task.Factory.StartNew(async () => await RecoveryTimerLoop(), TaskCreationOptions.LongRunning);
     }
 
     private async Task CycleTimerLoop()
@@ -231,7 +228,7 @@ public class ZooyardPools : IZooyardPools
         }
     }
 
-    public void Close()
+    public void Dispose()
     {
         // Stop firing the timer
         _cycleTimer.Dispose();
@@ -256,10 +253,8 @@ public class ZooyardPools : IZooyardPools
             return result;
         }
 
-        var invocationTypeName = invocation.TargetType.FullName!;
-        var invocationMethodName = invocation.MethodInfo.Name;
-        var parameters = invocation.MethodInfo.GetParameters();
-        var key = $"{invocation.ServiceNamePoint()}{invocationTypeName}.{invocationMethodName}@{StringUtils.Md5(StringUtils.ToArgumentString(parameters, invocation.Arguments))}{invocation.PointVersion()}";
+        var keyStr = $"{invocation.ServiceNamePoint()}{invocation.TargetType.FullName}.{invocation.MethodInfo.Name}@{invocation.Url}->{StringUtils.ToArgumentString(invocation.MethodInfo.GetParameters(), invocation.Arguments)}{invocation.PointVersion()}";
+        var key = StringUtils.Md5(keyStr);
         var value = cache.Get<T>(key);
         if (value != null)
         {
@@ -282,10 +277,12 @@ public class ZooyardPools : IZooyardPools
         (URL, IList<URL>) GetUrls()
         {
             //读取缓存
-            var cacheKey = $"{invocation.ServiceName}{invocation.TargetType.FullName}{invocation.PointVersion()}";
+            var cacheKeyStr = $"{invocation.ServiceName}{invocation.TargetType.FullName}{invocation.PointVersion()}@{invocation.Url}";
+            var cacheKey = StringUtils.Md5(cacheKeyStr);
 
             if (_cacheUrl.TryGetValue(cacheKey, out (URL, IList<URL>) val))
             {
+                _logger.LogInformation($"call from cache url:{cacheKey}#{cacheKeyStr}");
                 return val;
             }
 

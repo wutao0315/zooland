@@ -1,10 +1,6 @@
-﻿using Microsoft.ClearScript;
-using Microsoft.ClearScript.V8;
+﻿using Jint;
 using Microsoft.Extensions.Logging;
-using System.Collections;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-//using Zooyard.Logging;
 using Zooyard.Rpc.Route.State;
 using Zooyard.Utils;
 
@@ -12,18 +8,19 @@ namespace Zooyard.Rpc.Route.Script;
 
 public class ScriptStateRouter : AbstractStateRouter
 {
+
     public const string NAME = "SCRIPT_ROUTER";
     private const int SCRIPT_ROUTER_DEFAULT_PRIORITY = 0;
     //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ScriptStateRouter));
     private readonly ILogger _logger;
 
-    private static readonly ConcurrentDictionary<string, V8ScriptEngine> ENGINES = new ();
+    private static readonly ConcurrentDictionary<string, Engine> ENGINES = new ();
 
-    private readonly V8ScriptEngine _engine;
+    private readonly Engine _engine;
 
     private readonly string _rule;
 
-    private readonly V8Script _script;
+    //private readonly V8Script _script;
 
     public ScriptStateRouter(ILoggerFactory loggerFactory, URL address) : base(address)
     {
@@ -32,9 +29,8 @@ public class ScriptStateRouter : AbstractStateRouter
         _rule = GetRule(address);
         try
         {
-            _engine.AddHostObject("lib", new HostTypeCollection("mscorlib", "System.Core"));
-            _script = _engine.Compile(_rule);
-            _engine.Execute(_script);
+            //_engine.AddHostObject("lib", new HostTypeCollection("mscorlib", "System.Core"));
+            _engine.Execute(_rule);
             //(function route(invokers, address, invocation, context) {
             //    List = lib.System.Collections.Generic.List;
             //    var result = new List(lib.System.String);
@@ -75,19 +71,31 @@ public class ScriptStateRouter : AbstractStateRouter
     /// </summary>
     /// <param name="address"></param>
     /// <returns></returns>
-    private V8ScriptEngine GetEngine(URL address)
+    private Engine GetEngine(URL address)
     {
         var result = ENGINES.GetOrAdd(Constants.DEFAULT_SCRIPT_TYPE_KEY, (t) => {
 
             // 这边定义一个变量engine  生成一个v8引擎  用来执行js脚本
-            var scriptEngine = new V8ScriptEngine(Constants.DEFAULT_SCRIPT_TYPE_KEY, 
-                V8ScriptEngineFlags.EnableDebugging | V8ScriptEngineFlags.AwaitDebuggerAndPauseOnStart, 9222);
-            // 里面的参数9222为调试端口，
-            // V8ScriptEngineFlags.EnableDebugging 是否启用调试模式
-            // V8ScriptEngineFlags.AwaitDebuggerAndPauseOnStart  异步停止或开始等待调试
-            // type  调试引擎模式
-            scriptEngine.DocumentSettings.AccessFlags = Microsoft.ClearScript.DocumentAccessFlags.EnableFileLoading;
-            scriptEngine.DefaultAccess = Microsoft.ClearScript.ScriptAccess.Full; // 这两行是为了允许加载js文件
+            var scriptEngine = new Engine(options => {
+
+                // Limit memory allocations to 4 MB
+                options.LimitMemory(4_000_000);
+
+                // Set a timeout to 4 seconds.
+                options.TimeoutInterval(TimeSpan.FromSeconds(4));
+
+                // Set limit of 1000 executed statements.
+                options.MaxStatements(1000);
+
+                // Use a cancellation token.
+                //options.CancellationToken(cancellationToken);
+                });
+            //// 里面的参数9222为调试端口，
+            //// V8ScriptEngineFlags.EnableDebugging 是否启用调试模式
+            //// V8ScriptEngineFlags.AwaitDebuggerAndPauseOnStart  异步停止或开始等待调试
+            //// type  调试引擎模式
+            //scriptEngine.DocumentSettings.AccessFlags = Microsoft.ClearScript.DocumentAccessFlags.EnableFileLoading;
+            //scriptEngine.DefaultAccess = Microsoft.ClearScript.ScriptAccess.Full; // 这两行是为了允许加载js文件
 
             return scriptEngine;
         });
@@ -97,7 +105,7 @@ public class ScriptStateRouter : AbstractStateRouter
 
     protected override IList<URL> DoRoute(IList<URL> invokers, URL address, IInvocation invocation, bool needToPrintMessage, Holder<RouterSnapshotNode> nodeHolder, Holder<String> messageHolder)
     {
-        if (_engine == null || _script == null)
+        if (_engine == null)
         {
             if (needToPrintMessage)
             {
@@ -108,8 +116,15 @@ public class ScriptStateRouter : AbstractStateRouter
 
         try
         {
-            var result = _engine.Script.route(invokers, address, invocation, RpcContext.GetContext().Attachments);
-            return result;
+            var result = _engine.Invoke("route", invokers, address, invocation, RpcContext.GetContext().Attachments);
+            var str = result.ToString();
+            var list = str.DeserializeJson(new List<string>());
+            var aa = new List<URL>();
+            foreach (var item in list)
+            {
+                aa.Add(URL.ValueOf(item));
+            }
+            return aa;
         }
         catch (Exception e)
         {

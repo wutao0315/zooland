@@ -94,7 +94,7 @@ internal class DefaultRpcConfigProvider : IRpcConfigProvider
         {
             services[item.Key] = new ServiceConfig
             {
-                ServiceName = string.IsNullOrWhiteSpace(item.Value.ServiceName) ? item.Key : item.Value.ServiceName,
+                ServiceId = string.IsNullOrWhiteSpace(item.Value.ServiceId) ? item.Key : item.Value.ServiceId,
                 Instances = item.Value.Instances,
                 Metadata = item.Value.Metadata,
             };

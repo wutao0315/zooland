@@ -1,4 +1,5 @@
 ﻿using Zooyard.Configuration;
+using Zooyard.ConfigurationMapper;
 
 namespace ZooyardClient;
 

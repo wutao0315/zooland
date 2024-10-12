@@ -9,7 +9,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Zooyard.Realtime\Zooyard.Realtime.csproj" />
     <ProjectReference Include="..\Zooyard\Zooyard.csproj" />
   </ItemGroup>
 

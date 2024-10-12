@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 using Zooyard.Configuration;
+using Zooyard.ConfigurationMapper;
 
 namespace ZooyardClient;
 
@@ -94,7 +95,7 @@ internal class YardRpcConfigProvider : IRpcConfigProvider
         {
             services[item.Key] = new ServiceConfig
             {
-                ServiceName = string.IsNullOrWhiteSpace(item.Value.ServiceName) ? item.Key : item.Value.ServiceName,
+                ServiceId = string.IsNullOrWhiteSpace(item.Value.ServiceId) ? item.Key : item.Value.ServiceId,
                 Instances = item.Value.Instances,
                 Metadata = item.Value.Metadata,
             };

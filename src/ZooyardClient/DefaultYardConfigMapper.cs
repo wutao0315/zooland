@@ -1,4 +1,5 @@
 ﻿using Zooyard.Configuration;
+using Zooyard.ConfigurationMapper;
 
 namespace ZooyardClient;
 
@@ -9,9 +10,9 @@ public class DefaultYardConfigMapper : IYardConfigMapper
     {
         return new ServiceConfig
         {
-            ServiceName = serviceName,
-            Metadata = nameOption.Metadata,
-            Instances = instances,
+            ServiceId = serviceName,
+            Metadata = nameOption.Metadata.ToDictionary(),
+            Instances = instances.ToDictionary(),
         };
     }
 

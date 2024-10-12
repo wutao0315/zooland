@@ -17,7 +17,6 @@ using Zooyard.Rpc.Route.Tag;
 using Zooyard.ServiceDiscovery;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Zooyard.Management;
@@ -108,8 +107,7 @@ internal static class IRpcBuilderExtensions
             var clusters = serviceProvder.GetServices<ICluster>();
             var caches = serviceProvder.GetServices<ICache>();
             var routeFactories = serviceProvder.GetServices<IStateRouterFactory>();
-            var appLifetime = serviceProvder.GetRequiredService<IHostApplicationLifetime>();
-            var zooyardPools = new ZooyardPools(loggerfactory, appLifetime, clientPools, loadBalances, clusters, caches, routeFactories, lookup);
+            var zooyardPools = new ZooyardPools(loggerfactory, clientPools, loadBalances, clusters, caches, routeFactories, lookup);
             return zooyardPools;
         });
 

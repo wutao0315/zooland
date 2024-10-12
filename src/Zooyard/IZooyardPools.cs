@@ -1,6 +1,6 @@
 ﻿namespace Zooyard;
 
-public interface IZooyardPools
+public interface IZooyardPools:IDisposable
 {
     /// <summary>
     /// clear all cache

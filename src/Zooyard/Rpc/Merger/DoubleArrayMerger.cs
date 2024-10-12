@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-
-namespace Zooyard.Rpc.Merger;
+﻿namespace Zooyard.Rpc.Merger;
 
 public class DoubleArrayMerger : IMerger<double[]>
 {

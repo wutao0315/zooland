@@ -6,9 +6,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Zooyard.Realtime.MessagePack\Zooyard.Realtime.MessagePack.csproj" />
     <ProjectReference Include="..\Zooyard.Realtime.NewtonsoftJson\Zooyard.Realtime.NewtonsoftJson.csproj" />
-    <ProjectReference Include="..\Zooyard.Realtime\Zooyard.Realtime.csproj" />
     <ProjectReference Include="..\Zooyard\Zooyard.csproj" />
   </ItemGroup>
 

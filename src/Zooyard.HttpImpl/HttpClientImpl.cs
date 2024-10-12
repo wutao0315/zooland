@@ -28,7 +28,8 @@ public class HttpClientImpl(ILogger<HttpClientImpl> _logger, IHttpClientFactory 
             }
             else
             {
-                var uri = $"{Url.Protocol}://{Url.Host}:{Url.Port}/health";
+                var healthPath = url.GetParameter("health_path", "/health");
+                var uri = $"{Url.Protocol}://{Url.Host}:{Url.Port}{healthPath}";
                 try
                 {
                     var client = _transport.CreateClient();
@@ -69,7 +70,8 @@ public class HttpClientImpl(ILogger<HttpClientImpl> _logger, IHttpClientFactory 
             }
             else
             {
-                var uri = $"{Url.Protocol}://{Url.Host}:{Url.Port}/health";
+                var healthPath = url.GetParameter("health_path", "/health");
+                var uri = $"{Url.Protocol}://{Url.Host}:{Url.Port}{healthPath}";
                 try
                 {
                     var client = _transport.CreateClient();

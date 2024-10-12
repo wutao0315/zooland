@@ -1,14 +1,13 @@
-﻿using Zooyard.Configuration;
-using Zooyard.Model;
-using Zooyard.ServiceDiscovery;
-using Zooyard.Utils;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using Zooyard.Configuration;
+using Zooyard.Model;
+using Zooyard.ServiceDiscovery;
+using Zooyard.Utils;
 
 namespace Zooyard.Management;
 
@@ -39,7 +38,6 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
 
     public RpcConfigManager(
         ILogger<RpcConfigManager> logger
-        , IHostApplicationLifetime appLifetime
         , IEnumerable<IRpcConfigProvider> providers
         , IEnumerable<IRpcConfigFilter> filters
         , IConfigValidator configValidator
@@ -65,18 +63,18 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
         AsyncHelper.RunSync(InitialLoadAsync);
         // Register these last as the callbacks could run immediately
         //appLifetime.ApplicationStarted.Register(Start);
-        appLifetime.ApplicationStopping.Register(Close);
+        //appLifetime.ApplicationStopping.Register(Close);
     }
 
-    public void Start()
-    {
-        _ = InitialLoadAsync();
-    }
+    //public void Start()
+    //{
+    //    _ = InitialLoadAsync();
+    //}
 
-    public void Close()
-    {
-        Dispose();
-    }
+    //public void Close()
+    //{
+    //    Dispose();
+    //}
 
     private static IReadOnlyList<IRpcConfig> ExtractListOfProxyConfigs(IEnumerable<ConfigState> configStates)
     {

@@ -8,7 +8,12 @@ internal class YardRpcConfig(IReadOnlyList<string> contracts, IReadOnlyDictionar
 {
     public IReadOnlyList<string> Contracts => contracts;
     public IReadOnlyDictionary<string, string> Metadata => metadata;
-    public IReadOnlyDictionary<string, ServiceConfig> Services => services;
+    //public IReadOnlyDictionary<string, ServiceConfig> Services => services;
     public IChangeToken ChangeToken { get; internal set; } = default!;
+
+
+    public IReadOnlyList<RouteConfig> Routes { get; }
+
+    public IReadOnlyList<ServiceConfig> Services { get; }
 }
 

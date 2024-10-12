@@ -1,130 +1,168 @@
 ﻿using System.Text.Encodings.Web;
-using System.Text.Json.Serialization;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
+using Zooyard.Utils.JsonConverters;
 
 namespace Zooyard.Utils;
 
 
 internal static class ObjectExtensions
 {
-    internal readonly static JsonSerializerOptions _option = new()
+    public readonly static JsonSerializerOptions _option = GetDefaultOption();
+    internal static JsonSerializerOptions GetDefaultOption(JsonNamingPolicy? policy = null, string formatString = "yyyy-MM-dd HH:mm:ss.fff")
     {
-        // 解决中文序列化被编码的问题
-        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-        // 解决属性名称大小写敏感问题 
-        PropertyNameCaseInsensitive = true,
-        WriteIndented = true,
-        Converters = {
+        var result = new JsonSerializerOptions
+        {
+            // 解决中文序列化被编码的问题
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            PropertyNamingPolicy = policy ?? JsonNamingPolicy.CamelCase,
+            //DictionaryKeyPolicy = policy ?? JsonNamingPolicy.CamelCase,
+            TypeInfoResolver = new DefaultJsonTypeInfoResolver(),
+            // 解决属性名称大小写敏感问题 
+            PropertyNameCaseInsensitive = true,
+            WriteIndented = true,
+            AllowTrailingCommas = true,
+            Converters = {
                 new IntConverter(),
                 new IntNullableConverter(),
                 new LongConverter(),
                 new LongNullableConverter(),
-                new DateTimeConverter(),
-                new DateTimeNullableConverter(),
+                new DateTimeConverter(formatString),
+                new DateTimeNullableConverter(formatString),
                 new BoolConverter(),
                 new BoolNullableConverter(),
                 new DecimalConverter(),
                 new DecimalNullableConverter(),
+                new GuidConverter(),
+                new GuidNullableConverter(),
                 new DictionaryLongStringJsonConverter(),
                 new JsonStringEnumConverter(),
                 new StringConverter(),
-                new GuidConverter(),
-                new GuidNullableConverter(),
-                new ObjectToInferredTypesConverter()
-        }
-    };
+                new DataTableJsonConverter()
+            }
+        };
+        return result;
+    }
     /// <summary>
     /// Convert an object to a JSON string with camelCase formatting
     /// </summary>
     /// <param name="obj"></param>
     /// <param name="empty"></param>
+    /// <param name="options"> options </param>
     /// <returns></returns>
-    public static string ToJsonString(this object obj, string empty = "")
+    public static string ToJsonString(this object obj, string empty = "", JsonSerializerOptions? options = default)
     {
         if (obj == null)
         {
             return empty;
         }
 
-        var result = JsonSerializer.Serialize(obj, _option);
-
-        return result;
+        if (options != null)
+            return JsonSerializer.Serialize(obj, options);
+        else
+            return JsonSerializer.Serialize(obj, _option);
+    }
+    /// <summary>
+    /// Object to json string byte array.
+    /// </summary>
+    /// <param name="obj"> obj </param>
+    /// <param name="options"> options </param>
+    /// <returns> json string byte array </returns>
+    public static byte[] ToJsonBytesThrow(this object obj, JsonSerializerOptions? options = default)
+    {
+        try
+        {
+            if (options != null)
+                return JsonSerializer.SerializeToUtf8Bytes(obj, options);
+            else
+                return JsonSerializer.SerializeToUtf8Bytes(obj, _option);
+        }
+        catch (Exception e)
+        {
+            throw;
+        }
     }
     /// <summary>
     /// Deserializes the json.
     /// </summary>
     /// <param name="str">The STR.</param>
-    /// <param name="defaultValue">The STR.</param>
+    /// <param name="defaultValue">default value</param>
+    /// <param name="options">default options</param>
     /// <returns></returns>
-    public static T DeserializeJson<T>(this string str, T defaultValue = default!)
+    public static T DeserializeJson<T>(this string str, T defaultValue = default!, JsonSerializerOptions? options = default)
     {
-        if (!string.IsNullOrEmpty(str))
+        try
         {
-            try
-            {
-                var result = JsonSerializer.Deserialize<T>(str, _option);
-
-                return result!;
-            }
-            catch (Exception)
-            {
-                return defaultValue;
-            }
-
+            var result = str.DeserializeJsonThrow(defaultValue, options);
+            return result;
         }
-        return defaultValue;
-    }
-
-    /// <summary>
-    /// Deserializes the json.
-    /// </summary>
-    /// <param name="str">The STR.</param>
-    /// <param name="defaultValue">The STR.</param>
-    /// <returns></returns>
-    public static T DeserializeJsonThrow<T>(this string str, T defaultValue = default!)
-    {
-        if (!string.IsNullOrEmpty(str))
+        catch (Exception ex)
         {
-            try
-            {
-                var result = JsonSerializer.Deserialize<T>(str, _option);
-
-                return result!;
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-
+            return defaultValue;
         }
-        return defaultValue;
     }
 
     /// <summary>
     /// Deserializes the json.
     /// </summary>
     /// <param name="str">The STR.</param>
-    /// <param name="returnType">The returnType.</param>
+    /// <param name="defaultValue">default value</param>
+    /// <param name="options">default options</param>
     /// <returns></returns>
-    public static object DeserializeJson(this string str, Type returnType)
+    public static T DeserializeJsonThrow<T>(this string str, T defaultValue = default!, JsonSerializerOptions? options = default)
     {
-        if (!string.IsNullOrEmpty(str))
+        if (string.IsNullOrEmpty(str))
         {
-            try
-            {
-                var result = JsonSerializer.Deserialize(str, returnType, _option);
-                return result!;
-            }
-            catch (Exception)
-            {
-                return default!;
-            }
-
+            return defaultValue;
         }
-        return default!;
+
+        try
+        {
+            if (options != null)
+            {
+                if (typeof(T).FullName == typeof(object).FullName)
+                    options.Converters.Add(new DynamicJsonConverter());
+
+                return JsonSerializer.Deserialize<T>(str, options)!;
+            }
+            else
+            {
+                if (typeof(T).FullName == typeof(object).FullName)
+                    _option.Converters.Add(new DynamicJsonConverter());
+
+                return JsonSerializer.Deserialize<T>(str, _option)!;
+            }
+        }
+        catch (Exception)
+        {
+            throw;
+        }
     }
 
-    public static async Task<T> DeserializeJsonAsync<T>(this Stream utf8stream, CancellationToken cancellationToken)
+    /// <summary>
+    /// Deserializes the json.
+    /// </summary>
+    /// <param name="str">The STR.</param>
+    /// <param name="returnType">return type</param>
+    /// <param name="options">default options</param>
+    /// <returns></returns>
+    public static object? DeserializeJson(this string str, Type returnType, JsonSerializerOptions? options = default)
+    {
+        try
+        {
+            if (options != null)
+                return JsonSerializer.Deserialize(str, returnType, options)!;
+            else
+                return JsonSerializer.Deserialize(str, returnType, _option)!;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    public static async Task<T> DeserializeJsonAsync<T>(this Stream utf8stream, JsonSerializerOptions? options = default, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -132,8 +170,10 @@ internal static class ObjectExtensions
         {
             throw new Exception(" utf8stream is null");
         }
-        var result = await JsonSerializer.DeserializeAsync<T>(utf8stream, _option, cancellationToken);
-        return result!;
+        if (options != null)
+            return (await JsonSerializer.DeserializeAsync<T>(utf8stream, options, cancellationToken))!;
+        else
+            return (await JsonSerializer.DeserializeAsync<T>(utf8stream, _option, cancellationToken))!;
     }
     /// <summary>
     /// 根据对象实例和属性名称获得属性值
@@ -191,11 +231,13 @@ internal static class ObjectExtensions
     }
 }
 
-internal class BoolConverter : JsonConverter<bool>
+#region Conerter 集合类
+public class BoolConverter : JsonConverter<bool>
 {
+    public override bool HandleNull => true;
     public override bool Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        if (reader.TokenType == JsonTokenType.Null)
+        if (reader.TokenType == JsonTokenType.Null || reader.TokenType == JsonTokenType.None)
         {
             return false;
         }
@@ -231,11 +273,12 @@ internal class BoolConverter : JsonConverter<bool>
         writer.WriteBooleanValue(value);
     }
 }
-internal class BoolNullableConverter : JsonConverter<bool?>
+public class BoolNullableConverter : JsonConverter<bool?>
 {
+    public override bool HandleNull => true;
     public override bool? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        if (reader.TokenType == JsonTokenType.Null)
+        if (reader.TokenType == JsonTokenType.Null || reader.TokenType == JsonTokenType.None)
         {
             return null;
         }
@@ -278,11 +321,12 @@ internal class BoolNullableConverter : JsonConverter<bool?>
         }
     }
 }
-internal class DecimalConverter : JsonConverter<decimal>
+public class DecimalConverter : JsonConverter<decimal>
 {
+    public override bool HandleNull => true;
     public override decimal Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        if (reader.TokenType == JsonTokenType.Null)
+        if (reader.TokenType == JsonTokenType.Null || reader.TokenType == JsonTokenType.None)
         {
             return 0;
         }
@@ -313,11 +357,12 @@ internal class DecimalConverter : JsonConverter<decimal>
         writer.WriteNumberValue(value);
     }
 }
-internal class DecimalNullableConverter : JsonConverter<decimal?>
+public class DecimalNullableConverter : JsonConverter<decimal?>
 {
+    public override bool HandleNull => true;
     public override decimal? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        if (reader.TokenType == JsonTokenType.Null)
+        if (reader.TokenType == JsonTokenType.Null || reader.TokenType == JsonTokenType.None)
         {
             return null;
         }
@@ -356,11 +401,12 @@ internal class DecimalNullableConverter : JsonConverter<decimal?>
         }
     }
 }
-internal class LongNullableConverter : JsonConverter<long?>
+public class LongNullableConverter : JsonConverter<long?>
 {
+    public override bool HandleNull => true;
     public override long? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        if (reader.TokenType == JsonTokenType.Null)
+        if (reader.TokenType == JsonTokenType.Null || reader.TokenType == JsonTokenType.None)
         {
             return null;
         }
@@ -392,10 +438,16 @@ internal class LongNullableConverter : JsonConverter<long?>
         writer.WriteStringValue(value?.ToString() ?? "");
     }
 }
-internal class LongConverter : JsonConverter<long>
+public class LongConverter : JsonConverter<long>
 {
+    public override bool HandleNull => true;
     public override long Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
+        if (reader.TokenType == JsonTokenType.Null || reader.TokenType == JsonTokenType.None)
+        {
+            return 0;
+        }
+
         if (reader.TokenType == JsonTokenType.String)
         {
             var readStr = reader.GetString();
@@ -423,11 +475,12 @@ internal class LongConverter : JsonConverter<long>
         writer.WriteStringValue(value.ToString());
     }
 }
-internal class IntNullableConverter : JsonConverter<int?>
+public class IntNullableConverter : JsonConverter<int?>
 {
+    public override bool HandleNull => true;
     public override int? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        if (reader.TokenType == JsonTokenType.Null)
+        if (reader.TokenType == JsonTokenType.Null || reader.TokenType == JsonTokenType.None)
         {
             return null;
         }
@@ -466,10 +519,15 @@ internal class IntNullableConverter : JsonConverter<int?>
         }
     }
 }
-internal class IntConverter : JsonConverter<int>
+public class IntConverter : JsonConverter<int>
 {
+    public override bool HandleNull => true;
     public override int Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
+        if (reader.TokenType == JsonTokenType.Null || reader.TokenType == JsonTokenType.None)
+        {
+            return 0;
+        }
         if (reader.TokenType == JsonTokenType.String)
         {
             var readStr = reader.GetString();
@@ -497,11 +555,13 @@ internal class IntConverter : JsonConverter<int>
         writer.WriteNumberValue(value);
     }
 }
-internal class DateTimeNullableConverter : JsonConverter<DateTime?>
+public class DateTimeNullableConverter(string formatString = "yyyy-MM-dd HH:mm:ss.fff") : JsonConverter<DateTime?>
 {
+    public override bool HandleNull => true;
+    public string FormatString => formatString;
     public override DateTime? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        if (reader.TokenType == JsonTokenType.Null)
+        if (reader.TokenType == JsonTokenType.Null || reader.TokenType == JsonTokenType.None)
         {
             return null;
         }
@@ -509,7 +569,19 @@ internal class DateTimeNullableConverter : JsonConverter<DateTime?>
         if (reader.TokenType == JsonTokenType.String)
         {
             var tokenValue = reader.GetString();
-            return string.IsNullOrEmpty(tokenValue) ? default(DateTime?) : DateTime.Parse(tokenValue);
+
+            if (string.IsNullOrWhiteSpace(tokenValue))
+            {
+                return null;
+            }
+
+            if (DateTime.TryParse(tokenValue, out var dt))
+            {
+                return dt;
+            }
+
+            return DateTime.Parse(tokenValue);
+
         }
 
         if (reader.TryGetDateTime(out DateTime value))
@@ -522,20 +594,41 @@ internal class DateTimeNullableConverter : JsonConverter<DateTime?>
 
     public override void Write(Utf8JsonWriter writer, DateTime? value, JsonSerializerOptions options)
     {
-        if (value == null)
+        if (value == null || value == DateTime.MinValue)
         {
             writer.WriteStringValue("");
         }
-        writer.WriteStringValue(value?.ToString("yyyy-MM-dd HH:mm:ss") ?? "");
+        else
+        {
+            writer.WriteStringValue(value?.ToString(FormatString) ?? "");
+        }
     }
 }
-internal class DateTimeConverter : JsonConverter<DateTime>
+public class DateTimeConverter(string formatString = "yyyy-MM-dd HH:mm:ss.fff") : JsonConverter<DateTime>
 {
+    public override bool HandleNull => true;
+    public string FormatString => formatString;
     public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
+        if (reader.TokenType == JsonTokenType.None || reader.TokenType == JsonTokenType.Null)
+        {
+            return DateTime.MinValue;
+        }
+
         if (reader.TokenType == JsonTokenType.String)
         {
-            var tokenValue = reader.GetString()!;
+            var tokenValue = reader.GetString();
+
+            if (string.IsNullOrWhiteSpace(tokenValue))
+            {
+                return DateTime.MinValue;
+            }
+
+            if (DateTime.TryParse(tokenValue, out var dt))
+            {
+                return dt;
+            }
+
             return DateTime.Parse(tokenValue);
         }
 
@@ -549,21 +642,30 @@ internal class DateTimeConverter : JsonConverter<DateTime>
 
     public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
     {
-        writer.WriteStringValue(value.ToString("yyyy-MM-dd HH:mm:ss"));
+        if (value == DateTime.MinValue)
+        {
+            writer.WriteStringValue("");
+        }
+        else
+        {
+            writer.WriteStringValue(value.ToString(FormatString));
+        }
     }
 }
-internal class GuidConverter : JsonConverter<Guid>
+public class GuidConverter : JsonConverter<Guid>
 {
+    public override bool HandleNull => true;
     public override Guid Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        if (reader.TryGetGuid(out Guid val))
-        {
-            return val;
-        }
 
         if (reader.TokenType == JsonTokenType.Null)
         {
             return Guid.Empty;
+        }
+
+        if (reader.TryGetGuid(out Guid val))
+        {
+            return val;
         }
 
         if (reader.TokenType == JsonTokenType.String)
@@ -585,11 +687,12 @@ internal class GuidConverter : JsonConverter<Guid>
 
     public override void Write(Utf8JsonWriter writer, Guid value, JsonSerializerOptions options)
     {
-        writer.WriteStringValue(value == Guid.Empty? "" : value.ToString("N"));
+        writer.WriteStringValue(value.ToString());
     }
 }
-internal class GuidNullableConverter : JsonConverter<Guid?>
+public class GuidNullableConverter : JsonConverter<Guid?>
 {
+    public override bool HandleNull => true;
     public override Guid? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType == JsonTokenType.Null)
@@ -620,17 +723,21 @@ internal class GuidNullableConverter : JsonConverter<Guid?>
 
     public override void Write(Utf8JsonWriter writer, Guid? value, JsonSerializerOptions options)
     {
-        if (value == null || value == Guid.Empty)
+        if (value == null)
         {
-            writer.WriteStringValue("");
+            writer.WriteNullValue();
+        }
+        else if (value == Guid.Empty)
+        {
+            writer.WriteStringValue(Guid.Empty.ToString());
         }
         else
         {
-            writer.WriteStringValue(value.Value.ToString("N"));
+            writer.WriteStringValue(value.Value.ToString());
         }
     }
 }
-internal class DictionaryLongStringJsonConverter : JsonConverter<Dictionary<long, string>>
+public class DictionaryLongStringJsonConverter : JsonConverter<Dictionary<long, string>>
 {
     public override Dictionary<long, string> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
@@ -681,13 +788,15 @@ internal class DictionaryLongStringJsonConverter : JsonConverter<Dictionary<long
         writer.WriteEndObject();
     }
 }
-internal class StringConverter : JsonConverter<string>
+public class StringConverter : JsonConverter<string>
 {
+    public override bool HandleNull => true;
     public override string Read(
         ref Utf8JsonReader reader,
         Type typeToConvert,
         JsonSerializerOptions options) => reader.TokenType switch
         {
+            JsonTokenType.None => string.Empty,
             JsonTokenType.Null => string.Empty,
             JsonTokenType.True => bool.TrueString,
             JsonTokenType.False => bool.FalseString,
@@ -701,16 +810,16 @@ internal class StringConverter : JsonConverter<string>
             JsonTokenType.Number when reader.TryGetSingle(out float f) => f.ToString(),
             JsonTokenType.Number => reader.GetDouble().ToString(),
             JsonTokenType.String when reader.TryGetDateTime(out DateTime datetime) => datetime.ToString("yyyy-MM-dd HH:mm:ss.fff"),
-            JsonTokenType.String => reader.GetString()!,
-            _ => throw new System.Text.Json.JsonException("String Converter err")
+            JsonTokenType.String => reader.GetString() ?? "",
+            _ => throw new JsonException("String Converter err")
         };
 
     public override void Write(Utf8JsonWriter writer, string value, JsonSerializerOptions options)
     {
-        writer.WriteStringValue(value.ToString());
+        writer.WriteStringValue(value ?? "");
     }
 }
-internal class ObjectToInferredTypesConverter : JsonConverter<object>
+public class ObjectToInferredTypesConverter : JsonConverter<object>
 {
     public override object Read(
         ref Utf8JsonReader reader,
@@ -722,7 +831,7 @@ internal class ObjectToInferredTypesConverter : JsonConverter<object>
             JsonTokenType.Number when reader.TryGetInt64(out long l) => l,
             JsonTokenType.Number => reader.GetDouble(),
             JsonTokenType.String when reader.TryGetDateTime(out DateTime datetime) => datetime,
-            JsonTokenType.String => reader.GetString()!,
+            JsonTokenType.String => reader.GetString() ?? "",
             _ => JsonDocument.ParseValue(ref reader).RootElement.Clone()
         };
 
@@ -732,4 +841,6 @@ internal class ObjectToInferredTypesConverter : JsonConverter<object>
         JsonSerializerOptions options) =>
         JsonSerializer.Serialize(writer, objectToWrite, objectToWrite.GetType(), options);
 }
+
+#endregion
 

@@ -9,9 +9,9 @@ public class DefaultRpcConfigMapper : IRpcConfigMapper
     {
         return new ServiceConfig
         {
-            ServiceName = serviceName,
-            Metadata = nameOption.Metadata,
-            Instances = instances,
+            ServiceId = serviceName,
+            Metadata = nameOption.Metadata.ToDictionary(),
+            Instances = instances.ToDictionary(),
         };
     }
 

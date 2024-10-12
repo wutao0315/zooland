@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-	  <PackageReference Include="ApacheThrift" Version="0.20.0" />
+	  <PackageReference Include="ApacheThrift" Version="0.21.0" />
   </ItemGroup>
 
   <ItemGroup>
