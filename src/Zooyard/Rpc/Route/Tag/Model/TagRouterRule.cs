@@ -1,12 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Reflection;
-
-namespace Zooyard.Rpc.Route.Tag.Model;
+﻿namespace Zooyard.Rpc.Route.Tag.Model;
 
 public record TagRouterRule: AbstractRouterRule
 {
-    private readonly Dictionary<string, List<string>> addressToTagnames = new();
-    private readonly Dictionary<string, List<string>> tagnameToAddresses = new();
+    private readonly Dictionary<string, List<string>> addressToTagnames = [];
+    private readonly Dictionary<string, List<string>> tagnameToAddresses = [];
 
     public static TagRouterRule ParseFromMap(Dictionary<string, object> map)
     {
@@ -75,5 +72,5 @@ public record TagRouterRule: AbstractRouterRule
 
     public Dictionary<string, List<string>> TagnameToAddresses => tagnameToAddresses;
 
-    public List<Tag> Tags { get; set; } = new();
+    public List<Tag> Tags { get; set; } = [];
 }

@@ -20,31 +20,32 @@ public class ScriptStateRouter : AbstractStateRouter
 
     private readonly string _rule;
 
-    //private readonly V8Script _script;
+    private CancellationTokenSource _cts = new();
 
     public ScriptStateRouter(ILoggerFactory loggerFactory, URL address) : base(address)
     {
         _logger = loggerFactory.CreateLogger<ScriptStateRouter>();
         _engine = GetEngine(address);
         _rule = GetRule(address);
+
         try
         {
-            //_engine.AddHostObject("lib", new HostTypeCollection("mscorlib", "System.Core"));
             _engine.Execute(_rule);
-            //(function route(invokers, address, invocation, context) {
-            //    List = lib.System.Collections.Generic.List;
-            //    var result = new List(lib.System.String);
+            //function route(invokers, address, invocation, context) {
+            //    var ListOfString = System.Collections.Generic.List(System.String);
+            //    var list = new ListOfString();
             //    for (i = 0; i < invokers.Length; i++)
             //    {
             //        if ("10.20.153.10".equals(invokers[i].Host))
             //        {
-            //            result.Add(invokers[i]);
+            //            list.Add(invokers[i]);
             //        }
             //    }
-            //    return result;
-            //} (invokers));
+            //    return list;
+            //}
+
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             _logger.LogError(e, $"route error, rule has been ignored. rule: {_rule}, url: {RpcContext.GetContext().Url}");
             throw;
@@ -61,7 +62,11 @@ public class ScriptStateRouter : AbstractStateRouter
         string vRule = address.GetParameterAndDecoded(Constants.RULE_KEY);
         if (string.IsNullOrWhiteSpace(vRule))
         {
-            throw new Exception("route rule can not be empty.");
+            vRule = @"function route(invokers, address, invocation, context)
+            {
+                return invokers;
+            }";
+            //throw new Exception("route rule can not be empty.");
         }
         return vRule;
     }
@@ -78,24 +83,23 @@ public class ScriptStateRouter : AbstractStateRouter
             // 这边定义一个变量engine  生成一个v8引擎  用来执行js脚本
             var scriptEngine = new Engine(options => {
 
+                options.AllowClr();
+
+                var limitMemory = address.GetParameter("limit_memory", 4_000_000);
                 // Limit memory allocations to 4 MB
-                options.LimitMemory(4_000_000);
+                options.LimitMemory(limitMemory);
 
+                var timeout_interval = address.GetParameter("timeout_interval", 4);
                 // Set a timeout to 4 seconds.
-                options.TimeoutInterval(TimeSpan.FromSeconds(4));
+                options.TimeoutInterval(TimeSpan.FromSeconds(timeout_interval));
 
+                var max_statements = address.GetParameter("max_statements", 1000);
                 // Set limit of 1000 executed statements.
                 options.MaxStatements(1000);
 
                 // Use a cancellation token.
-                //options.CancellationToken(cancellationToken);
+                options.CancellationToken(_cts.Token);
                 });
-            //// 里面的参数9222为调试端口，
-            //// V8ScriptEngineFlags.EnableDebugging 是否启用调试模式
-            //// V8ScriptEngineFlags.AwaitDebuggerAndPauseOnStart  异步停止或开始等待调试
-            //// type  调试引擎模式
-            //scriptEngine.DocumentSettings.AccessFlags = Microsoft.ClearScript.DocumentAccessFlags.EnableFileLoading;
-            //scriptEngine.DefaultAccess = Microsoft.ClearScript.ScriptAccess.Full; // 这两行是为了允许加载js文件
 
             return scriptEngine;
         });
@@ -103,9 +107,9 @@ public class ScriptStateRouter : AbstractStateRouter
         return result;
     }
 
-    protected override IList<URL> DoRoute(IList<URL> invokers, URL address, IInvocation invocation, bool needToPrintMessage, Holder<RouterSnapshotNode> nodeHolder, Holder<String> messageHolder)
+    protected override IList<URL> DoRoute(IList<URL> invokers, URL address, IInvocation invocation, bool needToPrintMessage, Holder<RouterSnapshotNode> nodeHolder, Holder<string> messageHolder)
     {
-        if (_engine == null)
+        if (_engine == null || string.IsNullOrWhiteSpace(_rule))
         {
             if (needToPrintMessage)
             {
@@ -137,4 +141,10 @@ public class ScriptStateRouter : AbstractStateRouter
 
     public override bool Force => this.Address.GetParameter(Constants.FORCE_KEY, false);
 
+    public override void Dispose()
+    {
+        base.Dispose();
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 }

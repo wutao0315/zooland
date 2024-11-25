@@ -1,12 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System.Text;
 using Zooyard.Management;
-
-//using Zooyard.Logging;
 using Zooyard.Rpc.Route.Condition.Config.Model;
 using Zooyard.Rpc.Route.State;
-using Zooyard.Rpc.Route.Tag.Model;
 using Zooyard.Utils;
 
 namespace Zooyard.Rpc.Route.Condition.Config;
@@ -24,6 +20,7 @@ public abstract class ListenableStateRouter : AbstractStateRouter
 
     //private readonly IOptionsMonitor<ZooyardOption> _zooyard;
     //public ListenableStateRouter(ILoggerFactory loggerFactory, IOptionsMonitor<ZooyardOption> zooyard, URL address, string ruleKey):base(address)
+
     private readonly IRpcStateLookup _stateLookup;
     public ListenableStateRouter(ILoggerFactory loggerFactory, IRpcStateLookup stateLookup, URL address, string ruleKey) : base(address)
     {
@@ -71,7 +68,8 @@ public abstract class ListenableStateRouter : AbstractStateRouter
             }
         }
     }
-    //@Override
+
+
     //public synchronized void process(ConfigChangedEvent event) {
     //    if (logger.isDebugEnabled()) {
     //        logger.debug("Notification of condition rule, change type is: " + event.getChangeType() +
@@ -159,8 +157,10 @@ public abstract class ListenableStateRouter : AbstractStateRouter
         //}
     }
 
-    //public void Stop()
-    //{
-    //    //this.getRuleRepository().removeListener(ruleKey + RULE_SUFFIX, this);
-    //}
+    public override void Dispose()
+    {
+        base.Dispose();
+
+        //    //this.getRuleRepository().removeListener(ruleKey + RULE_SUFFIX, this);
+    }
 }

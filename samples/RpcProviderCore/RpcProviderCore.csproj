@@ -11,15 +11,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="DotNetty.Transport" Version="0.7.6" />
-		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
-		<PackageReference Include="NLog" Version="5.3.4" />
-		<PackageReference Include="NLog.Extensions.Hosting" Version="5.3.14" />
-		<PackageReference Include="NLog.Extensions.Logging" Version="5.3.14" />
-		<PackageReference Include="SoapCore" Version="1.1.0.51" />
-		<PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
-		<PackageReference Include="ApacheThrift" Version="0.21.0" />
-		<PackageReference Include="Grpc.AspNetCore" Version="2.66.0" />
+		<PackageReference Include="DotNetty.Transport" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" />
+		<PackageReference Include="NLog" />
+		<PackageReference Include="NLog.Extensions.Hosting" />
+		<PackageReference Include="NLog.Extensions.Logging" />
+		<PackageReference Include="SoapCore" />
+		<PackageReference Include="System.Text.Encoding.CodePages" />
+		<PackageReference Include="ApacheThrift" />
+		<PackageReference Include="Grpc.AspNetCore" />
 	</ItemGroup>
 
 	<ItemGroup>

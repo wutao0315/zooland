@@ -7,10 +7,12 @@ using DotNetty.Transport.Libuv;
 using Grpc.Core;
 using Grpc.Core.Interceptors;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using NLog;
 using NLog.Extensions.Hosting;
 using NLog.Extensions.Logging;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
@@ -98,15 +100,31 @@ public class Program
 
 
             services.AddTransient<RpcContractThrift.HelloService.IAsync>((serviceProvider) => new HelloServiceThriftImpl { ServiceName = "A" });
-            services.AddTransient<ITAsyncProcessor, RpcContractThrift.HelloService.AsyncProcessor>();
-            //services.AddSingleton<TServerTransport>((serviceProvider) =>
-            //{
-            //    var option = serviceProvider.GetService<IOptionsMonitor<ThriftServerOption>>().CurrentValue;
 
-            //    return new TServerSocketTransport(option.Port, option.Configuration, option.ClientTimeOut);
-            //});
+            services.AddTransient<RpcContractThrift.HelloService.AsyncProcessor>();
+
+            services.AddTransient<ITAsyncProcessor>((p) => {
+
+                var logger = p.GetRequiredService<ILogger<ITAsyncProcessor>>();
+                var processor = p.GetRequiredService<RpcContractThrift.HelloService.AsyncProcessor>();
+                DiagnosticListener diagnosticListener = p.GetRequiredService<DiagnosticListener>();
+                ActivitySource activitySource = p.GetRequiredService<ActivitySource>();
+                DistributedContextPropagator propagator = p.GetRequiredService<DistributedContextPropagator>();
+
+                return new THeaderProcessor(logger, processor, diagnosticListener, activitySource, propagator);
+            });
+
+
+            services.AddSingleton<TServerTransport>((serviceProvider) =>
+            {
+                var option = serviceProvider.GetRequiredService<IOptionsMonitor<ThriftServerOption>>().CurrentValue;
+
+                return new TServerSocketTransport(option.Port, option.Configuration, option.ClientTimeOut);
+            });
             //services.AddSingleton<TProtocolFactory>(new TBinaryProtocol.Factory());
+            services.AddSingleton<TProtocolFactory>(new TBinaryHeaderServerProtocol.Factory());
 
+            services.AddSingleton<TTransportFactory>(new TFramedTransport.Factory());
             //services.AddSingleton<TTransportFactory>(new TFramedTransport.Factory());
             //services.AddSingleton<TTransportFactory>(new TBufferedTransport.Factory());
 
@@ -115,8 +133,8 @@ public class Program
             {
                 var processor = serviceProvider.GetRequiredService<ITAsyncProcessor>();
                 var serverTransport = serviceProvider.GetRequiredService<TServerTransport>();
-                var transportFactory = serviceProvider.GetRequiredService<TTransportFactory>();
                 var protocolFactory = serviceProvider.GetRequiredService<TProtocolFactory>();
+                var transportFactory = serviceProvider.GetRequiredService<TTransportFactory>();
                 var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
 
                 var threadConfig = new TThreadPoolAsyncServer.Configuration();
@@ -129,6 +147,8 @@ public class Program
                      outputProtocolFactory: protocolFactory,
                      threadConfig: threadConfig,
                      logger: loggerFactory.CreateLogger<TThreadPoolAsyncServer>());
+
+
                 return server;
             });
 
@@ -412,11 +432,11 @@ public class ZoolandHostedService : IHostedService
         Console.WriteLine("Zooland started...");
         try
         {
-            //await _grpcServer.Start(cancellationToken).ConfigureAwait(false);
-            await _thriftServer.Start(cancellationToken).ConfigureAwait(false);
-            await _nettyServer.Start(cancellationToken).ConfigureAwait(false);
-            await _httpServer.Start(cancellationToken).ConfigureAwait(false);
-            await _grpcNetServer.Start(cancellationToken).ConfigureAwait(false);
+            //await _grpcServer.Start(cancellationToken);
+            await _thriftServer.Start(cancellationToken);
+            await _nettyServer.Start(cancellationToken);
+            await _httpServer.Start(cancellationToken);
+            await _grpcNetServer.Start(cancellationToken);
         }
         catch (Exception ex)
         {
@@ -429,11 +449,11 @@ public class ZoolandHostedService : IHostedService
         Console.WriteLine("Zooland stopped...");
         try
         {
-            //await _grpcServer.Stop(cancellationToken).ConfigureAwait(false);
-            await _thriftServer.Stop(cancellationToken).ConfigureAwait(false);
-            await _nettyServer.Stop(cancellationToken).ConfigureAwait(false);
-            await _httpServer.Stop(cancellationToken).ConfigureAwait(false);
-            await _grpcNetServer.Stop(cancellationToken).ConfigureAwait(false);
+            //await _grpcServer.Stop(cancellationToken);
+            await _thriftServer.Stop(cancellationToken);
+            await _nettyServer.Stop(cancellationToken);
+            await _httpServer.Stop(cancellationToken);
+            await _grpcNetServer.Stop(cancellationToken);
         }
         catch (Exception ex)
         {

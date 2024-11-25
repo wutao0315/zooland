@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using Zooyard.Rpc.Route.State;
+﻿using Zooyard.Rpc.Route.State;
 using Zooyard.Utils;
 
 namespace Zooyard.Rpc.Route.Mock;

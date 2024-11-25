@@ -40,6 +40,7 @@ public class HttpStub
             var paraDic = new Dictionary<string, string>(paraItems);
 
             var pathList = new List<string>();
+            var removeList = new List<string>();
             foreach (var item in path)
             {
                 var pathItem = item;
@@ -53,6 +54,7 @@ public class HttpStub
                 {
                     if ($"{{{dic.Key}}}" == item)
                     {
+                        removeList.Add(dic.Key);
                         paraDic.Remove(dic.Key);
                         pathItem = dic.Value;
                         break;
@@ -69,7 +71,7 @@ public class HttpStub
                 relatedUrl = $"{requestUri}?{string.Join("&", paraDic.Select(para => para.Key + "=" + WebUtility.UrlEncode(para.Value)))}";
             }
 
-            using HttpContent? content = GetContent(contentType, parameters, paras, paraItems, fileItems);
+            using HttpContent? content = GetContent(contentType, parameters, paras, paraItems, fileItems, removeList);
             var request = new HttpRequestMessage(httpMethod, relatedUrl) { Content = content };
 
             foreach (var item in headers)
@@ -101,7 +103,8 @@ public class HttpStub
         ParameterInfo[] parameters,
         object[] paras,
         IDictionary<string, string> paraItems,
-        IDictionary<string, byte[]> fileItems)
+        IDictionary<string, byte[]> fileItems,
+        IList<string> removeList)
     {
         HttpContent? content = null;
         switch (contentType)
@@ -124,7 +127,7 @@ public class HttpStub
                 content = multipartFormDataContent;
                 break;
             case "application/json":
-                var json = GetJson(parameters, paras);
+                var json = GetJson(parameters, paras, removeList);
                 content = new StringContent(json, Encoding.UTF8, "application/json");
                 break;
         }
@@ -132,33 +135,41 @@ public class HttpStub
         return content;
     }
 
-    private string GetJson(ParameterInfo[] parameterInfos, object[] paras)
+    private string GetJson(ParameterInfo[] parameterInfos, object[] paras, IList<string> removeList)
     {
         var paraDic = new Dictionary<string, object>();
         for (int i = 0; i < paras.Length; i++)
         {
             var para = paras[i];
-            var paraType = para.GetType();
+            //var paraType = para.GetType();
             var paraInfo = parameterInfos[i];
 
-            if (string.IsNullOrWhiteSpace(paraInfo.Name))
+            if (string.IsNullOrWhiteSpace(paraInfo.Name) || removeList.Contains(paraInfo.Name, StringComparer.OrdinalIgnoreCase))
             {
                 continue;
             }
 
-            if (paraType.IsValueTypeOrString())
-            {
-                paraDic.Add(paraInfo.Name, para.ToStringValueType());
-            }
-            else
-            {
-                var paraPairs = ObjectUtil.ExecuteObj(para);
-                foreach (var paraPair in paraPairs)
-                {
-                    paraDic[paraPair.Key] = paraPair.Value;
-                }
-            }
+            paraDic.Add(paraInfo.Name, para);
+
+            //if (paraType.IsValueTypeOrString())
+            //{
+            //    paraDic.Add(paraInfo.Name, para.ToStringValueType());
+            //}
+            //else
+            //{
+            //    var paraPairs = ObjectUtil.ExecuteObj(para);
+            //    foreach (var paraPair in paraPairs)
+            //    {
+            //        paraDic[paraPair.Key] = paraPair.Value;
+            //    }
+            //}
         }
+
+        if (paraDic.Count == 1)
+        {
+            return paraDic.First().Value.ToJsonString();
+        }
+
         return paraDic.ToJsonString("{}");
     }
 
@@ -209,30 +220,30 @@ public class ObjectUtil
     {
         return ExecuteInternal(obj, prefix: prefix);
     }
-    public static Dictionary<string, object> ExecuteObj(object obj, string prefix = "")
-    {
-        var dictionary = new Dictionary<string, object>();
-        var type = obj.GetType();
-        var properties = type.GetProperties();
+    //public static Dictionary<string, object> ExecuteObj(object obj, string prefix = "")
+    //{
+    //    var dictionary = new Dictionary<string, object>();
+    //    var type = obj.GetType();
+    //    var properties = type.GetProperties();
 
-        foreach (var property in properties)
-        {
-            var key = string.IsNullOrWhiteSpace(prefix) ? property.Name : $"{prefix}.{property.Name}";
+    //    foreach (var property in properties)
+    //    {
+    //        var key = string.IsNullOrWhiteSpace(prefix) ? property.Name : $"{prefix}.{property.Name}";
 
-            var fastProp = FastProperty.GetOrCreate(property);
-            var value = fastProp.Get(obj);
+    //        var fastProp = FastProperty.GetOrCreate(property);
+    //        var value = fastProp.Get(obj);
 
-            if (value == null)
-            {
-                dictionary.Add(key, "");
-                continue;
-            }
+    //        if (value == null)
+    //        {
+    //            dictionary.Add(key, "");
+    //            continue;
+    //        }
 
-            dictionary.Add(key, value);
-        }
+    //        dictionary.Add(key, value);
+    //    }
 
-        return dictionary;
-    }
+    //    return dictionary;
+    //}
     private static (Dictionary<string, string>, Dictionary<string, byte[]> dictionaryBytes) ExecuteInternal(
         object obj,
         string prefix = "",
@@ -241,6 +252,32 @@ public class ObjectUtil
     {
         dictionary ??= new Dictionary<string, string>();
         dictionaryBytes ??= new Dictionary<string, byte[]>();
+
+        if (obj is IEnumerable list)
+        {
+            var key = string.IsNullOrWhiteSpace(prefix) ? "" : prefix;
+            var counter = 0;
+            foreach (var item in list)
+            {
+                var itemKey = $"{key}[{counter++}]";
+                var itemType = item.GetType();
+
+                if (item is byte[] itemBytes)
+                {
+                    dictionaryBytes.Add(itemKey, itemBytes);
+                }
+                if (itemType.IsValueTypeOrString())
+                {
+                    dictionary.Add(itemKey, item.ToStringValueType());
+                }
+                else
+                {
+                    ExecuteInternal(item, itemKey, dictionary, dictionaryBytes);
+                }
+            }
+            return (dictionary, dictionaryBytes);
+        }
+
         var type = obj.GetType();
         var properties = type.GetProperties();
 
@@ -316,10 +353,10 @@ internal static class Extensions
         };
     }
 
-    internal static bool IsIEnumerable(this Type type)
-    {
-        return type.IsAssignableFrom(typeof(IEnumerable));
-    }
+    //internal static bool IsIEnumerable(this Type type)
+    //{
+    //    return type.IsAssignableFrom(typeof(IEnumerable));
+    //}
 
     internal static string ToStringLowerCase(this bool boolean)
     {

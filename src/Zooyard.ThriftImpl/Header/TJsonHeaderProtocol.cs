@@ -1,13 +1,21 @@
-﻿using Thrift;
+﻿using System.Diagnostics;
+using System.Net;
+using System.Net.Http.Headers;
+using Thrift;
 using Thrift.Protocol;
 using Thrift.Protocol.Entities;
 using Thrift.Transport;
+using Thrift.Transport.Client;
+using Zooyard.Rpc;
 
 namespace Zooyard.ThriftImpl.Header;
 
 public class TJsonHeaderProtocol : TJsonProtocol
 {
-
+    //public const string DiagnosticListenerName = "ThriftHandlerDiagnosticListener";
+    public const string ActivityName = "Zooyard.ThriftImpl.TJsonHeaderProtocol.RequestOut";
+    private Activity? activity;
+    private bool isNewActivity = false;
     private IDictionary<string, string> HEAD_INFO;
 
     public TJsonHeaderProtocol(TTransport transport) : base(transport)
@@ -15,18 +23,40 @@ public class TJsonHeaderProtocol : TJsonProtocol
         HEAD_INFO = new Dictionary<string, string>();
     }
 
-    public override async Task WriteMessageBeginAsync(TMessage message, CancellationToken cancellationToken)
+     public override async Task WriteMessageBeginAsync(TMessage message, CancellationToken cancellationToken)
     {
+        var attachments = RpcContext.GetContext().Attachments;
+        foreach (var item in attachments)
+        {
+            HEAD_INFO.Add(item.Key, item.Value.ToString()!);
+        }
+
         //trace start
-        //TraceUtils.startLocalTracer("rpc.thrift start");
+        activity = Activity.Current;
+        if (activity == null) 
+        {
+            activity = new Activity(ActivityName);
+            activity.Start();
+            isNewActivity = true;
+        }
+
+        activity?.SetTag("rpc.thrift", "start");
+        HEAD_INFO.Add("rpc.thrift", "start");
 
         string methodName = message.Name;
-        //TraceUtils.submitAdditionalAnnotation(Constants.TRACE_THRIFT_METHOD, methodName);
+        activity?.SetTag("rpc.thrift.method", methodName);
+        HEAD_INFO.Add("rpc.thrift.method", methodName);
         TTransport transport = this.Transport;
 
 
-        //string hostAddress = ((TSocket)transport).getSocket().getRemoteSocketAddress().toString();
-        //TraceUtils.submitAdditionalAnnotation(Constants.TRACE_THRIFT_SERVER, hostAddress);
+        if (transport is TSocketTransport socket)
+        {
+            string hostAddress = socket.Host.MapToIPv4().ToString();
+            activity?.SetTag("rpc.thrift.server", hostAddress);
+            HEAD_INFO.Add("rpc.thrift.server", hostAddress);
+        }
+
+        this.InjectHeaders(activity!, HEAD_INFO);
 
         await base.WriteMessageBeginAsync(message, cancellationToken);
         //write trace header to field0
@@ -34,12 +64,9 @@ public class TJsonHeaderProtocol : TJsonProtocol
     }
 
 
-
-
-
     public async Task WriteFieldZero(CancellationToken cancellationToken)
     {
-        var TRACE_HEAD = new TField("traceHeader", TType.Map, (short)0);
+        var TRACE_HEAD = new TField("traceHeader", TType.Map, 0);
         await WriteFieldBeginAsync(TRACE_HEAD, cancellationToken);
         {
             IDictionary<string, string> traceInfo = GenTraceInfo();
@@ -65,13 +92,24 @@ public class TJsonHeaderProtocol : TJsonProtocol
         if (tMessage.Type == TMessageType.Exception)
         {
             TApplicationException x = await TApplicationException.ReadAsync(this, cancellationToken);
+
+            activity!.SetTag("rpc.thrift.exception", x.StackTrace);
+
+            if (isNewActivity) 
+            {
+                activity!.Stop();
+            }
             //TraceUtils.submitAdditionalAnnotation(Constants.TRACE_THRIFT_EXCEPTION, StringUtil.trimNewlineSymbolAndRemoveExtraSpace(x.getMessage()));
             //TraceUtils.endAndSendLocalTracer();
         }
         else if (tMessage.Type == TMessageType.Reply)
         {
             //TraceUtils.endAndSendLocalTracer();
+            activity!.Stop();
         }
         return tMessage;
     }
+
+    
 }
+

@@ -16,6 +16,7 @@
 		<Description>Zooyard RPC Framework microservice</Description>
 		<Authors>wutao0315</Authors>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
 	</PropertyGroup>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(Configuration)'=='Release'" >

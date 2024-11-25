@@ -1,6 +1,4 @@
-﻿using System.Collections.Specialized;
-using System.Text;
-using System.Xml.Linq;
+﻿using System.Text;
 
 namespace Zooyard.Rpc.Route;
 
@@ -25,11 +23,11 @@ public class RouterSnapshotNode
 
     public string? RouterMessage { get; set; }
 
-    public IList<URL> NodeOutputInvokers { get; set; } = new List<URL>();
+    public IList<URL> NodeOutputInvokers { get; set; } = [];
 
-    public IList<URL> ChainOutputInvokers { get; set; } = new List<URL>();
+    public IList<URL> ChainOutputInvokers { get; set; } = [];
 
-    public List<RouterSnapshotNode> NextNode { get; private set; } = new();
+    public List<RouterSnapshotNode> NextNode { get; private set; } = [];
 
     public RouterSnapshotNode? ParentNode { get; private set; }
 

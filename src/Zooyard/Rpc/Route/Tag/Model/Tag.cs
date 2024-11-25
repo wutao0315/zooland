@@ -4,7 +4,7 @@ public record Tag
 {
     public string Name { get; set; } = string.Empty;
 
-    public List<string> Addresses { get; set; } = new();
+    public List<string> Addresses { get; set; } = [];
 
     public static Tag ParseFromMap(Dictionary<string, object> map)
     {

@@ -61,20 +61,6 @@ public class TCompactHeaderServerProtocol : TCompactProtocol
             throw;
         }
 
-        //try
-        //{
-        //    TField tioInputStream = TIOStreamTransportFieldsCache.getInstance().getTIOInputStream();
-        //    if (tioInputStream == null)
-        //    {
-        //        return;
-        //    }
-        //    BufferedInputStream inputStream = (BufferedInputStream)tioInputStream.get(protocol.Transport);
-        //    inputStream.mark(0);
-        //}
-        //catch (Exception e)
-        //{
-        //    //e.printStackTrace();
-        //}
     }
 
 
@@ -99,19 +85,10 @@ public class TCompactHeaderServerProtocol : TCompactProtocol
                     inputStream.Seek(inputStream.Position, SeekOrigin.Begin);
                 }
             }
-
-            //TField tioInputStream = TIOStreamTransportFieldsCache.getInstance().getTIOInputStream();
-            //if (tioInputStream == null)
-            //{
-            //    return;
-            //}
-            //BufferedInputStream inputStream = (BufferedInputStream)tioInputStream.get(protocol.getTransport());
-            //inputStream.reset();
         }
         catch
         {
             throw;
-            //e.printStackTrace();
         }
     }
 
@@ -125,8 +102,6 @@ public class TCompactHeaderServerProtocol : TCompactProtocol
         {
 
             inputStream_ = typeof(TStreamTransport).GetField(TStreamTransport_inputStream_)!;
-            //inputStream_ = TIOStreamTransport.class.getDeclaredField(TIOStreamTransport_inputStream_);
-            //inputStream_.SetAccessible(true);
         }
 
         public static TStreamTransportFieldsCache getInstance()
@@ -151,7 +126,6 @@ public class TCompactHeaderServerProtocol : TCompactProtocol
     {
         private static TIOStreamTransportFieldsCache? instance;
         private TField inputStream_;
-        //private string TIOStreamTransport_inputStream_ = "inputStream_";
 
         private TIOStreamTransportFieldsCache()
         {

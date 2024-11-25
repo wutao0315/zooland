@@ -57,21 +57,6 @@ public class TJsonHeaderServerProtocol : TBinaryProtocol
         {
             throw;
         }
-
-        //try
-        //{
-        //    TField tioInputStream = TIOStreamTransportFieldsCache.getInstance().getTIOInputStream();
-        //    if (tioInputStream == null)
-        //    {
-        //        return;
-        //    }
-        //    BufferedInputStream inputStream = (BufferedInputStream)tioInputStream.get(protocol.Transport);
-        //    inputStream.mark(0);
-        //}
-        //catch (Exception e)
-        //{
-        //    //e.printStackTrace();
-        //}
     }
 
 
@@ -96,13 +81,6 @@ public class TJsonHeaderServerProtocol : TBinaryProtocol
                 }
             }
 
-            //TField tioInputStream = TIOStreamTransportFieldsCache.getInstance().getTIOInputStream();
-            //if (tioInputStream == null)
-            //{
-            //    return;
-            //}
-            //BufferedInputStream inputStream = (BufferedInputStream)tioInputStream.get(protocol.getTransport());
-            //inputStream.reset();
         }
         catch 
         {

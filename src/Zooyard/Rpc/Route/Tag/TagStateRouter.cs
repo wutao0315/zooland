@@ -1,6 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using System.Linq;
 using Zooyard.Management;
 using Zooyard.Rpc.Route.State;
 using Zooyard.Rpc.Route.Tag.Model;
@@ -38,7 +36,7 @@ public class TagStateRouter : AbstractStateRouter
     // 监听配置或者服务注册变化，清空缓存
     void OnChanged(IRpcStateLookup value)
     {
-        if (string.IsNullOrWhiteSpace(application)) 
+        if (string.IsNullOrWhiteSpace(application))
         {
             return;
         }
@@ -61,7 +59,7 @@ public class TagStateRouter : AbstractStateRouter
             {
                 this.tagRouterRule = null;
             }
-            else 
+            else
             {
                 this.tagRouterRule = TagRuleParser.Parse(ruleContent);
             }
@@ -115,7 +113,7 @@ public class TagStateRouter : AbstractStateRouter
         {
             if (needToPrintMessage)
             {
-               messageHolder.Value = "Disable Tag Router. Reason: tagRouterRule is invalid or disabled";
+                messageHolder.Value = "Disable Tag Router. Reason: tagRouterRule is invalid or disabled";
             }
             return FilterUsingStaticTag(invokers, address, invocation);
         }
@@ -128,9 +126,9 @@ public class TagStateRouter : AbstractStateRouter
         {
             tagRouterRuleCopy.TagnameToAddresses.TryGetValue(tag, out List<string>? addresses);
             // filter by dynamic tag group first
-            if (addresses!= null && addresses.Count > 0)
+            if (addresses != null && addresses.Count > 0)
             {
-                result = FilterInvoker(invokers, invoker=>AddressMatches(invoker, addresses));
+                result = FilterInvoker(invokers, invoker => AddressMatches(invoker, addresses));
                 // if result is not null OR it's null but force=true, return result directly
                 if (result.Count > 0 || tagRouterRuleCopy.Force)
                 {
@@ -145,7 +143,7 @@ public class TagStateRouter : AbstractStateRouter
             {
                 // dynamic tag group doesn't have any item about the requested app OR it's null after filtered by
                 // dynamic tag group but force=false. check static tag
-                result = FilterInvoker(invokers, invoker=>tag.Equals(invoker.GetParameter(TAG_KEY)));
+                result = FilterInvoker(invokers, invoker => tag.Equals(invoker.GetParameter(TAG_KEY)));
             }
             // If there's no tagged providers that can match the current tagged request. force.tag is set by default
             // to false, which means it will invoke any providers without a tag unless it's explicitly disallowed.
@@ -160,12 +158,12 @@ public class TagStateRouter : AbstractStateRouter
             // FAILOVER: return all Providers without any tags.
             else
             {
-                var tmp = FilterInvoker(invokers, invoker=>AddressNotMatches(invoker, tagRouterRuleCopy.Addresses));
+                var tmp = FilterInvoker(invokers, invoker => AddressNotMatches(invoker, tagRouterRuleCopy.Addresses));
                 if (needToPrintMessage)
                 {
                     messageHolder.Value = "FAILOVER: return all Providers without any tags";
                 }
-                return FilterInvoker(tmp, invoker=>string.IsNullOrWhiteSpace(invoker.GetParameter(TAG_KEY)));
+                return FilterInvoker(tmp, invoker => string.IsNullOrWhiteSpace(invoker.GetParameter(TAG_KEY)));
             }
         }
         else
@@ -175,7 +173,7 @@ public class TagStateRouter : AbstractStateRouter
             List<string> addresses = tagRouterRuleCopy.Addresses;
             if (addresses?.Count > 0)
             {
-                result = FilterInvoker(invokers, invoker=>AddressNotMatches(invoker, addresses));
+                result = FilterInvoker(invokers, invoker => AddressNotMatches(invoker, addresses));
                 // 1. all addresses are in dynamic tag group, return empty list.
                 if (result.Count == 0)
                 {
@@ -192,7 +190,7 @@ public class TagStateRouter : AbstractStateRouter
             {
                 messageHolder.Value = "filter using the static tag group";
             }
-            return FilterInvoker(result, invoker=> 
+            return FilterInvoker(result, invoker =>
             {
                 string? localTag = invoker.GetParameter(TAG_KEY);
                 return string.IsNullOrWhiteSpace(localTag) || !tagRouterRuleCopy.GetTagNames().Contains(localTag);
@@ -219,14 +217,14 @@ public class TagStateRouter : AbstractStateRouter
     {
         IList<URL>? result = null;
         // Dynamic param
-        string? tag = string.IsNullOrWhiteSpace(invocation.GetAttachment(TAG_KEY)) ? url.GetParameter(TAG_KEY)! :invocation.GetAttachment(TAG_KEY);
+        string? tag = string.IsNullOrWhiteSpace(invocation.GetAttachment(TAG_KEY)) ? url.GetParameter(TAG_KEY)! : invocation.GetAttachment(TAG_KEY);
         // Tag request
         if (!string.IsNullOrWhiteSpace(tag))
         {
             result = FilterInvoker(invokers, invoker => tag.Equals(invoker.GetParameter(TAG_KEY)));
             if (result.Count == 0 && !IsForceUseTag(invocation))
             {
-                result = FilterInvoker(invokers, invoker=>string.IsNullOrWhiteSpace(invoker.GetParameter(TAG_KEY)));
+                result = FilterInvoker(invokers, invoker => string.IsNullOrWhiteSpace(invoker.GetParameter(TAG_KEY)));
             }
         }
         else
@@ -255,17 +253,17 @@ public class TagStateRouter : AbstractStateRouter
         return newInvokers;
     }
 
-    private bool AddressMatches(URL url, List<String> addresses)
+    private bool AddressMatches(URL url, List<string> addresses)
     {
         return addresses != null && CheckAddressMatch(addresses, url.Host, url.Port);
     }
 
-    private bool AddressNotMatches(URL url, List<String> addresses)
+    private bool AddressNotMatches(URL url, List<string> addresses)
     {
         return addresses == null || !CheckAddressMatch(addresses, url.Host, url.Port);
     }
 
-    private bool CheckAddressMatch(List<String> addresses, String host, int port)
+    private bool CheckAddressMatch(List<string> addresses, string host, int port)
     {
         foreach (var address in addresses)
         {
@@ -330,11 +328,13 @@ public class TagStateRouter : AbstractStateRouter
     //    //}
     //}
 
-    //public void Stop()
-    //{
-    //    if (!string.IsNullOrWhiteSpace(application))
-    //    {
-    //        //this.getRuleRepository().removeListener(application + RULE_SUFFIX, this);
-    //    }
-    //}
+    public override void Dispose()
+    {
+        base.Dispose();
+
+        //    if (!string.IsNullOrWhiteSpace(application))
+        //    {
+        //        //this.getRuleRepository().removeListener(application + RULE_SUFFIX, this);
+        //    }
+    }
 }

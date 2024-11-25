@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Zooyard.Management;
 
 namespace Zooyard.Rpc.Route.Condition.Config;

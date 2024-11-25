@@ -5,7 +5,6 @@ namespace Zooyard.Rpc.Route.State;
 public abstract class AbstractStateRouter: IStateRouter
 {
     private volatile bool force = false;
-    //private volatile URL address;
     private volatile IStateRouter? nextRouter = null;
 
     //Should continue route if current router's result is empty
@@ -20,11 +19,6 @@ public abstract class AbstractStateRouter: IStateRouter
     public virtual bool Runtime => true;
     public virtual bool Force { get => force; set => force = value; }
     public IStateRouter? NextRouter { get=> nextRouter; set=> nextRouter = value; }
-
-    //public void Notify(BitList<IInvoker> invokers)
-    //{
-    //    // default empty implement
-    //}
 
     public IList<URL> Route(IList<URL> invokers, URL address, IInvocation invocation, bool needToPrintMessage, Holder<RouterSnapshotNode>? nodeHolder) 
     {
@@ -133,6 +127,11 @@ public abstract class AbstractStateRouter: IStateRouter
     public void SetNextRouter(IStateRouter nextRouter)
     {
         this.nextRouter = nextRouter;
+    }
+
+    public virtual void Dispose()
+    {
+        
     }
 
     //public string BuildSnapshot()

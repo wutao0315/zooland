@@ -3,6 +3,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Net.Http.Headers;
+using System.Net;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 using Zooyard.Attributes;
@@ -132,7 +134,7 @@ public class ZooyardInvoker
             throw new ArgumentNullException("method base is null");
         }
 
-        if (methodBase is not MethodInfo md) 
+        if (methodBase is not MethodInfo md)
         {
             throw new ArgumentNullException($"method base is not a MethodInfo:{methodBase.GetType().FullName}");
         }
@@ -186,6 +188,8 @@ public class ZooyardInvoker
         await InvokeAsync<object>(context);
     }
 
+    Activity? newActivity;
+
     public async Task<TT?> InvokeAsync<TT>(ProxyMethodResolverContext context)
     {
         var watch = Stopwatch.StartNew();
@@ -195,6 +199,7 @@ public class ZooyardInvoker
         {
 
             var url = _replacedUrl;
+
             //todo before invoke
             if (_interceptors != null && _interceptors.Count() > 0)
             {
@@ -208,6 +213,31 @@ public class ZooyardInvoker
             var rpcContext = RpcContext.GetContext();
             rpcContext.SetInvocation(icn);
 
+            var headers = new Dictionary<string, string?>();
+
+            newActivity = null;
+            Activity? activity = Activity.Current;
+
+            if (activity == null)
+            {
+                newActivity = new Activity(ActivityName);
+                newActivity.Start();
+                InjectHeaders(newActivity, headers);
+
+                foreach (var item in headers)
+                {
+                    rpcContext.SetAttachment(item.Key, item.Value ?? "");
+                }
+            }
+            else
+            {
+                InjectHeaders(activity, headers);
+                foreach (var item in headers)
+                {
+                    rpcContext.SetAttachment(item.Key, item.Value ?? "");
+                }
+            }
+
             //todo before invoke
             if (_interceptors != null && _interceptors.Count() > 0)
             {
@@ -216,6 +246,8 @@ public class ZooyardInvoker
                     await item.BeforeCall(icn, rpcContext);
                 }
             }
+
+
             IResult<TT>? result = null;
             //制定返回类型父类
             var requstMapping = icn.TargetType.GetCustomAttribute<RequestMappingAttribute>();
@@ -268,6 +300,7 @@ public class ZooyardInvoker
                         throw;
                     }
 
+                    newActivity?.Stop();
                     //todo after invoke
                     if (_interceptors != null && _interceptors.Count() > 0)
                     {
@@ -375,6 +408,7 @@ public class ZooyardInvoker
             async Task<IResult<TA>?> ReturnCall<TA>()
             {
                 var resultInner = await _zooyardPools.Invoke<TA>(icn);
+
                 //todo after invoke
                 if (_interceptors != null && _interceptors.Count() > 0)
                 {
@@ -417,5 +451,52 @@ public class ZooyardInvoker
         _logger.LogInformation("{0} call {1} async proxy generator: {2} ms", context.Packed.DeclaringType, context.Method, watch.ElapsedMilliseconds);
         return returnValue;
     }
+
+
+
+    private void InjectHeaders(Activity currentActivity, IDictionary<string, string?> headers)
+    {
+        if (currentActivity.IdFormat == ActivityIdFormat.W3C)
+        {
+            if (!headers.ContainsKey(TraceParentHeaderName))
+            {
+                headers.Add(TraceParentHeaderName, currentActivity.Id);
+                if (currentActivity.TraceStateString != null)
+                {
+                    headers.Add(TraceStateHeaderName, currentActivity.TraceStateString);
+                }
+            }
+        }
+        else
+        {
+            if (!headers.ContainsKey(RequestIdHeaderName))
+            {
+                headers.Add(RequestIdHeaderName, currentActivity.Id);
+            }
+        }
+
+        // we expect baggage to be empty or contain a few items
+        using (IEnumerator<KeyValuePair<string, string?>> e = currentActivity.Baggage.GetEnumerator())
+        {
+            if (e.MoveNext())
+            {
+                var baggage = new List<string>();
+                do
+                {
+                    KeyValuePair<string, string?> item = e.Current;
+                    baggage.Add(new NameValueHeaderValue(WebUtility.UrlEncode(item.Key), WebUtility.UrlEncode(item.Value)).ToString());
+                }
+                while (e.MoveNext());
+                headers.Add(CorrelationContextHeaderName, string.Join(',', baggage));
+            }
+        }
+    }
+
+    public const string ActivityName = "Zooyard.RequestOut";
+    public const string RequestIdHeaderName = "Request-Id";
+    public const string CorrelationContextHeaderName = "Correlation-Context";
+
+    public const string TraceParentHeaderName = "traceparent";
+    public const string TraceStateHeaderName = "tracestate";
 
 }

@@ -26,5 +26,5 @@ public record ConditionRouterRule : AbstractRouterRule
 
 
 
-    public List<string> Conditions { get; set; } = new();
+    public List<string> Conditions { get; set; } = [];
 }

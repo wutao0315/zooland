@@ -7,7 +7,7 @@ class Program
 {
     static async Task Main(string[] args)
     {
-        CreateHostBuilder(args).Build().Run();
+        await CreateHostBuilder(args).Build().RunAsync();
     }
 
     public static IHostBuilder CreateHostBuilder(string[] args) =>
@@ -44,10 +44,13 @@ class Program
            services.AddRpc()
                .LoadFromConfig(config.GetSection("zooyard"))
                .AddHttp()
-               //.AddDotNetty()
-               //.AddThrift()
-               //.AddGrpcNet()
+               .AddDotNetty()
+               .AddThrift()
+               .AddGrpcNet()
                .AddContract<RpcContractHttp.IHelloService>()
+               .AddContract<RpcContractThrift.IHelloService>()
+               .AddContract<RpcContractGrpcNet.IHelloNetService>()
+               .AddContract<RpcContractNetty.IHelloService>()
                //.AddContracts(
                ////typeof(RpcContractThrift.IHelloService)
                ////, typeof(RpcContractGrpcNet.IHelloNetService)
@@ -61,7 +64,7 @@ class Program
            services.AddSingleton<IHelloService, RpcContractHttp.HelloServiceClientTest>();
            //services.AddSingleton<IHelloService, RpcContractHttp.HelloServiceClient>();
 
-           //using var bsp = services.BuildServiceProvider();
+           using var bsp = services.BuildServiceProvider();
            //var helloServiceThrift = bsp.GetRequiredService<RpcContractThrift.IHelloService>();
            //var helloServiceGrpcNet = bsp.GetRequiredService<RpcContractGrpcNet.IHelloNetService>();
            //var helloServiceHttp = bsp.GetRequiredService<RpcContractHttp.IHelloService>();
@@ -80,7 +83,10 @@ class Program
    
 }
 
-public class TestHostedService(RpcContractHttp.IHelloService helloServiceHttp) : IHostedService
+public class TestHostedService(RpcContractHttp.IHelloService helloServiceHttp,
+    RpcContractGrpcNet.IHelloNetService helloServiceGrpcNet, 
+    RpcContractThrift.IHelloService helloServiceThrift) 
+    : IHostedService
 {
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -95,15 +101,15 @@ public class TestHostedService(RpcContractHttp.IHelloService helloServiceHttp) :
                 var mode = Console.ReadLine()?.ToLower() ?? "all";
                 switch (mode)
                 {
-                    //case "grpcnet":
-                    //    await CallWhile(async (helloword) => { await GrpcNetHello(helloServiceGrpcNet, helloword); });
-                    //    break;
+                    case "grpcnet":
+                        await CallWhile(async (helloword) => { await GrpcNetHello(helloServiceGrpcNet, helloword); });
+                        break;
                     //case "grpcmember":
                     //    await CallWhile(async (helloword) => { await GrpcNetMember(sessionService, helloword); });
                     //    break;
-                    //case "thrift":
-                    //    await CallWhile(async (helloword) => { await ThriftHello(helloServiceThrift, helloword); });
-                    //    break;
+                    case "thrift":
+                        await CallWhile(async (helloword) => { await ThriftHello(helloServiceThrift, helloword); });
+                        break;
                     case "http":
                         helloServiceHttp.CallName("test");
 
@@ -199,7 +205,7 @@ public class TestHostedService(RpcContractHttp.IHelloService helloServiceHttp) :
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
-     
+        await Task.CompletedTask;
     }
 
     private static async Task ThriftHello(RpcContractThrift.IHelloService helloServiceThrift, string helloword = "world")
@@ -287,8 +293,8 @@ public class TestHostedService(RpcContractHttp.IHelloService helloServiceHttp) :
         var hello = await helloServiceHttp.Hello(helloword);
         Console.WriteLine(hello);
         var helloResult = await helloServiceHttp.SayHello($"{helloword} perfect world");
-        Console.WriteLine($"{helloResult.Name},{helloResult.Gender},{helloResult.Head}");
-        helloResult.Name = helloword + "show perfect world";
+        Console.WriteLine($"{helloResult?.Name},{helloResult?.Gender},{helloResult?.Head}");
+        helloResult!.Name = helloword + "show perfect world";
         var showResult = await helloServiceHttp.ShowHello(helloResult);
         Console.WriteLine(showResult);
     }

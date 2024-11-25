@@ -5,7 +5,6 @@ namespace Zooyard.Rpc.Route.Condition.Config.Model;
 public class ConditionRuleParser
 {
     /// <summary>
-    /// 
     ///
     ///Json
     ///
@@ -24,7 +23,7 @@ public class ConditionRuleParser
     /// <returns></returns>
     public static ConditionRouterRule Parse(string rawRule)
     {
-        var map = JsonSerializer.Deserialize<Dictionary<string, Object>>(rawRule)!;
+        var map = JsonSerializer.Deserialize<Dictionary<string, object>>(rawRule)!;
         ConditionRouterRule rule = ConditionRouterRule.ParseFromMap(map);
         rule.RawRule = rawRule;
         if (rule.Conditions.Count == 0)

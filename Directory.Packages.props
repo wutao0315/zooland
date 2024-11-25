@@ -1,0 +1,55 @@
+  <Project>
+	  <PropertyGroup>
+		  <EFCoreVersion>8.0.11</EFCoreVersion>
+	  </PropertyGroup>
+
+	  <ItemGroup>
+		  <PackageVersion Include="Jint" Version="4.1.0" />
+		  <PackageVersion Include="Microsoft.Extensions.Caching.Abstractions" Version="8.0.0" />
+		  <PackageVersion Include="Microsoft.Extensions.Logging" Version="8.0.1" />
+		  <PackageVersion Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+		  <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />
+		  <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
+		  <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1" />
+		  <PackageVersion Include="Microsoft.Extensions.Configuration.FileExtensions" Version="8.0.1" />
+		  <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+		  <PackageVersion Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+
+		  <PackageVersion Include="DotNetty.Codecs" Version="0.7.6" />
+		  <PackageVersion Include="DotNetty.Transport.Libuv" Version="0.7.6" />
+		  <PackageVersion Include="DotNetty.Transport" Version="0.7.6" />
+
+
+		  <PackageVersion Include="Grpc.Net.Client" Version="2.67.0" />
+		  <PackageVersion Include="Google.Protobuf" Version="3.28.3" />
+		  <PackageVersion Include="Grpc.Tools" Version="2.67.0" />
+		  <PackageVersion Include="Grpc.AspNetCore" Version="2.67.0" />
+
+		  <PackageVersion Include="Microsoft.Extensions.Http" Version="8.0.1" />
+
+
+		  <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.11" />
+		  <PackageVersion Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="8.0.11" />
+		  <PackageVersion Include="Microsoft.AspNetCore.SignalR.Protocols.NewtonsoftJson" Version="8.0.11" />
+
+		  <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4"/>
+		  <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.10.0" />
+
+
+		  <PackageVersion Include="ApacheThrift" Version="0.21.0" />
+
+		  
+		  <PackageVersion Include="NLog" Version="5.3.4" />
+		  <PackageVersion Include="NLog.Extensions.Hosting" Version="5.3.15" />
+		  <PackageVersion Include="NLog.Extensions.Logging" Version="5.3.15" />
+		  <PackageVersion Include="SoapCore" Version="1.1.0.51" />
+		  <PackageVersion Include="System.Text.Encoding.CodePages" Version="8.0.0" />
+		  <PackageVersion Include="OpenTelemetry" Version="1.9.0" />
+
+
+
+		  <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+		  <PackageVersion Include="MSTest.TestAdapter" Version="3.6.1" />
+		  <PackageVersion Include="MSTest.TestFramework" Version="3.6.1" />
+	  </ItemGroup>
+</Project>
