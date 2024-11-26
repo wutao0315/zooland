@@ -31,44 +31,59 @@ public class HttpStub
         _httpClient.Timeout = TimeSpan.FromMilliseconds(timeout);
     }
 
-    public async Task<Stream> Request(IList<string> path, string contentType, string method, ParameterInfo[] parameters, object[] paras, IDictionary<string, string> headers)
+    public async Task<Stream> Request(bool isParameterInPath, IList<string> path, string contentType, string method, ParameterInfo[] parameters, object[] paras, IDictionary<string, string> headers)
     {
         try
         {
-            var (paraItems, fileItems) = GetDic(parameters, paras);
-
-            var paraDic = new Dictionary<string, string>(paraItems);
-
-            var pathList = new List<string>();
+            IList<string> pathList = new List<string>();
             var removeList = new List<string>();
-            foreach (var item in path)
-            {
-                var pathItem = item;
-                if (!item.Contains('{') || !item.Contains('}'))
-                {
-                    pathList.Add(pathItem);
-                    continue;
-                }
+            var paraList = new List<string>();
 
-                foreach (var dic in paraItems)
-                {
-                    if ($"{{{dic.Key}}}" == item)
-                    {
-                        removeList.Add(dic.Key);
-                        paraDic.Remove(dic.Key);
-                        pathItem = dic.Value;
-                        break;
-                    }
-                }
-                pathList.Add(pathItem);
-            }
-            string requestUri = $"/{string.Join('/', pathList)}";
+            IDictionary<string, string>? paraItems = null;
+            IDictionary<string, byte[]>? fileItems = null;
 
             var httpMethod = new HttpMethod(method);
+
+            if (isParameterInPath)
+            {
+                //减少不必要的反射
+                (paraItems, fileItems) = GetDic(parameters, paras);
+                var paraDic = new Dictionary<string, string>(paraItems);
+                foreach (var item in path)
+                {
+                    var pathItem = item;
+                    if (!item.Contains('{') || !item.Contains('}'))
+                    {
+                        pathList.Add(pathItem);
+                        continue;
+                    }
+
+                    foreach (var dic in paraItems)
+                    {
+                        if ($"{{{dic.Key}}}" == item)
+                        {
+                            removeList.Add(dic.Key);
+                            paraDic.Remove(dic.Key);
+                            pathItem = dic.Value;
+                            break;
+                        }
+                    }
+                    pathList.Add(pathItem);
+                }
+
+                if (httpMethod == HttpMethod.Get)
+                    paraList = paraDic.Select(para => para.Key + "=" + WebUtility.UrlEncode(para.Value)).ToList();
+            }
+            else 
+            {
+                pathList = path;
+            }
+            
+            string requestUri = $"/{string.Join('/', pathList)}";
             var relatedUrl = requestUri;
             if (httpMethod == HttpMethod.Get)
             {
-                relatedUrl = $"{requestUri}?{string.Join("&", paraDic.Select(para => para.Key + "=" + WebUtility.UrlEncode(para.Value)))}";
+                relatedUrl = $"{requestUri}?{string.Join("&", paraList)}";
             }
 
             using HttpContent? content = GetContent(contentType, parameters, paras, paraItems, fileItems, removeList);
@@ -102,17 +117,25 @@ public class HttpStub
     private HttpContent? GetContent(string contentType,
         ParameterInfo[] parameters,
         object[] paras,
-        IDictionary<string, string> paraItems,
-        IDictionary<string, byte[]> fileItems,
+        IDictionary<string, string>? paraItems,
+        IDictionary<string, byte[]>? fileItems,
         IList<string> removeList)
     {
         HttpContent? content = null;
         switch (contentType)
         {
             case "application/x-www-form-urlencoded":
+                if (paraItems == null)
+                {
+                    (paraItems, fileItems) = GetDic(parameters, paras);
+                }
                 content = new FormUrlEncodedContent(paraItems);
                 break;
             case "multipart/form-data":
+                if (paraItems == null || fileItems == null)
+                {
+                    (paraItems, fileItems) = GetDic(parameters, paras);
+                }
                 var multipartFormDataContent = new MultipartFormDataContent();
                 foreach (var item in paraItems)
                 {
@@ -141,7 +164,6 @@ public class HttpStub
         for (int i = 0; i < paras.Length; i++)
         {
             var para = paras[i];
-            //var paraType = para.GetType();
             var paraInfo = parameterInfos[i];
 
             if (string.IsNullOrWhiteSpace(paraInfo.Name) || removeList.Contains(paraInfo.Name, StringComparer.OrdinalIgnoreCase))
@@ -151,18 +173,6 @@ public class HttpStub
 
             paraDic.Add(paraInfo.Name, para);
 
-            //if (paraType.IsValueTypeOrString())
-            //{
-            //    paraDic.Add(paraInfo.Name, para.ToStringValueType());
-            //}
-            //else
-            //{
-            //    var paraPairs = ObjectUtil.ExecuteObj(para);
-            //    foreach (var paraPair in paraPairs)
-            //    {
-            //        paraDic[paraPair.Key] = paraPair.Value;
-            //    }
-            //}
         }
 
         if (paraDic.Count == 1)
@@ -214,36 +224,13 @@ public class HttpStub
 }
 
 
-public class ObjectUtil
+internal static class ObjectUtil
 {
     public static (Dictionary<string, string>, Dictionary<string, byte[]>) Execute(object obj, string prefix = "")
     {
         return ExecuteInternal(obj, prefix: prefix);
     }
-    //public static Dictionary<string, object> ExecuteObj(object obj, string prefix = "")
-    //{
-    //    var dictionary = new Dictionary<string, object>();
-    //    var type = obj.GetType();
-    //    var properties = type.GetProperties();
-
-    //    foreach (var property in properties)
-    //    {
-    //        var key = string.IsNullOrWhiteSpace(prefix) ? property.Name : $"{prefix}.{property.Name}";
-
-    //        var fastProp = FastProperty.GetOrCreate(property);
-    //        var value = fastProp.Get(obj);
-
-    //        if (value == null)
-    //        {
-    //            dictionary.Add(key, "");
-    //            continue;
-    //        }
-
-    //        dictionary.Add(key, value);
-    //    }
-
-    //    return dictionary;
-    //}
+   
     private static (Dictionary<string, string>, Dictionary<string, byte[]> dictionaryBytes) ExecuteInternal(
         object obj,
         string prefix = "",
@@ -335,9 +322,8 @@ public class ObjectUtil
 
         return (dictionary, dictionaryBytes);
     }
-}
-internal static class Extensions
-{
+
+
     internal static bool IsValueTypeOrString(this Type type)
     {
         return type.IsValueType || type == typeof(string);
@@ -352,11 +338,6 @@ internal static class Extensions
             _ => value.ToString()!
         };
     }
-
-    //internal static bool IsIEnumerable(this Type type)
-    //{
-    //    return type.IsAssignableFrom(typeof(IEnumerable));
-    //}
 
     internal static string ToStringLowerCase(this bool boolean)
     {
