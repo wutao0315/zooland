@@ -188,7 +188,7 @@ public class ZooyardInvoker
         await InvokeAsync<object>(context);
     }
 
-    Activity? newActivity;
+    private AsyncLocal<Activity?> newActivityLOCAL = new();
 
     public async Task<TT?> InvokeAsync<TT>(ProxyMethodResolverContext context)
     {
@@ -215,14 +215,14 @@ public class ZooyardInvoker
 
             var headers = new Dictionary<string, string?>();
 
-            newActivity = null;
+            newActivityLOCAL.Value = null;
             Activity? activity = Activity.Current;
 
             if (activity == null)
             {
-                newActivity = new Activity(ActivityName);
-                newActivity.Start();
-                InjectHeaders(newActivity, headers);
+                newActivityLOCAL.Value = new Activity(ActivityName);
+                newActivityLOCAL.Value.Start();
+                InjectHeaders(newActivityLOCAL.Value, headers);
 
                 foreach (var item in headers)
                 {
@@ -300,7 +300,7 @@ public class ZooyardInvoker
                         throw;
                     }
 
-                    newActivity?.Stop();
+                    newActivityLOCAL.Value?.Stop();
                     //todo after invoke
                     if (_interceptors != null && _interceptors.Count() > 0)
                     {

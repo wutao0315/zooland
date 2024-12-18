@@ -47,7 +47,7 @@ public sealed record RpcContext
     /// 
     /// @serial
     /// </summary>
-    public Type[]? ParameterTypes { get; set; }
+    public Type?[]? ParameterTypes { get; set; }
 
 
     /// <summary>
@@ -168,7 +168,7 @@ public sealed record RpcContext
         if (invocation != null)
         {
             MethodName = invocation.MethodInfo.Name;
-            ParameterTypes = (from item in invocation.Arguments select item.GetType()).ToArray();
+            ParameterTypes = (from item in invocation.Arguments select item?.GetType()).ToArray();
             Arguments = invocation.Arguments;
         }
         return this;

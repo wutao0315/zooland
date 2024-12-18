@@ -527,7 +527,8 @@ public class ZooyardPools : IZooyardPools
         //执行路由逻辑
         IList<URL> GetRouteUrls()
         {
-            var cacheKey = $"{invocation.ServiceName}{invocation.TargetType.FullName}{invocation.PointVersion()}";
+            var cacheKeyStr = $"{invocation.ServiceName}{invocation.TargetType.FullName}{invocation.PointVersion()}@{invocation.Url}";
+            var cacheKey = StringUtils.Md5(cacheKeyStr);
 
             if (_cacheRouteUrl.TryGetValue(cacheKey, out IList<URL>? val) && val != null)
             {
