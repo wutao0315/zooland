@@ -50,12 +50,12 @@ public class GrpcInvoker(ILogger logger, object _instance, int _clientTimeout) :
             var targetDescription = invocation.TargetType.GetCustomAttribute<RequestMappingAttribute>();
             if (targetDescription != null)
             {
-                header = targetDescription.Headers;
+                header = targetDescription.GetHeaders();
             }
             var methodDescription = invocation.MethodInfo.GetCustomAttribute<RequestMappingAttribute>();
             if (methodDescription != null)
             {
-                foreach (var item in methodDescription.Headers)
+                foreach (var item in methodDescription.GetHeaders())
                 {
                     header[item.Key] = item.Value;
                 }

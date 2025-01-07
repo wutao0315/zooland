@@ -4,6 +4,10 @@
 	  <IsPackable>false</IsPackable>
 	  <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="JintTest.cs" />
+  </ItemGroup>
   
 
   <ItemGroup>

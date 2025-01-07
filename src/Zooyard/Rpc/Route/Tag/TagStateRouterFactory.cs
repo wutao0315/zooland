@@ -8,7 +8,7 @@ public class TagStateRouterFactory(ILoggerFactory _loggerFactory, IRpcStateLooku
 {
     public const string NAME = "tag";
     public override string Name => NAME;
-    protected override IStateRouter CreateRouter(Type interfaceClass, URL address)
+    protected override IStateRouter CreateRouter(Type interfaceType, URL address)
     {
         return new TagStateRouter(_loggerFactory, _stateLookup, address);
     }

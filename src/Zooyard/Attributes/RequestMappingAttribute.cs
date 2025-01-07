@@ -23,11 +23,61 @@ public class RequestMappingAttribute : Attribute
     /// <summary>
     /// 指定request中必须包含某些参数值，才让该方法处理。
     /// </summary>
-    public List<Dictionary<string, string>> Params { get; init; } = new();
+    public string Params { get; init; } = string.Empty;
+    /// <summary>
+    /// 获取Params
+    /// </summary>
+    /// <returns></returns>
+    public Dictionary<string, string> GetParams()
+    {
+        var result = new Dictionary<string, string>();
+        if (string.IsNullOrWhiteSpace(Params))
+        {
+            return result;
+        }
+
+        var headerList = Params.Split(['&', ','], StringSplitOptions.RemoveEmptyEntries);
+        foreach (var item in headerList)
+        {
+            var kvList = item.Split('=', StringSplitOptions.RemoveEmptyEntries);
+            if (kvList.Length <= 1)
+            {
+                continue;
+            }
+            result[kvList[0]] = kvList[1];
+        }
+
+        return result;
+    }
     /// <summary>
     /// 指定request中必须包含某些指定的header值，才让该方法处理请求
     /// </summary>
-    public Dictionary<string, string> Headers { get; init; } = new();
+    public string Headers { get; init; } = string.Empty;
+    /// <summary>
+    /// 获取Headers
+    /// </summary>
+    /// <returns></returns>
+    public Dictionary<string, string> GetHeaders()
+    {
+        var result = new Dictionary<string, string>();
+        if (string.IsNullOrWhiteSpace(Headers))
+        {
+            return result;
+        }
+
+        var headerList = Headers.Split(['&', ','], StringSplitOptions.RemoveEmptyEntries);
+        foreach (var item in headerList)
+        {
+            var kvList = item.Split('=', StringSplitOptions.RemoveEmptyEntries);
+            if (kvList.Length <= 1)
+            {
+                continue;
+            }
+            result[kvList[0]] = kvList[1];
+        }
+
+        return result;
+    }
     /// <summary>
     /// 该参数在Rest接口中，代表通用返回类型封装 ResultInfo 代表当前接口的返回类型
     /// 该属性空代表不起作用，该属性设置后影响当前接口，并覆盖接口上的设置

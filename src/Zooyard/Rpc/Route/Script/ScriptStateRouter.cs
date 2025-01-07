@@ -10,7 +10,7 @@ public class ScriptStateRouter : AbstractStateRouter
 {
 
     public const string NAME = "SCRIPT_ROUTER";
-    private const int SCRIPT_ROUTER_DEFAULT_PRIORITY = 0;
+    //private const int SCRIPT_ROUTER_DEFAULT_PRIORITY = 0;
     //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ScriptStateRouter));
     private readonly ILogger _logger;
 
@@ -32,8 +32,9 @@ public class ScriptStateRouter : AbstractStateRouter
         {
             _engine.Execute(_rule);
             //function route(invokers, address, invocation, context) {
-            //    var ListOfString = System.Collections.Generic.List(System.String);
-            //    var list = new ListOfString();
+            //    var Zooyard = importNamespace('Zooyard')
+            //    var ListOfURL = System.Collections.Generic.List(Zooyard.URL);
+            //    var list = new ListOfURL();
             //    for (i = 0; i < invokers.Length; i++)
             //    {
             //        if ("10.20.153.10".equals(invokers[i].Host))
@@ -85,6 +86,8 @@ public class ScriptStateRouter : AbstractStateRouter
 
                 options.AllowClr();
 
+                options.AllowClr(typeof(URL).Assembly);
+
                 var limitMemory = address.GetParameter("limit_memory", 4_000_000);
                 // Limit memory allocations to 4 MB
                 options.LimitMemory(limitMemory);
@@ -121,14 +124,9 @@ public class ScriptStateRouter : AbstractStateRouter
         try
         {
             var result = _engine.Invoke("route", invokers, address, invocation, RpcContext.GetContext().Attachments);
-            var str = result.ToString();
-            var list = str.DeserializeJson(new List<string>());
-            var aa = new List<URL>();
-            foreach (var item in list)
-            {
-                aa.Add(URL.ValueOf(item));
-            }
-            return aa;
+            var listObj = result.ToObject();
+            var listResult = listObj as List<URL>;
+            return listResult ?? new ();
         }
         catch (Exception e)
         {

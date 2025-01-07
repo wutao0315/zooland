@@ -454,7 +454,7 @@ public class ZooyardPools : IZooyardPools
             var targetDescription = invocation.TargetType.GetCustomAttribute<RequestMappingAttribute>();
             if (targetDescription != null)
             {
-                foreach (var item in targetDescription.Headers)
+                foreach (var item in targetDescription.GetHeaders())
                 {
                     RpcContext.GetContext().SetAttachment(item.Key, item.Value);
                 }
@@ -462,7 +462,7 @@ public class ZooyardPools : IZooyardPools
             var methodDescription = invocation.MethodInfo.GetCustomAttribute<RequestMappingAttribute>();
             if (methodDescription != null)
             {
-                foreach (var item in methodDescription.Headers)
+                foreach (var item in methodDescription.GetHeaders())
                 {
                     RpcContext.GetContext().SetAttachment(item.Key, item.Value);
                 }
