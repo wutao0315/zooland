@@ -48,7 +48,7 @@ public abstract class AbstractLoadBalance : ILoadBalance
     }
     int CalculateWarmupWeight(int uptime, int warmup, int weight)
     {
-        int ww = (int)(uptime / (warmup / weight));
+        int ww = (uptime / (warmup / weight));
         return ww < 1 ? 1 : (ww > weight ? weight : ww);
     }
 }

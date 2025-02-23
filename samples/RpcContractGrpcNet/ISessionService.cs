@@ -2,7 +2,7 @@
 
 namespace MemberGrpc;
 
-[ZooyardGrpcNet("SessionService", typeof(MemberGrpc.SessionService.SessionServiceClient), Url = "http://localhost:6662?cluster=failfast&timeout=5000")]
+[ZooyardGrpcNet("SessionService", typeof(SessionService.SessionServiceClient), Url = "http://localhost:6662?cluster=failfast&timeout=5000")]
 public interface ISessionService
 {
     /// <summary>

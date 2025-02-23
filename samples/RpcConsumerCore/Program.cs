@@ -1,5 +1,4 @@
 ﻿using MemberGrpc;
-using RpcContractHttp;
 
 namespace RpcConsumerCore;
 
@@ -41,7 +40,7 @@ class Program
            services.AddLogging();
 
            services.AddMemoryCache();
-           services.AddRpc()
+           services.AddRpcDefault()
                .LoadFromConfig(config.GetSection("zooyard"))
                .AddHttp()
                .AddDotNetty()
@@ -61,15 +60,21 @@ class Program
                //)
                ;
 
-           services.AddSingleton<IHelloService, RpcContractHttp.HelloServiceClientTest>();
+           //services.AddSingleton<IHelloService, RpcContractHttp.HelloServiceClientTest>();
+           services.AddSingleton<RpcContractHttp.IHelloService, RpcContractHttp.HelloServiceClient>();
+           services.AddSingleton<RpcContractThrift.IHelloService, RpcContractThrift.HelloServiceClient>();
+           services.AddSingleton<RpcContractGrpcNet.IHelloNetService, RpcContractGrpcNet.HelloNetServiceClient>();
+           services.AddSingleton<RpcContractNetty.IHelloService, RpcContractNetty.HelloServiceClient>();
            //services.AddSingleton<IHelloService, RpcContractHttp.HelloServiceClient>();
 
-           using var bsp = services.BuildServiceProvider();
+           //using var bsp = services.BuildServiceProvider();
+
            //var helloServiceThrift = bsp.GetRequiredService<RpcContractThrift.IHelloService>();
            //var helloServiceGrpcNet = bsp.GetRequiredService<RpcContractGrpcNet.IHelloNetService>();
            //var helloServiceHttp = bsp.GetRequiredService<RpcContractHttp.IHelloService>();
            //var helloServiceNetty = bsp.GetRequiredService<RpcContractNetty.IHelloService>();
            //var sessionService = bsp.GetRequiredService<MemberGrpc.ISessionService>();
+
 
            services.AddHostedService<TestHostedService>();
            
@@ -111,11 +116,14 @@ public class TestHostedService(RpcContractHttp.IHelloService helloServiceHttp,
                         await CallWhile(async (helloword) => { await ThriftHello(helloServiceThrift, helloword); });
                         break;
                     case "http":
+
+                        var callNameVoid = await helloServiceHttp.CallNameVoid();
+
                         helloServiceHttp.CallName("test");
 
                         await CallWhile(async (helloword) => { await HttpHello(helloServiceHttp, helloword); });
 
-                        var callNameVoid = await helloServiceHttp.CallNameVoid();
+                       
                         Console.WriteLine(callNameVoid);
                         break;
                     //case "netty":

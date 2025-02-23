@@ -1,8 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
-using System.Reflection;
 using System.Text.RegularExpressions;
-using Zooyard.Attributes;
 using Zooyard.Management;
 using Zooyard.Rpc.Cache;
 using Zooyard.Rpc.Cluster;
@@ -38,8 +36,10 @@ public class ZooyardPools : IZooyardPools
     ///// <summary>
     ///// 注册中心的配置
     ///// </summary>
-    //private readonly IOptionsMonitor<FeignOption> _zooyard;
     private readonly IRpcStateLookup _proxyStateLookup;
+    /// <summary>
+    /// 配置更新
+    /// </summary>
     private readonly IDisposable _configChange;
     /// <summary>
     /// the service pools
@@ -82,6 +82,7 @@ public class ZooyardPools : IZooyardPools
         , IEnumerable<ICache> caches
         , IEnumerable<IStateRouterFactory> routerFactories
         , IRpcStateLookup proxyStateLookup
+        , Type? baseReturnType
         )
     {
         _logger = loggerFactory.CreateLogger<ZooyardPools>();
@@ -105,6 +106,8 @@ public class ZooyardPools : IZooyardPools
         {
             _routeFoctories[item.Name] = item;
         }
+
+        BaseReturnType = baseReturnType;
 
         _proxyStateLookup = proxyStateLookup;
         _configChange = _proxyStateLookup.OnChange(OnChanged);
@@ -235,6 +238,7 @@ public class ZooyardPools : IZooyardPools
         _recoveryTimer.Dispose();
         _configChange.Dispose();
     }
+    public Type? BaseReturnType { get; private set; }
     /// <summary>
     /// exec rpc
     /// </summary>
@@ -247,14 +251,15 @@ public class ZooyardPools : IZooyardPools
         //cache
         var cache = GetCache();
 
-        if (cache == null)
-        {
-            var result = await InvokeInner();
-            return result;
-        }
-
         var keyStr = $"{invocation.ServiceNamePoint()}{invocation.TargetType.FullName}.{invocation.MethodInfo.Name}@{invocation.Url}->{StringUtils.ToArgumentString(invocation.MethodInfo.GetParameters(), invocation.Arguments)}{invocation.PointVersion()}";
         var key = StringUtils.Md5(keyStr);
+
+        if (cache == null)
+        {
+            var result = await InvokeInner(key);
+            return result;
+        }
+        
         var value = cache.Get<T>(key);
         if (value != null)
         {
@@ -262,7 +267,7 @@ public class ZooyardPools : IZooyardPools
             return new RpcResult<T>(value);
         }
 
-        var resultInner = await InvokeInner();
+        var resultInner = await InvokeInner(key);
 
         if (resultInner != null
             && !resultInner.HasException
@@ -277,7 +282,8 @@ public class ZooyardPools : IZooyardPools
         (URL, IList<URL>) GetUrls()
         {
             //读取缓存
-            var cacheKeyStr = $"{invocation.ServiceName}{invocation.TargetType.FullName}{invocation.PointVersion()}@{invocation.Url}";
+            //var cacheKeyStr = $"{invocation.ServiceName}{invocation.TargetType.FullName}{invocation.PointVersion()}@{invocation.Url}";
+            var cacheKeyStr = invocation.ServiceName;//避免因基础路径差异导致的缓存浪费
             var cacheKey = StringUtils.Md5(cacheKeyStr);
 
             if (_cacheUrl.TryGetValue(cacheKey, out (URL, IList<URL>) val))
@@ -286,10 +292,12 @@ public class ZooyardPools : IZooyardPools
                 return val;
             }
 
-            var url = invocation.Url;
-
+            //清理掉路径信息
+            var url = invocation.Url with { Path="" };
+            //本地的配置信息
+            url = GetMetaUrl(url, invocation.Metadatas);
+            //配置中心的配置信息，配置中心和本地冲突时，配置中心的配置覆盖本地配置
             url = GetRouteMetaUrl(url, invocation.ServiceName);
-            //url = GetUrl(url, invocation.Url);
 
             var result = new List<URL>();
             if (_proxyStateLookup.TryGetService(invocation.ServiceName, out var service))
@@ -379,26 +387,6 @@ public class ZooyardPools : IZooyardPools
                 }
                 return url;
             }
-            //URL GetUrl(URL url, URL? u)
-            //{
-            //    if (u == null)
-            //    {
-            //        return url;
-            //    }
-            //    url = url.SetProtocol(u.Protocol);
-            //    url = url.SetUsername(u.Username);
-            //    url = url.SetPassword(u.Password);
-            //    url = url.SetHost(u.Host);
-            //    url = url.SetPort(u.Port);
-
-            //    url = url.SetPath(u.Path);
-
-            //    foreach (var item in u.Parameters)
-            //    {
-            //        url = url.AddParameter(item.Key, item.Value);
-            //    }
-            //    return url;
-            //}
         }
 
         // 获取客户端缓存
@@ -445,35 +433,42 @@ public class ZooyardPools : IZooyardPools
         }
 
         // 执行调用
-        async Task<IResult<T>?> InvokeInner()
+        async Task<IResult<T>?> InvokeInner(string cacheKey)
         {
-
             //get cached route urls
-            var routeUrls = GetRouteUrls();
-            var header = new Dictionary<string, string>();
-            var targetDescription = invocation.TargetType.GetCustomAttribute<RequestMappingAttribute>();
-            if (targetDescription != null)
+            var routeUrls = GetRouteUrls(cacheKey);
+
+            //var header = new Dictionary<string, string>();
+
+            //var targetDescription = invocation.TargetType.GetCustomAttribute<RequestMappingAttribute>();
+            //if (targetDescription != null)
+            //{
+            //    foreach (var item in targetDescription.GetHeaders())
+            //    {
+            //        RpcContext.GetContext().SetAttachment(item.Key, item.Value);
+            //    }
+            //}
+
+            //var methodDescription = invocation.MethodInfo.GetCustomAttribute<RequestMappingAttribute>();
+            //if (methodDescription != null)
+            //{
+            //    foreach (var item in methodDescription.GetHeaders())
+            //    {
+            //        RpcContext.GetContext().SetAttachment(item.Key, item.Value);
+            //    }
+            //}
+
+            foreach (var item in invocation.Headers)
             {
-                foreach (var item in targetDescription.GetHeaders())
-                {
-                    RpcContext.GetContext().SetAttachment(item.Key, item.Value);
-                }
-            }
-            var methodDescription = invocation.MethodInfo.GetCustomAttribute<RequestMappingAttribute>();
-            if (methodDescription != null)
-            {
-                foreach (var item in methodDescription.GetHeaders())
-                {
-                    RpcContext.GetContext().SetAttachment(item.Key, item.Value);
-                }
+                RpcContext.GetContext().SetAttachment(item.Key, item.Value);
             }
 
             //get pool
             var pool = GetClientPool(invocation);
-            //get load balance
-            var loadbalance = GetLoadBalance(proxyAddr, invocation);
             //get cluster
             var cluster = GetCluster(proxyAddr, invocation);
+            //get load balance
+            var loadbalance = GetLoadBalance(proxyAddr, invocation);
             //bad urls
             var badUrls = _badUrls.GetOrAdd(invocation.TargetType.FullName!, new List<BadUrl>());
 
@@ -525,10 +520,10 @@ public class ZooyardPools : IZooyardPools
         }
 
         //执行路由逻辑
-        IList<URL> GetRouteUrls()
+        IList<URL> GetRouteUrls(string cacheKey)
         {
-            var cacheKeyStr = $"{invocation.ServiceName}{invocation.TargetType.FullName}{invocation.PointVersion()}@{invocation.Url}";
-            var cacheKey = StringUtils.Md5(cacheKeyStr);
+            //var cacheKeyStr = $"{invocation.ServiceName}{invocation.TargetType.FullName}{invocation.PointVersion()}@{invocation.Url}@{invocation.MethodInfo.Name}";
+            //var cacheKey = StringUtils.Md5(cacheKeyStr);
 
             if (_cacheRouteUrl.TryGetValue(cacheKey, out IList<URL>? val) && val != null)
             {
@@ -554,9 +549,9 @@ public class ZooyardPools : IZooyardPools
             if (!string.IsNullOrWhiteSpace(key)
                 && _loadBalances.ContainsKey(key)
                 && key != NoneStateRouterFactory.NAME
-                && _routeFoctories.ContainsKey(key))
+                && _routeFoctories.TryGetValue(key, out var rf))
             {
-                routerFactory = _routeFoctories[key];
+                routerFactory = rf;
             }
 
             //执行过滤逻辑
@@ -656,6 +651,8 @@ public class ZooyardPools : IZooyardPools
 
             return result;
         }
+
+        
     }
 
     /// <summary>

@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Options;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Zooyard.Management;
 
 namespace Zooyard.Rpc.Cache.Support;
@@ -13,14 +12,10 @@ public class LruCacheData<TKey, TValue>
     private static readonly ReaderWriterLockSlim rwl = new();
     private readonly Timer _cleanupTimer;
 
-    //private readonly IOptionsMonitor<ZooyardOption> _zooyard;
-    //private int _maxSize => _zooyard.CurrentValue.Meta.GetValue("cache.size", 1000);
-    //private TimeSpan _timeOut=> TimeSpan.FromMilliseconds(_zooyard.CurrentValue.Meta.GetValue("cache.timeout", 60000));
     private readonly IRpcStateLookup _stateLookup;
     private int _maxSize => _stateLookup.GetGlobalMataValue("cache.size", 1000);
     private TimeSpan _timeOut => TimeSpan.FromMilliseconds(_stateLookup.GetGlobalMataValue("cache.timeout", 60000));
 
-    //public LruCacheData(IOptionsMonitor<ZooyardOption> zooyard)
     public LruCacheData(IRpcStateLookup stateLookup)
     {
         //int itemExpiryTimeout, int maxCacheSize = 100, int memoryRefreshInterval = 1000

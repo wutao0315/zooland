@@ -28,7 +28,7 @@ namespace ZooyardTest
             //services.Configure<NettyOption>(config.GetSection("netty"));
             //services.Configure<ThriftOption>(config.GetSection("thrift"));
             //services.Configure<ZooyardOption>(config.GetSection("zooyard"));
-            services.AddRpc()
+            services.AddRpcDefault()
                 .LoadFromConfig(config.GetSection("zooyard"))
                 .AddHttp();
             services.AddLogging();

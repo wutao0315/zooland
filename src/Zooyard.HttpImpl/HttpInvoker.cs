@@ -23,9 +23,9 @@ public class HttpInvoker(ILogger logger, IHttpClientFactory _instance, int _clie
             methodName = methodName[..^endStr.Length];
         }
 
-        var isParameterInPath = _url.Path.Contains('{')&&_url.Path.Contains('}');
+        //var isParameterInPath = invocation.Url.Path.Contains('{')&& invocation.Url.Path.Contains('}');
 
-        var pathList = _url.Path?.Split('/', StringSplitOptions.RemoveEmptyEntries) ?? [];
+        var pathList = invocation.Url.Path?.Split('/', StringSplitOptions.RemoveEmptyEntries) ?? [];
         var pathUrl = new List<string>(pathList);
         var method = DEFAULT_METHODTYPE;
         var contentType = DEFAULT_CONTENTTYPE;
@@ -36,10 +36,10 @@ public class HttpInvoker(ILogger logger, IHttpClientFactory _instance, int _clie
         {
             if (!string.IsNullOrWhiteSpace(targetDescription.Value)) 
             {
-                if (!isParameterInPath) 
-                {
-                    isParameterInPath = targetDescription.Value.Contains('{') && targetDescription.Value.Contains('}');
-                }
+                //if (!isParameterInPath) 
+                //{
+                //    isParameterInPath = targetDescription.Value.Contains('{') && targetDescription.Value.Contains('}');
+                //}
 
                 pathUrl.AddRange(targetDescription.Value.Split('/', StringSplitOptions.RemoveEmptyEntries));
             }
@@ -49,10 +49,10 @@ public class HttpInvoker(ILogger logger, IHttpClientFactory _instance, int _clie
         {
             if (!string.IsNullOrWhiteSpace(methodDescription.Value))
             {
-                if (!isParameterInPath)
-                {
-                    isParameterInPath = methodDescription.Value.Contains('{') && methodDescription.Value.Contains('}');
-                }
+                //    if (!isParameterInPath)
+                //    {
+                //        isParameterInPath = methodDescription.Value.Contains('{') && methodDescription.Value.Contains('}');
+                //    }
 
                 var methodNames = methodDescription.Value.Split('/', StringSplitOptions.RemoveEmptyEntries);
                 pathUrl.AddRange(methodNames);
@@ -72,7 +72,7 @@ public class HttpInvoker(ILogger logger, IHttpClientFactory _instance, int _clie
         string? value = null;
         try
         {
-            using var stream = await stub.Request(isParameterInPath, pathUrl, contentType, method, parameters, invocation.Arguments, RpcContext.GetContext().Attachments);
+            using var stream = await stub.Request(pathUrl, contentType, method, parameters, invocation.Arguments, RpcContext.GetContext().Attachments);
             if (stream == null)
             {
                 throw new Exception($"{nameof(stream)} is null");

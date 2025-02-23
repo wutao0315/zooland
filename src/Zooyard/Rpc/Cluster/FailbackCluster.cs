@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using Zooyard.Diagnositcs;
-//using Zooyard.Logging;
 
 namespace Zooyard.Rpc.Cluster;
 
@@ -11,8 +10,6 @@ namespace Zooyard.Rpc.Cluster;
 /// </summary>
 public class FailbackCluster : AbstractCluster
 {
-    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(FailbackCluster));
-    //public FailbackCluster(IEnumerable<ICache> caches) : base(caches) { }
     public FailbackCluster(ILogger<FailbackCluster> logger) : base(logger) { }
     public override string Name => NAME;
     public const string NAME = "failback";
@@ -104,7 +101,7 @@ public class FailbackCluster : AbstractCluster
 
         CheckInvokers(invokers, invocation, address);
 
-        var invoker = base.Select(loadbalance, invocation, invokers, disabledUrls);
+        var invoker = base.Select(address, loadbalance, invocation, invokers, disabledUrls);
 
         IResult<T> result;
         var watch = Stopwatch.StartNew();

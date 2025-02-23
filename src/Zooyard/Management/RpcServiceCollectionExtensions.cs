@@ -1,4 +1,9 @@
-﻿using Zooyard;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
+using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
+using Zooyard;
 using Zooyard.Attributes;
 using Zooyard.Configuration;
 using Zooyard.Configuration.ConfigProvider;
@@ -6,11 +11,6 @@ using Zooyard.Management;
 using Zooyard.Rpc;
 using Zooyard.Rpc.Support;
 using Zooyard.ServiceDiscovery;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Logging;
-using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -23,14 +23,36 @@ public static class RpcServiceCollectionExtensions
     /// <summary>
     /// Adds Rpc's services to Dependency Injection.
     /// </summary>
-    public static IRpcBuilder AddRpc(this IServiceCollection services)
+    public static IRpcBuilder AddRpcDefault(this IServiceCollection services)
     {
         var builder = new RpcBuilder(services);
         builder
-            .AddConfigBuilder()
+            .AddConfigBuilder(typeof(ResponseDataResult<>))
+            .AddRuntimeStateManagers()
+            .AddConfigManager()
+            .AddInstanceResolver()
+            .AddInterceptor<ResponseRpcInterceptor>();
+
+        return builder;
+    }
+
+    /// <summary>
+    /// Adds Rpc's services to Dependency Injection.
+    /// </summary>
+    public static IRpcBuilder AddRpc(this IServiceCollection services, Type? baseReturnType = null, Type? baseInterceptor = null)
+    {
+        
+        var builder = new RpcBuilder(services);
+        builder
+            .AddConfigBuilder(baseReturnType)
             .AddRuntimeStateManagers()
             .AddConfigManager()
             .AddInstanceResolver();
+
+        if (baseInterceptor != null) 
+        {
+            builder.AddInterceptor(baseInterceptor);
+        }
 
         return builder;
     }
@@ -57,7 +79,13 @@ public static class RpcServiceCollectionExtensions
     public static IRpcBuilder AddInterceptor<T>(this IRpcBuilder builder)
         where T: class, IInterceptor
     {
-        builder.Services.TryAddSingleton<IInterceptor, T>();
+        builder.AddInterceptor(typeof(T));
+        return builder;
+    }
+
+    public static IRpcBuilder AddInterceptor(this IRpcBuilder builder, Type type)
+    {
+        builder.Services.TryAddSingleton(typeof(IInterceptor), type);
         return builder;
     }
 

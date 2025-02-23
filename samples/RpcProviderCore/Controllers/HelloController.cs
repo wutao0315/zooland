@@ -9,35 +9,33 @@ public class HelloController : ControllerBase
 {
     public string ServiceName { get; set; } = "A";
 
-    [HttpGet]
-    [Route("callnamevoid")]
-    public string CallNameVoid()
+    [HttpGet("callnamevoid")]
+    public IActionResult CallNameVoid()
     {
         Console.WriteLine($"call CallNameVoid![{ServiceName}]");
-        return $"CallNameVoid;From[{ServiceName}]";
+        return Ok(new { code=0,msg="ok",data= $"CallNameVoid;From[{ServiceName}]" });
     }
-    [HttpGet]
-    [Route("callname")]
-    public void CallName(string name)
+    [HttpGet("callname")]
+    public IActionResult CallName(string name)
     {
         Console.WriteLine($"{name} call CallName![{ServiceName}]");
+
+        return Ok(new { code = 0, msg = "ok"});
     }
-    [HttpGet]
-    [Route("callvoid")]
-    public void CallVoid()
+    [HttpGet("callvoid")]
+    public IActionResult CallVoid()
     {
         Console.WriteLine($"call CallVoid![{ServiceName}]");
+        return Ok(new { code = 0, msg = "ok" });
     }
-    [HttpGet]
-    [Route("hello/{name}")]
-    public string Hello(string name)
+    [HttpGet("hello/{name}")]
+    public IActionResult Hello(string name)
     {
         Console.WriteLine($"{name} call Hello![{ServiceName}]");
-        return $"hello {name};From[{ServiceName}]";
+        return Ok(new { code = 0, msg = "ok", data = $"hello {name};From[{ServiceName}]" });
     }
-    [HttpGet]
-    [Route("sayhello/{name}")]
-    public HelloDTO.HelloModel SayHello(string name)
+    [HttpGet("sayhello/{name}")]
+    public IActionResult SayHello(string name)
     {
         Console.WriteLine($"{name} call SayHello![{ServiceName}]");
         var result = new HelloDTO.HelloModel
@@ -46,14 +44,13 @@ public class HelloController : ControllerBase
             Gender = "male",
             Head = $"head.png"
         };
-        return result;
+        return Ok(new { code = 0, msg = "ok", data = result });
     }
-    [HttpPost]
-    [Route("showhello")]
-    public string ShowHello(HelloDTO.HelloModel hello)
+    [HttpPost("showhello")]
+    public IActionResult ShowHello(HelloDTO.HelloModel hello)
     {
         Console.WriteLine($"{hello.Name} call SayHello![{ServiceName}]");
         var result = $"name:{hello.Name}；gender:{hello.Gender}；avatar:{hello.Head};From[{ServiceName}]";
-        return result;
+        return Ok(new { code = 0, msg = "ok", data = result });
     }
 }

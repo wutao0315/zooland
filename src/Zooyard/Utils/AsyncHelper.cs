@@ -6,8 +6,7 @@
 /// </summary>
 internal static class AsyncHelper
 {
-    private static readonly TaskFactory _myTaskFactory =
-        new TaskFactory(CancellationToken.None, TaskCreationOptions.None, TaskContinuationOptions.None, TaskScheduler.Default);
+    //private static readonly TaskFactory _myTaskFactory = new (CancellationToken.None, TaskCreationOptions.None, TaskContinuationOptions.None, TaskScheduler.Default);
 
     /// <summary>
     /// 同步执行
@@ -15,7 +14,9 @@ internal static class AsyncHelper
     /// <param name="func">任务</param>
     public static void RunSync(Func<Task> func)
     {
-        _myTaskFactory.StartNew(func).Unwrap().GetAwaiter().GetResult();
+        func().ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing).GetAwaiter().GetResult();
+        //func().ConfigureAwait(false).GetAwaiter().GetResult();
+        //_myTaskFactory.StartNew(func).Unwrap().ConfigureAwait(false).GetAwaiter().GetResult();
     }
 
     /// <summary>
@@ -26,6 +27,8 @@ internal static class AsyncHelper
     /// <returns></returns>
     public static TResult RunSync<TResult>(Func<Task<TResult>> func)
     {
-        return _myTaskFactory.StartNew(func).Unwrap().GetAwaiter().GetResult();
+        return func().ConfigureAwait(false).GetAwaiter().GetResult();
+        //return func().ConfigureAwait(false).GetAwaiter().GetResult();
+        //return _myTaskFactory.StartNew(func).Unwrap().ConfigureAwait(false).GetAwaiter().GetResult();
     }
 }

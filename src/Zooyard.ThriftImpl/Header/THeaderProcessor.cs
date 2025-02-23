@@ -50,15 +50,15 @@ public class THeaderProcessor : ITAsyncProcessor
         var hostAddress = "";
         if (iprot.Transport is TSocketTransport socket)
         {
-            hostAddress = socket.Host.MapToIPv4().ToString();
+            hostAddress = socket.Host?.MapToIPv4()?.ToString()??"";
         }
         else if (iprot.Transport is TTlsSocketTransport socketTls)
         {
-            hostAddress = socketTls.Host.MapToIPv4().ToString();
+            hostAddress = socketTls.Host?.MapToIPv4()?.ToString()??"";
         }
         else if (iprot.Transport is THttpTransport http)
         {
-            hostAddress = http.RequestHeaders.Host!;
+            hostAddress = http.RequestHeaders.Host??"";
         }
         //else if (iprot.Transport is TStreamTransport stream)
         //{

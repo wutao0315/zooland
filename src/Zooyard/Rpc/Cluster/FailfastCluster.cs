@@ -32,7 +32,7 @@ public class FailfastCluster : AbstractCluster
 
         CheckInvokers(invokers, invocation, address);
 
-        var invoker = base.Select(loadbalance, invocation, invokers, disabledUrls);
+        var invoker = base.Select(address, loadbalance, invocation, invokers, disabledUrls);
 
         var watch = Stopwatch.StartNew();
         try

@@ -1,28 +1,27 @@
-﻿using System.ComponentModel;
-using Zooyard;
-using Zooyard.Attributes;
+﻿using Zooyard.Attributes;
 
 namespace RpcContractHttp;
 
-[ZooyardHttp("HttpHelloService", Url = "http://127.0.0.1:10010/{domain}/hello", Config ="domain=Appsettings:Domain@testdomain")]
+//[ZooyardHttp("HttpHelloService", Url = "http://127.0.0.1:10010/{domain}/hello", Config ="domain=Appsettings:Domain@testdomain")]
+[ZooyardHttp("HttpHelloService", Url = "http://127.0.0.1:10010/hello")]
 public interface IHelloService
 {
-    [GetMapping("CallNameVoid")]
+    [GetMapping("callnamevoid")]
     Task<string?> CallNameVoid();
 
-    [GetMapping("CallName")]
+    [GetMapping("callname")]
     void CallName(string name);
 
-    [GetMapping("CallVoid")]
+    [GetMapping("callvoid")]
     Task CallVoid();
 
-    [GetMapping("Hello/{name}")]
+    [GetMapping("hello/{name}")]
     Task<string?> Hello(string name);
 
-    [GetMapping("SayHello/{name}")]
+    [GetMapping("sayhello/{name}")]
     Task<HelloResult?> SayHello(string name);
 
-    [PostMapping("ShowHello", Consumes = "application/json")]
+    [PostMapping("showhello", Consumes = "application/json")]
     Task<string?> ShowHello(HelloResult name);
 
     [PostMapping("getpage", Consumes = "application/json")]

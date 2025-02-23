@@ -1,14 +1,11 @@
-﻿using Microsoft.Extensions.Configuration;
-using System.Xml.Linq;
-
-namespace Zooyard.Attributes;
+﻿namespace Zooyard.Attributes;
 
 
 /// <summary>
 /// 接口代理
 /// </summary>
 [AttributeUsage(AttributeTargets.Interface)]
-public abstract class ZooyardAttribute : Attribute
+public abstract class ZooyardAttribute : AbstractAttribute
 {
 
     /// <summary>
@@ -27,26 +24,29 @@ public abstract class ZooyardAttribute : Attribute
     /// 版本
     /// </summary>
     public string Version { get; init; } = "1.0.0";
+
+    public string Protocol { get; init; } = "http";
+
     private string _url = string.Empty;
     /// <summary>
     /// 默认路径和默认配置参数
     /// </summary>
-    public virtual string Url
+    public string Url
     {
         get
         {
-            if (_url.IndexOf("://") <= 0 || _url.IndexOf(":/") <= 0)
+            var idx = _url.IndexOf("://");
+            if (idx >= 0) 
             {
-                if (_url.StartsWith('/'))
+                if (idx == 0)
                 {
-                    return "http://" + ServiceName + _url;
+                    return $"{Protocol}{_url}";
                 }
-                else
-                {
-                    return "http://" + ServiceName + "/" + _url;
-                }
+
+                return _url;
             }
-            return _url;
+
+            return $"{Protocol}://{ServiceName}{(_url.StartsWith('/') ? _url : "/" + _url)}";
         }
         init => _url = value;
     }
@@ -62,7 +62,7 @@ public abstract class ZooyardAttribute : Attribute
     /// 该参数在Rest接口中，代表通用返回类型封装 ResultInfo 代表当前接口的返回类型
     /// 该属性空代表不起作用，该属性设置后影响所有接口
     /// </summary>
-    public Type? BaseReturnType { get; set; } = typeof(ResponseDataResult<>);
+    public Type? BaseReturnType { get; set; }
     /// <summary>
     ///构造函数
     /// </summary>

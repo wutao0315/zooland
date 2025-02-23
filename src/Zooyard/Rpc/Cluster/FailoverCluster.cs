@@ -53,7 +53,7 @@ public class FailoverCluster : AbstractCluster
                 CheckInvokers(invokers, invocation, address);
             }
 
-            var url = base.Select(loadbalance, invocation, invokers, disabledUrls, invoked);
+            var url = base.Select(address, loadbalance, invocation, invokers, disabledUrls, invoked);
             invoked.Add(url);
             RpcContext.GetContext().SetInvokers(invoked);
 
@@ -78,7 +78,7 @@ public class FailoverCluster : AbstractCluster
                                 + " was successful by the provider " + url.Address
                                 + ", but there have been failed providers " + string.Join(",", providers)
                                 + " (" + providers.Count + "/" + invokers.Count
-                                + ") from the registry " + address.ToString().TrimEnd('/') + "/" + methodAttr?.Value?.TrimStart('/')
+                                + ") from the registry " + GetPath(invocation, address)
                                 + " on the consumer " + Local.HostName
                                 + " using the service version " + invocation.Version
                                 + ". Last error is: " + le.Message);
@@ -141,7 +141,7 @@ public class FailoverCluster : AbstractCluster
                + invocation.MethodInfo.Name + " in the service " + invocation.TargetType.FullName
                + ". Tried " + len + " times of the providers " + string.Join(",", providers)
                + " (" + providers.Count + "/" + invokers.Count
-               + ") from the registry " + address.ToString().TrimEnd('/') + "/" + methodAttr?.Value?.TrimStart('/')
+               + ") from the registry " + GetPath(invocation, address)
                 + " on the consumer " + Local.HostName
                + " using the service version " + invocation.Version 
                + ". Last error is: "

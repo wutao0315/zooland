@@ -1,5 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Diagnostics;
+using System.Linq;
+using System.Net.Mime;
+using System.Reflection;
+using Zooyard.Attributes;
 using Zooyard.Diagnositcs;
 //using Zooyard.Logging;
 
@@ -36,20 +40,21 @@ public abstract class AbstractCluster : ICluster
     /// a)先lb选择，如果在selected列表中 或者 不可用且做检验时，进入下一步(重选),否则直接返回
     ///  b)重选验证规则：selected > available .保证重选出的结果尽量不在select中，并且是可用的
     /// </summary>
+    /// <param name="address"></param>
     /// <param name="loadbalance"></param>
     /// <param name="invocation"></param>
     /// <param name="invokers"></param>
     /// <param name="disabledUrls"></param>
     /// <param name="selected"> 已选过的invoker.注意：输入保证不重复</param>
     /// <returns></returns>
-    protected URL Select(ILoadBalance loadbalance, IInvocation invocation, IList<URL>? invokers, IList<BadUrl> disabledUrls, IList<URL>? selected = null)
+    protected URL Select(URL address, ILoadBalance loadbalance, IInvocation invocation, IList<URL>? invokers, IList<BadUrl> disabledUrls, IList<URL>? selected = null)
     {
         if (invokers == null || invokers.Count == 0)
             throw new RpcException("invokers is null or empty");
 
         string methodName = invocation.MethodInfo.Name;
 
-        var sticky = invokers[0].GetMethodParameter<bool>(methodName, CLUSTER_STICKY_KEY, DEFAULT_CLUSTER_STICKY);
+        var sticky = address.GetMethodParameter<bool>(methodName, CLUSTER_STICKY_KEY, DEFAULT_CLUSTER_STICKY);
         //ignore overloaded method
         if (invokers != null && stickyInvoker != null && !invokers.Contains(stickyInvoker))
         {
@@ -219,11 +224,37 @@ public abstract class AbstractCluster : ICluster
             throw new RpcException("Failed to invoke the method "
                     + invocation.MethodInfo.Name + " in the service " + invocation.TargetType.Name
                     + ". No provider available for the service " + invocation.ServiceName
-                    + " from registry " + address
+                    + " from registry " + GetPath(invocation, address)
                     //+ " on the consumer " + NetUtils.getLocalHost()
                     + " using the zooyard version " + invocation.Version
                     + ". Please check if the providers have been started and registered.");
         }
+    }
+
+    protected string GetPath(IInvocation invocation, URL address) 
+    {
+        var methodName = invocation.MethodInfo.Name;
+        var pathList = invocation.Url.Path?.Split('/', StringSplitOptions.RemoveEmptyEntries) ?? [];
+        var pathUrl = new List<string>(pathList);
+
+        var targetDescription = invocation.TargetType.GetCustomAttribute<RequestMappingAttribute>();
+        if (targetDescription != null && !string.IsNullOrWhiteSpace(targetDescription.Value))
+        {
+            pathUrl.AddRange(targetDescription.Value.Split('/', StringSplitOptions.RemoveEmptyEntries));
+        }
+        var methodDescription = invocation.MethodInfo.GetCustomAttribute<RequestMappingAttribute>();
+        if (methodDescription != null && !string.IsNullOrWhiteSpace(methodDescription.Value))
+        {
+            var methodNames = methodDescription.Value.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            pathUrl.AddRange(methodNames);
+        }
+        else
+        {
+            pathUrl.Add(methodName);
+        }
+
+        var url = address with { Path = string.Join("/", pathUrl) };
+        return url.ToFullString();
     }
 
     public virtual async Task<IClusterResult<T>> Invoke<T>(IClientPool pool, 

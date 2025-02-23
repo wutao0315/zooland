@@ -1,8 +1,5 @@
 ﻿using System.Reflection;
-using System.Threading;
 using Zooyard.Attributes;
-using Zooyard.Rpc;
-using Zooyard.Utils;
 
 namespace Zooyard;
 
@@ -11,7 +8,7 @@ public interface IInvocation
     public string Id { get; }
     string ServiceName { get; }
     string Version { get; }
-    URL? Url { get; }
+    URL Url { get; }
     Type TargetType { get; }
     MethodInfo MethodInfo { get; }
     object[] Arguments { get; }
@@ -30,7 +27,14 @@ public interface IInvocation
     void SetObjectAttachment(string key, object value);
     object? GetObjectAttachment(string key, object? defaultValue = default);
 
-   
+    IDictionary<string, string> Metadatas { get; }
+    IDictionary<string, string> Headers { get; }
+    IDictionary<string, string> Params { get; }
+
+    //void SetMetadata(string key, string value);
+    //T? GetMetadata<T>(string key, T? defaultValue = default);
+
+
 }
 
 public class RpcInvocation : IInvocation
@@ -84,6 +88,10 @@ public class RpcInvocation : IInvocation
 
     private Dictionary<string, object> attachments = new ();
     private Dictionary<object, object> attributes = new ();
+
+    private Dictionary<string, string> metadatas = new();
+    private Dictionary<string, string> headers = new();
+    private Dictionary<string, string> parameters = new();
     public string Id { get; }
     public string ServiceName { get; }
     public string Version { get;}
@@ -109,6 +117,7 @@ public class RpcInvocation : IInvocation
     {
         return attributes;
     }
+
     public string ServiceNamePoint()
     {
         var result = string.IsNullOrWhiteSpace(ServiceName) ? "" : $"{ServiceName}.";
@@ -187,4 +196,34 @@ public class RpcInvocation : IInvocation
             attachmentLock.Release();
         }
     }
+
+    public IDictionary<string, string> Metadatas => metadatas;
+    public IDictionary<string, string> Headers => headers;
+    public IDictionary<string, string> Params => parameters;
+
+    //public void SetMetadata(string key, string value)
+    //{
+    //    if (metadata == null)
+    //    {
+    //        metadata = new Dictionary<string, string>();
+    //    }
+    //    metadata[key] = value;
+    //}
+    //public T? GetMetadata<T>(string key, T? defaultValue = default)
+    //{
+    //    if (metadata == null)
+    //    {
+    //        return defaultValue;
+    //    }
+    //    metadata.TryGetValue(key, out var value);
+    //    if (value is string strValue)
+    //    {
+    //        if (string.IsNullOrWhiteSpace(strValue))
+    //        {
+    //            return defaultValue;
+    //        }
+    //    }
+
+    //    return (T?)value.ChangeType(typeof(T));
+    //}
 }

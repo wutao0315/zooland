@@ -1,13 +1,11 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using Zooyard.Diagnositcs;
-//using Zooyard.Logging;
 
 namespace Zooyard.Rpc.Cluster;
 
 public class BroadcastCluster : AbstractCluster
 {
-    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(BroadcastCluster));
     public BroadcastCluster(ILogger<BroadcastCluster> logger) : base(logger) { }
     public override string Name => NAME;
     public const string NAME = "broadcast";

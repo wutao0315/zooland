@@ -48,7 +48,7 @@ public class ForkingCluster : AbstractCluster
             for (int i = 0; i < forks; i++)
             {
                 //在invoker列表(排除selected)后,如果没有选够,则存在重复循环问题.见select实现.
-                var invoker = base.Select(loadbalance, invocation, invokers, disabledUrls, selected);
+                var invoker = base.Select(address, loadbalance, invocation, invokers, disabledUrls, selected);
                 if (!selected.Contains(invoker))
                 {//防止重复添加invoker
                     selected.Add(invoker);

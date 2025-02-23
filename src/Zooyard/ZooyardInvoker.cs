@@ -12,12 +12,14 @@ using Zooyard.DynamicProxy;
 using Zooyard.Exceptions;
 using Zooyard.Rpc;
 using Zooyard.Utils;
+using Zooyard.Management;
 
 namespace Zooyard;
 public class ZooyardInvoker
 {
     private readonly ILogger _logger;
     private readonly IZooyardPools _zooyardPools;
+    private readonly IRpcStateLookup _proxyStateLookup;
     private readonly IEnumerable<IInterceptor> _interceptors;
     private readonly ZooyardAttribute _zooyardAttribute;
     private readonly string _replacedUrl;
@@ -29,6 +31,7 @@ public class ZooyardInvoker
         }
         _logger = logger;
         _zooyardAttribute = zooyardAttribute;
+        _proxyStateLookup = serviceProvider.GetRequiredService<IRpcStateLookup>();
         _zooyardPools = serviceProvider.GetRequiredService<IZooyardPools>(); ;
         _interceptors = serviceProvider.GetRequiredService<IEnumerable<IInterceptor>>();
         var configuration = serviceProvider.GetRequiredService<IConfiguration>();
@@ -197,7 +200,6 @@ public class ZooyardInvoker
         TT? returnValue = default;
         try
         {
-
             var url = _replacedUrl;
 
             //todo before invoke
@@ -210,6 +212,41 @@ public class ZooyardInvoker
             }
 
             var icn = new RpcInvocation(Guid.NewGuid().ToString("N"), _zooyardAttribute, url, context.Packed.DeclaringType, context.Method, context.Packed.Args);
+
+            var targetDescription = icn.TargetType.GetCustomAttribute<ZooyardAttribute>();
+            if (targetDescription != null)
+            {
+                foreach (var item in targetDescription.GetHeaders())
+                {
+                    icn.Headers[item.Key] = item.Value;
+                }
+                foreach (var item in targetDescription.GetMetadatas())
+                {
+                    icn.Metadatas[item.Key] = item.Value;
+                }
+                foreach (var item in targetDescription.GetParams())
+                {
+                    icn.Params[item.Key] = item.Value;
+                }
+            }
+
+            var methodDescription = icn.MethodInfo.GetCustomAttribute<RequestMappingAttribute>();
+            if (methodDescription != null)
+            {
+                foreach (var item in methodDescription.GetHeaders())
+                {
+                    icn.Headers[item.Key] = item.Value;
+                }
+                foreach (var item in methodDescription.GetMetadatas())
+                {
+                    icn.Metadatas[item.Key] = item.Value;
+                }
+                foreach (var item in methodDescription.GetParams())
+                {
+                    icn.Params[item.Key] = item.Value;
+                }
+            }
+
             var rpcContext = RpcContext.GetContext();
             rpcContext.SetInvocation(icn);
 
@@ -226,7 +263,8 @@ public class ZooyardInvoker
 
                 foreach (var item in headers)
                 {
-                    rpcContext.SetAttachment(item.Key, item.Value ?? "");
+                    icn.Headers[item.Key] = item.Value ?? "";
+                    //rpcContext.SetAttachment(item.Key, item.Value ?? "");
                 }
             }
             else
@@ -234,7 +272,8 @@ public class ZooyardInvoker
                 InjectHeaders(activity, headers);
                 foreach (var item in headers)
                 {
-                    rpcContext.SetAttachment(item.Key, item.Value ?? "");
+                    icn.Headers[item.Key] = item.Value ?? "";
+                    //rpcContext.SetAttachment(item.Key, item.Value ?? "");
                 }
             }
 
@@ -249,8 +288,9 @@ public class ZooyardInvoker
 
 
             IResult<TT>? result = null;
+
             //制定返回类型父类
-            var requstMapping = icn.TargetType.GetCustomAttribute<RequestMappingAttribute>();
+            var requstMapping = icn.MethodInfo.GetCustomAttribute<RequestMappingAttribute>();
             if (requstMapping != null && requstMapping.BaseReturnType != null && requstMapping.BaseReturnType != typeof(TT))
             {
                 result = await BaseReturnCall<RequestMappingAttribute>(requstMapping.BaseReturnType);
@@ -263,10 +303,20 @@ public class ZooyardInvoker
             {
                 result = await BaseReturnCall<ZooyardAttribute>(_zooyardAttribute.BaseReturnType);
             }
-            else
+            else if (_zooyardAttribute.BaseReturnType != null && _zooyardAttribute.BaseReturnType == typeof(TT))
             {
                 result = await ReturnCall<TT>();
             }
+            //全局设置基础返回父类
+            else if (_zooyardPools.BaseReturnType != null && _zooyardPools.BaseReturnType != typeof(TT))
+            {
+                result = await BaseReturnCall<ZooyardPools>(_zooyardPools.BaseReturnType);
+            }
+            else 
+            {
+                result = await ReturnCall<TT>();
+            }
+
 
             async Task<IResult<TT>?> BaseReturnCall<TA>(Type baseReturnType)
             {
@@ -289,13 +339,14 @@ public class ZooyardInvoker
                     object? resultObj = null;
                     try
                     {
+                        // begin invoke
                         var taskObj = (Task)constructedMethod.Invoke(_zooyardPools, [icn])!;
-
                         await taskObj;
+                        // end invoke
 
                         resultObj = taskObj.GetProperty<object>("Result");
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
                         throw;
                     }
@@ -313,7 +364,7 @@ public class ZooyardInvoker
                                 var tObj = (Task)afterConstructedMethod.Invoke(item, [icn, rpcContext, resultObj])!;
                                 await tObj;
                             }
-                            catch (Exception ex)
+                            catch (Exception)
                             {
                                 throw;
                             }
@@ -331,7 +382,7 @@ public class ZooyardInvoker
                         };
                         return result;
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
 
                         throw;
@@ -356,7 +407,7 @@ public class ZooyardInvoker
 
                         resultObj = taskObj.GetProperty<object>("Result");
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
                         throw;
                     }
@@ -375,7 +426,7 @@ public class ZooyardInvoker
                                 var tObj = (Task)afterConstructedMethod.Invoke(item, [icn, rpcContext, resultObj])!;
                                 await tObj;
                             }
-                            catch (Exception ex)
+                            catch (Exception)
                             {
                                 throw;
                             }
@@ -393,7 +444,7 @@ public class ZooyardInvoker
                         };
                         return result;
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
                         throw;
                     }
@@ -407,7 +458,10 @@ public class ZooyardInvoker
 
             async Task<IResult<TA>?> ReturnCall<TA>()
             {
+                // begin invoke
                 var resultInner = await _zooyardPools.Invoke<TA>(icn);
+                // end invoke
+
 
                 //todo after invoke
                 if (_interceptors != null && _interceptors.Count() > 0)

@@ -13,4 +13,6 @@ public interface IZooyardPools:IDisposable
     /// <returns></returns>
 
     Task<IResult<T>?> Invoke<T>(IInvocation invocation);
+
+    Type? BaseReturnType { get; }
 }

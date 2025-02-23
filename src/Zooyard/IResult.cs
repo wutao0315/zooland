@@ -1,4 +1,8 @@
-﻿namespace Zooyard;
+﻿using Microsoft.Extensions.Logging;
+using Zooyard.DynamicProxy;
+using Zooyard.Rpc;
+
+namespace Zooyard;
 
 public interface IResult
 {
@@ -79,12 +83,13 @@ public interface IBaseReturnResult
     T? Translate<T>();
 }
 
-public record ResponseDataResult
+public record ResponseDataResult 
 {
     public int Code { get; set; }
     public string Msg { get; set; } = string.Empty;
 }
-public record ResponseDataResult<T> : ResponseDataResult, IBaseReturnResult
+
+public record ResponseDataResult<T> : IBaseReturnResult
     where T : class
 {
     public T? Data { get; set; }
@@ -93,5 +98,43 @@ public record ResponseDataResult<T> : ResponseDataResult, IBaseReturnResult
     {
         var result = (T1?)Data.ChangeType(typeof(T1));
         return result;
+    }
+}
+
+/// <summary>
+/// 路径过滤器
+/// </summary>
+public class ResponseRpcInterceptor(ILogger<ResponseRpcInterceptor> _logger) : IInterceptor
+{
+    public async Task<string> UrlCall(string url, ProxyMethodResolverContext context)
+    {
+        await Task.CompletedTask;
+        return url;
+    }
+
+    public async Task BeforeCall(IInvocation invocation, RpcContext context)
+    {
+        await Task.CompletedTask;
+    }
+
+    public async Task AfterCall<T>(IInvocation invocation, RpcContext context, IResult<T>? obj)
+    {
+        if (obj != null && !obj.HasException && obj.Value is ResponseDataResult baseObj)
+        {
+            if (baseObj.Code != 0)
+            {
+                throw new ResponseRpcException(baseObj.Msg);
+            }
+        }
+        await Task.CompletedTask;
+    }
+
+    public int Order => -999;
+}
+
+public class ResponseRpcException : Exception
+{
+    public ResponseRpcException(string message) : base(message)
+    {
     }
 }

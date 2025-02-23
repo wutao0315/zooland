@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Runtime.Intrinsics.Arm;
+﻿using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using static Zooyard.Rpc.LoadBalance.ConsistentHashLoadBalance;
 
 namespace Zooyard.Rpc.LoadBalance;
 
@@ -38,20 +35,21 @@ public class ConsistentHashLoadBalance : AbstractLoadBalance
         var hash = Hash(Encoding.ASCII.GetBytes(item ?? ""));
         return (int)hash;
     }
-    private const UInt32 m = 0x5bd1e995;
-    private const Int32 r = 24;
 
-    public UInt32 Hash(Byte[] data, UInt32 seed = 0xc58f1a7b)
+    private const uint m = 0x5bd1e995;
+    private const int r = 24;
+
+    public uint Hash(byte[] data, uint seed = 0xc58f1a7b)
     {
         var length = data.Length;
         if (length == 0)
             return 0;
 
-        var h = seed ^ (UInt32)length;
+        var h = seed ^ (uint)length;
         var c = 0;
         while (length >= 4)
         {
-            var k = (UInt32)(
+            var k = (uint)(
                 data[c++]
                 | data[c++] << 8
                 | data[c++] << 16
@@ -66,12 +64,12 @@ public class ConsistentHashLoadBalance : AbstractLoadBalance
         switch (length)
         {
             case 3:
-                h ^= (UInt16)(data[c++] | data[c++] << 8);
-                h ^= (UInt32)(data[c] << 16);
+                h ^= (ushort)(data[c++] | data[c++] << 8);
+                h ^= (uint)(data[c] << 16);
                 h *= m;
                 break;
             case 2:
-                h ^= (UInt16)(data[c++] | data[c] << 8);
+                h ^= (ushort)(data[c++] | data[c] << 8);
                 h *= m;
                 break;
             case 1:

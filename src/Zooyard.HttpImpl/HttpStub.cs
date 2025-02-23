@@ -31,59 +31,46 @@ public class HttpStub
         _httpClient.Timeout = TimeSpan.FromMilliseconds(timeout);
     }
 
-    public async Task<Stream> Request(bool isParameterInPath, IList<string> path, string contentType, string method, ParameterInfo[] parameters, object[] paras, IDictionary<string, string> headers)
+    public async Task<Stream> Request(IList<string> path, string contentType, string method, ParameterInfo[] parameters, object[] paras, IDictionary<string, string> headers)
     {
         try
         {
-            IList<string> pathList = new List<string>();
+            var (paraItems, fileItems) = GetDic(parameters, paras);
+
+            var paraDic = new Dictionary<string, string>(paraItems);
+
+            var pathList = new List<string>();
             var removeList = new List<string>();
-            var paraList = new List<string>();
 
-            IDictionary<string, string>? paraItems = null;
-            IDictionary<string, byte[]>? fileItems = null;
 
-            var httpMethod = new HttpMethod(method);
-
-            if (isParameterInPath)
+            foreach (var item in path)
             {
-                //减少不必要的反射
-                (paraItems, fileItems) = GetDic(parameters, paras);
-                var paraDic = new Dictionary<string, string>(paraItems);
-                foreach (var item in path)
+                var pathItem = item;
+                if (!item.Contains('{') || !item.Contains('}'))
                 {
-                    var pathItem = item;
-                    if (!item.Contains('{') || !item.Contains('}'))
-                    {
-                        pathList.Add(pathItem);
-                        continue;
-                    }
-
-                    foreach (var dic in paraItems)
-                    {
-                        if ($"{{{dic.Key}}}" == item)
-                        {
-                            removeList.Add(dic.Key);
-                            paraDic.Remove(dic.Key);
-                            pathItem = dic.Value;
-                            break;
-                        }
-                    }
                     pathList.Add(pathItem);
+                    continue;
                 }
 
-                if (httpMethod == HttpMethod.Get)
-                    paraList = paraDic.Select(para => para.Key + "=" + WebUtility.UrlEncode(para.Value)).ToList();
+                foreach (var dic in paraItems)
+                {
+                    if ($"{{{dic.Key}}}" == item)
+                    {
+                        removeList.Add(dic.Key);
+                        paraDic.Remove(dic.Key);
+                        pathItem = dic.Value;
+                        break;
+                    }
+                }
+                pathList.Add(pathItem);
             }
-            else 
-            {
-                pathList = path;
-            }
-            
             string requestUri = $"/{string.Join('/', pathList)}";
+
+            var httpMethod = new HttpMethod(method);
             var relatedUrl = requestUri;
-            if (httpMethod == HttpMethod.Get)
+            if (httpMethod == HttpMethod.Get && paraDic.Count > 0)
             {
-                relatedUrl = $"{requestUri}?{string.Join("&", paraList)}";
+                relatedUrl = $"{requestUri}?{string.Join("&", paraDic.Select(para => para.Key + "=" + WebUtility.UrlEncode(para.Value)))}";
             }
 
             using HttpContent? content = GetContent(contentType, parameters, paras, paraItems, fileItems, removeList);
@@ -117,25 +104,17 @@ public class HttpStub
     private HttpContent? GetContent(string contentType,
         ParameterInfo[] parameters,
         object[] paras,
-        IDictionary<string, string>? paraItems,
-        IDictionary<string, byte[]>? fileItems,
+        IDictionary<string, string> paraItems,
+        IDictionary<string, byte[]> fileItems,
         IList<string> removeList)
     {
         HttpContent? content = null;
         switch (contentType)
         {
             case "application/x-www-form-urlencoded":
-                if (paraItems == null)
-                {
-                    (paraItems, fileItems) = GetDic(parameters, paras);
-                }
                 content = new FormUrlEncodedContent(paraItems);
                 break;
             case "multipart/form-data":
-                if (paraItems == null || fileItems == null)
-                {
-                    (paraItems, fileItems) = GetDic(parameters, paras);
-                }
                 var multipartFormDataContent = new MultipartFormDataContent();
                 foreach (var item in paraItems)
                 {
@@ -160,6 +139,11 @@ public class HttpStub
 
     private string GetJson(ParameterInfo[] parameterInfos, object[] paras, IList<string> removeList)
     {
+        if (paras.Length == 1)
+        {
+            return paras[0].ToJsonString(paras[0] is IEnumerable ? "[]" : "{}");
+        }
+
         var paraDic = new Dictionary<string, object>();
         for (int i = 0; i < paras.Length; i++)
         {
@@ -172,7 +156,6 @@ public class HttpStub
             }
 
             paraDic.Add(paraInfo.Name, para);
-
         }
 
         if (paraDic.Count == 1)

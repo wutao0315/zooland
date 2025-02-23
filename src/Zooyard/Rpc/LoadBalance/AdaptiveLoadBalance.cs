@@ -1,8 +1,5 @@
-﻿using Microsoft.Extensions.Options;
-using System.Collections.Concurrent;
-using System.Runtime.InteropServices;
+﻿using System.Collections.Concurrent;
 using System.Text;
-using System.Threading;
 using Zooyard.Atomic;
 
 namespace Zooyard.Rpc.LoadBalance;
@@ -76,12 +73,12 @@ public class AdaptiveLoadBalance : AbstractLoadBalance
             return keyStr;
         }
 
-        keyStr = buildServiceKey(invoker, invocation);
+        keyStr = BuildServiceKey(invoker, invocation);
         invocation.GetAttributes()[invoker] = keyStr;
         return keyStr;
     }
 
-    private string buildServiceKey(URL invoker, IInvocation invocation)
+    private string BuildServiceKey(URL invoker, IInvocation invocation)
     {
         var sb = new StringBuilder(128);
         sb.Append(invoker.Address).Append(':').Append(invocation.ProtocolServiceKey);
@@ -234,26 +231,26 @@ public sealed record AdaptiveMetrics
         metrics._consumerReq.IncrementAndGet();
     }
 
-    public void AddConsumerSuccess(String idKey)
+    public void AddConsumerSuccess(string idKey)
     {
         AdaptiveMetrics metrics = GetStatus(idKey);
         metrics._consumerSuccess.IncrementAndGet();
     }
 
-    public void AddErrorReq(String idKey)
+    public void AddErrorReq(string idKey)
     {
         AdaptiveMetrics metrics = GetStatus(idKey);
         metrics._errorReq.IncrementAndGet();
     }
 
-    public void SetPickTime(String idKey, long time)
+    public void SetPickTime(string idKey, long time)
     {
         AdaptiveMetrics metrics = GetStatus(idKey);
         metrics.pickTime = time;
     }
 
 
-    public void SetProviderMetrics(String idKey, IDictionary<string, string> metricsMap)
+    public void SetProviderMetrics(string idKey, IDictionary<string, string> metricsMap)
     {
         AdaptiveMetrics metrics = GetStatus(idKey);
 
