@@ -82,7 +82,7 @@ class Program
        })
        .ConfigureWebHostDefaults(webBuilder =>
        {
-           // webBuilder.UseStartup<Startup>();
+           webBuilder.UseStartup<Startup>();
        });
 
    

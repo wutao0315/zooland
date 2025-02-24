@@ -78,7 +78,7 @@ public class FailoverCluster : AbstractCluster
                                 + " was successful by the provider " + url.Address
                                 + ", but there have been failed providers " + string.Join(",", providers)
                                 + " (" + providers.Count + "/" + invokers.Count
-                                + ") from the registry " + GetPath(invocation, address)
+                                + ") from the proxy url " + GetPath(invocation, address)
                                 + " on the consumer " + Local.HostName
                                 + " using the service version " + invocation.Version
                                 + ". Last error is: " + le.Message);

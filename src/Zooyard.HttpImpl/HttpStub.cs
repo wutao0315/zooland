@@ -173,13 +173,20 @@ public class HttpStub
         for (int i = 0; i < paras.Length; i++)
         {
             var para = paras[i];
-            var paraType = para.GetType();
             var paraInfo = parameterInfos[i];
 
             if (string.IsNullOrWhiteSpace(paraInfo.Name))
             {
                 continue;
             }
+
+            if (para == null)
+            {
+                //paraDic.Add(paraInfo.Name, "");
+                continue;
+            }
+
+            var paraType = para.GetType();
 
             if (para is byte[] paraBytes)
             {

@@ -65,7 +65,7 @@ public class HttpInvoker(ILogger logger, IHttpClientFactory _instance, int _clie
             pathUrl.Add(methodName);
         }
 
-        var client = _instance.CreateClient();
+        using var client = _instance.CreateClient();
         client.BaseAddress = new Uri($"{_url.Protocol}://{_url.Host}:{_url.Port}");
 
         var stub = new HttpStub(_logger, client, _clientTimeout);

@@ -51,7 +51,13 @@ public sealed partial class StringUtils
         for (int i = 0; i < args.Length; i++)
         {
             var arg = args[i];
-            if (arg.GetType().IsValueType || arg.GetType().IsPrimitive || arg is string)
+            if (arg == null)
+            {
+                //buf.Append(parameterInfos[i].Name);
+                //buf.Append('=');
+                continue;
+            }
+            else if (arg.GetType().IsValueType || arg.GetType().IsPrimitive || arg is string)
             {
                 buf.Append(parameterInfos[i].Name);
                 buf.Append('=');

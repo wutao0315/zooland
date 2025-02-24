@@ -5,6 +5,7 @@ using System.Net.Mime;
 using System.Reflection;
 using Zooyard.Attributes;
 using Zooyard.Diagnositcs;
+using Zooyard.Utils;
 //using Zooyard.Logging;
 
 namespace Zooyard.Rpc.Cluster;
@@ -224,8 +225,8 @@ public abstract class AbstractCluster : ICluster
             throw new RpcException("Failed to invoke the method "
                     + invocation.MethodInfo.Name + " in the service " + invocation.TargetType.Name
                     + ". No provider available for the service " + invocation.ServiceName
-                    + " from registry " + GetPath(invocation, address)
-                    //+ " on the consumer " + NetUtils.getLocalHost()
+                    + " from proxy url " + GetPath(invocation, address)
+                    + " on the consumer " + Local.HostName
                     + " using the zooyard version " + invocation.Version
                     + ". Please check if the providers have been started and registered.");
         }
@@ -237,11 +238,6 @@ public abstract class AbstractCluster : ICluster
         var pathList = invocation.Url.Path?.Split('/', StringSplitOptions.RemoveEmptyEntries) ?? [];
         var pathUrl = new List<string>(pathList);
 
-        var targetDescription = invocation.TargetType.GetCustomAttribute<RequestMappingAttribute>();
-        if (targetDescription != null && !string.IsNullOrWhiteSpace(targetDescription.Value))
-        {
-            pathUrl.AddRange(targetDescription.Value.Split('/', StringSplitOptions.RemoveEmptyEntries));
-        }
         var methodDescription = invocation.MethodInfo.GetCustomAttribute<RequestMappingAttribute>();
         if (methodDescription != null && !string.IsNullOrWhiteSpace(methodDescription.Value))
         {

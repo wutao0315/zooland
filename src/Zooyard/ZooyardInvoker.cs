@@ -86,40 +86,40 @@ public class ZooyardInvoker
         return methodToToken;
     }
 
-    /// <summary>
-    /// get interface method from impl method body
-    /// </summary>
-    /// <param name="stackTrace"></param>
-    /// <param name="interfaceMapping"></param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentNullException"></exception>
-    public (MethodInfo, int) GetInterfaceMethod(StackTrace stackTrace, InterfaceMapping interfaceMapping)
-    {
-        foreach (var frames in stackTrace.GetFrames())
-        {
-            var md = frames.GetMethod();
-            if (md == null || md is not MethodInfo method)
-            {
-                continue;
-            }
+    ///// <summary>
+    ///// get interface method from impl method body
+    ///// </summary>
+    ///// <param name="stackTrace"></param>
+    ///// <param name="interfaceMapping"></param>
+    ///// <returns></returns>
+    ///// <exception cref="ArgumentNullException"></exception>
+    //public (MethodInfo, int) GetInterfaceMethod(StackTrace stackTrace, InterfaceMapping interfaceMapping)
+    //{
+    //    foreach (var frames in stackTrace.GetFrames())
+    //    {
+    //        var md = frames.GetMethod();
+    //        if (md == null || md is not MethodInfo method)
+    //        {
+    //            continue;
+    //        }
 
-            if (method.GetCustomAttribute<ZooyardImplAttribute>() == null)
-            {
-                continue;
-            }
-            var index = Array.IndexOf(interfaceMapping.TargetMethods, md);
+    //        if (method.GetCustomAttribute<ZooyardImplAttribute>() == null)
+    //        {
+    //            continue;
+    //        }
+    //        var index = Array.IndexOf(interfaceMapping.TargetMethods, md);
 
-            if (index == -1)
-            {
-                throw new ArgumentNullException($"index not exists{md}");
-            }
+    //        if (index == -1)
+    //        {
+    //            throw new ArgumentNullException($"index not exists{md}");
+    //        }
 
-            var im = interfaceMapping.InterfaceMethods[index];
+    //        var im = interfaceMapping.InterfaceMethods[index];
 
-            return (im, index);
-        }
-        throw new ArgumentNullException("not a impl method");
-    }
+    //        return (im, index);
+    //    }
+    //    throw new ArgumentNullException("not a impl method");
+    //}
 
 
 
@@ -412,6 +412,8 @@ public class ZooyardInvoker
                         throw;
                     }
 
+                    newActivityLOCAL.Value?.Stop();
+
                     var genericType = resultObj.GetType();
 
                     //todo after invoke
@@ -462,6 +464,7 @@ public class ZooyardInvoker
                 var resultInner = await _zooyardPools.Invoke<TA>(icn);
                 // end invoke
 
+                newActivityLOCAL.Value?.Stop();
 
                 //todo after invoke
                 if (_interceptors != null && _interceptors.Count() > 0)

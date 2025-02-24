@@ -4,6 +4,7 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 	<ItemGroup>
+		<Compile Remove="Attributes\ZooyardGrpcAttribute.cs" />
 		<Compile Remove="ServiceBuilderExtensions.cs" />
 		<Compile Remove="ZooyardOption.cs" />
 	</ItemGroup>
