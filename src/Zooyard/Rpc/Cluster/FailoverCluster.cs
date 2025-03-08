@@ -77,7 +77,7 @@ public class FailoverCluster : AbstractCluster
                                 + " in the service " + invocation.TargetType.FullName
                                 + " was successful by the provider " + url.Address
                                 + ", but there have been failed providers " + string.Join(",", providers)
-                                + " (" + providers.Count + "/" + invokers.Count
+                                + " (" + providers.Count + "/" + invokers.Count + "@" + string.Join(",", invokers.Select(w => w.ToFullString()))
                                 + ") from the proxy url " + GetPath(invocation, address)
                                 + " on the consumer " + Local.HostName
                                 + " using the service version " + invocation.Version
@@ -140,7 +140,7 @@ public class FailoverCluster : AbstractCluster
          var re = new RpcException(le != null ? le.Code : 0, "Failed to invoke the method "
                + invocation.MethodInfo.Name + " in the service " + invocation.TargetType.FullName
                + ". Tried " + len + " times of the providers " + string.Join(",", providers)
-               + " (" + providers.Count + "/" + invokers.Count
+               + " (" + providers.Count + "/" + invokers.Count + "@" + string.Join(",", invokers.Select(w => w.ToFullString()))
                + ") from the registry " + GetPath(invocation, address)
                 + " on the consumer " + Local.HostName
                + " using the service version " + invocation.Version 

@@ -1,4 +1,6 @@
-﻿namespace Zooyard;
+﻿using Zooyard.Configuration;
+
+namespace Zooyard;
 
 public interface IZooyardPools:IDisposable
 {
@@ -16,3 +18,10 @@ public interface IZooyardPools:IDisposable
 
     Type? BaseReturnType { get; }
 }
+
+
+//public sealed record ZooyardOption 
+//{
+//    public IDictionary<string, string> Metadata { get; set; } = new Dictionary<string, string>();
+//    public IDictionary<string, ServiceConfig> Services { get; set; } = new Dictionary<string, ServiceConfig>();
+//}

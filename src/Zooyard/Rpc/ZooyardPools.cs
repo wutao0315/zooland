@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using Zooyard.Management;
@@ -110,6 +111,7 @@ public class ZooyardPools : IZooyardPools
         BaseReturnType = baseReturnType;
 
         _proxyStateLookup = proxyStateLookup;
+        
         _configChange = _proxyStateLookup.OnChange(OnChanged);
 
         // 定时或者在接收到推送的消息后  主动-维护Pools集合

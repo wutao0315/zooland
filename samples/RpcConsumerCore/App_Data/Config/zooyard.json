@@ -29,7 +29,7 @@
       "Key": "val"
     },
     "Services": {
-      "GrpcHelloService": {
+      "GrpcHelloServiceTest": {
         "Metadata": {
           "Ephemeral": "True"
         },

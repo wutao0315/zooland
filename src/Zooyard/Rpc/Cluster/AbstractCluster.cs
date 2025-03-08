@@ -222,9 +222,11 @@ public abstract class AbstractCluster : ICluster
     {
         if (invokers == null || invokers.Count == 0)
         {
+            invokers ??= new List<URL>();
             throw new RpcException("Failed to invoke the method "
                     + invocation.MethodInfo.Name + " in the service " + invocation.TargetType.Name
                     + ". No provider available for the service " + invocation.ServiceName
+                    + " (" + invokers.Count + "@" + string.Join(",", invokers.Select(w => w.ToFullString()))
                     + " from proxy url " + GetPath(invocation, address)
                     + " on the consumer " + Local.HostName
                     + " using the zooyard version " + invocation.Version

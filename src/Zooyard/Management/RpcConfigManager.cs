@@ -136,8 +136,6 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
         return this;
     }
 
-
-
     private async Task ReloadConfigAsync()
     {
         _configChangeSource.Dispose();
