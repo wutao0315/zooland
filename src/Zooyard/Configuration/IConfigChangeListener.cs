@@ -1,6 +1,4 @@
-﻿using Zooyard.Utils;
-
-namespace Zooyard.Configuration;
+﻿namespace Zooyard.Configuration;
 
 /// <summary>
 /// Allows subscribing to events notifying you when the configuration is loaded and applied, or when those actions fail.

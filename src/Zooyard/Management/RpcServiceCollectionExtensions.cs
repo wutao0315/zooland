@@ -10,7 +10,7 @@ using Zooyard.Configuration.ConfigProvider;
 using Zooyard.Management;
 using Zooyard.Rpc;
 using Zooyard.Rpc.Support;
-using Zooyard.ServiceDiscovery;
+//using Zooyard.ServiceDiscovery;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -30,7 +30,7 @@ public static class RpcServiceCollectionExtensions
             .AddConfigBuilder(typeof(ResponseDataResult<>))
             .AddRuntimeStateManagers()
             .AddConfigManager()
-            .AddInstanceResolver()
+            //.AddInstanceResolver()
             .AddInterceptor<ResponseRpcInterceptor>();
 
         return builder;
@@ -47,7 +47,8 @@ public static class RpcServiceCollectionExtensions
             .AddConfigBuilder(baseReturnType)
             .AddRuntimeStateManagers()
             .AddConfigManager()
-            .AddInstanceResolver();
+            //.AddInstanceResolver()
+            ;
 
         if (baseInterceptor != null) 
         {
@@ -67,7 +68,7 @@ public static class RpcServiceCollectionExtensions
             throw new ArgumentNullException(nameof(config));
         }
 
-        builder.Services.TryAddSingleton<IRpcConfigProvider>(sp =>
+        builder.Services.AddSingleton<IRpcConfigProvider>(sp =>
         {
             // This is required because we're capturing the configuration via a closure
             return new ConfigurationConfigProvider(sp.GetRequiredService<ILogger<ConfigurationConfigProvider>>(), config);
@@ -134,17 +135,17 @@ public static class RpcServiceCollectionExtensions
     }
 
 
-    /// <summary>
-    /// Provides a <see cref="IInstanceResolver"/> implementation which uses <see cref="System.Net.Dns"/> to resolve destinations.
-    /// </summary>
-    public static IRpcBuilder AddDnsInstanceResolver(this IRpcBuilder builder, Action<DnsInstanceResolverOptions>? configureOptions = null)
-    {
-        builder.Services.TryAddSingleton<IInstanceResolver, DnsInstanceResolver>();
-        if (configureOptions is not null)
-        {
-            builder.Services.Configure(configureOptions);
-        }
+    ///// <summary>
+    ///// Provides a <see cref="IInstanceResolver"/> implementation which uses <see cref="System.Net.Dns"/> to resolve destinations.
+    ///// </summary>
+    //public static IRpcBuilder AddDnsInstanceResolver(this IRpcBuilder builder, Action<DnsInstanceResolverOptions>? configureOptions = null)
+    //{
+    //    builder.Services.TryAddSingleton<IInstanceResolver, DnsInstanceResolver>();
+    //    if (configureOptions is not null)
+    //    {
+    //        builder.Services.Configure(configureOptions);
+    //    }
 
-        return builder;
-    }
+    //    return builder;
+    //}
 }

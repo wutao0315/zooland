@@ -1,5 +1,4 @@
-﻿using System.Collections.ObjectModel;
-using System.Globalization;
+﻿using System.Globalization;
 
 namespace Microsoft.Extensions.Configuration;
 
@@ -54,7 +53,7 @@ internal static class ConfigurationReadingExtensions
             return new Dictionary<string, string>();
         }
 
-        return new ReadOnlyDictionary<string, string>(children.ToDictionary(s => s.Key, s => s.Value!, StringComparer.OrdinalIgnoreCase));
+        return children.ToDictionary(s => s.Key, s => s.Value!, StringComparer.OrdinalIgnoreCase);
     }
 
     internal static string[]? ReadStringArray(this IConfigurationSection section)

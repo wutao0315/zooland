@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using Zooyard.Configuration;
 using Zooyard.Model;
-using Zooyard.ServiceDiscovery;
+//using Zooyard.ServiceDiscovery;
 using Zooyard.Utils;
 
 namespace Zooyard.Management;
@@ -30,7 +30,7 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
     private readonly IRpcConfigFilter[] _filters;
     private readonly IConfigValidator _configValidator;
     //private readonly IServiceInstancesUpdater _clusterDestinationsUpdater;
-    private readonly IInstanceResolver _instanceResolver;
+    //private readonly IInstanceResolver _instanceResolver;
     private readonly IConfigChangeListener[] _configChangeListeners;
     private IChangeToken _endpointsChangeToken;
 
@@ -42,7 +42,7 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
         , IEnumerable<IRpcConfigFilter> filters
         , IConfigValidator configValidator
         , IEnumerable<IConfigChangeListener> configChangeListeners //IServiceInstancesUpdater clusterDestinationsUpdater,
-        , IInstanceResolver instanceResolver
+        //, IInstanceResolver instanceResolver
         )
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -50,7 +50,7 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
         _filters = (filters as IRpcConfigFilter[]) ?? filters?.ToArray() ?? throw new ArgumentNullException(nameof(filters));
         _configValidator = configValidator ?? throw new ArgumentNullException(nameof(configValidator));
         //_clusterDestinationsUpdater = clusterDestinationsUpdater ?? throw new ArgumentNullException(nameof(clusterDestinationsUpdater));
-        _instanceResolver = instanceResolver ?? throw new ArgumentNullException(nameof(instanceResolver));
+        //_instanceResolver = instanceResolver ?? throw new ArgumentNullException(nameof(instanceResolver));
         _configChangeListeners = configChangeListeners?.ToArray() ?? Array.Empty<IConfigChangeListener>();
 
         if (_providers.Length == 0)
@@ -261,84 +261,86 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
         var config = provider.GetConfig();
         ValidateConfigProperties(config);
 
-        if (_instanceResolver.GetType() == typeof(NoOpInstanceResolver))
-        {
-            return new(config);
-        }
+        return new(config);
 
-        return LoadConfigAsyncCore(config, cancellationToken);
+        //if (_instanceResolver.GetType() == typeof(NoOpInstanceResolver))
+        //{
+        //    return new(config);
+        //}
+
+        //return LoadConfigAsyncCore(config, cancellationToken);
     }
 
-    private async ValueTask<IRpcConfig> LoadConfigAsyncCore(IRpcConfig config, CancellationToken cancellationToken)
-    {
-        List<(int Index, ValueTask<ResolvedInstanceCollection> Task)> resolverTasks = new();
-        List<ServiceConfig> services = new(config.Services);
-        List<IChangeToken>? changeTokens = null;
-        for (var i = 0; i < services.Count; i++)
-        {
-            var service = services[i];
-            if (service.Instances is { Count: > 0 } instances)
-            {
-                // Resolve destinations if there are any.
-                var task = _instanceResolver.ResolveInstancesAsync(instances, cancellationToken);
-                resolverTasks.Add((i, task));
-            }
-        }
+    //private async ValueTask<IRpcConfig> LoadConfigAsyncCore(IRpcConfig config, CancellationToken cancellationToken)
+    //{
+    //    List<(int Index, ValueTask<ResolvedInstanceCollection> Task)> resolverTasks = new();
+    //    List<ServiceConfig> services = new(config.Services);
+    //    List<IChangeToken>? changeTokens = null;
+    //    for (var i = 0; i < services.Count; i++)
+    //    {
+    //        var service = services[i];
+    //        if (service.Instances is { Count: > 0 } instances)
+    //        {
+    //            // Resolve destinations if there are any.
+    //            var task = _instanceResolver.ResolveInstancesAsync(instances, cancellationToken);
+    //            resolverTasks.Add((i, task));
+    //        }
+    //    }
 
-        if (resolverTasks.Count > 0)
-        {
-            foreach (var (i, task) in resolverTasks)
-            {
-                ResolvedInstanceCollection resolvedInstances;
-                try
-                {
-                    resolvedInstances = await task;
-                }
-                catch (Exception exception)
-                {
-                    var service = services[i];
-                    throw new InvalidOperationException($"Error resolving destinations for service {service.ServiceId}", exception);
-                }
+    //    if (resolverTasks.Count > 0)
+    //    {
+    //        foreach (var (i, task) in resolverTasks)
+    //        {
+    //            ResolvedInstanceCollection resolvedInstances;
+    //            try
+    //            {
+    //                resolvedInstances = await task;
+    //            }
+    //            catch (Exception exception)
+    //            {
+    //                var service = services[i];
+    //                throw new InvalidOperationException($"Error resolving destinations for service {service.ServiceId}", exception);
+    //            }
 
-                services[i] = services[i] with { Instances = resolvedInstances.Instances };
-                if (resolvedInstances.ChangeToken is { } token)
-                {
-                    changeTokens ??= new();
-                    changeTokens.Add(token);
-                }
-            }
+    //            services[i] = services[i] with { Instances = resolvedInstances.Instances };
+    //            if (resolvedInstances.ChangeToken is { } token)
+    //            {
+    //                changeTokens ??= new();
+    //                changeTokens.Add(token);
+    //            }
+    //        }
 
-            IChangeToken changeToken;
-            if (changeTokens is not null)
-            {
-                // Combine change tokens from the resolver with the configuration's existing change token.
-                changeTokens.Add(config.ChangeToken);
-                changeToken = new CompositeChangeToken(changeTokens);
-            }
-            else
-            {
-                changeToken = config.ChangeToken;
-            }
+    //        IChangeToken changeToken;
+    //        if (changeTokens is not null)
+    //        {
+    //            // Combine change tokens from the resolver with the configuration's existing change token.
+    //            changeTokens.Add(config.ChangeToken);
+    //            changeToken = new CompositeChangeToken(changeTokens);
+    //        }
+    //        else
+    //        {
+    //            changeToken = config.ChangeToken;
+    //        }
 
-            // Return updated config
-            return new ResolvedProxyConfig(config, services, changeToken);
-        }
+    //        // Return updated config
+    //        return new ResolvedProxyConfig(config, services, changeToken);
+    //    }
 
-        return config;
-    }
+    //    return config;
+    //}
 
-    private sealed class ResolvedProxyConfig(IRpcConfig _innerConfig
-        , IReadOnlyList<ServiceConfig> services
-        , IChangeToken changeToken)
-        : IRpcConfig
-    {
-        public IReadOnlyList<RouteConfig> Routes => _innerConfig.Routes;
+    //private sealed class ResolvedProxyConfig(IRpcConfig _innerConfig
+    //    , IReadOnlyList<ServiceConfig> services
+    //    , IChangeToken changeToken)
+    //    : IRpcConfig
+    //{
+    //    public IReadOnlyList<RouteConfig> Routes => _innerConfig.Routes;
 
-        public IReadOnlyList<ServiceConfig> Services { get; } = services;
+    //    public IReadOnlyList<ServiceConfig> Services { get; } = services;
 
-        public IChangeToken ChangeToken { get; } = changeToken;
+    //    public IChangeToken ChangeToken { get; } = changeToken;
 
-    }
+    //}
 
     private void ListenForConfigChanges()
     {
