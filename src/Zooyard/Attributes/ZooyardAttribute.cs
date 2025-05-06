@@ -25,7 +25,7 @@ public abstract class ZooyardAttribute : AbstractAttribute
     /// </summary>
     public string Version { get; init; } = "1.0.0";
 
-    public string Protocol { get; init; } = "http";
+    public string Protocol { get; set; } = "http";
 
     private string _url = string.Empty;
     /// <summary>

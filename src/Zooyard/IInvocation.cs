@@ -40,7 +40,7 @@ public interface IInvocation
 public class RpcInvocation : IInvocation
 {
     private readonly SemaphoreSlim attachmentLock = new(1, 1);
-    public RpcInvocation(string id, ZooyardAttribute zooyardAttribute, string url, Type targetType, MethodInfo methodInfo, object[]? arguments)
+    public RpcInvocation(string id, ZooyardAttribute zooyardAttribute, string url, string serviceName, Type targetType, MethodInfo methodInfo, object[]? arguments)
     {
         //兼容只传后面路径的问题
         if (url.IndexOf("://")<=0 || url.IndexOf(":/") <= 0) 
@@ -57,7 +57,7 @@ public class RpcInvocation : IInvocation
 
         Url = URL.ValueOf(url);
         Id = id;
-        ServiceName = zooyardAttribute.ServiceName;
+        ServiceName = serviceName;
         Version = zooyardAttribute.Version;
         TargetType = targetType;
         MethodInfo = methodInfo;

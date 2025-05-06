@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.IO;
 using System.Reflection;
+using System.Text;
 using Zooyard.Attributes;
 using Zooyard.Rpc;
 using Zooyard.Rpc.Support;
@@ -23,10 +24,26 @@ public class HttpInvoker(ILogger logger, IHttpClientFactory _instance, int _clie
             methodName = methodName[..^endStr.Length];
         }
 
-        //var isParameterInPath = invocation.Url.Path.Contains('{')&& invocation.Url.Path.Contains('}');
 
-        var pathList = invocation.Url.Path?.Split('/', StringSplitOptions.RemoveEmptyEntries) ?? [];
-        var pathUrl = new List<string>(pathList);
+        //var pathList = invocation.Url.Path?.Split('/', StringSplitOptions.RemoveEmptyEntries) ?? [];
+        //var pathUrl = new List<string>(pathList);
+
+        var pathUrl = new StringBuilder();
+        if (invocation.Url.Path.StartsWith('/'))
+        {
+            pathUrl.Append(invocation.Url.Path);
+        }
+        else 
+        {
+            pathUrl.Append('/');
+            pathUrl.Append(invocation.Url.Path);
+        }
+
+        if (invocation.Url.Path.EndsWith('/'))
+        {
+            pathUrl.Length--;
+        }
+
         var method = DEFAULT_METHODTYPE;
         var contentType = DEFAULT_CONTENTTYPE;
         var parameters = invocation.MethodInfo.GetParameters();
@@ -36,12 +53,20 @@ public class HttpInvoker(ILogger logger, IHttpClientFactory _instance, int _clie
         {
             if (!string.IsNullOrWhiteSpace(targetDescription.Value)) 
             {
-                //if (!isParameterInPath) 
-                //{
-                //    isParameterInPath = targetDescription.Value.Contains('{') && targetDescription.Value.Contains('}');
-                //}
+                if (targetDescription.Value.StartsWith('/'))
+                {
+                    pathUrl.Append(targetDescription.Value);
+                }
+                else 
+                {
+                    pathUrl.Append('/');
+                    pathUrl.Append(targetDescription.Value);
+                }
 
-                pathUrl.AddRange(targetDescription.Value.Split('/', StringSplitOptions.RemoveEmptyEntries));
+                if (targetDescription.Value.EndsWith('/'))
+                {
+                    pathUrl.Length--;
+                }
             }
         }
         var methodDescription = invocation.MethodInfo.GetCustomAttribute<RequestMappingAttribute>();
@@ -49,20 +74,32 @@ public class HttpInvoker(ILogger logger, IHttpClientFactory _instance, int _clie
         {
             if (!string.IsNullOrWhiteSpace(methodDescription.Value))
             {
-                //    if (!isParameterInPath)
-                //    {
-                //        isParameterInPath = methodDescription.Value.Contains('{') && methodDescription.Value.Contains('}');
-                //    }
+                //var methodNames = methodDescription.Value.Split('/', StringSplitOptions.RemoveEmptyEntries);
+                //pathUrl.AddRange(methodNames);
 
-                var methodNames = methodDescription.Value.Split('/', StringSplitOptions.RemoveEmptyEntries);
-                pathUrl.AddRange(methodNames);
+                if (methodDescription.Value.StartsWith('/'))
+                {
+                    pathUrl.Append(methodDescription.Value);
+                }
+                else
+                {
+                    pathUrl.Append('/');
+                    pathUrl.Append(methodDescription.Value);
+                }
+
+                if (methodDescription.Value.EndsWith('/'))
+                {
+                    pathUrl.Length--;
+                }
             }
             method = methodDescription.Method.ToString();
             contentType = methodDescription.Consumes;
         }
         else 
         {
-            pathUrl.Add(methodName);
+            //pathUrl.Add(methodName);
+            pathUrl.Append('/');
+            pathUrl.Append(methodName);
         }
 
         using var client = _instance.CreateClient();
@@ -72,7 +109,7 @@ public class HttpInvoker(ILogger logger, IHttpClientFactory _instance, int _clie
         string? value = null;
         try
         {
-            using var stream = await stub.Request(pathUrl, contentType, method, parameters, invocation.Arguments, RpcContext.GetContext().Attachments);
+            using var stream = await stub.Request(pathUrl.ToString(), contentType, method, parameters, invocation.Arguments, RpcContext.GetContext().Attachments);
             if (stream == null)
             {
                 throw new Exception($"{nameof(stream)} is null");

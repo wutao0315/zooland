@@ -31,7 +31,7 @@ public class HttpStub
         _httpClient.Timeout = TimeSpan.FromMilliseconds(timeout);
     }
 
-    public async Task<Stream> Request(IList<string> path, string contentType, string method, ParameterInfo[] parameters, object[] paras, IDictionary<string, string> headers)
+    public async Task<Stream> Request(string pathUrl, string contentType, string method, ParameterInfo[] parameters, object[] paras, IDictionary<string, string> headers)
     {
         try
         {
@@ -39,38 +39,50 @@ public class HttpStub
 
             var paraDic = new Dictionary<string, string>(paraItems);
 
-            var pathList = new List<string>();
+            //var pathList = new List<string>();
             var removeList = new List<string>();
 
-
-            foreach (var item in path)
+            foreach (var dic in paraItems)
             {
-                var pathItem = item;
-                if (!item.Contains('{') || !item.Contains('}'))
+                var tplKey = $"{{{dic.Key}}}";
+                if (pathUrl.Contains(tplKey, StringComparison.OrdinalIgnoreCase))
                 {
-                    pathList.Add(pathItem);
+                    removeList.Add(dic.Key);
+                    paraDic.Remove(dic.Key);
+                    pathUrl.Replace(tplKey, dic.Value, StringComparison.OrdinalIgnoreCase);
                     continue;
                 }
-
-                foreach (var dic in paraItems)
-                {
-                    if ($"{{{dic.Key}}}" == item)
-                    {
-                        removeList.Add(dic.Key);
-                        paraDic.Remove(dic.Key);
-                        pathItem = dic.Value;
-                        break;
-                    }
-                }
-                pathList.Add(pathItem);
             }
-            string requestUri = $"/{string.Join('/', pathList)}";
+
+            //foreach (var item in path)
+            //{
+            //    var pathItem = item;
+            //    if (!item.Contains('{') || !item.Contains('}'))
+            //    {
+            //        pathList.Add(pathItem);
+            //        continue;
+            //    }
+
+            //    foreach (var dic in paraItems)
+            //    {
+            //        if ($"{{{dic.Key}}}" == item)
+            //        {
+            //            removeList.Add(dic.Key);
+            //            paraDic.Remove(dic.Key);
+            //            pathItem = dic.Value;
+            //            break;
+            //        }
+            //    }
+            //    pathList.Add(pathItem);
+            //}
+
+            //string requestUri = pathUrl;// $"/{string.Join('/', pathList)}";
 
             var httpMethod = new HttpMethod(method);
-            var relatedUrl = requestUri;
+            var relatedUrl = pathUrl;
             if (httpMethod == HttpMethod.Get && paraDic.Count > 0)
             {
-                relatedUrl = $"{requestUri}?{string.Join("&", paraDic.Select(para => para.Key + "=" + WebUtility.UrlEncode(para.Value)))}";
+                relatedUrl = $"{(pathUrl.Contains('?')? pathUrl : pathUrl + "?")}{string.Join("&", paraDic.Select(para => para.Key + "=" + WebUtility.UrlEncode(para.Value)))}";
             }
 
             using HttpContent? content = GetContent(contentType, parameters, paras, paraItems, fileItems, removeList);

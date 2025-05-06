@@ -19,10 +19,11 @@ public class ZooyardInvoker
 {
     private readonly ILogger _logger;
     private readonly IZooyardPools _zooyardPools;
-    private readonly IRpcStateLookup _proxyStateLookup;
+    //private readonly IRpcStateLookup _proxyStateLookup;
     private readonly IEnumerable<IInterceptor> _interceptors;
     private readonly ZooyardAttribute _zooyardAttribute;
     private readonly string _replacedUrl;
+    private readonly string _replacedServiceName;
     public ZooyardInvoker(ILogger logger, IServiceProvider serviceProvider, ZooyardAttribute? zooyardAttribute)
     {
         if (zooyardAttribute == null)
@@ -31,11 +32,11 @@ public class ZooyardInvoker
         }
         _logger = logger;
         _zooyardAttribute = zooyardAttribute;
-        _proxyStateLookup = serviceProvider.GetRequiredService<IRpcStateLookup>();
+        //_proxyStateLookup = serviceProvider.GetRequiredService<IRpcStateLookup>();
         _zooyardPools = serviceProvider.GetRequiredService<IZooyardPools>(); ;
         _interceptors = serviceProvider.GetRequiredService<IEnumerable<IInterceptor>>();
         var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-        _replacedUrl = GetConfigUrl(zooyardAttribute, configuration);
+        (_replacedUrl, _replacedServiceName) = GetConfigUrl(zooyardAttribute, configuration);
     }
 
 
@@ -43,9 +44,17 @@ public class ZooyardInvoker
     /// 获取配置数据
     /// </summary>
     /// <returns></returns>
-    private string GetConfigUrl(ZooyardAttribute attr, IConfiguration configuration)
+    private (string, string) GetConfigUrl(ZooyardAttribute attr, IConfiguration configuration)
     {
+        //如果协议是通用协议，检查配置中是否配置并替换
+        var protocol = configuration.GetValue("zooyard:Protocol", "http")!;
+        if (attr.Protocol.Equals("http", StringComparison.OrdinalIgnoreCase) && !attr.Protocol.Equals(protocol, StringComparison.OrdinalIgnoreCase))
+        {
+            attr.Protocol = protocol;
+        }
+
         var url = attr.Url;
+        var serviceName = attr.ServiceName;
         if (!string.IsNullOrWhiteSpace(attr.Config))
         {
             var keyValueList = attr.Config.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
@@ -66,9 +75,10 @@ public class ZooyardInvoker
                 }
                 var val = configuration.GetValue(cfgKey, cfgValue);
                 url = url.Replace($"{{{kvList[0]}}}", val);
+                serviceName = serviceName.Replace($"{{{kvList[0]}}}", val);
             }
         }
-        return url;
+        return (url, serviceName);
     }
 
     public IDictionary<MethodInfo, int> GetMethodPosition(Type declaringType)
@@ -211,7 +221,7 @@ public class ZooyardInvoker
                 }
             }
 
-            var icn = new RpcInvocation(Guid.NewGuid().ToString("N"), _zooyardAttribute, url, context.Packed.DeclaringType, context.Method, context.Packed.Args);
+            var icn = new RpcInvocation(Guid.NewGuid().ToString("N"), _zooyardAttribute, url, _replacedServiceName, context.Packed.DeclaringType, context.Method, context.Packed.Args);
 
             var targetDescription = icn.TargetType.GetCustomAttribute<ZooyardAttribute>();
             if (targetDescription != null)
