@@ -105,13 +105,13 @@ public class Program
 
             services.AddTransient<ITAsyncProcessor>((p) => {
 
-                var logger = p.GetRequiredService<ILogger<ITAsyncProcessor>>();
+                //var logger = p.GetRequiredService<ILogger<ITAsyncProcessor>>();
                 var processor = p.GetRequiredService<RpcContractThrift.HelloService.AsyncProcessor>();
-                DiagnosticListener diagnosticListener = p.GetRequiredService<DiagnosticListener>();
-                ActivitySource activitySource = p.GetRequiredService<ActivitySource>();
-                DistributedContextPropagator propagator = p.GetRequiredService<DistributedContextPropagator>();
+                //DiagnosticListener diagnosticListener = p.GetRequiredService<DiagnosticListener>();
+                //ActivitySource activitySource = p.GetRequiredService<ActivitySource>();
+                //DistributedContextPropagator propagator = p.GetRequiredService<DistributedContextPropagator>();
 
-                return new THeaderProcessor(logger, processor, diagnosticListener, activitySource, propagator);
+                return new THeaderProcessor(processor);
             });
 
 

@@ -28,7 +28,10 @@ public class HttpStub
     {
         _logger = logger;
         _httpClient = httpClient;
-        _httpClient.Timeout = TimeSpan.FromMilliseconds(timeout);
+        if (timeout > 0)
+        {
+            _httpClient.Timeout = TimeSpan.FromMilliseconds(timeout);
+        }
     }
 
     public async Task<Stream> Request(string pathUrl, string contentType, string method, ParameterInfo[] parameters, object[] paras, IDictionary<string, string> headers)

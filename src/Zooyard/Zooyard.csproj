@@ -5,17 +5,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Compile Remove="ServiceDiscovery\**" />
-	  <EmbeddedResource Remove="ServiceDiscovery\**" />
-	  <None Remove="ServiceDiscovery\**" />
-	</ItemGroup>
-	<ItemGroup>
-		<Compile Remove="Attributes\ZooyardGrpcAttribute.cs" />
-		<Compile Remove="ServiceBuilderExtensions.cs" />
-		<Compile Remove="ZooyardOption.cs" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<PackageReference Include="Jint" />
 		<PackageReference Include="Microsoft.Extensions.Caching.Abstractions" />
 		<PackageReference Include="Microsoft.Extensions.Logging" />

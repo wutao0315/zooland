@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using Zooyard.Management;
@@ -83,7 +82,7 @@ public class ZooyardPools : IZooyardPools
         , IEnumerable<ICache> caches
         , IEnumerable<IStateRouterFactory> routerFactories
         , IRpcStateLookup proxyStateLookup
-        , Type? baseReturnType
+        , Dictionary<string, Type> baseReturnTypes
         )
     {
         _logger = loggerFactory.CreateLogger<ZooyardPools>();
@@ -108,7 +107,7 @@ public class ZooyardPools : IZooyardPools
             _routeFoctories[item.Name] = item;
         }
 
-        BaseReturnType = baseReturnType;
+        BaseReturnTypes = baseReturnTypes;
 
         _proxyStateLookup = proxyStateLookup;
         
@@ -240,7 +239,7 @@ public class ZooyardPools : IZooyardPools
         _recoveryTimer.Dispose();
         _configChange.Dispose();
     }
-    public Type? BaseReturnType { get; private set; }
+    public Dictionary<string, Type> BaseReturnTypes { get; private set; }
     /// <summary>
     /// exec rpc
     /// </summary>

@@ -4,7 +4,7 @@ using Zooyard.Utils;
 
 namespace Zooyard.Rpc.Support;
 
-public abstract class AbstractClientPool: IClientPool
+public abstract class AbstractClientPool : IClientPool
 {
     protected readonly ILogger _logger;
     public AbstractClientPool(ILogger logger) 

@@ -9,7 +9,8 @@ namespace Zooyard.GrpcNetImpl;
 
 public class GrpcClientPool(IDictionary<string, ChannelCredentials> _credentials,
         IEnumerable<ClientInterceptor> _interceptors,
-        ILoggerFactory _loggerFactory) : AbstractClientPool(_loggerFactory.CreateLogger<GrpcClientPool>())
+        ILoggerFactory _loggerFactory) 
+    : AbstractClientPool(_loggerFactory.CreateLogger<GrpcClientPool>())
 {
     public const string MAXLENGTH_KEY = "maxlength";
     public const int DEFAULT_MAXLENGTH = int.MaxValue;

@@ -2,8 +2,6 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
-using System.Diagnostics;
-using System.Reflection;
 using System.Text;
 
 namespace Zooyard.SourceGenerator;
@@ -12,37 +10,39 @@ namespace Zooyard.SourceGenerator;
 ///  The generator of Rpc client
 /// </summary>
 [Generator(LanguageNames.CSharp)]
-public class RpcClientGenerator : ISourceGenerator
+public class RpcClientGenerator : IIncrementalGenerator
 {
-    public void Initialize(GeneratorInitializationContext context)
+    public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        context.RegisterForSyntaxNotifications(() => new SyntaxReceiver());
-    }
+        // 收集所有带有属性的接口声明
+        var interfaceDeclarations = context.SyntaxProvider
+            .CreateSyntaxProvider(
+                predicate: static (s, _) => s is InterfaceDeclarationSyntax ids && ids.AttributeLists.Count > 0,
+                transform: static (ctx, _) => (InterfaceDeclarationSyntax)ctx.Node
+            )
+            .Where(static ids => ids != null);
 
-    public void Execute(GeneratorExecutionContext context)
-    {
+        // 收集 Compilation
+        var compilationProvider = context.CompilationProvider;
 
-        context.LogMessage("Client Generator started");
+        // 组合接口和 Compilation
+        var interfaceWithCompilation = interfaceDeclarations
+            .Combine(compilationProvider);
 
-        if (context.SyntaxReceiver is not SyntaxReceiver receiver)
-            return;
-
-        var namespaceNameSet = new HashSet<string>();
-        var clientClasses = new List<string>();
-        //const string namespaceName = "Zooyard";
-
-        foreach (var @interface in receiver.CandidateInterfaces)
+        context.RegisterSourceOutput(interfaceWithCompilation, (spc, tuple) =>
         {
-            // first get the semantic model for the interface, and make sure it's annotated
-            var model = context.Compilation.GetSemanticModel(@interface.SyntaxTree);
-            if (model.GetDeclaredSymbol(@interface) is not INamedTypeSymbol symbol) continue;
+            var @interface = tuple.Left;
+            var compilation = tuple.Right;
+
+            var model = compilation.GetSemanticModel(@interface.SyntaxTree);
+            if (model.GetDeclaredSymbol(@interface) is not INamedTypeSymbol symbol) return;
             if (!symbol.GetAttributes().Any(ad =>
-                    ad.AttributeClass?.BaseType?.ToDisplayString() == "Zooyard.Attributes.ZooyardAttribute")) continue;
+                    ad.AttributeClass?.BaseType?.ToDisplayString() == "Zooyard.Attributes.ZooyardAttribute")) return;
 
             var rpcAttribute = symbol.GetAttributes().FirstOrDefault(ad =>
                 ad.AttributeClass?.BaseType?.ToDisplayString() == "Zooyard.Attributes.ZooyardAttribute");
 
-            if (rpcAttribute == null) continue;
+            if (rpcAttribute == null) return;
 
             var generateClient = (bool?)rpcAttribute
                 .NamedArguments
@@ -52,26 +52,14 @@ public class RpcClientGenerator : ISourceGenerator
                 .FirstOrDefault(kvp => kvp.Key == "GenerateDependencyInjection").Value.Value ?? true;
 
             // Skip if both are false
-            if (!generateClient && !generateDependencyInjection) continue;
+            if (!generateClient && !generateDependencyInjection) return;
 
-            // below is the code to generate the client
             var serviceName = (string?)rpcAttribute.ConstructorArguments.FirstOrDefault().Value;
-
-            context.LogMessage(serviceName ?? "Null");
 
             var className = symbol.Name.Substring(1) + "Client"; // Changed the class name
             var interfaceName = symbol.Name;
 
-            if (generateDependencyInjection)
-            {
-                clientClasses.Add($"{interfaceName}, {className}");
-            }
-
-
             var symbolNamespace = symbol.ContainingNamespace.ToDisplayString();
-
-            namespaceNameSet.Add(symbolNamespace);
-
 
             var modelCollector = new ModelCollector();
             modelCollector.Visit(@interface.SyntaxTree.GetRoot());
@@ -191,60 +179,21 @@ public class RpcClientGenerator : ISourceGenerator
                 stringBuilder.AppendLine("        [ZooyardImpl]");
                 stringBuilder.AppendLine($"        public {returnType} {methodName}({parameters})");
                 stringBuilder.AppendLine("        {");
-                //stringBuilder.AppendLine("             var stackTrace = new StackTrace(true);");
-                //stringBuilder.AppendLine("             var (mi, mtoken) = _invoker.GetInterfaceMethod(stackTrace,_interfaceMapping);");
-
                 stringBuilder.AppendLine($"             var method = this.GetType().GetMethod(nameof({methodName}), new Type[] {{{parameterTypes}}});");
                 stringBuilder.AppendLine("             var (mi, mtoken) = _invoker.GetInterfaceMethodBase(method, _interfaceMapping);");
                 stringBuilder.AppendLine($"             object[] args = [{callParameters}];");
                 stringBuilder.AppendLine("             var context = _invoker.GetMethodResolverContext(this, _declaringType, mi, mtoken, args);");
                 stringBuilder.AppendLine($"             {invokeAsync}(context);");
+                stringBuilder.AppendLine("        ");
                 stringBuilder.AppendLine("        }");
-
-                context.LogMessage($"Generator method: {methodName} success");
             }
 
             stringBuilder.AppendLine("    }");
             stringBuilder.AppendLine("}");
 
-            context.AddSource($"{className}.g.cs", SourceText.From(stringBuilder.ToString(), Encoding.UTF8));
-
-            context.LogMessage("Client Generator finished");
-
-            //context.LogMessage("DI Generator started");
-
-            //// Generate a new class to register clients to DI container
-            //var registrationClassBuilder = new StringBuilder();
-            //registrationClassBuilder.AppendLine("// <auto-generated/>");
-            //registrationClassBuilder.AppendLine("using Microsoft.Extensions.DependencyInjection;");
-            //foreach (var name in namespaceNameSet)
-            //{
-            //    registrationClassBuilder.AppendLine($"using {name};");
-            //}
-            //registrationClassBuilder.AppendLine();
-            //registrationClassBuilder.AppendLine($"namespace {namespaceName}");
-            //registrationClassBuilder.AppendLine("{");
-            //registrationClassBuilder.AppendLine($"    public static class {className}Extensions");
-            //registrationClassBuilder.AppendLine("    {");
-            //registrationClassBuilder.AppendLine("        public static IServiceCollection AddAutoGeneratedClients(this IServiceCollection services)");
-            //registrationClassBuilder.AppendLine("        {");
-
-            //for (int i = 0; i < clientClasses.Count; i++)
-            //{
-            //    registrationClassBuilder.AppendLine($"            services.AddSingleton<{clientClasses[i]}>();");
-            //}
-
-            //registrationClassBuilder.AppendLine("            return services;");
-            //registrationClassBuilder.AppendLine("        }");
-            //registrationClassBuilder.AppendLine("    }");
-            //registrationClassBuilder.AppendLine("}");
-
-            //context.AddSource($"{className}Extensions.g.cs", SourceText.From(registrationClassBuilder.ToString(), Encoding.UTF8));
-
-            //context.LogMessage("DI Generator finished");
-        }
+            spc.AddSource($"{className}.g.cs", SourceText.From(stringBuilder.ToString(), Encoding.UTF8));
+        });
     }
-
 
     private List<string> GenerateUsing(ModelCollector typeSymbol)
     {
@@ -276,19 +225,4 @@ public class RpcClientGenerator : ISourceGenerator
             base.VisitUsingDirective(node);
         }
     }
-
-    private class SyntaxReceiver : ISyntaxReceiver
-    {
-        public List<InterfaceDeclarationSyntax> CandidateInterfaces { get; } = new();
-
-        public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
-        {
-            // We only care about interface declarations
-            if (syntaxNode is InterfaceDeclarationSyntax { AttributeLists.Count: > 0 } @interface)
-            {
-                CandidateInterfaces.Add(@interface);
-            }
-        }
-    }
 }
-

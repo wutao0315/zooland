@@ -23,7 +23,7 @@ namespace Zooyard.Management;
 
 internal static class IRpcBuilderExtensions
 {
-    public static IRpcBuilder AddConfigBuilder(this IRpcBuilder builder, Type? baseReturnType)
+    public static IRpcBuilder AddConfigBuilder(this IRpcBuilder builder, Dictionary<string, Type> baseReturnTypes)
     {
         builder.Services.TryAddSingleton<IConfigValidator, ConfigValidator>();
         builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IRouteValidator, ServicePatternValidator>());
@@ -107,7 +107,7 @@ internal static class IRpcBuilderExtensions
             var clusters = serviceProvder.GetServices<ICluster>();
             var caches = serviceProvder.GetServices<ICache>();
             var routeFactories = serviceProvder.GetServices<IStateRouterFactory>();
-            var zooyardPools = new ZooyardPools(loggerfactory, clientPools, loadBalances, clusters, caches, routeFactories, lookup, baseReturnType);
+            var zooyardPools = new ZooyardPools(loggerfactory, clientPools, loadBalances, clusters, caches, routeFactories, lookup, baseReturnTypes);
             return zooyardPools;
         });
 

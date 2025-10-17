@@ -29,7 +29,8 @@ public class NettyClientPool : AbstractClientPool
 
     public NettyClientPool(
         ILoggerFactory loggerFactory,
-        ITransportMessageCodecFactory transportMessageCodecFactory):base(loggerFactory.CreateLogger<NettyClientPool>())
+        ITransportMessageCodecFactory transportMessageCodecFactory)
+        :base(loggerFactory.CreateLogger<NettyClientPool>())
     {
         _transportMessageEncoder = transportMessageCodecFactory.GetEncoder();
         _transportMessageDecoder = transportMessageCodecFactory.GetDecoder();

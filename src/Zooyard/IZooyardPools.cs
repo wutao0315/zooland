@@ -1,8 +1,6 @@
-﻿using Zooyard.Configuration;
+﻿namespace Zooyard;
 
-namespace Zooyard;
-
-public interface IZooyardPools:IDisposable
+public interface IZooyardPools : IDisposable
 {
     /// <summary>
     /// clear all cache
@@ -16,7 +14,7 @@ public interface IZooyardPools:IDisposable
 
     Task<IResult<T>?> Invoke<T>(IInvocation invocation);
 
-    Type? BaseReturnType { get; }
+    Dictionary<string, Type> BaseReturnTypes { get; }
 }
 
 

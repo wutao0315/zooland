@@ -51,8 +51,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.SignalRImpl", "src\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.SourceGenerator", "src\Zooyard.SourceGenerator\Zooyard.SourceGenerator.csproj", "{90284D60-2AF6-417D-BA47-6EBD7C4E5D6A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ZooyardClient", "src\ZooyardClient\ZooyardClient.csproj", "{95643D24-776C-4D43-AE6B-A1C4500E1948}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -119,10 +117,6 @@ Global
 		{90284D60-2AF6-417D-BA47-6EBD7C4E5D6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{90284D60-2AF6-417D-BA47-6EBD7C4E5D6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{90284D60-2AF6-417D-BA47-6EBD7C4E5D6A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{95643D24-776C-4D43-AE6B-A1C4500E1948}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{95643D24-776C-4D43-AE6B-A1C4500E1948}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{95643D24-776C-4D43-AE6B-A1C4500E1948}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{95643D24-776C-4D43-AE6B-A1C4500E1948}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -143,7 +137,6 @@ Global
 		{0B291057-68DF-421C-AE68-0CD0B14799C9} = {50C4867C-8931-45F0-B773-463C7B953969}
 		{959C9B84-D7D2-4D17-A648-A8C673EA931D} = {50C4867C-8931-45F0-B773-463C7B953969}
 		{90284D60-2AF6-417D-BA47-6EBD7C4E5D6A} = {50C4867C-8931-45F0-B773-463C7B953969}
-		{95643D24-776C-4D43-AE6B-A1C4500E1948} = {50C4867C-8931-45F0-B773-463C7B953969}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4FBB3247-7E5E-40FB-85B2-67B3E3D57FCB}

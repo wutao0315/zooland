@@ -12,14 +12,12 @@ using Zooyard.DynamicProxy;
 using Zooyard.Exceptions;
 using Zooyard.Rpc;
 using Zooyard.Utils;
-using Zooyard.Management;
 
 namespace Zooyard;
 public class ZooyardInvoker
 {
     private readonly ILogger _logger;
     private readonly IZooyardPools _zooyardPools;
-    //private readonly IRpcStateLookup _proxyStateLookup;
     private readonly IEnumerable<IInterceptor> _interceptors;
     private readonly ZooyardAttribute _zooyardAttribute;
     private readonly string _replacedUrl;
@@ -32,7 +30,6 @@ public class ZooyardInvoker
         }
         _logger = logger;
         _zooyardAttribute = zooyardAttribute;
-        //_proxyStateLookup = serviceProvider.GetRequiredService<IRpcStateLookup>();
         _zooyardPools = serviceProvider.GetRequiredService<IZooyardPools>(); ;
         _interceptors = serviceProvider.GetRequiredService<IEnumerable<IInterceptor>>();
         var configuration = serviceProvider.GetRequiredService<IConfiguration>();
@@ -318,15 +315,16 @@ public class ZooyardInvoker
                 result = await ReturnCall<TT>();
             }
             //全局设置基础返回父类
-            else if (_zooyardPools.BaseReturnType != null && _zooyardPools.BaseReturnType != typeof(TT))
+            else if (_zooyardPools.BaseReturnTypes != null 
+                && _zooyardPools.BaseReturnTypes.TryGetValue(_zooyardAttribute.TypeName, out var baseReturnType) 
+                && baseReturnType != typeof(TT))
             {
-                result = await BaseReturnCall<ZooyardPools>(_zooyardPools.BaseReturnType);
+                result = await BaseReturnCall<ZooyardPools>(baseReturnType);
             }
             else 
             {
                 result = await ReturnCall<TT>();
             }
-
 
             async Task<IResult<TT>?> BaseReturnCall<TA>(Type baseReturnType)
             {

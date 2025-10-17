@@ -40,6 +40,7 @@ class Program
            services.AddLogging();
 
            services.AddMemoryCache();
+
            services.AddRpcDefault()
                .LoadFromConfig(config.GetSection("zooyard"))
                .AddHttp()

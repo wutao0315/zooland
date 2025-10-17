@@ -1,6 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Net.Sockets;
-using System.Reflection;
 using Thrift;
 using Thrift.Protocol;
 using Thrift.Protocol.Entities;
@@ -12,9 +10,9 @@ namespace Zooyard.ThriftImpl.Header;
 
 public class TBinaryHeaderProtocol : TBinaryProtocol
 {
-    public const string ActivityName = "Zooyard.ThriftImpl.TBinaryHeaderProtocol.RequestOut";
+    //public const string ActivityName = "Zooyard.ThriftImpl.TBinaryHeaderProtocol.RequestOut";
     private Activity? activity;
-    private bool isNewActivity = false;
+    //private bool isNewActivity = false;
     private IDictionary<string, string> HEAD_INFO;
 
     public TBinaryHeaderProtocol(TTransport transport) : base(transport)
@@ -32,30 +30,33 @@ public class TBinaryHeaderProtocol : TBinaryProtocol
 
         //trace start
         activity = Activity.Current;
-        if (activity == null)
+        //if (activity == null)
+        //{
+        //    activity = new Activity(ActivityName);
+        //    activity.Start();
+        //    isNewActivity = true;
+        //}
+        if (activity != null)
         {
-            activity = new Activity(ActivityName);
-            activity.Start();
-            isNewActivity = true;
+            activity.SetTag("rpc.thrift", "start");
+            HEAD_INFO.Add("rpc.thrift", "start");
+
+            string methodName = message.Name;
+            activity.SetTag("rpc.thrift.method", methodName);
+            HEAD_INFO.Add("rpc.thrift.method", methodName);
+            TTransport transport = this.Transport;
+
+
+            if (transport is TSocketTransport socket)
+            {
+                string hostAddress = socket.Host.MapToIPv4().ToString();
+                activity.SetTag("rpc.thrift.server", hostAddress);
+                HEAD_INFO.Add("rpc.thrift.server", hostAddress);
+            }
+
+            this.InjectHeaders(activity, HEAD_INFO);
         }
-
-        activity?.SetTag("rpc.thrift", "start");
-        HEAD_INFO.Add("rpc.thrift", "start");
-
-        string methodName = message.Name;
-        activity?.SetTag("rpc.thrift.method", methodName);
-        HEAD_INFO.Add("rpc.thrift.method", methodName);
-        TTransport transport = this.Transport;
-
-
-        if (transport is TSocketTransport socket)
-        {
-            string hostAddress = socket.Host.MapToIPv4().ToString();
-            activity?.SetTag("rpc.thrift.server", hostAddress);
-            HEAD_INFO.Add("rpc.thrift.server", hostAddress);
-        }
-
-        this.InjectHeaders(activity!, HEAD_INFO);
+        
 
         await base.WriteMessageBeginAsync(message, cancellationToken);
 
@@ -92,20 +93,17 @@ public class TBinaryHeaderProtocol : TBinaryProtocol
         {
             TApplicationException x = await TApplicationException.ReadAsync(this, cancellationToken);
 
-            activity!.SetTag("rpc.thrift.exception", x.StackTrace);
+            activity?.SetTag("rpc.thrift.exception", x.StackTrace);
 
-            if (isNewActivity)
-            {
-                activity!.Stop();
-            }
-            //TraceUtils.submitAdditionalAnnotation(Constants.TRACE_THRIFT_EXCEPTION, StringUtil.trimNewlineSymbolAndRemoveExtraSpace(x.getMessage()));
-            //TraceUtils.endAndSendLocalTracer();
+            //if (isNewActivity)
+            //{
+            //    activity?.Stop();
+            //}
         }
-        else if (tMessage.Type == TMessageType.Reply)
-        {
-            //TraceUtils.endAndSendLocalTracer();
-            activity!.Stop();
-        }
+        //else if (tMessage.Type == TMessageType.Reply)
+        //{
+        //    //activity?.Stop();
+        //}
         return tMessage;
     }
 }

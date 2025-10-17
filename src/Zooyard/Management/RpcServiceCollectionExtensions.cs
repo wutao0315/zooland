@@ -27,7 +27,7 @@ public static class RpcServiceCollectionExtensions
     {
         var builder = new RpcBuilder(services);
         builder
-            .AddConfigBuilder(typeof(ResponseDataResult<>))
+            .AddConfigBuilder(new Dictionary<string, Type> { [ZooyardHttpAttribute.TYPENAME] = typeof(ResponseDataResult<>) })
             .AddRuntimeStateManagers()
             .AddConfigManager()
             //.AddInstanceResolver()
@@ -39,12 +39,12 @@ public static class RpcServiceCollectionExtensions
     /// <summary>
     /// Adds Rpc's services to Dependency Injection.
     /// </summary>
-    public static IRpcBuilder AddRpc(this IServiceCollection services, Type? baseReturnType = null, Type? baseInterceptor = null)
+    public static IRpcBuilder AddRpc(this IServiceCollection services,Dictionary<string, Type> baseReturnTypes, Type? baseInterceptor = null)
     {
         
         var builder = new RpcBuilder(services);
         builder
-            .AddConfigBuilder(baseReturnType)
+            .AddConfigBuilder(baseReturnTypes)
             .AddRuntimeStateManagers()
             .AddConfigManager()
             //.AddInstanceResolver()
