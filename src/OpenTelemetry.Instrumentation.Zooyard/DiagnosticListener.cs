@@ -34,7 +34,7 @@ internal class DiagnosticListener : IObserver<KeyValuePair<string, object?>>
                     {
                         if (msg.GetAttributes().TryGetValue(key, out object? value))
                         {
-                            return new[] { value.ToString() };
+                            return new[] { value.ToString()! };
                         }
                         return Enumerable.Empty<string>();
                     });
@@ -84,9 +84,12 @@ internal class DiagnosticListener : IObserver<KeyValuePair<string, object?>>
                     var eventData = (EventDataStore)evt.Value!;
                     if (Activity.Current is { } activity)
                     {
-                        var exception = eventData.Exception!;
-                        activity.SetStatus(Status.Error.WithDescription(exception.Message));
-                        activity.RecordException(exception);
+                        var exception = eventData.Exception;
+                        if (exception !=null) 
+                        {
+                            activity.SetStatus(ActivityStatusCode.Error, exception.Message);
+                            activity.AddException(exception);
+                        }
                         activity.Stop();
                     }
                 }

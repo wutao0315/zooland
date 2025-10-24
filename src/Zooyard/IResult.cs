@@ -87,6 +87,7 @@ public record ResponseDataResult
 {
     public int Code { get; set; }
     public string Msg { get; set; } = string.Empty;
+    public string Trace { get; set; } = string.Empty;
 }
 
 public record ResponseDataResult<T> : IBaseReturnResult
