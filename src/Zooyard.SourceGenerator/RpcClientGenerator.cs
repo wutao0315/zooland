@@ -147,14 +147,19 @@ public class RpcClientGenerator : IIncrementalGenerator
                 }
                 string GetTypeArguments(ITypeSymbol returnType)
                 {
+                    if (returnType is IArrayTypeSymbol arrType)
+                    {
+                        return arrType.ElementType.ToString() + "[]";
+                    }
+
                     if (returnType is not INamedTypeSymbol namedType)
                     {
-                        return "";
+                        return returnType.GetType().ToString();
                     }
 
                     if (namedType.TypeArguments.Length == 0)
                     {
-                        return namedType.Name;
+                        return namedType.ToString();
                     }
 
                     var argStr = "<";

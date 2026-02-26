@@ -14,6 +14,14 @@ public static class ObjectExtensions
             else
                 return Enum.ToObject(type, value);
         }
+        if (type == typeof(string))
+        {
+            return value.ToString();
+        }
+        if (type == typeof(DateTime))
+        {
+            return Convert.ToDateTime(value);
+        }
         if (!type.IsInterface && type.IsGenericType)
         {
             Type innerType = type.GetGenericArguments()[0];
