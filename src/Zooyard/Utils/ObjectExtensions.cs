@@ -204,19 +204,23 @@ internal static class ObjectExtensions
         if (type.IsEnum)
         {
             if (value is string val)
-                return Enum.Parse(type, val);
+                return System.Enum.Parse(type, val);
             else
-                return Enum.ToObject(type, value);
+                return System.Enum.ToObject(type, value);
+        }
+        if (type == typeof(string))
+        {
+            return value.ToString();
+        }
+        if (type == typeof(DateTime))
+        {
+            return Convert.ToDateTime(value);
         }
         if (!type.IsInterface && type.IsGenericType)
         {
             Type innerType = type.GetGenericArguments()[0];
             object? innerValue = ChangeType(value, innerType);
-            return Activator.CreateInstance(type, [innerValue]);
-        }
-        if (type == typeof(string))
-        {
-            return value.ToString();
+            return Activator.CreateInstance(type, new object?[] { innerValue });
         }
         if (value is string valGuid && type == typeof(Guid)) return new Guid(valGuid);
         if (value is string valVersion && type == typeof(Version)) return new Version(valVersion);
@@ -229,6 +233,7 @@ internal static class ObjectExtensions
         } // end if
         return Convert.ChangeType(value, type);
     }
+
 }
 
 #region Conerter 集合类
