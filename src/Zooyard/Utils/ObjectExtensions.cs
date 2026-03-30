@@ -814,7 +814,7 @@ public class StringConverter : JsonConverter<string>
             JsonTokenType.Number when reader.TryGetUInt64(out ulong ul) => ul.ToString(),
             JsonTokenType.Number when reader.TryGetSingle(out float f) => f.ToString(),
             JsonTokenType.Number => reader.GetDouble().ToString(),
-            JsonTokenType.String when reader.TryGetDateTime(out DateTime datetime) => datetime.ToString("yyyy-MM-dd HH:mm:ss.fff"),
+            //JsonTokenType.String when reader.TryGetDateTime(out DateTime datetime) => datetime.ToString("yyyy-MM-dd HH:mm:ss.fff"),
             JsonTokenType.String => reader.GetString() ?? "",
             _ => throw new JsonException("String Converter err")
         };
