@@ -15,6 +15,10 @@ public interface IHelloService
     [GetMapping("callvoid")]
     Task CallVoid();
 
+    [GetMapping("callvoidnook")]
+    Task CallVoidNoOk();
+    
+
     [GetMapping("hello/{name}")]
     Task<string?> Hello(string name);
 

@@ -1,6 +1,9 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Google.Protobuf;
+using Google.Protobuf.Reflection;
+using System.ComponentModel;
 using Zooyard.DynamicProxy;
 using Zooyard.Rpc;
+using Zooyard.Utils;
 
 namespace Zooyard;
 
@@ -9,6 +12,8 @@ public interface IResult
     long ElapsedMilliseconds { get; set; }
     bool HasException { get; }
     Exception? Exception { get; }
+
+    object? OriginalValue { get; }
 }
 
 
@@ -19,6 +24,7 @@ public interface IResult<T> : IResult
 
 public record RpcResult<T> : IResult<T>
 {
+    public object? OriginalValue { get; init; }
     public T? Value { get; private set; }
     public long ElapsedMilliseconds { get; set; }
     public Exception? Exception { get; private set; }
@@ -78,34 +84,68 @@ public record ClusterResult<T> : IClusterResult<T>
     }
 }
 
-public interface IBaseReturnResult
+public interface IResultTranslate
 {
-    T? Translate<T>();
+    T? Translate<T>(object obj);
 }
 
-public record ResponseDataResult 
+public class ResultTranslate : IResultTranslate
+{
+    public T? Translate<T>(object obj)
+    {
+        if (obj is ResponseDataResult<T> responseObj)
+        {
+            return responseObj.Data;
+        }
+
+        if (obj is ResponseMessage rm)
+        {
+            TypeRegistry registry = CreateTypeRegistryFromType<T>();
+
+            IMessage message = rm.Data.Unpack(registry);
+
+            if (message is T t) 
+            {
+                return t;
+            }
+
+            throw new ArgumentException($"{message.GetType().Name} 不是有效的 {typeof(T).Name}类型");
+        }
+        return default;
+
+        TypeRegistry CreateTypeRegistryFromType<T>()
+        {
+            var messageType = typeof(T);
+
+            var descriptorProp = messageType.GetProperty("Descriptor");
+           
+            if (descriptorProp == null)
+                throw new ArgumentException($"{messageType.Name} 不是有效的 Protobuf 消息类型");
+
+            MessageDescriptor descriptor = (MessageDescriptor)descriptorProp.GetValue(null)!;
+
+            return TypeRegistry.FromFiles(descriptor.File);
+        }
+    }
+    
+}
+
+public record ResponseDataResult
 {
     public int Code { get; set; }
     public string Msg { get; set; } = string.Empty;
-    public string Trace { get; set; } = string.Empty;
+    public string? Trace { get; set; }
 }
 
-public record ResponseDataResult<T> : IBaseReturnResult
-    where T : class
+public record ResponseDataResult<T> : ResponseDataResult
 {
     public T? Data { get; set; }
-
-    public T1? Translate<T1>()
-    {
-        var result = (T1?)Data.ChangeType(typeof(T1));
-        return result;
-    }
 }
 
 /// <summary>
 /// 路径过滤器
 /// </summary>
-public class ResponseRpcInterceptor(ILogger<ResponseRpcInterceptor> _logger) : IInterceptor
+public class ResponseRpcInterceptor : IInterceptor
 {
     public async Task<string> UrlCall(string url, ProxyMethodResolverContext context)
     {
@@ -120,12 +160,14 @@ public class ResponseRpcInterceptor(ILogger<ResponseRpcInterceptor> _logger) : I
 
     public async Task AfterCall<T>(IInvocation invocation, RpcContext context, IResult<T>? obj)
     {
-        if (obj != null && !obj.HasException && obj.Value is ResponseDataResult baseObj)
+        if (obj != null && !obj.HasException && obj.Value != null && obj.Value is ResponseDataResult baseObj && baseObj.Code != 0)
         {
-            if (baseObj.Code != 0)
-            {
-                throw new ResponseRpcException(baseObj.Msg);
-            }
+            throw new ResponseRpcException(baseObj.Msg, baseObj.Trace);
+        }
+
+        if (obj != null && !obj.HasException && obj.Value != null && obj.Value is ResponseMessage rm && rm.Code != 0)
+        {
+            throw new ResponseRpcException(rm.Msg, rm.Trace);
         }
         await Task.CompletedTask;
     }
@@ -133,9 +175,7 @@ public class ResponseRpcInterceptor(ILogger<ResponseRpcInterceptor> _logger) : I
     public int Order => -999;
 }
 
-public class ResponseRpcException : Exception
+public class ResponseRpcException(string message, string? trace = null) 
+    : Exception(message, string.IsNullOrWhiteSpace(trace)? null: new Exception(trace) )
 {
-    public ResponseRpcException(string message) : base(message)
-    {
-    }
 }

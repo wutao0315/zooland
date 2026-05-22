@@ -140,12 +140,12 @@ public class HttpInvoker(ILogger logger, IHttpClientFactory _instance, int _clie
         {
             if (invocation.MethodInfo.ReturnType == typeof(void) || invocation.MethodInfo.ReturnType == typeof(Task))
             {
-                return new RpcResult<T>();
+                return new RpcResult<T>() { OriginalValue = value };
             }
 
             if (invocation.MethodInfo.ReturnType.IsValueType || invocation.MethodInfo.ReturnType == typeof(string))
             {
-                return new RpcResult<T>((T)value.ChangeType(typeof(T))!);
+                return new RpcResult<T>((T)value.ChangeType(typeof(T))!) { OriginalValue = value };
             }
 
             if (invocation.MethodInfo.ReturnType.IsGenericType &&
@@ -155,15 +155,15 @@ public class HttpInvoker(ILogger logger, IHttpClientFactory _instance, int _clie
 
                 if (tastGenericType.IsValueType || tastGenericType == typeof(string))
                 {
-                    return new RpcResult<T>((T)value.ChangeType(typeof(T))!);
+                    return new RpcResult<T>((T)value.ChangeType(typeof(T))!) { OriginalValue = value };
                 }
 
                 var genericData = value.DeserializeJsonThrow<T>();
-                return new RpcResult<T>(genericData);
+                return new RpcResult<T>(genericData) { OriginalValue = value };
             }
         }
 
-        var result = new RpcResult<T>(value.DeserializeJsonThrow<T>());
+        var result = new RpcResult<T>(value.DeserializeJsonThrow<T>()) { OriginalValue = value };
         return result;
 
     }

@@ -15,11 +15,7 @@ public interface IZooyardPools : IDisposable
     Task<IResult<T>?> Invoke<T>(IInvocation invocation);
 
     Dictionary<string, Type> BaseReturnTypes { get; }
+
+    public IResultTranslate ResultTranslate { get; }
+
 }
-
-
-//public sealed record ZooyardOption 
-//{
-//    public IDictionary<string, string> Metadata { get; set; } = new Dictionary<string, string>();
-//    public IDictionary<string, ServiceConfig> Services { get; set; } = new Dictionary<string, ServiceConfig>();
-//}

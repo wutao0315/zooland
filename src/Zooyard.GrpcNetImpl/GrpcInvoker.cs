@@ -79,12 +79,12 @@ public class GrpcInvoker(ILogger logger, object _instance, int _clientTimeout) :
             {
                 var resultTask = (AsyncUnaryCall<T>)taskResult;
                 var resultData = await resultTask;
-                var result = new RpcResult<T>(resultData);
+                var result = new RpcResult<T>(resultData) { OriginalValue = resultData };
                 return result;
             }
             else
             {
-                var result = new RpcResult<T>((T)taskResult.ChangeType(typeof(T))!);
+                var result = new RpcResult<T>((T)taskResult.ChangeType(typeof(T))!) { OriginalValue = taskResult };
                 return result;
             }
         }

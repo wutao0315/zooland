@@ -1,16 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
+	
 	<PropertyGroup>
+		<TargetFramework>netstandard2.1</TargetFramework>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<Nullable>disable</Nullable>
 		<IsPackable>false</IsPackable>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 	</PropertyGroup>
   <ItemGroup>
     <PackageReference Include="ApacheThrift" />
   </ItemGroup>
-
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Zooyard.SourceGenerator\Zooyard.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
-    <ProjectReference Include="..\..\src\Zooyard\Zooyard.csproj" />
+    <Folder Include="gen-netstd\" />
   </ItemGroup>
+
+
 
 </Project>

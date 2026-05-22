@@ -50,8 +50,8 @@ namespace ZooyardTest
             Assert.IsNotNull(httpHelloService);
             var nettyHelloService = bsp.GetService<RpcContractNetty.IHelloService>();
             Assert.IsNotNull(nettyHelloService);
-            var thriftHelloService = bsp.GetService<RpcContractThrift.IHelloService>();
-            Assert.IsNotNull(thriftHelloService);
+            //var thriftHelloService = bsp.GetService<RpcContractThrift.IHelloService>();
+            //Assert.IsNotNull(thriftHelloService);
 
         }
     }

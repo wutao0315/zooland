@@ -2,6 +2,8 @@
 
 import "memberModel.proto";
 
+import "common.proto";
+
 package MemberGrpc;
 
 
@@ -11,7 +13,7 @@ service SessionService {
 	/**
 	 * 创建用于应用访问的AccessToken
 	 */
-	rpc MemberRefresh (MemberRefreshRequest) returns (ResponseMessage);
+	rpc MemberRefresh (MemberRefreshRequest) returns (Zooyard.Rpc.ResponseMessage);
 	/**
 	 * 用户冻结
 	 */
@@ -19,46 +21,46 @@ service SessionService {
 	/**
 	 * 登录
 	 */
-	rpc MemberLogin (MemberLoginRequest) returns (ResponseMessage);
+	rpc MemberLogin (MemberLoginRequest) returns (Zooyard.Rpc.ResponseMessage);
 	/**
 	 * 登录 第三方OpenId登录
 	 */
-	rpc MemberThirdLogin (MemberThirdLoginRequest) returns (ResponseMessage);
+	rpc MemberThirdLogin (MemberThirdLoginRequest) returns (Zooyard.Rpc.ResponseMessage);
 	
 	/**
 	 * 登录 短信码登录
 	 */
-	rpc MemberSmsLogin (MemberSmsLoginRequest) returns (ResponseMessage);
+	rpc MemberSmsLogin (MemberSmsLoginRequest) returns (Zooyard.Rpc.ResponseMessage);
 	/**
 	 * 登录 二维码扫码登录
 	 */
-	rpc MemberQRCodeLogin (MemberQRCodeLoginRequest) returns (ResponseMessage);
+	rpc MemberQRCodeLogin (MemberQRCodeLoginRequest) returns (Zooyard.Rpc.ResponseMessage);
 	/**
 	 * 用户锁定
 	 */
-	rpc MemberLock (MemberLockRequest) returns (ResponseMessage);
+	rpc MemberLock (MemberLockRequest) returns (Zooyard.Rpc.ResponseMessage);
 	/**
 	 * 用户解除锁定
 	 */
-	rpc MemberUnLock (MemberUnLockRequest) returns (ResponseMessage);
+	rpc MemberUnLock (MemberUnLockRequest) returns (Zooyard.Rpc.ResponseMessage);
 	/**
 	 * 登出
 	 */
-	rpc MemberLogOut (MemberLogOutRequest) returns (ResponseMessage);
+	rpc MemberLogOut (MemberLogOutRequest) returns (Zooyard.Rpc.ResponseMessage);
     /**
 	 * API list
 	 */
-	rpc GetApi (GetApiRequest) returns (ResponseMessage);
+	rpc GetApi (GetApiRequest) returns (Zooyard.Rpc.ResponseMessage);
     /**
 	 * User Touch Session Message
 	 */
-    rpc UserTouch (TouchRequest) returns (ResponseMessage);
+    rpc UserTouch (TouchRequest) returns (Zooyard.Rpc.ResponseMessage);
     /**
 	 * App Touch Session Message
 	 */
-    rpc AppTouch (TouchRequest) returns (ResponseMessage);
+    rpc AppTouch (TouchRequest) returns (Zooyard.Rpc.ResponseMessage);
     /**
 	 * BasicTouch Session Message
 	 */
-    rpc BasicTouch (BasicTouchRequest) returns (ResponseMessage);
+    rpc BasicTouch (BasicTouchRequest) returns (Zooyard.Rpc.ResponseMessage);
 }

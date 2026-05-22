@@ -298,6 +298,18 @@ public class TestHostedService(RpcContractHttp.IHelloService helloServiceHttp,
         helloServiceHttp.CallName(helloword);
         Console.WriteLine("CallName called");
         await helloServiceHttp.CallVoid();
+
+        try
+        {
+            Console.WriteLine("CallName called no ok");
+            await helloServiceHttp.CallVoidNoOk();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+        
+
         Console.WriteLine("CallVoid called");
         var hello = await helloServiceHttp.Hello(helloword);
         Console.WriteLine(hello);

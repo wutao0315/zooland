@@ -4,14 +4,13 @@
 		<IsPackable>false</IsPackable>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 	</PropertyGroup>
-	<ItemGroup>
-		<Protobuf Include="Protos/*.proto" ProtoRoot="Protos" />
-	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Google.Protobuf" />
 		<PackageReference Include="Grpc.Net.Client" />
 		<PackageReference Include="Grpc.Tools" PrivateAssets="All" />
+		<Protobuf AdditionalImportDirs="$(SolutionDir)\src\Zooyard\Protos" Include="Protos/*.proto" ProtoRoot="Protos" />
+		<Protobuf Remove="Protos/common.proto" />
 	</ItemGroup>
 
 	<ItemGroup>

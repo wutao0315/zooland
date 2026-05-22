@@ -83,6 +83,7 @@ public class ZooyardPools : IZooyardPools
         , IEnumerable<IStateRouterFactory> routerFactories
         , IRpcStateLookup proxyStateLookup
         , Dictionary<string, Type> baseReturnTypes
+        , IResultTranslate resultTranslate
         )
     {
         _logger = loggerFactory.CreateLogger<ZooyardPools>();
@@ -108,6 +109,7 @@ public class ZooyardPools : IZooyardPools
         }
 
         BaseReturnTypes = baseReturnTypes;
+        ResultTranslate = resultTranslate;
 
         _proxyStateLookup = proxyStateLookup;
         
@@ -240,6 +242,7 @@ public class ZooyardPools : IZooyardPools
         _configChange.Dispose();
     }
     public Dictionary<string, Type> BaseReturnTypes { get; private set; }
+    public IResultTranslate ResultTranslate { get; private set; }
     /// <summary>
     /// exec rpc
     /// </summary>

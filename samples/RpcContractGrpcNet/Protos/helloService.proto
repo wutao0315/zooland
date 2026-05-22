@@ -1,5 +1,7 @@
 ﻿syntax = "proto3";
 
+import "common.proto";
+
 package RpcContractGrpcNet;
 
 
@@ -14,7 +16,7 @@ service HelloService {
   // SayHello
   rpc SayHello (NameResult) returns (HelloResult) {}
   // ShowHello
-  rpc ShowHello (HelloResult) returns (NameResult) {}
+  rpc ShowHello (HelloResult) returns (Zooyard.Rpc.ResponseMessage) {}
 }
 
 // The NameResult message.

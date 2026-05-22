@@ -63,6 +63,7 @@ public abstract class ZooyardAttribute : AbstractAttribute
     /// 该属性空代表不起作用，该属性设置后影响所有接口
     /// </summary>
     public Type? BaseReturnType { get; set; }
+    public Type? ResultTranslateType { get; set; }
     /// <summary>
     ///构造函数
     /// </summary>

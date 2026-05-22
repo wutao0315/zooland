@@ -10,11 +10,11 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
     <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\src\Zooyard.DotNettyImpl\Zooyard.DotNettyImpl.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.GrpcNetImpl\Zooyard.GrpcNetImpl.csproj" />
     <ProjectReference Include="..\..\src\Zooyard\Zooyard.csproj" />
+	<ProjectReference Include="..\..\src\Zooyard.SourceGenerator\Zooyard.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
     <ProjectReference Include="..\..\src\Zooyard.HttpImpl\Zooyard.HttpImpl.csproj" />
     <ProjectReference Include="..\..\src\Zooyard.ThriftImpl\Zooyard.ThriftImpl.csproj" />
     <ProjectReference Include="..\RpcContractGrpcNet\RpcContractGrpcNet.csproj" />

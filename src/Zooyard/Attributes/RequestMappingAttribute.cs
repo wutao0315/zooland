@@ -27,6 +27,7 @@ public class RequestMappingAttribute : AbstractAttribute
     /// 该属性空代表不起作用，该属性设置后影响当前接口，并覆盖接口上的设置
     /// </summary>
     public Type? BaseReturnType { get; set; }
+    public Type? ResultTranslateType { get; set; }
     /// <summary>
     /// 构造函数
     /// </summary>

@@ -30,32 +30,32 @@ public class NettyInvoker(ILogger _logger, ITransportClient _channel, int _clien
             var response = await _channel.SendAsync(message, CancellationToken.None);
             if (invocation.MethodInfo.ReturnType == typeof(Task))
             {
-                return new RpcResult<T>();
+                return new RpcResult<T>() { OriginalValue = response };
             }
             else if (invocation.MethodInfo.ReturnType.IsGenericType 
                 && invocation.MethodInfo.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
             {
                 if (typeof(T).IsValueType || typeof(T) == typeof(string))
                 {
-                    return new RpcResult<T>((T)response.Data.ChangeType(typeof(T))!);
+                    return new RpcResult<T>((T)response.Data.ChangeType(typeof(T))!) { OriginalValue = response };
                 }
                 else 
                 {
                     var data = JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(response.Data, JsonTransportMessageCodecFactory._option), JsonTransportMessageCodecFactory._option)!;
 
-                    return new RpcResult<T>(data);
+                    return new RpcResult<T>(data) { OriginalValue = response };
                 }
             }
 
             if (typeof(T).IsValueType || typeof(T) == typeof(string))
             {
-                return new RpcResult<T>((T)response.Data!);
+                return new RpcResult<T>((T)response.Data!) { OriginalValue = response };
             }
             else
             {
                 var data = JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(response.Data, JsonTransportMessageCodecFactory._option), JsonTransportMessageCodecFactory._option)!;
 
-                return new RpcResult<T>(data);
+                return new RpcResult<T>(data) { OriginalValue = response };
             }
         }
         catch (Exception ex)

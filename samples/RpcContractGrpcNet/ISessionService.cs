@@ -1,4 +1,5 @@
 ﻿using Zooyard.Attributes;
+using Zooyard.Rpc;
 
 namespace MemberGrpc;
 

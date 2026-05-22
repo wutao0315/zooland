@@ -1,5 +1,7 @@
-﻿using Grpc.Core;
+﻿using Google.Protobuf.WellKnownTypes;
+using Grpc.Core;
 using RpcContractGrpcNet;
+using Zooyard.Rpc;
 
 namespace RpcProviderCore;
 
@@ -66,7 +68,7 @@ public class HelloServiceGrpcNetImpl : HelloService.HelloServiceBase
 
         return Task.FromResult<RpcContractGrpcNet.HelloResult>(result);
     }
-    public override Task<NameResult> ShowHello(RpcContractGrpcNet.HelloResult request, ServerCallContext context)
+    public override Task<ResponseMessage> ShowHello(RpcContractGrpcNet.HelloResult request, ServerCallContext context)
     {
         Console.WriteLine($"from grpc {request.Name} call SayHello! [{ServiceName}]");
         var hello = _helloRepository.SayHello();
@@ -75,7 +77,7 @@ public class HelloServiceGrpcNetImpl : HelloService.HelloServiceBase
             Name = $"from grpc name:{request.Name}；gender:{request.Gender}；avatar:{request.Head} [{ServiceName}]{hello}"
         };
 
-        return Task.FromResult<NameResult>(result);
+        return Task.FromResult<ResponseMessage>(new ResponseMessage { Code=0, Msg="ok", Data = Any.Pack(result) });
     }
 
 }

@@ -12,6 +12,13 @@
 		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<PackageReference Include="Google.Protobuf" />
+		<PackageReference Include="Grpc.Net.Client" />
+		<PackageReference Include="Grpc.Tools" PrivateAssets="All" />
+		<Protobuf Include="Protos/*.proto" ProtoRoot="Protos" GrpcServices="None" />
+	</ItemGroup>
+
 
 	<ItemGroup>
 		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">

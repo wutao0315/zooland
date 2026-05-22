@@ -28,6 +28,14 @@ public class HelloController : ControllerBase
         Console.WriteLine($"call CallVoid![{ServiceName}]");
         return Ok(new { code = 0, msg = "ok" });
     }
+
+    [HttpGet("callvoidnook")]
+    public IActionResult CallVoidNoOk()
+    {
+        Console.WriteLine($"call CallVoid![{ServiceName}]");
+        return Ok(new { code = 500, msg = "nok" });
+    }
+
     [HttpGet("hello/{name}")]
     public IActionResult Hello(string name)
     {

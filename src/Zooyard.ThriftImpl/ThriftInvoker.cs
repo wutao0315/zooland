@@ -44,7 +44,7 @@ public class ThriftInvoker(ILogger logger, TBaseClient _instance, int _clientTim
                 return new RpcResult<T>();
             }
             var valueOut = await (Task<T>)taskInvoke;
-            return new RpcResult<T>(valueOut);
+            return new RpcResult<T>(valueOut) { OriginalValue = valueOut };
         }
         catch (Exception ex)
         {

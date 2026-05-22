@@ -350,10 +350,3 @@ message PrmTouchSession
     PrmDataSession Data = 3;
     int64 NowTime = 4;
 }
-
-message ResponseMessage {
-	int32 Code = 1;
-	string Msg = 2;
-	string Trace = 3;
-	google.protobuf.Any Data = 4;
-}
