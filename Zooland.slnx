@@ -1,0 +1,30 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/src/">
+    <Project Path="src/Zooyard/Zooyard.csproj" />
+    <Project Path="src/Zooyard.HttpImpl/Zooyard.HttpImpl.csproj" />
+    <Project Path="src/Zooyard.ThriftImpl/Zooyard.ThriftImpl.csproj" />
+    <Project Path="src/Zooyard.DotNettyImpl/Zooyard.DotNettyImpl.csproj" />
+    <Project Path="src/Zooyard.GrpcNetImpl/Zooyard.GrpcNetImpl.csproj" />
+    <Project Path="src/Zooyard.SourceGenerator/Zooyard.SourceGenerator.csproj" />
+    <Project Path="src/OpenTelemetry.Instrumentation.Zooyard/OpenTelemetry.Instrumentation.Zooyard.csproj" />
+  </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/RpcContractGrpcNet/RpcContractGrpcNet.csproj" />
+    <Project Path="samples/RpcContractHttp/RpcContractHttp.csproj" />
+    <Project Path="samples/RpcContractNetty/RpcContractNetty.csproj" />
+    <Project Path="samples/RpcConsumerCore/RpcConsumerCore.csproj" />
+    <Project Path="samples/RpcProviderCore/RpcProviderCore.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/Zooyard.CoreTest/Zooyard.CoreTest.csproj" />
+  </Folder>
+  <Folder Name="/build/">
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+  </Folder>
+</Solution>

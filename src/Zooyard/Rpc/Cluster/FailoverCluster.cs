@@ -137,7 +137,7 @@ public class FailoverCluster : AbstractCluster
             }
         }
 
-         var re = new RpcException(le != null ? le.Code : 0, "Failed to invoke the method "
+         var re = new RpcException(le != null ? le.Code : 0, "Failover Failed to invoke the method "
                + invocation.MethodInfo.Name + " in the service " + invocation.TargetType.FullName
                + ". Tried " + len + " times of the providers " + string.Join(",", providers)
                + " (" + providers.Count + "/" + invokers.Count + "@" + string.Join(",", invokers.Select(w => w.ToFullString()))

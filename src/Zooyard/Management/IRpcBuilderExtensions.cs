@@ -14,7 +14,6 @@ using Zooyard.Rpc.Route.None;
 using Zooyard.Rpc.Route.Script;
 using Zooyard.Rpc.Route.State;
 using Zooyard.Rpc.Route.Tag;
-//using Zooyard.ServiceDiscovery;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;

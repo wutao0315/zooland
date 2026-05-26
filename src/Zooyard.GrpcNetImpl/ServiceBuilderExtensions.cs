@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Zooyard.GrpcNetImpl;
+using Zooyard.Rpc;
 
 namespace Microsoft.Extensions.Configuration;
 
@@ -16,8 +17,8 @@ public static class ServiceBuilderExtensions
     public static IRpcBuilder AddGrpcNet(this IRpcBuilder builder)
     {
         builder.Services.AddSingleton<ClientInterceptor, ClientGrpcHeaderInterceptor>();
-
-        builder.Services.AddTransient((serviceProvder) => 
+        
+        builder.Services.AddSingleton((serviceProvder) => 
         {
             var option = serviceProvder.GetRequiredService<IOptionsMonitor<GrpcNetOption>>().CurrentValue;
             var loggerFactory = serviceProvder.GetRequiredService<ILoggerFactory>();

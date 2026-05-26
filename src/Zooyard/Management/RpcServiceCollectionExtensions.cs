@@ -10,7 +10,6 @@ using Zooyard.Configuration.ConfigProvider;
 using Zooyard.Management;
 using Zooyard.Rpc;
 using Zooyard.Rpc.Support;
-//using Zooyard.ServiceDiscovery;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -34,7 +33,6 @@ public static class RpcServiceCollectionExtensions
             }, new ResultTranslate())
             .AddRuntimeStateManagers()
             .AddConfigManager()
-            //.AddInstanceResolver()
             .AddInterceptor<ResponseRpcInterceptor>();
 
         return builder;
@@ -51,7 +49,6 @@ public static class RpcServiceCollectionExtensions
             .AddConfigBuilder(baseReturnTypes, resultTranslate)
             .AddRuntimeStateManagers()
             .AddConfigManager()
-            //.AddInstanceResolver()
             ;
 
         if (baseInterceptor != null) 
@@ -96,21 +93,24 @@ public static class RpcServiceCollectionExtensions
 
     public static IRpcBuilder AddContract<T>(this IRpcBuilder builder)
     {
-        builder.AddContracts(typeof(T));
+        builder.Services.AddContracts(typeof(T));
         return builder;
     }
 
-    public static void AddContracts(this IRpcBuilder builder, params Type[] types) 
+    public static IRpcBuilder AddContracts(this IRpcBuilder builder, params IEnumerable<Type> types)
+    {
+        builder.Services.AddContracts(types);
+        return builder;
+    }
+
+    public static void AddContracts(this IServiceCollection service, params IEnumerable<Type> types)
     {
         foreach (var serviceType in types)
         {
-            builder.Services.AddSingleton<IClientPool>((s) => 
+            service.AddSingleton<IClientPool>((s) =>
             {
                 var zooyard = serviceType.GetCustomAttribute<ZooyardAttribute>();
-                if (zooyard == null)
-                {
-                    throw new RpcException($"{nameof(ZooyardAttribute)} is not exists");
-                }
+                ArgumentNullException.ThrowIfNull(zooyard);
 
                 var poolType = Type.GetType(zooyard.TypeName)!;
 
@@ -129,27 +129,10 @@ public static class RpcServiceCollectionExtensions
     /// <typeparam name="TService">A class that implements IProxyConfigFilter.</typeparam>
     public static IRpcBuilder AddConfigFilter<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TService>(this IRpcBuilder builder) where TService : class, IRpcConfigFilter
     {
-        if (builder is null)
-        {
-            throw new ArgumentNullException(nameof(builder));
-        }
+        ArgumentNullException.ThrowIfNull(builder);
 
         builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IRpcConfigFilter, TService>());
         return builder;
     }
 
-
-    ///// <summary>
-    ///// Provides a <see cref="IInstanceResolver"/> implementation which uses <see cref="System.Net.Dns"/> to resolve destinations.
-    ///// </summary>
-    //public static IRpcBuilder AddDnsInstanceResolver(this IRpcBuilder builder, Action<DnsInstanceResolverOptions>? configureOptions = null)
-    //{
-    //    builder.Services.TryAddSingleton<IInstanceResolver, DnsInstanceResolver>();
-    //    if (configureOptions is not null)
-    //    {
-    //        builder.Services.Configure(configureOptions);
-    //    }
-
-    //    return builder;
-    //}
 }

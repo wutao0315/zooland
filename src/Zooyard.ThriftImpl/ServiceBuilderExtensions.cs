@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Zooyard.Rpc;
 using Zooyard.ThriftImpl;
 
 namespace Microsoft.Extensions.Configuration;
@@ -7,7 +8,7 @@ public static class ServiceBuilderExtensions
 {
     public static IRpcBuilder AddThrift(this IRpcBuilder builder)
     {
-        builder.Services.AddTransient<ThriftClientPool>();
+        builder.Services.AddSingleton<ThriftClientPool>();
         return builder;
     }
 }
