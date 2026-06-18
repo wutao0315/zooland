@@ -23,11 +23,6 @@ public class ThriftInvoker(ILogger logger, TBaseClient _instance, int _clientTim
 
         var methodName = invocation.MethodInfo.Name;
 
-        //if (!invocation.MethodInfo.Name.EndsWith("Async", StringComparison.OrdinalIgnoreCase))
-        //{
-        //    methodName += "Async";
-        //}
-
         var method = _instance.GetType().GetMethod(methodName, argumentTypes.ToArray());
 
         if (method == null) 

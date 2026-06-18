@@ -1,17 +1,11 @@
 ﻿using Microsoft.Extensions.Logging;
-using System;
 using System.Diagnostics;
-using System.Security.Policy;
-using Zooyard.Diagnositcs;
-//using Zooyard.Logging;
 using Zooyard.Utils;
 
 namespace Zooyard.Rpc.Cluster;
 
 public class FailfastCluster : AbstractCluster
 {
-    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(FailfastCluster));
-    //public FailfastCluster(IEnumerable<ICache> caches) : base(caches) { }
     public FailfastCluster(ILogger<FailfastCluster> logger) : base(logger) { }
     public override string Name => NAME;
     public const string NAME = "failfast";
@@ -42,17 +36,18 @@ public class FailfastCluster : AbstractCluster
             try
             {
                 var refer = await client.Refer();
-                _source.WriteConsumerBefore(client.System, Name, invoker, invocation);
+                //_source.WriteConsumerBefore(client.System, Name, invoker, invocation);
                 result = await refer.Invoke<T>(invocation);
                 result.ElapsedMilliseconds = watch.ElapsedMilliseconds;
-                _source.WriteConsumerAfter(client.System, Name, invoker, invocation, result);
+                //_source.WriteConsumerAfter(client.System, Name, invoker, invocation, result);
                 await pool.Recovery(client);
                 goodUrls.Add(invoker);
             }
             catch (Exception ex)
             {
+                Activity.Current?.AddException(ex);
                 await pool.DestoryClient(client);
-                _source.WriteConsumerError(client.System, Name, invoker, invocation, ex, watch.ElapsedMilliseconds);
+                //_source.WriteConsumerError(client.System, Name, invoker, invocation, ex, watch.ElapsedMilliseconds);
                 throw;
             }
         }

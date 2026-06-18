@@ -4,7 +4,7 @@ namespace Zooyard.Diagnositcs;
 
 internal static class Observability
 {
-    public static readonly ActivitySource YarpActivitySource = new ("Zooyard");
+    //public static readonly ActivitySource YarpActivitySource = new ("Zooyard");
 
     public static void AddError(this Activity activity, string message, string description)
     {
@@ -20,7 +20,7 @@ internal static class Observability
         }
     }
 
-    private class YarpActivity
-    {
-    }
+    //private class YarpActivity
+    //{
+    //}
 }

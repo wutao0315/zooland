@@ -1,12 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
-using System.Diagnostics;
-using System.Linq;
-using System.Net.Mime;
 using System.Reflection;
 using Zooyard.Attributes;
-using Zooyard.Diagnositcs;
 using Zooyard.Utils;
-//using Zooyard.Logging;
 
 namespace Zooyard.Rpc.Cluster;
 
@@ -18,7 +13,7 @@ public abstract class AbstractCluster : ICluster
         _logger = logger;
     }
 
-    protected static DiagnosticSource _source = new DiagnosticListener(Constant.DiagnosticListenerName);
+    //protected static DiagnosticSource _source = new DiagnosticListener(Constant.DiagnosticListenerName);
     public const string TIMEOUT_KEY = "timeout";
     public const int DEFAULT_TIMEOUT = 1000;
     /// <summary>

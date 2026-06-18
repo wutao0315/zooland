@@ -3,20 +3,19 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Net.Http.Headers;
-using System.Net;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 using Zooyard.Attributes;
+using Zooyard.Diagnositcs;
 using Zooyard.DynamicProxy;
 using Zooyard.Exceptions;
 using Zooyard.Rpc;
 using Zooyard.Utils;
-using Google.Protobuf;
 
 namespace Zooyard;
 public class ZooyardInvoker
 {
+    
     private readonly ILogger _logger;
     private readonly IServiceProvider _serviceProvider;
     private readonly IZooyardPools _zooyardPools;
@@ -48,11 +47,11 @@ public class ZooyardInvoker
     {
         //如果协议是通用协议，检查配置中是否配置并替换
         var protocol = configuration.GetValue("zooyard:Protocol", "http")!;
-        if (attr.Protocol.Equals("http", StringComparison.OrdinalIgnoreCase) && !attr.Protocol.Equals(protocol, StringComparison.OrdinalIgnoreCase))
+        if (attr.Protocol.Equals("http", StringComparison.OrdinalIgnoreCase) 
+            && !attr.Protocol.Equals(protocol, StringComparison.OrdinalIgnoreCase))
         {
             attr.Protocol = protocol;
         }
-
         var url = attr.Url;
         var serviceName = attr.ServiceName;
         if (!string.IsNullOrWhiteSpace(attr.Config))
@@ -167,7 +166,7 @@ public class ZooyardInvoker
         await InvokeAsync<object>(context);
     }
 
-    private AsyncLocal<Activity?> newActivityLOCAL = new();
+    //private AsyncLocal<Activity?> newActivityLOCAL = new();
 
     public async Task<TT?> InvokeAsync<TT>(ProxyMethodResolverContext context)
     {
@@ -223,33 +222,30 @@ public class ZooyardInvoker
                 }
             }
 
-            var rpcContext = RpcContext.GetContext();
+            using var rpcContext = RpcContext.GetContext();
             rpcContext.SetInvocation(icn);
 
             var headers = new Dictionary<string, string?>();
 
-            newActivityLOCAL.Value = null;
+            //newActivityLOCAL.Value = null;
             Activity? activity = Activity.Current;
 
             if (activity == null)
             {
-                newActivityLOCAL.Value = new Activity(ActivityName);
-                newActivityLOCAL.Value.Start();
-                InjectHeaders(newActivityLOCAL.Value, headers);
-
+                activity = ActivityHelper.Start(ActivityName, headers, ActivityKind.Client);
+                Activity.Current = activity;
+                ActivityHelper.InjectHeaders(activity, headers);
                 foreach (var item in headers)
                 {
                     icn.Headers[item.Key] = item.Value ?? "";
-                    //rpcContext.SetAttachment(item.Key, item.Value ?? "");
                 }
             }
             else
             {
-                InjectHeaders(activity, headers);
+                ActivityHelper.InjectHeaders(activity, headers);
                 foreach (var item in headers)
                 {
                     icn.Headers[item.Key] = item.Value ?? "";
-                    //rpcContext.SetAttachment(item.Key, item.Value ?? "");
                 }
             }
 
@@ -261,7 +257,6 @@ public class ZooyardInvoker
                     await item.BeforeCall(icn, rpcContext);
                 }
             }
-
 
             IResult<TT>? result = null;
 
@@ -323,7 +318,7 @@ public class ZooyardInvoker
                         throw;
                     }
 
-                    newActivityLOCAL.Value?.Stop();
+                    Activity.Current?.Stop();
                     //todo after invoke
                     if (_interceptors != null && _interceptors.Count() > 0)
                     {
@@ -383,7 +378,7 @@ public class ZooyardInvoker
                         throw;
                     }
 
-                    newActivityLOCAL.Value?.Stop();
+                    Activity.Current?.Stop();
 
                     var genericType = baseReturnType;
 
@@ -436,7 +431,7 @@ public class ZooyardInvoker
                 var resultInner = await _zooyardPools.Invoke<TA>(icn);
                 // end invoke
 
-                newActivityLOCAL.Value?.Stop();
+                Activity.Current?.Stop();
 
                 //todo after invoke
                 if (_interceptors != null && _interceptors.Count() > 0)
@@ -483,49 +478,10 @@ public class ZooyardInvoker
 
 
 
-    private void InjectHeaders(Activity currentActivity, IDictionary<string, string?> headers)
-    {
-        if (currentActivity.IdFormat == ActivityIdFormat.W3C)
-        {
-            if (!headers.ContainsKey(TraceParentHeaderName))
-            {
-                headers.Add(TraceParentHeaderName, currentActivity.Id);
-                if (currentActivity.TraceStateString != null)
-                {
-                    headers.Add(TraceStateHeaderName, currentActivity.TraceStateString);
-                }
-            }
-        }
-        else
-        {
-            if (!headers.ContainsKey(RequestIdHeaderName))
-            {
-                headers.Add(RequestIdHeaderName, currentActivity.Id);
-            }
-        }
-
-        // we expect baggage to be empty or contain a few items
-        using (IEnumerator<KeyValuePair<string, string?>> e = currentActivity.Baggage.GetEnumerator())
-        {
-            if (e.MoveNext())
-            {
-                var baggage = new List<string>();
-                do
-                {
-                    KeyValuePair<string, string?> item = e.Current;
-                    baggage.Add(new NameValueHeaderValue(WebUtility.UrlEncode(item.Key), WebUtility.UrlEncode(item.Value)).ToString());
-                }
-                while (e.MoveNext());
-                headers.Add(CorrelationContextHeaderName, string.Join(',', baggage));
-            }
-        }
-    }
+    
 
     public const string ActivityName = "Zooyard.RequestOut";
-    public const string RequestIdHeaderName = "Request-Id";
-    public const string CorrelationContextHeaderName = "Correlation-Context";
 
-    public const string TraceParentHeaderName = "traceparent";
-    public const string TraceStateHeaderName = "tracestate";
+
 
 }

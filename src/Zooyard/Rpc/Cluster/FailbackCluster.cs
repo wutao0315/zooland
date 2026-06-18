@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using Zooyard.Diagnositcs;
 
 namespace Zooyard.Rpc.Cluster;
 
@@ -66,17 +65,18 @@ public class FailbackCluster : AbstractCluster
             try
             {
                 var refer = await client.Refer();
-                _source.WriteConsumerBefore(client.System, Name, failed[invocation], invocation);
+                //_source.WriteConsumerBefore(client.System, Name, failed[invocation], invocation);
                 var result = await refer.Invoke<T>(invocation);
                 watch.Stop();
                 result.ElapsedMilliseconds = watch.ElapsedMilliseconds;
-                _source.WriteConsumerAfter(client.System, Name, failed[invocation], invocation, result);
+                //_source.WriteConsumerAfter(client.System, Name, failed[invocation], invocation, result);
                 await pool.Recovery(client);
                 failed.TryRemove(invocation, out URL? cluster);
             }
             catch (Exception e)
             {
-                _source.WriteConsumerError(client.System, Name, failed[invocation], invocation, e, watch.ElapsedMilliseconds);
+                //_source.WriteConsumerError(client.System, Name, failed[invocation], invocation, e, watch.ElapsedMilliseconds);
+                Activity.Current?.AddException(e);
                 await pool.DestoryClient(client);
                 _logger.LogError(e, $"Failed retry to invoke method {invocation.MethodInfo.Name}, waiting again.");
             }
@@ -112,17 +112,18 @@ public class FailbackCluster : AbstractCluster
             try
             {
                 var refer = await client.Refer();
-                _source.WriteConsumerBefore(client.System, Name, invoker, invocation);
+                //_source.WriteConsumerBefore(client.System, Name, invoker, invocation);
                 result = await refer.Invoke<T>(invocation);
                 result.ElapsedMilliseconds = watch.ElapsedMilliseconds;
-                _source.WriteConsumerAfter(client.System, Name,invoker, invocation, result);
+                //_source.WriteConsumerAfter(client.System, Name,invoker, invocation, result);
                 await pool.Recovery(client);
                 goodUrls.Add(invoker);
             }
             catch (Exception ex)
             {
+                Activity.Current?.AddException(ex);
                 await pool.DestoryClient(client).ConfigureAwait(false);
-                _source.WriteConsumerError(client.System, Name, invoker, invocation, ex, watch.ElapsedMilliseconds);
+                //_source.WriteConsumerError(client.System, Name, invoker, invocation, ex, watch.ElapsedMilliseconds);
                 throw;
             }
         }

@@ -12,14 +12,23 @@
 
 	<ItemGroup>
 		<PackageReference Include="DotNetty.Transport" />
-		<PackageReference Include="Microsoft.Extensions.Hosting" />
 		<PackageReference Include="NLog" />
 		<PackageReference Include="NLog.Extensions.Hosting" />
 		<PackageReference Include="NLog.Extensions.Logging" />
 		<PackageReference Include="SoapCore" />
-		<PackageReference Include="System.Text.Encoding.CodePages" />
 		<PackageReference Include="ApacheThrift" />
 		<PackageReference Include="Grpc.AspNetCore" />
+
+		<PackageReference Include="OpenTelemetry" />
+		<PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
+		<PackageReference Include="OpenTelemetry.Extensions.Hosting" />
+		<PackageReference Include="OpenTelemetry.Exporter.Console" />
+		<PackageReference Include="OpenTelemetry.Instrumentation.GrpcNetClient" />
+		<PackageReference Include="OpenTelemetry.Instrumentation.Process" />
+		<PackageReference Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" />
+		<PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />
+		<PackageReference Include="OpenTelemetry.Instrumentation.Http" />
+		<PackageReference Include="OpenTelemetry.Instrumentation.Runtime" />
 	</ItemGroup>
 
 	<ItemGroup>

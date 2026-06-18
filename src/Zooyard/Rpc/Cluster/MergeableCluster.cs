@@ -1,8 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System.Diagnostics;
 using System.Reflection;
-using Zooyard.Diagnositcs;
 using Zooyard.Rpc.Merger;
 
 namespace Zooyard.Rpc.Cluster;
@@ -14,7 +12,6 @@ public class MergeableCluster : AbstractCluster
     public const string MERGER_KEY = "merger";
 
     private readonly IDictionary<Type, IMerger> _defaultMergers;
-    //private readonly IDictionary<string, IMerger> _mySelfMergers;
     public MergeableCluster(ILogger<MergeableCluster> logger,
         //IOptionsMonitor<ZooyardOption> zooyard,
         IEnumerable<IMerger> defaultMergers):base(logger)
@@ -71,10 +68,10 @@ public class MergeableCluster : AbstractCluster
                     try
                     {
                         var refer = await client.Refer();
-                        _source.WriteConsumerBefore(client.System, Name, invoker, invocation);
+                        //_source.WriteConsumerBefore(client.System, Name, invoker, invocation);
                         var invokeResult = await refer.Invoke<T>(invocation);
                         invokeResult.ElapsedMilliseconds = watchInner.ElapsedMilliseconds;
-                        _source.WriteConsumerAfter(client.System, Name, invoker, invocation, invokeResult);
+                        //_source.WriteConsumerAfter(client.System, Name, invoker, invocation, invokeResult);
                         await pool.Recovery(client);
                         goodUrls.Add(invoker);
                         return new ClusterResult<T>(invokeResult,
@@ -83,7 +80,8 @@ public class MergeableCluster : AbstractCluster
                     }
                     catch (Exception ex)
                     {
-                        _source.WriteConsumerError(client.System, Name, invoker, invocation, ex, watchInner.ElapsedMilliseconds);
+                        Activity.Current?.AddException(ex);
+                        //_source.WriteConsumerError(client.System, Name, invoker, invocation, ex, watchInner.ElapsedMilliseconds);
                         await pool.DestoryClient(client).ConfigureAwait(false);
                         throw;
                     }
@@ -135,18 +133,19 @@ public class MergeableCluster : AbstractCluster
                         try
                         {
                             var refer = await client.Refer();
-                            _source.WriteConsumerBefore(client.System, Name, invoker, invocation);
+                            //_source.WriteConsumerBefore(client.System, Name, invoker, invocation);
                             var invokeResult = await refer.Invoke<T>(invocation);
                             invokeResult.ElapsedMilliseconds = watchInner.ElapsedMilliseconds;
-                            _source.WriteConsumerAfter(client.System, Name, invoker, invocation, invokeResult);
+                            //_source.WriteConsumerAfter(client.System, Name, invoker, invocation, invokeResult);
                             await pool.Recovery(client);
                             goodUrls.Add(invoker);
                             return invokeResult;
                         }
                         catch (Exception ex)
                         {
+                            Activity.Current?.AddException(ex);
                             await pool.DestoryClient(client);
-                            _source.WriteConsumerError(client.System, Name, invoker, invocation, ex, watchInner.ElapsedMilliseconds);
+                            //_source.WriteConsumerError(client.System, Name, invoker, invocation, ex, watchInner.ElapsedMilliseconds);
                             throw;
                         }
                     }

@@ -1,6 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <Compile Remove="Header\TProtocolClientExtend.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
 	  <PackageReference Include="ApacheThrift" />
   </ItemGroup>
 

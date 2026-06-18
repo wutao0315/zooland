@@ -1,9 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
-using System;
 using System.Diagnostics;
 using Zooyard.Atomic;
-using Zooyard.Diagnositcs;
-//using Zooyard.Logging;
 
 namespace Zooyard.Rpc.Cluster;
 
@@ -12,8 +9,6 @@ namespace Zooyard.Rpc.Cluster;
 /// </summary>
 public class ForkingCluster : AbstractCluster
 {
-    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(ForkingCluster));
-    //public ForkingCluster(IEnumerable<ICache> caches) : base(caches) { }
     public ForkingCluster(ILogger<ForkingCluster> logger) : base(logger) { }
     public override string Name => NAME;
     public const string NAME = "forking";
@@ -72,18 +67,19 @@ public class ForkingCluster : AbstractCluster
                     try
                     {
                         var refer = await client.Refer();
-                        _source.WriteConsumerBefore(client.System, Name, invoker, invocation);
+                        //_source.WriteConsumerBefore(client.System, Name, invoker, invocation);
                         var resultInner = await refer.Invoke<T>(invocation);
                         resultInner.ElapsedMilliseconds = watch.ElapsedMilliseconds;
-                        _source.WriteConsumerAfter(client.System, Name, invoker, invocation, resultInner);
+                        //_source.WriteConsumerAfter(client.System, Name, invoker, invocation, resultInner);
                         await pool.Recovery(client);
                         goodUrls.Add(invoker);
                         return resultInner;
                     }
                     catch (Exception ex)
                     {
+                        Activity.Current?.AddException(ex);
                         await pool.DestoryClient(client).ConfigureAwait(false);
-                        _source.WriteConsumerError(client.System, Name, invoker, invocation, ex, watch.ElapsedMilliseconds);
+                        //_source.WriteConsumerError(client.System, Name, invoker, invocation, ex, watch.ElapsedMilliseconds);
                         throw;
                     }
                 }

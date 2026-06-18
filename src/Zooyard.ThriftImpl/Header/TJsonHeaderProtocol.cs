@@ -4,21 +4,20 @@ using Thrift.Protocol;
 using Thrift.Protocol.Entities;
 using Thrift.Transport;
 using Thrift.Transport.Client;
+using Zooyard.Diagnositcs;
 using Zooyard.Rpc;
 
 namespace Zooyard.ThriftImpl.Header;
 
 public class TJsonHeaderProtocol : TJsonProtocol
 {
-    //public const string DiagnosticListenerName = "ThriftHandlerDiagnosticListener";
-    //public const string ActivityName = "Zooyard.ThriftImpl.TJsonHeaderProtocol.RequestOut";
     private Activity? activity;
-    //private bool isNewActivity = false;
-    private IDictionary<string, string> HEAD_INFO;
+    private bool isNewActivity = false;
+    private IDictionary<string, string?> HEAD_INFO;
 
     public TJsonHeaderProtocol(TTransport transport) : base(transport)
     {
-        HEAD_INFO = new Dictionary<string, string>();
+        HEAD_INFO = new Dictionary<string, string?>();
     }
 
      public override async Task WriteMessageBeginAsync(TMessage message, CancellationToken cancellationToken)
@@ -31,21 +30,20 @@ public class TJsonHeaderProtocol : TJsonProtocol
 
         //trace start
         activity = Activity.Current;
-        //if (activity == null) 
-        //{
-        //    activity = new Activity(ActivityName);
-        //    activity.Start();
-        //    isNewActivity = true;
-        //}
+        if (activity == null)
+        {
+            activity = ActivityHelper.Start("TJsonHeaderClient", HEAD_INFO, ActivityKind.Client);
+            Activity.Current = activity;
+            isNewActivity = true;
+        }
 
         if (activity != null) 
         {
             activity.SetTag("rpc.thrift", "start");
-            HEAD_INFO.Add("rpc.thrift", "start");
 
             string methodName = message.Name;
+            activity.SetTag("rpc.client.potocol", "TJson");
             activity.SetTag("rpc.thrift.method", methodName);
-            HEAD_INFO.Add("rpc.thrift.method", methodName);
             TTransport transport = this.Transport;
 
 
@@ -53,14 +51,14 @@ public class TJsonHeaderProtocol : TJsonProtocol
             {
                 string hostAddress = socket.Host.MapToIPv4().ToString();
                 activity.SetTag("rpc.thrift.server", hostAddress);
-                HEAD_INFO.Add("rpc.thrift.server", hostAddress);
             }
 
-            this.InjectHeaders(activity, HEAD_INFO);
+            ActivityHelper.InjectHeaders(activity, HEAD_INFO);
         }
-        
 
+   
         await base.WriteMessageBeginAsync(message, cancellationToken);
+
         //write trace header to field0
         await WriteFieldZero(cancellationToken);
     }
@@ -70,19 +68,18 @@ public class TJsonHeaderProtocol : TJsonProtocol
     {
         var TRACE_HEAD = new TField("traceHeader", TType.Map, 0);
         await WriteFieldBeginAsync(TRACE_HEAD, cancellationToken);
+        IDictionary<string, string?> traceInfo = GenTraceInfo();
+        await WriteMapBeginAsync(new TMap(TType.String, TType.String, traceInfo.Count), cancellationToken);
+        foreach (var entry in traceInfo)
         {
-            IDictionary<string, string> traceInfo = GenTraceInfo();
-            await WriteMapBeginAsync(new TMap(TType.String, TType.String, traceInfo.Count), cancellationToken);
-            foreach (var entry in traceInfo) {
-                await WriteStringAsync(entry.Key, cancellationToken);
-                await WriteStringAsync(entry.Value, cancellationToken);
-            }
-            await WriteMapEndAsync(cancellationToken);
+            await WriteStringAsync(entry.Key, cancellationToken);
+            await WriteStringAsync(entry.Value, cancellationToken);
         }
+        await WriteMapEndAsync(cancellationToken);
         await WriteFieldEndAsync(cancellationToken);
     }
 
-    private IDictionary<string, string> GenTraceInfo()
+    private IDictionary<string, string?> GenTraceInfo()
     {
         //gen trace info
         return HEAD_INFO;
@@ -97,17 +94,14 @@ public class TJsonHeaderProtocol : TJsonProtocol
 
             activity!.SetTag("rpc.thrift.exception", x.StackTrace);
 
-            //if (isNewActivity) 
-            //{
-            //    activity!.Stop();
-            //}
-            //TraceUtils.submitAdditionalAnnotation(Constants.TRACE_THRIFT_EXCEPTION, StringUtil.trimNewlineSymbolAndRemoveExtraSpace(x.getMessage()));
-            //TraceUtils.endAndSendLocalTracer();
+            if (isNewActivity)
+            {
+                activity!.Stop();
+            }
         }
         else if (tMessage.Type == TMessageType.Reply)
         {
-            //TraceUtils.endAndSendLocalTracer();
-            //activity!.Stop();
+            activity!.Stop();
         }
         return tMessage;
     }

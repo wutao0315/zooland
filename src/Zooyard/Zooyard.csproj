@@ -19,6 +19,12 @@
 		<Protobuf Include="Protos/*.proto" ProtoRoot="Protos" GrpcServices="None" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Compile Remove="Diagnositcs\DiagnosticListenerExtensions.cs" />
+	  <Compile Remove="Diagnositcs\EventDataStore.cs" />
+	  <Compile Remove="Diagnositcs\Observability.cs" />
+	</ItemGroup>
+
 
 	<ItemGroup>
 		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">

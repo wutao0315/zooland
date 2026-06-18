@@ -2,16 +2,12 @@
 using System.Diagnostics;
 using System.Reflection;
 using Zooyard.Attributes;
-using Zooyard.Diagnositcs;
-//using Zooyard.Logging;
 using Zooyard.Utils;
 
 namespace Zooyard.Rpc.Cluster;
 
 public class FailoverCluster : AbstractCluster
 {
-    //private static readonly Func<Action<LogLevel, string, Exception?>> Logger = () => LogManager.CreateLogger(typeof(FailoverCluster));
-    //public FailoverCluster(IEnumerable<ICache> caches) : base(caches) { }
     public FailoverCluster(ILogger<FailoverCluster> logger) : base(logger) { }
     public override string Name => NAME;
     public const string NAME = "failover";
@@ -66,10 +62,10 @@ public class FailoverCluster : AbstractCluster
                 try
                 {
                     var refer = await client.Refer();
-                    _source.WriteConsumerBefore(client.System, Name, url, invocation);
+                    //_source.WriteConsumerBefore(client.System, Name, url, invocation);
                     var result = await refer.Invoke<T>(invocation);
                     result.ElapsedMilliseconds = watch.ElapsedMilliseconds;
-                    _source.WriteConsumerAfter(client.System, Name, url, invocation, result);
+                    //_source.WriteConsumerAfter(client.System, Name, url, invocation, result);
                     await pool.Recovery(client);
                     if (le != null)
                     {
@@ -91,8 +87,9 @@ public class FailoverCluster : AbstractCluster
                 }
                 catch (Exception ex)
                 {
+                    Activity.Current?.AddException(ex);
                     await pool.DestoryClient(client).ConfigureAwait(false);
-                    _source.WriteConsumerError(client.System, Name, url, invocation, ex, watch.ElapsedMilliseconds);
+                    //_source.WriteConsumerError(client.System, Name, url, invocation, ex, watch.ElapsedMilliseconds);
                     throw;
                 }
                 

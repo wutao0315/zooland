@@ -23,14 +23,11 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
     private readonly IRpcConfigProvider[] _providers;
     private readonly ConfigState[] _configs;
 
-    //private readonly IClusterChangeListener[] _clusterChangeListeners;
     private readonly ConcurrentDictionary<string, ServiceState> _services = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, RouteState> _routes = new(StringComparer.OrdinalIgnoreCase);
 
     private readonly IRpcConfigFilter[] _filters;
     private readonly IConfigValidator _configValidator;
-    //private readonly IServiceInstancesUpdater _clusterDestinationsUpdater;
-    //private readonly IInstanceResolver _instanceResolver;
     private readonly IConfigChangeListener[] _configChangeListeners;
     private IChangeToken _endpointsChangeToken;
 
@@ -41,16 +38,13 @@ internal sealed class RpcConfigManager : IRpcStateLookup, IDisposable
         , IEnumerable<IRpcConfigProvider> providers
         , IEnumerable<IRpcConfigFilter> filters
         , IConfigValidator configValidator
-        , IEnumerable<IConfigChangeListener> configChangeListeners //IServiceInstancesUpdater clusterDestinationsUpdater,
-        //, IInstanceResolver instanceResolver
+        , IEnumerable<IConfigChangeListener> configChangeListeners
         )
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _providers = providers?.ToArray() ?? throw new ArgumentNullException(nameof(providers));
         _filters = (filters as IRpcConfigFilter[]) ?? filters?.ToArray() ?? throw new ArgumentNullException(nameof(filters));
         _configValidator = configValidator ?? throw new ArgumentNullException(nameof(configValidator));
-        //_clusterDestinationsUpdater = clusterDestinationsUpdater ?? throw new ArgumentNullException(nameof(clusterDestinationsUpdater));
-        //_instanceResolver = instanceResolver ?? throw new ArgumentNullException(nameof(instanceResolver));
         _configChangeListeners = configChangeListeners?.ToArray() ?? Array.Empty<IConfigChangeListener>();
 
         if (_providers.Length == 0)

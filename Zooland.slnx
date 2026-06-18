@@ -11,7 +11,6 @@
     <Project Path="src/Zooyard.DotNettyImpl/Zooyard.DotNettyImpl.csproj" />
     <Project Path="src/Zooyard.GrpcNetImpl/Zooyard.GrpcNetImpl.csproj" />
     <Project Path="src/Zooyard.SourceGenerator/Zooyard.SourceGenerator.csproj" />
-    <Project Path="src/OpenTelemetry.Instrumentation.Zooyard/OpenTelemetry.Instrumentation.Zooyard.csproj" />
   </Folder>
   <Folder Name="/samples/">
     <Project Path="samples/RpcContractGrpcNet/RpcContractGrpcNet.csproj" />
@@ -19,6 +18,7 @@
     <Project Path="samples/RpcContractNetty/RpcContractNetty.csproj" />
     <Project Path="samples/RpcConsumerCore/RpcConsumerCore.csproj" />
     <Project Path="samples/RpcProviderCore/RpcProviderCore.csproj" />
+    <Project Path="samples/RpcContractThrift/RpcContractThrift.csproj" />
   </Folder>
   <Folder Name="/test/">
     <Project Path="test/Zooyard.CoreTest/Zooyard.CoreTest.csproj" />

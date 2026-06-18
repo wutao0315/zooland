@@ -108,7 +108,7 @@ internal sealed class ConfigurationConfigProvider : IRpcConfigProvider, IDisposa
 
         return new ServiceConfig
         {
-            ServiceId =section.Key,
+            ServiceId = section.Key,
             Metadata = section.GetSection(nameof(ServiceConfig.Metadata)).ReadStringDictionary(),
             Instances = instances,
         };

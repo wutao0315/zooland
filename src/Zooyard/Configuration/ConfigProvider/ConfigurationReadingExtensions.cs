@@ -53,7 +53,7 @@ internal static class ConfigurationReadingExtensions
             return new Dictionary<string, string>();
         }
 
-        return children.ToDictionary(s => s.Key, s => s.Value!, StringComparer.OrdinalIgnoreCase);
+        return children.ToDictionary(s => s.Key, s => s.Value??"", StringComparer.OrdinalIgnoreCase);
     }
 
     internal static string[]? ReadStringArray(this IConfigurationSection section)

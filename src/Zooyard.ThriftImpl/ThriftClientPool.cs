@@ -74,13 +74,13 @@ public class ThriftClientPool(ILogger<ThriftClientPool> logger) : AbstractClient
     {
         var protocol = url.Protocol;
         if (string.IsNullOrEmpty(protocol))
-            return Protocol.Binary;
+            return Protocol.OriginBinary;
 
         protocol = protocol[..1].ToUpperInvariant() + protocol.Substring(1).ToLowerInvariant();
         if (Enum.TryParse(protocol, true, out Protocol selectedProtocol))
             return selectedProtocol;
         else
-            return Protocol.Binary;
+            return Protocol.OriginBinary;
     }
 
     private Buffering GetBuffering(URL url)
@@ -206,12 +206,12 @@ public class ThriftClientPool(ILogger<ThriftClientPool> logger) : AbstractClient
         Protocol selectedProtocol = GetProtocol(url);
         return selectedProtocol switch
         {
-            Protocol.Binary => new TBinaryProtocol(transport),
-            Protocol.Compact => new TCompactProtocol(transport),
-            Protocol.Json => new TJsonProtocol(transport),
-            Protocol.BinaryHeader => new TBinaryHeaderProtocol(transport),
-            Protocol.CompactHeader => new TCompactHeaderProtocol(transport),
-            Protocol.JsonHeader => new TJsonHeaderProtocol(transport),
+            Protocol.OriginBinary => new TBinaryProtocol(transport),
+            Protocol.OriginCompact => new TCompactProtocol(transport),
+            Protocol.OriginJson => new TJsonProtocol(transport),
+            Protocol.Binary => new TBinaryHeaderProtocol(transport),
+            Protocol.Compact => new TCompactHeaderProtocol(transport),
+            Protocol.Json => new TJsonHeaderProtocol(transport),
             _ => throw new Exception("unhandled protocol"),
         };
     }
@@ -234,12 +234,12 @@ public class ThriftClientPool(ILogger<ThriftClientPool> logger) : AbstractClient
 
     private enum Protocol
     {
+        OriginBinary,
+        OriginCompact,
+        OriginJson,
         Binary,
         Compact,
         Json,
-        BinaryHeader,
-        CompactHeader,
-        JsonHeader,
     }
 }
 

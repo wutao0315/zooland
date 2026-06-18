@@ -33,17 +33,18 @@ public class BroadcastCluster : AbstractCluster
                 try
                 {
                     var refer = await client.Refer();
-                    _source.WriteConsumerBefore(client.System, Name, invoker, invocation);
+                    //_source.WriteConsumerBefore(client.System, Name, invoker, invocation);
                     result = await refer.Invoke<T>(invocation);
                     result.ElapsedMilliseconds = watch.ElapsedMilliseconds;
-                    _source.WriteConsumerAfter(client.System, Name, invoker, invocation, result);
+                    //_source.WriteConsumerAfter(client.System, Name, invoker, invocation, result);
                     await pool.Recovery(client);
                     goodUrls.Add(invoker);
                 }
                 catch (Exception ex)
                 {
+                    Activity.Current?.AddException(ex);
                     await pool.DestoryClient(client);
-                    _source.WriteConsumerError(client.System, Name, invoker, invocation, ex, watch.ElapsedMilliseconds);
+                    //_source.WriteConsumerError(client.System, Name, invoker, invocation, ex, watch.ElapsedMilliseconds);
                     throw;
                 }
             }

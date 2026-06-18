@@ -1,21 +1,22 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics;
+using System.Reflection;
 using Thrift.Protocol;
 using Thrift.Protocol.Entities;
 using Thrift.Transport;
 using Thrift.Transport.Client;
+using Zooyard.Diagnositcs;
 
 namespace Zooyard.ThriftImpl.Header;
 
 public class TCompactHeaderServerProtocol : TCompactProtocol
 {
 
-    private IDictionary<string, string> HEAD_INFO;
+    private IDictionary<string, string?> HEAD_INFO;
 
     public TCompactHeaderServerProtocol(TTransport transport) : base(transport)
     {
-        HEAD_INFO = new Dictionary<string, string>();
+        HEAD_INFO = new Dictionary<string, string?>();
     }
-
 
     public async Task<bool> ReadFieldZero(CancellationToken cancellationToken)
     {
@@ -24,7 +25,7 @@ public class TCompactHeaderServerProtocol : TCompactProtocol
         if (schemeField.ID == 0 && schemeField.Type == TType.Map)
         {
             TMap _map = await this.ReadMapBeginAsync(cancellationToken);
-            HEAD_INFO = new Dictionary<string, string>(2 * _map.Count);
+            HEAD_INFO = new Dictionary<string, string?>(2 * _map.Count);
             for (int i = 0; i < _map.Count; ++i)
             {
                 string key = await this.ReadStringAsync(cancellationToken);
@@ -37,120 +38,20 @@ public class TCompactHeaderServerProtocol : TCompactProtocol
         return HEAD_INFO.Count > 0;
     }
 
-    public IDictionary<string, string> Head => HEAD_INFO;
+    public IDictionary<string, string?> Head => HEAD_INFO;
 
-    public void MarkTFramedTransport(TProtocol protocol)
+    public TMessage TMessage { get; private set; }
+
+    public async ValueTask<TMessage> BaseReadMessageBeginAsync(CancellationToken cancellationToken)
     {
-        try
-        {
-            if (protocol.Transport is TStreamTransport stream)
-            {
-                var tioInputStream = TStreamTransportFieldsCache.getInstance().GetInputStream();
-                if (tioInputStream == null)
-                {
-                    return;
-                }
-                if (tioInputStream.GetValue(stream) is Stream inputStream)
-                {
-                    inputStream.Position = 0;
-                }
-            }
-        }
-        catch 
-        {
-            throw;
-        }
-
+        TMessage = await base.ReadMessageBeginAsync(cancellationToken);
+        return TMessage;
     }
 
-
-    /// <summary>
-    /// 重置TFramedTransport流，不影响Thrift原有流程
-    /// </summary>
-    /// <param name="protocol"></param>
-    public void ResetTFramedTransport(TProtocol protocol)
+    public override async ValueTask<TMessage> ReadMessageBeginAsync(CancellationToken cancellationToken)
     {
-        try
-        {
-            if (protocol.Transport is TStreamTransport stream)
-            {
-                var tioInputStream = TStreamTransportFieldsCache.getInstance().GetInputStream();
-                if (tioInputStream == null)
-                {
-                    return;
-                }
-
-                if (tioInputStream.GetValue(stream) is Stream inputStream) 
-                {
-                    inputStream.Seek(inputStream.Position, SeekOrigin.Begin);
-                }
-            }
-        }
-        catch
-        {
-            throw;
-        }
+        return TMessage;
     }
-
-    private class TStreamTransportFieldsCache
-    {
-        private static TStreamTransportFieldsCache? instance;
-        private FieldInfo inputStream_;
-        private string TStreamTransport_inputStream_ = "_inputStream";
-
-        private TStreamTransportFieldsCache()
-        {
-
-            inputStream_ = typeof(TStreamTransport).GetField(TStreamTransport_inputStream_)!;
-        }
-
-        public static TStreamTransportFieldsCache getInstance()
-        {
-            if (instance == null)
-            {
-                if (instance == null)
-                {
-                    instance = new TStreamTransportFieldsCache();
-                }
-            }
-            return instance;
-        }
-
-        public FieldInfo GetInputStream()
-        {
-            return inputStream_;
-        }
-    }
-
-    private class TIOStreamTransportFieldsCache
-    {
-        private static TIOStreamTransportFieldsCache? instance;
-        private TField inputStream_;
-
-        private TIOStreamTransportFieldsCache()
-        {
-            //inputStream_ = TIOStreamTransport.class.getDeclaredField(TIOStreamTransport_inputStream_);
-            //inputStream_.SetAccessible(true);
-        }
-
-        public static TIOStreamTransportFieldsCache getInstance()
-        {
-            if (instance == null)
-            {
-                if (instance == null)
-                {
-                    instance = new TIOStreamTransportFieldsCache();
-                }
-            }
-            return instance;
-        }
-
-        public TField getTIOInputStream()
-        {
-            return inputStream_;
-        }
-    }
-
 
     public new class Factory : TProtocolFactory
     {

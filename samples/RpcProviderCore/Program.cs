@@ -12,6 +12,11 @@ using Microsoft.Extensions.Options;
 using NLog;
 using NLog.Extensions.Hosting;
 using NLog.Extensions.Logging;
+using OpenTelemetry;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Security;
@@ -29,6 +34,7 @@ using Zooyard.DotNettyImpl.Messages;
 using Zooyard.DotNettyImpl.Transport;
 using Zooyard.DotNettyImpl.Transport.Codec;
 using Zooyard.ThriftImpl.Header;
+using static Thrift.Server.TThreadPoolAsyncServer;
 
 namespace RpcProviderCore;
 
@@ -43,21 +49,13 @@ public class Program
     Host.CreateDefaultBuilder(args)
         .ConfigureAppConfiguration((hostingContext, config) => {
             hostingContext.HostingEnvironment.ApplicationName = "RpcProviderCore";
-            hostingContext.HostingEnvironment.ContentRootPath = Directory.GetCurrentDirectory();
             var env = hostingContext.HostingEnvironment;
+            env.ContentRootPath = AppDomain.CurrentDomain.BaseDirectory;
             //load json settings
-
-            var nlogSection = config.Build().GetSection("NLog");
-            LogManager.Configuration = new NLogLoggingConfiguration(nlogSection);
-        })
-        .UseNLog()
-        .ConfigureServices((hostingContext, services) =>
-        {
-            var env = hostingContext.HostingEnvironment;
-
             var basePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "config");
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(basePath)
+            config
+                    .SetBasePath(basePath)
+                  .AddJsonFile("appsettings.json", true, true)
                 .AddJsonFile("service.grpc.json", false, true)
                 .AddJsonFile("service.netty.json", false, true)
                 .AddJsonFile("service.thrift.json", false, true)
@@ -65,14 +63,176 @@ public class Program
                 .AddJsonFile("service.json", false, true)
                 .AddJsonFile("nlog.json", false, true);
 
-            var config = builder.Build();
+            var nlogSection = config.Build().GetSection("NLog");
+            LogManager.Configuration = new NLogLoggingConfiguration(nlogSection);
+        })
+        .UseNLog()
+        .ConfigureServices((hostingContext, services) =>
+        {
+            //var env = hostingContext.HostingEnvironment;
+            //var basePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "config");
+            //var builder = new ConfigurationBuilder()
+            //    .SetBasePath(basePath)
+            //    .AddJsonFile("appsettings.json", true, true)
+            //    .AddJsonFile("service.grpc.json", false, true)
+            //    .AddJsonFile("service.netty.json", false, true)
+            //    .AddJsonFile("service.thrift.json", false, true)
+            //    .AddJsonFile("service.http.json", false, true)
+            //    .AddJsonFile("service.json", false, true)
+            //    .AddJsonFile("nlog.json", false, true);
+
+            var configuration = hostingContext.Configuration;
 
             //ZooyardLogManager.UseConsoleLogging(Zooyard.Logging.LogLevel.Debug);
 
-            services.Configure<GrpcServerOption>(config.GetSection("grpc"));
-            services.Configure<NettyServerOption>(config.GetSection("netty"));
-            services.Configure<ThriftServerOption>(config.GetSection("thrift"));
+            services.Configure<GrpcServerOption>(configuration.GetSection("grpc"));
+            services.Configure<NettyServerOption>(configuration.GetSection("netty"));
+            services.Configure<ThriftServerOption>(configuration.GetSection("thrift"));
             services.AddLogging();
+
+
+            #region 诊断收集器
+            var (trace_source, namespaceId, serviceName) = EnvUtil.GetTraceSource();
+            var serviceInstanceId = System.Environment.GetEnvironmentVariable(Env.ServiceInstanceId);
+            var autoGenerateServiceInstanceId = string.IsNullOrWhiteSpace(serviceInstanceId);
+            var groupName = EnvUtil.GetGroupName();
+            //public$$default_group@@appsettings
+
+            var tracingExporter = configuration.GetValue<string>("Otel:Exporter:Tracing");
+            var metricsExporter = configuration.GetValue<string>("Otel:Exporter:Metrics");
+            var logExporter = configuration.GetValue<string>("Otel:Exporter:Log");
+
+            // Build a resource configuration action to set service information.
+            Action<ResourceBuilder> configureResource = r => r.AddService(
+                serviceName: serviceName,
+                serviceVersion: trace_source + "?" + typeof(Startup).Assembly.GetName().Version?.ToString() ?? "",
+                autoGenerateServiceInstanceId: autoGenerateServiceInstanceId,
+                serviceInstanceId: serviceInstanceId)
+                .AddAttributes(new Dictionary<string, object>
+                  {
+                  { "NamespaceId", namespaceId },
+                  { "GroupName", groupName }
+                  });
+            if (!string.IsNullOrWhiteSpace(tracingExporter))
+            {
+                services.AddOpenTelemetry()
+                .ConfigureResource(configureResource)
+                .WithTracing(tracerBuilder =>
+                {
+                    var filters = new List<string>();
+                    configuration.GetSection("Otel:TraceHttpFilter").Bind(filters);
+
+                    var sourceFilters = new List<string>();
+                    configuration.GetSection("Otel:TraceSourceFilter").Bind(sourceFilters);
+
+                    // Sources
+                    foreach (var source in sourceFilters)
+                    {
+                        tracerBuilder.AddSource(source);
+                    }
+
+                    // Sources
+                    tracerBuilder
+                    .AddSource(trace_source)
+                    .SetSampler(new AlwaysOnSampler()) //调试时设置
+                    .AddAspNetCoreInstrumentation("Otel:Instrumentation:AspNetCore", (options) => {
+                        options.Filter = httpContent =>
+                        {
+                            foreach (var item in filters)
+                            {
+                                var result = httpContent.Request.Path.ToString()?.Contains(item, StringComparison.OrdinalIgnoreCase) ?? false;
+                                if (result)
+                                {
+                                    return false;
+                                }
+                            }
+                            return true;
+                        };
+                    })
+                    .AddHttpClientInstrumentation("Otel:Instrumentation:HttpClient", (options) =>
+                    {
+                        //忽略配置中心的链路日志
+                        options.FilterHttpRequestMessage = (req) =>
+                        {
+                            foreach (var item in filters)
+                            {
+                                var result = req.RequestUri?.ToString()?.Contains(item, StringComparison.OrdinalIgnoreCase) ?? false;
+                                if (result)
+                                {
+                                    return false;
+                                }
+                            }
+                            return true;
+                        };
+                    })
+                    .AddGrpcClientInstrumentation("Otel:Instrumentation:GrpcClient", (options) => { })
+                    //.AddFeignInstrumentation("Otel:Instrumentation:Feign", (options) => { })
+                    ;
+
+                    //AddTracerInstrumentation(tracerBuilder);
+
+                    if (tracingExporter.Equals("otlp", StringComparison.OrdinalIgnoreCase))
+                    {
+                        tracerBuilder.AddOtlpExporter((options) => { configuration.GetSection("Otel:Otlp").Bind(options); });
+                    }
+                    //else
+                    //{
+                    //    tracerBuilder.AddConsoleExporter();
+                    //}
+                });
+            }
+            if (!string.IsNullOrWhiteSpace(metricsExporter))
+            {
+                services.AddOpenTelemetry()
+                .ConfigureResource(configureResource)
+                .WithMetrics(meterBuilder =>
+                {
+                    meterBuilder
+                    .AddRuntimeInstrumentation()
+                    .AddProcessInstrumentation()
+                    .AddAspNetCoreInstrumentation();
+
+                    //AddMeterInstrumentation(meterBuilder);
+
+                    if (metricsExporter.Equals("otlp", StringComparison.OrdinalIgnoreCase))
+                    {
+                        meterBuilder.AddOtlpExporter((options) => { configuration.GetSection("Otel:Otlp").Bind(options); });
+                    }
+                    //else
+                    //{
+                    //    meterBuilder.AddConsoleExporter();
+                    //}
+                });
+            }
+            if (!string.IsNullOrWhiteSpace(logExporter))
+            {
+                services.Configure<OpenTelemetryLoggerOptions>(configuration.GetSection("Logging:OpenTelemetry"));
+                services.AddLogging(opt =>
+                {
+                    opt
+                    .AddTraceSource(trace_source)
+                    .AddOpenTelemetry(loggerOpt =>
+                    {
+                        loggerOpt.IncludeScopes = true;
+                        var resourceBuilder = ResourceBuilder.CreateDefault();
+                        configureResource(resourceBuilder);
+                        loggerOpt.SetResourceBuilder(resourceBuilder);
+
+                        if (logExporter.Equals("otlp", StringComparison.OrdinalIgnoreCase))
+                        {
+                            loggerOpt.AddOtlpExporter((options) => { configuration.GetSection("Otel:Otlp").Bind(options); });
+
+
+                        }
+                        //else
+                        //{
+                        //    loggerOpt.AddConsoleExporter();
+                        //}
+                    });
+                });
+            }
+
+            #endregion
 
 
             services.AddTransient((serviceProvider) => "A");
@@ -101,16 +261,12 @@ public class Program
 
             services.AddTransient<RpcContractThrift.HelloService.IAsync>((serviceProvider) => new HelloServiceThriftImpl { ServiceName = "A" });
 
+            //services.AddTransient<ITAsyncProcessor, RpcContractThrift.HelloService.AsyncProcessor>();
+
             services.AddTransient<RpcContractThrift.HelloService.AsyncProcessor>();
-
-            services.AddTransient<ITAsyncProcessor>((p) => {
-
-                //var logger = p.GetRequiredService<ILogger<ITAsyncProcessor>>();
+            services.AddTransient<ITAsyncProcessor>((p) =>
+            {
                 var processor = p.GetRequiredService<RpcContractThrift.HelloService.AsyncProcessor>();
-                //DiagnosticListener diagnosticListener = p.GetRequiredService<DiagnosticListener>();
-                //ActivitySource activitySource = p.GetRequiredService<ActivitySource>();
-                //DistributedContextPropagator propagator = p.GetRequiredService<DistributedContextPropagator>();
-
                 return new THeaderProcessor(processor);
             });
 
@@ -177,6 +333,10 @@ public class Program
 
             //services.AddZoolandServer();
             services.AddHostedService<ZoolandHostedService>();
+
+
+
+
 
         })
         .ConfigureWebHostDefaults(webBuilder =>
@@ -942,12 +1102,12 @@ public class ThriftServer
 
         TProtocolFactory protocolFactory = protocol switch
         {
-            Protocol.Binary => new TBinaryProtocol.Factory(),
-            Protocol.Compact => new TCompactProtocol.Factory(),
-            Protocol.Json => new TJsonProtocol.Factory(),
-            Protocol.BinaryHeader => new TBinaryHeaderServerProtocol.Factory(),
-            Protocol.CompactHeader => new TCompactHeaderServerProtocol.Factory(),
-            Protocol.JsonHeader => new TJsonHeaderServerProtocol.Factory(),
+            Protocol.OriginBinary => new TBinaryProtocol.Factory(),
+            Protocol.OriginCompact => new TCompactProtocol.Factory(),
+            Protocol.OriginJson => new TJsonProtocol.Factory(),
+            Protocol.Binary => new TBinaryHeaderServerProtocol.Factory(),
+            Protocol.Compact => new TCompactHeaderServerProtocol.Factory(),
+            Protocol.Json => new TJsonHeaderServerProtocol.Factory(),
             _ => throw new ArgumentException("unsupported value $protocol", nameof(protocol)),
         };
 
@@ -1061,12 +1221,12 @@ public class ThriftServer
 
     private enum Protocol
     {
+        OriginBinary,
+        OriginCompact,
+        OriginJson,
         Binary,
         Compact,
         Json,
-        BinaryHeader,
-        CompactHeader,
-        JsonHeader,
     }
 
     public class HttpServerSample
