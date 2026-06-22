@@ -32,3 +32,20 @@ public interface IHelloService
     Task<Result<HelloResult>?> GetPage(string name);
     
 }
+
+
+[ZooyardHttp("HttpHelloService", Url = "http://127.0.0.1:10010/hello")]
+public interface IHelloClientService
+{
+    [GetMapping("callnamevoid")]
+    Task<string?> CallNameVoid();
+
+    [GetMapping("callname")]
+    void CallName(string name);
+
+    [GetMapping("callvoid")]
+    Task CallVoid();
+
+    [GetMapping("callvoidnook")]
+    Task CallVoidNoOk();
+}

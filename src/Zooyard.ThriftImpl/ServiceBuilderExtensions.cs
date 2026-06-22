@@ -8,7 +8,7 @@ public static class ServiceBuilderExtensions
 {
     public static IRpcBuilder AddThrift(this IRpcBuilder builder)
     {
-        builder.Services.AddSingleton<ThriftClientPool>();
+        builder.Services.AddTransient<ThriftClientPool>();
         return builder;
     }
 }

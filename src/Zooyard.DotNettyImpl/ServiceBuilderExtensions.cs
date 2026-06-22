@@ -10,7 +10,7 @@ public static class ServiceBuilderExtensions
     public static IRpcBuilder AddDotNetty(this IRpcBuilder builder)
     {
         builder.Services.AddSingleton<ITransportMessageCodecFactory, JsonTransportMessageCodecFactory>();
-        builder.Services.AddSingleton<NettyClientPool>();
+        builder.Services.AddTransient<NettyClientPool>();
         return builder;
     }
 }

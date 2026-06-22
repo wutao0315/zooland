@@ -11,7 +11,7 @@ public static class ServiceBuilderExtensions
     {
         builder.Services.ConfigureHttpClientDefaults((b) => b.UseSocketsHttpHandler((s, p) => s.ActivityHeadersPropagator = DistributedContextPropagator.CreateDefaultPropagator()));
         builder.Services.AddHttpClient();
-        builder.Services.AddSingleton<HttpClientPool>();
+        builder.Services.AddTransient<HttpClientPool>();
         return builder;
     }
 }

@@ -18,7 +18,7 @@ public static class ServiceBuilderExtensions
     {
         builder.Services.AddSingleton<ClientInterceptor, ClientGrpcHeaderInterceptor>();
         
-        builder.Services.AddSingleton((serviceProvder) => 
+        builder.Services.AddTransient((serviceProvder) => 
         {
             var option = serviceProvder.GetRequiredService<IOptionsMonitor<GrpcNetOption>>().CurrentValue;
             var loggerFactory = serviceProvder.GetRequiredService<ILoggerFactory>();

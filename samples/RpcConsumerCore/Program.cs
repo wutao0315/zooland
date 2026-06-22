@@ -1,4 +1,5 @@
 ﻿using MemberGrpc;
+using RpcContractHttp;
 
 namespace RpcConsumerCore;
 
@@ -48,6 +49,7 @@ class Program
                .AddThrift()
                .AddGrpcNet()
                .AddContract<RpcContractHttp.IHelloService>()
+               .AddContract<RpcContractHttp.IHelloClientService>()
                .AddContract<RpcContractThrift.IHelloService>()
                .AddContract<RpcContractGrpcNet.IHelloNetService>()
                .AddContract<RpcContractNetty.IHelloService>()
@@ -63,6 +65,9 @@ class Program
 
            //services.AddSingleton<IHelloService, RpcContractHttp.HelloServiceClientTest>();
            services.AddSingleton<RpcContractHttp.IHelloService, RpcContractHttp.HelloServiceClient>();
+           services.AddSingleton<RpcContractHttp.IHelloClientService, RpcContractHttp.HelloClientServiceClient>();
+
+
            services.AddSingleton<RpcContractThrift.IHelloService, RpcContractThrift.HelloServiceClient>();
            services.AddSingleton<RpcContractGrpcNet.IHelloNetService, RpcContractGrpcNet.HelloNetServiceClient>();
            services.AddSingleton<RpcContractNetty.IHelloService, RpcContractNetty.HelloServiceClient>();
@@ -90,6 +95,7 @@ class Program
 }
 
 public class TestHostedService(RpcContractHttp.IHelloService helloServiceHttp,
+    RpcContractHttp.IHelloClientService helloServiceHttpClient,
     RpcContractGrpcNet.IHelloNetService helloServiceGrpcNet, 
     RpcContractThrift.IHelloService helloServiceThrift) 
     : IHostedService
@@ -124,7 +130,8 @@ public class TestHostedService(RpcContractHttp.IHelloService helloServiceHttp,
 
                         await CallWhile(async (helloword) => { await HttpHello(helloServiceHttp, helloword); });
 
-                       
+                        await CallWhile(async (helloword) => { await HttpHelloClient(helloServiceHttpClient, helloword); });
+                        
                         Console.WriteLine(callNameVoid);
                         break;
                     //case "netty":
@@ -318,6 +325,27 @@ public class TestHostedService(RpcContractHttp.IHelloService helloServiceHttp,
         helloResult!.Name = helloword + "show perfect world";
         var showResult = await helloServiceHttp.ShowHello(helloResult);
         Console.WriteLine(showResult);
+    }
+
+    private static async Task HttpHelloClient(RpcContractHttp.IHelloClientService helloServiceHttp, string helloword = "world")
+    {
+        Console.WriteLine("HttpHello---------------------------------------------------------------------------");
+        var callNameVoid = await helloServiceHttp.CallNameVoid();
+        Console.WriteLine(callNameVoid);
+        helloServiceHttp.CallName(helloword);
+        Console.WriteLine("CallName called");
+        await helloServiceHttp.CallVoid();
+
+        try
+        {
+            Console.WriteLine("CallName called no ok");
+            await helloServiceHttp.CallVoidNoOk();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+
     }
     private static async Task NettyHello(RpcContractNetty.IHelloService nettyService, string helloword = "world")
     {
