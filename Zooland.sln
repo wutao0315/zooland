@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.2.32630.192
+# Visual Studio Version 18
+VisualStudioVersion = 18.7.11919.86 stable
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{8983E1CE-EF43-4646-AF03-51D96E9A17F3}"
 	ProjectSection(SolutionItems) = preProject
@@ -44,8 +44,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.GrpcNetImpl", "src\Zooyard.GrpcNetImpl\Zooyard.GrpcNetImpl.csproj", "{D411F8ED-C5BC-4AC8-922D-342699B7DDDB}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcContractGrpcNet", "samples\RpcContractGrpcNet\RpcContractGrpcNet.csproj", "{AFC26A63-6D48-41A2-A9A4-A11FB2057ED5}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenTelemetry.Instrumentation.Zooyard", "src\OpenTelemetry.Instrumentation.Zooyard\OpenTelemetry.Instrumentation.Zooyard.csproj", "{0B291057-68DF-421C-AE68-0CD0B14799C9}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zooyard.SourceGenerator", "src\Zooyard.SourceGenerator\Zooyard.SourceGenerator.csproj", "{90284D60-2AF6-417D-BA47-6EBD7C4E5D6A}"
 EndProject
@@ -103,10 +101,6 @@ Global
 		{AFC26A63-6D48-41A2-A9A4-A11FB2057ED5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AFC26A63-6D48-41A2-A9A4-A11FB2057ED5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AFC26A63-6D48-41A2-A9A4-A11FB2057ED5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0B291057-68DF-421C-AE68-0CD0B14799C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0B291057-68DF-421C-AE68-0CD0B14799C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0B291057-68DF-421C-AE68-0CD0B14799C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0B291057-68DF-421C-AE68-0CD0B14799C9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{90284D60-2AF6-417D-BA47-6EBD7C4E5D6A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{90284D60-2AF6-417D-BA47-6EBD7C4E5D6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{90284D60-2AF6-417D-BA47-6EBD7C4E5D6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -128,7 +122,6 @@ Global
 		{A55DA158-7776-4554-9007-7A89311642B5} = {50C4867C-8931-45F0-B773-463C7B953969}
 		{D411F8ED-C5BC-4AC8-922D-342699B7DDDB} = {50C4867C-8931-45F0-B773-463C7B953969}
 		{AFC26A63-6D48-41A2-A9A4-A11FB2057ED5} = {1E4B38C1-0CF2-4E5C-AC4A-30B48CB3F7BA}
-		{0B291057-68DF-421C-AE68-0CD0B14799C9} = {50C4867C-8931-45F0-B773-463C7B953969}
 		{90284D60-2AF6-417D-BA47-6EBD7C4E5D6A} = {50C4867C-8931-45F0-B773-463C7B953969}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution

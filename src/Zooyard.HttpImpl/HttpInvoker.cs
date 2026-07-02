@@ -118,7 +118,7 @@ public class HttpInvoker(ILogger logger, IHttpClientFactory _instance, int _clie
             //文件流处理
             if (genType == typeof(byte[]))
             {
-                byte[] bytes = new byte[stream.Length];
+                var bytes = new byte[stream.Length];
                 await stream.ReadAsync(bytes, 0, bytes.Length);
                 // 设置当前流的位置为流的开始
                 stream.Seek(0, SeekOrigin.Begin);
