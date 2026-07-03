@@ -119,7 +119,11 @@ public class HttpInvoker(ILogger logger, IHttpClientFactory _instance, int _clie
             if (genType == typeof(byte[]))
             {
                 var bytes = new byte[stream.Length];
+                var memory = bytes.AsMemory();
                 await stream.ReadAsync(bytes, 0, bytes.Length);
+                //using var ms = new MemoryStream();
+                //await stream.CopyToAsync(ms);
+                //var bytes = ms.ToArray();
                 // 设置当前流的位置为流的开始
                 stream.Seek(0, SeekOrigin.Begin);
                 return new RpcResult<T>((T)bytes.ChangeType(genType)!);
