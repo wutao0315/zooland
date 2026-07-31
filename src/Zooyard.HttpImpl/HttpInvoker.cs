@@ -74,9 +74,6 @@ public class HttpInvoker(ILogger logger, IHttpClientFactory _instance, int _clie
         {
             if (!string.IsNullOrWhiteSpace(methodDescription.Value))
             {
-                //var methodNames = methodDescription.Value.Split('/', StringSplitOptions.RemoveEmptyEntries);
-                //pathUrl.AddRange(methodNames);
-
                 if (methodDescription.Value.StartsWith('/'))
                 {
                     pathUrl.Append(methodDescription.Value);
@@ -92,12 +89,18 @@ public class HttpInvoker(ILogger logger, IHttpClientFactory _instance, int _clie
                     pathUrl.Length--;
                 }
             }
-            method = methodDescription.Method.ToString();
-            contentType = methodDescription.Consumes;
+
+            if (methodDescription.Method != RequestMethod.NONE) 
+            {
+                method = methodDescription.Method.ToString();
+            }
+            if (!string.IsNullOrWhiteSpace(methodDescription.Consumes)) 
+            {
+                contentType = methodDescription.Consumes;
+            }
         }
         else 
         {
-            //pathUrl.Add(methodName);
             pathUrl.Append('/');
             pathUrl.Append(methodName);
         }

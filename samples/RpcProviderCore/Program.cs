@@ -7,17 +7,14 @@ using DotNetty.Transport.Libuv;
 using Grpc.Core;
 using Grpc.Core.Interceptors;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using NLog;
 using NLog.Extensions.Hosting;
 using NLog.Extensions.Logging;
-using OpenTelemetry;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-using System.Diagnostics;
 using System.Net;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
@@ -34,7 +31,6 @@ using Zooyard.DotNettyImpl.Messages;
 using Zooyard.DotNettyImpl.Transport;
 using Zooyard.DotNettyImpl.Transport.Codec;
 using Zooyard.ThriftImpl.Header;
-using static Thrift.Server.TThreadPoolAsyncServer;
 
 namespace RpcProviderCore;
 

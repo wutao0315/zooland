@@ -42,7 +42,6 @@ public class HttpStub
 
             var paraDic = new Dictionary<string, string>(paraItems);
 
-            //var pathList = new List<string>();
             var removeList = new List<string>();
 
             foreach (var dic in paraItems)
@@ -56,30 +55,6 @@ public class HttpStub
                     continue;
                 }
             }
-
-            //foreach (var item in path)
-            //{
-            //    var pathItem = item;
-            //    if (!item.Contains('{') || !item.Contains('}'))
-            //    {
-            //        pathList.Add(pathItem);
-            //        continue;
-            //    }
-
-            //    foreach (var dic in paraItems)
-            //    {
-            //        if ($"{{{dic.Key}}}" == item)
-            //        {
-            //            removeList.Add(dic.Key);
-            //            paraDic.Remove(dic.Key);
-            //            pathItem = dic.Value;
-            //            break;
-            //        }
-            //    }
-            //    pathList.Add(pathItem);
-            //}
-
-            //string requestUri = pathUrl;// $"/{string.Join('/', pathList)}";
 
             var httpMethod = new HttpMethod(method);
             var relatedUrl = pathUrl;
@@ -197,7 +172,6 @@ public class HttpStub
 
             if (para == null)
             {
-                //paraDic.Add(paraInfo.Name, "");
                 continue;
             }
 
@@ -242,8 +216,8 @@ internal static class ObjectUtil
         Dictionary<string, string> dictionary = default!,
         Dictionary<string, byte[]> dictionaryBytes = default!)
     {
-        dictionary ??= new Dictionary<string, string>();
-        dictionaryBytes ??= new Dictionary<string, byte[]>();
+        dictionary ??= [];
+        dictionaryBytes ??= [];
 
         if (obj is IEnumerable list)
         {

@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using Microsoft.Net.Http.Headers;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Thrift.Processor;
 using Thrift.Protocol;
 using Thrift.Protocol.Entities;
