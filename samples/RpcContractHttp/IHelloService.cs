@@ -28,6 +28,9 @@ public interface IHelloService
     [PostMapping("showhello", Consumes = "application/json")]
     Task<string?> ShowHello(HelloResult name);
 
+    [PostMapping("showhelloerr", Consumes = "application/json")]
+    Task<string?> ShowHelloErr(HelloResult name);
+
     [PostMapping("getpage", Consumes = "application/json")]
     Task<Result<HelloResult>?> GetPage(string name);
     
@@ -48,4 +51,8 @@ public interface IHelloClientService
 
     [GetMapping("callvoidnook")]
     Task CallVoidNoOk();
+
+    [PostMapping("showhelloerr", Consumes = "application/json")]
+    Task<string?> ShowHelloErr(HelloResult name);
 }
+

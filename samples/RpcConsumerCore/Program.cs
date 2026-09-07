@@ -325,6 +325,17 @@ public class TestHostedService(RpcContractHttp.IHelloService helloServiceHttp,
         helloResult!.Name = helloword + "show perfect world";
         var showResult = await helloServiceHttp.ShowHello(helloResult);
         Console.WriteLine(showResult);
+
+
+        try
+        {
+            Console.WriteLine("CallName called no ok");
+            await helloServiceHttp.ShowHelloErr(helloResult);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
     }
 
     private static async Task HttpHelloClient(RpcContractHttp.IHelloClientService helloServiceHttp, string helloword = "world")
@@ -345,6 +356,7 @@ public class TestHostedService(RpcContractHttp.IHelloService helloServiceHttp,
         {
             Console.WriteLine(e.Message);
         }
+
 
     }
     private static async Task NettyHello(RpcContractNetty.IHelloService nettyService, string helloword = "world")

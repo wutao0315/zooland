@@ -61,4 +61,12 @@ public class HelloController : ControllerBase
         var result = $"name:{hello.Name}；gender:{hello.Gender}；avatar:{hello.Head};From[{ServiceName}]";
         return Ok(new { code = 0, msg = "ok", data = result });
     }
+
+    [HttpPost("showhelloerr")]
+    public IActionResult ShowHelloErr(HelloDTO.HelloModel hello)
+    {
+        Console.WriteLine($"{hello.Name} call SayHello err![{ServiceName}]");
+        var result = $"name:{hello.Name}；gender:{hello.Gender}；avatar:{hello.Head};From[{ServiceName}]";
+        return Ok(new { code = 500, msg = "业务报错", data = result });
+    }
 }
