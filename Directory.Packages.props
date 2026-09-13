@@ -5,17 +5,17 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="ApacheThrift.AspNetCore" Version="0.24.0" />
-    <PackageVersion Include="Jint" Version="4.16.1" />
-    <PackageVersion Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.11" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.11" />
-    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.11" />
-    <PackageVersion Include="Microsoft.Extensions.Logging" Version="10.0.11" />
-    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="10.0.11" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="10.0.11" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.11" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.FileExtensions" Version="10.0.11" />
+    <PackageVersion Include="Jint" Version="4.16.2" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.FileExtensions" Version="10.0.12" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.9" />
-    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.11" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.12" />
     <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.8" />
     <PackageVersion Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="10.0.8" />
     <PackageVersion Include="Microsoft.AspNetCore.SignalR.Protocols.NewtonsoftJson" Version="10.0.8" />
@@ -32,10 +32,10 @@
     <PackageVersion Include="NLog" Version="6.2.0" />
     <PackageVersion Include="NLog.Extensions.Hosting" Version="6.2.0" />
     <PackageVersion Include="NLog.Extensions.Logging" Version="6.2.0" />
-    <PackageVersion Include="SoapCore" Version="1.2.1.15" />
+    <PackageVersion Include="SoapCore" Version="1.2.1.16" />
     <PackageVersion Include="System.Text.Encoding.CodePages" Version="10.0.9" />
     <PackageVersion Include="OpenTelemetry" Version="1.16.0" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.0" />
     <PackageVersion Include="MSTest.TestAdapter" Version="4.4.0" />
     <PackageVersion Include="MSTest.TestFramework" Version="4.4.0" />
     <PackageVersion Include="OpenTelemetry" Version="1.17.0" />
